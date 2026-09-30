@@ -1,6 +1,6 @@
 # Firma Randevu Sistemi
 
-Türkiye'deki tek şubeli hizmet işletmeleri için planlanan markalı randevu uygulaması. Şu anda P01 temel kurulum aşamasındadır: başlangıç sayfası ve sağlık kontrolleri vardır; gerçek rezervasyon henüz yoktur. Güncel durum için [STATUS](docs/STATUS.md), ürün kararları için [PRODUCT](docs/PRODUCT.md), aşamalar için [ROADMAP](docs/ROADMAP.md).
+Türkiye'deki tek şubeli hizmet işletmeleri için planlanan markalı randevu uygulaması. P01 temel kurulum tamamlandı: başlangıç sayfası ve sağlık kontrolleri vardır; gerçek rezervasyon henüz yoktur. Güncel durum için [STATUS](docs/STATUS.md), ürün kararları için [PRODUCT](docs/PRODUCT.md), aşamalar için [ROADMAP](docs/ROADMAP.md).
 
 ## Gerekenler
 
