@@ -92,12 +92,8 @@ export default function StaffInvitations({ post }: Props) {
       <input id="issued-invitation" type={showCode ? 'text' : 'password'} autoComplete="off" readOnly value={issued.token}
         onFocus={event => { if (showCode) event.currentTarget.select() }} />
       <p>Son kullanım: {new Date(issued.expiresAt).toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul' })} (İstanbul)</p>
-      <button type="button" disabled={busy} onClick={async () => {
-        try { await navigator.clipboard.writeText(issued.token); setNotice('Davet kodu kopyalandı. Yalnız doğrulanmış çalışana teslim edin.') }
-        catch { setError('Kopyalanamadı. “Kodu göster”e basın, kod alanına tıklayın ve seçili kodu kendiniz kopyalayın.') }
-      }}>Davet kodunu kopyala</button>
       <button type="button" disabled={busy} onClick={() => setShowCode(!showCode)}>{showCode ? 'Kodu gizle' : 'Kodu göster'}</button>
-      {showCode && <p>Kod alanına tıklayın; seçili kodu Ctrl+C ile kopyalayın. Yalnız doğrulanmış çalışana teslim edin, ardından kodu temizleyin.</p>}
+      {showCode && <p>Kod alanına tıklayın; seçili kodu bilgisayarda Ctrl+C ile, telefonda kopyalama menüsüyle kopyalayın. Yalnız doğrulanmış çalışana teslim edin, ardından kodu temizleyin.</p>}
       <button type="button" disabled={busy} onClick={() => { setIssued(null); setShowCode(false) }}>Kodu teslim ettim, temizle</button>
     </div>}
     <h3>Bekleyen davetler</h3>

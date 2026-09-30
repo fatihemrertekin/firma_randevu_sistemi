@@ -99,10 +99,8 @@ describe('Staff daveti', () => {
     expect(container.querySelector<HTMLInputElement>('#password')?.value).toBe('')
   })
 
-  it('kopyalama başarısızsa kodu gösterip elle seçmeye izin verir, temizlemede kodu kaldırır', async () => {
+  it('kodu açık onayla gösterip elle seçmeye izin verir, temizlemede kodu kaldırır', async () => {
     vi.stubGlobal('fetch', vi.fn(async () => Response.json([])))
-    const clipboard = { writeText: vi.fn(async () => { throw new DOMException('synthetic clipboard denial', 'NotAllowedError') }) }
-    vi.stubGlobal('navigator', { clipboard })
     const post = vi.fn(async () => Response.json({ id: 'invite-1', token: 'synthetic-token', expiresAt: '2026-10-02T00:00:00Z' }))
     await act(async () => root.render(<StaffInvitations post={post} />))
     await fill('invite-email', 'staff@example.test')
@@ -110,9 +108,7 @@ describe('Staff daveti', () => {
     if (!checkbox) throw new Error('Alıcı onayı yok')
     await act(async () => checkbox.click())
     await submit('Staff daveti oluştur')
-    await click('Davet kodunu kopyala')
-    expect(clipboard.writeText).toHaveBeenCalledWith('synthetic-token')
-    expect(container.textContent).toContain('Kopyalanamadı')
+    expect(Array.from(container.querySelectorAll('button')).some(button => button.textContent === 'Davet kodunu kopyala')).toBe(false)
     expect(container.querySelector<HTMLInputElement>('#issued-invitation')?.type).toBe('password')
     await click('Kodu göster')
     const input = container.querySelector<HTMLInputElement>('#issued-invitation')
