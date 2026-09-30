@@ -7,8 +7,9 @@ Güncelleme: 2026-09-30
 | Aşama | Durum | Kanıt / engel |
 | --- | --- | --- |
 | P00 — İş ve ürün tanımı | `done` | [P00 planı](plans/P00.md), [ürün kararları](PRODUCT.md#2-ürün-kararları), kapsam/politika ve belge kontrolü tamam. Bu yalnız planlama kanıtıdır. |
-| P01 — Temel ve CI | `done` | Yerel kontroller ve [P01 kanıtı](plans/P01.md#kanıt) tamam. Kullanıcının GitHub ekran görüntüsünde `320401f` ve `5b36130` için CI #1/#2 yeşil. |
-| P02–P17 | `planned` | Yalnız [ROADMAP](ROADMAP.md) düzeyinde; uygulama kanıtı yok. |
+| P01 — Temel ve CI | `done` | Yerel kontroller ve [P01 kanıtı](plans/P01.md#kanıt) tamam. `10527c1` (PR #1) `main` ve `origin/main` üzerinde doğrulandı. Kullanıcının GitHub ekran görüntüsünde `320401f` ve `5b36130` için CI #1/#2 yeşil. |
+| P02 — Kimlik ve tanımlar | `in_progress` | Yalnız Owner oturumu P02-01 tamamlandı; [P02 planı ve kanıtı](plans/P02.md). |
+| P03–P17 | `planned` | Yalnız [ROADMAP](ROADMAP.md) düzeyinde; uygulama kanıtı yok. |
 
 ## P00'da doğrulananlar
 
@@ -25,6 +26,7 @@ Güncelleme: 2026-09-30
 
 - SDK, PostgreSQL, Node ve temel lisans seçimi resmi kaynaklarla [ADR-001](adr/001-teknoloji-secimi.md) içinde kaydedildi. SDK, paketler ve imajlar belirli sürüm/tag'lere sabitlendi; NuGet/npm lock dosyaları var.
 - `dotnet restore --locked-mode`, derleme (0 uyarı), 3 sunucu testi ve `dotnet format --verify-no-changes` geçti. Web tarafında `npm ci`, tip, lint, 1 test, build ve `npm audit --audit-level=high` (0 bulgu) geçti.
+- PR #1'in birleşme commit'i `10527c1`, 30.09.2026 tarihinde yerel `main` ve izlenen `origin/main` başında görüldü. Bu kayıt yerel Git durumuna dayanır; bu oturumda GitHub'da yeniden CI çalıştırılmadı.
 - Docker Compose `config` ve `up -d --build --wait` geçti. Yerel `/health/live`, `/health/ready` ve ana sayfa HTTP 200 döndü; uygulama kullanıcı kimliği 1654, DB uygulama rolü superuser değil. Sentetik kayıt PostgreSQL yeniden başlatıldıktan sonra okundu ve test tablosu kaldırıldı.
 - [CI iş akışı](../.github/workflows/ci.yml) eklendi; yereldeki eşdeğer kontroller geçti. `320401f` ve `5b36130` commit'leri `feature/p01-temel-ci` dalına gönderildi. Kullanıcının paylaştığı GitHub Actions ekranında bu iki commit için CI #1 ve #2 yeşil göründü.
 - Projeye özel `.gitignore` ile `deploy/.env`, derleme çıktıları, paket önbellekleri ve yedekler dışarıda tutuluyor; örnek `.env` takip edilebilir. Gerçek veri, SMS, ödeme ve üretim dağıtımı yapılmadı.
@@ -34,6 +36,12 @@ Güncelleme: 2026-09-30
 - Hedef pilot tarihi verilmedi; P01 ADR-001 teslim hızı/öğrenme bedelini yazarken somut takvim ancak tarihle değerlendirilebilir. Bu, P00 kapanışını engellemez.
 - Destek e-posta adresi/telefon numarası pilot hazırlığında belirlenecek; ilk yanıt süresi taahhüdü yok. Gerçek tarife ve mesaj kotası ilgili aşamalarda ölçülecek.
 
+## P02-01'de doğrulananlar
+
+- ASP.NET Core Identity ve EF Core migration'ı, tek seferlik Owner kurulumu, giriş/çıkış, Owner hesabı API'si ve web giriş ekranı eklendi. Varsayılan veya açık kayıt hesabı yok.
+- Gerçek PostgreSQL testinde Owner kurulumunun tekrar reddi, anonim 401, CSRF 400, yanlış parola 401, beş hatadan sonra hesap kilidi, giriş/çıkış ve istek sınırı 429 doğrulandı. Sunucu testleri 4/4; web tip/lint/test/build geçti.
+- Yerel Compose imajı derlenip sağlıklı başladı. Manuel Identity migration'ı iki kez sorunsuz uygulandı; `/health/live` ve `/health/ready` 200, anonim `/api/auth/me` 401 ve CSRF ucu 200 döndü. Uygulama rolünün tablo okuma yetkisi var, şema oluşturma yetkisi yok. Anahtar dosyası restart sonrasında korundu. Etkileşimli yerel Owner script'i çalıştırılmadı; kurulum işlevi testte doğrulandı. Uzak CI bu oturumda çalıştırılmadı.
+
 ## Sıradaki iş
 
-[ROADMAP](ROADMAP.md) gereği P02 kimlik ve tanımlar aşamasına geçmeden kullanıcının açık onayını bekle. P01 özellik dalı henüz `main` ile birleştirilmedi; bu ayrı bir Git kararıdır.
+P02'nin sonraki küçük işi için kullanıcı onayını bekle. P03'e geçme; `main` dalına doğrudan push veya merge yapma. Yerel çalışmalar `feature/p02-owner-oturum` dalındadır.
