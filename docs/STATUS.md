@@ -8,7 +8,7 @@ Güncelleme: 2026-10-01
 | --- | --- | --- |
 | P00 — İş ve ürün tanımı | `done` | [P00 planı](plans/P00.md), [ürün kararları](PRODUCT.md#2-ürün-kararları), kapsam/politika ve belge kontrolü tamam. Bu yalnız planlama kanıtıdır. |
 | P01 — Temel ve CI | `done` | Yerel kontroller ve [P01 kanıtı](plans/P01.md#kanıt) tamam. `10527c1` (PR #1) `main` ve `origin/main` üzerinde doğrulandı. Kullanıcının GitHub ekran görüntüsünde `320401f` ve `5b36130` için CI #1/#2 yeşil. |
-| P02 — Kimlik ve tanımlar | `in_progress` | P02-01–P02-05 tamamlandı. Owner parola sıfırlama yerel/tarayıcı kabulü ve uzak CI kanıtı aşağıda; P02'nin kalan işleri ayrı onay gerektirir. [P02 planı](plans/P02.md). |
+| P02 — Kimlik ve tanımlar | `in_progress` | P02-01–P02-05 tamamlandı. P02-06 Staff daveti onaylandı, kabul süreci devam ediyor. P02'nin kalan işleri ayrı onay gerektirir. [P02 planı](plans/P02.md). |
 | P03–P17 | `planned` | Yalnız [ROADMAP](ROADMAP.md) düzeyinde; uygulama kanıtı yok. |
 
 ## P00'da doğrulananlar
@@ -78,7 +78,7 @@ Güncelleme: 2026-10-01
 
 ## Sıradaki iş ve onay sınırı
 
-P02-05 uygulama ve kabulü tamamlandı. P02 bütünü `in_progress`; P03'e geçme. Sıradaki küçük iş adayı Staff davetidir; kapsam/teslim yöntemi/kabul önerisini sun, uygulamadan önce kullanıcı onayını bekle. GitHub işlemleri yeşil kontroller sonrası PR üzerinden yapılır; doğrudan main push yoktur.
+P02-06 Staff daveti ürün sahibi tarafından 01.10.2026 tarihinde onaylandı; dar kapsamı ve kabul sürecini tamamla. P02 bütünü `in_progress`; P03'e geçme. Bundan sonraki küçük iş yine ayrı onay gerektirir. GitHub işlemleri yeşil kontroller sonrası PR üzerinden yapılır; doğrudan main push yoktur.
 
 ## P02-04 sonradan doğrulanan kanıt (30.09.2026)
 
@@ -95,3 +95,10 @@ P02-05 uygulama ve kabulü tamamlandı. P02 bütünü `in_progress`; P03'e geçm
 - Güncel yerel/uzak kabul kanıtı ve geri dönüş [P02 planında](plans/P02.md#p02-05--owner-parola-sıfırlama) tutulur. Üretim dağıtımı veya gerçek mesaj gönderimi yoktur.
 - `8eccc09` ile [PR #4](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/4) açıldı. Bu kod commit'inin [push CI](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/36778704363) ve [PR CI](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/36778987450) kontrolleri başarılı olarak GitHub API'den doğrulandı. Bu kanıtı ekleyen belge commit'i de yeşil olmadan merge yapılmaz; güncel son commit/merge ve birleşme sonrası main CI PR/GitHub'dan yeniden doğrulanır.
 - Ayrı sentetik tarayıcı testinin uygulaması/DB'si/ağı/anahtar volume'u ve geçici token/MFA dosyaları kaldırıldı; mevcut yerel kurulum korundu. Git dışındaki `.local/p02-05-browser-test-report.md` son Git/GitHub kanıtının devam kaydıdır.
+
+## P02-06 — Staff daveti
+
+- Başlangıçta [PR #4](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/4) merge'i `d36167a`, son PR kontrolleri 2/2 ve [main CI](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/36780041401) başarı olarak yeniden doğrulandı. Yerel main/origin/main/GitHub main eşit, çalışma ağacı temizdi; yeni `codex/p02-staff-davet` dalı origin/main üzerinden açıldı.
+- Dahil: MFA Owner'ın adres/alıcı doğrulamasıyla 24 saatlik davet üretmesi, tek yanıtta kod gösterimi ve özel manuel teslim; bekleyen davetin iptali; Staff'ın kendi parolasıyla hesabını açması ve kendi oturum/çıkışı. Otomatik mesaj, Owner ataması, Staff iş/randevu izinleri, MFA/kurtarma/hesap kapatma ve P03 hariç.
+- Son sunucu kapısı 22/22 geçti; beklerken iptal edilmiş Owner oturumu da reddediliyor. Web typecheck/lint, 24/24 test ve build; derleme ve format başarılı. Migration iki kez geçti; audit SELECT/INSERT açık, UPDATE/DELETE/TRUNCATE kapalı. Ana kurulum davet sayısı 0; live/ready 200. Mevcut Owner korunuyor. Son PR/CI/tarayıcı kanıtı tamamlanmadan `done` değildir.
+- Ayrı `p02-invite-browser` kurulumunda sentetik Owner/MFA hazırlandı ve tarayıcıda mevcut parola+TOTP ile Owner ekranı doğrulandı. `invited-staff@example.test` için form hazır; kullanıcıya davet üretme/manuel kod aktarımı/yeni parola ve normal giriş kabulü devredildi. Yeni parola giriş/gönderimi tarayıcı aracının zorunlu kullanıcı devri kuralıdır; parola/kod sohbet/loga istenmez.

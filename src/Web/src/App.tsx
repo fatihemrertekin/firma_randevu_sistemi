@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import PasswordChangeForm from './PasswordChangeForm'
 import PasswordResetForm from './PasswordResetForm'
+import StaffInvitations from './StaffInvitations'
+import StaffInvitationAcceptForm from './StaffInvitationAcceptForm'
 import styles from './App.module.css'
 
-type Account = { email: string; mfaEnabled: boolean; ownerAccess: boolean }
+type Account = { email: string; mfaEnabled: boolean; ownerAccess: boolean; staffAccess: boolean }
 type SetupInfo = { key: string; uri: string }
 
 async function getAccount(): Promise<Account | null> {
@@ -43,6 +45,7 @@ export default function App() {
   const [notice, setNotice] = useState('')
   const passwordChangePending = useRef(false)
   const [resettingPassword, setResettingPassword] = useState(false)
+  const [acceptingInvitation, setAcceptingInvitation] = useState(false)
 
   function clearPasswordFields() {
     setCurrentPassword('')
@@ -228,6 +231,13 @@ export default function App() {
         <span className={styles.eyebrow}>Randevu</span>
         {loading ? (
           <p role="status">Oturum kontrol ediliyor…</p>
+        ) : acceptingInvitation ? (
+          <StaffInvitationAcceptForm post={body => postWithCsrf('/api/staff-invitations/accept', body)}
+            onCancel={() => setAcceptingInvitation(false)} onDone={() => {
+              setAcceptingInvitation(false)
+              setPassword('')
+              setNotice('Staff hesabınız açıldı. E-postanız ve belirlediğiniz parolayla giriş yapın.')
+            }} />
         ) : resettingPassword ? (
           <PasswordResetForm onRequest={body => postWithCsrf('/api/auth/reset-password', body)}
             onCancel={() => setResettingPassword(false)} onDone={() => {
@@ -249,7 +259,14 @@ export default function App() {
             <button type="button" onClick={() => setRecoveryCodes(null)}>Kodları kaydettim</button>
           </>
         ) : account ? (
-          account.mfaEnabled && account.ownerAccess ? (
+          account.staffAccess ? (
+            <>
+              <h1 id="page-title">Staff hesabınız açık</h1>
+              <p>{account.email}</p>
+              <p>Çalışan ekranları hazırlanıyor. İşletme yönetimi erişiminiz yok.</p>
+              <button type="button" onClick={handleLogout} disabled={busy}>Çıkış yap</button>
+            </>
+          ) : account.mfaEnabled && account.ownerAccess ? (
             <>
               <h1 id="page-title">Hoş geldiniz</h1>
               <p>{account.email}</p>
@@ -258,6 +275,7 @@ export default function App() {
                 confirmPassword={confirmPassword} busy={busy}
                 onCurrentPassword={setCurrentPassword} onNewPassword={setNewPassword}
                 onConfirmPassword={setConfirmPassword} onSubmit={handlePasswordChange} />
+              <StaffInvitations post={postWithCsrf} />
               <button type="button" onClick={handleLogout} disabled={busy}>
                 {busy ? 'Çıkış yapılıyor…' : 'Çıkış yap'}
               </button>
@@ -342,6 +360,12 @@ export default function App() {
               setError('')
               setNotice('')
             }}>Parolamı unuttum</button>
+            <button type="button" disabled={busy} onClick={() => {
+              setAcceptingInvitation(true)
+              setPassword('')
+              setError('')
+              setNotice('')
+            }}>Staff davetim var</button>
           </>
         )}
         {error && <p className={styles.error} role="alert">{error}</p>}

@@ -25,6 +25,7 @@ function mockRequests(change: () => Promise<Response>, account = owner) {
   const requests = vi.fn(async (path: string) => {
     if (path === '/api/auth/me') return Response.json(account)
     if (path === '/api/auth/csrf') return Response.json({ token: 'synthetic-csrf' })
+    if (path === '/api/staff-invitations/') return Response.json([])
     if (path === '/api/auth/change-password') return change()
     throw new Error('Beklenmeyen test isteği')
   })
@@ -67,7 +68,7 @@ describe('Owner parola değişikliği', () => {
     await fillForm()
     await submit()
     expect(container.textContent).toContain('Parola değiştiriliyor…')
-    const inputs = Array.from(container.querySelectorAll<HTMLInputElement>('input'))
+    const inputs = Array.from(container.querySelectorAll<HTMLInputElement>('form[aria-label="Parola değiştirme"] input'))
     expect(inputs.every(input => input.disabled)).toBe(true)
     expect(inputs.map(input => input.autocomplete)).toEqual(['current-password', 'new-password', 'new-password'])
     await submit()
@@ -91,7 +92,7 @@ describe('Owner parola değişikliği', () => {
     await fillPassword('confirm-password', 'Synthetic!New456')
     await submit()
     expect(container.querySelector('[role="alert"]')?.textContent).toContain('Mevcut parola doğrulanamadı')
-    expect(Array.from(container.querySelectorAll<HTMLInputElement>('input')).every(input => input.value === '')).toBe(true)
+    expect(Array.from(container.querySelectorAll<HTMLInputElement>('form[aria-label="Parola değiştirme"] input')).every(input => input.value === '')).toBe(true)
     expect(container.querySelector<HTMLButtonElement>('button[type="submit"]')?.disabled).toBe(false)
   })
 
