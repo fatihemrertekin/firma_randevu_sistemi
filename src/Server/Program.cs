@@ -47,9 +47,18 @@ builder.Services.AddIdentity<AppUser, IdentityRole<Guid>>(options =>
         options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
         options.Lockout.MaxFailedAccessAttempts = 5;
         options.Lockout.AllowedForNewUsers = true;
+        options.Tokens.PasswordResetTokenProvider = "OwnerPasswordReset";
     })
     .AddEntityFrameworkStores<AppDbContext>()
-    .AddDefaultTokenProviders();
+    .AddDefaultTokenProviders()
+    .AddTokenProvider<OwnerPasswordResetTokenProvider>("OwnerPasswordReset");
+builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddSingleton(PartitionedRateLimiter.Create<Guid, Guid>(ownerId =>
+    RateLimitPartition.GetFixedWindowLimiter(ownerId, _ => new FixedWindowRateLimiterOptions
+    {
+        PermitLimit = 10,
+        Window = TimeSpan.FromMinutes(5)
+    })));
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.Cookie.Name = builder.Environment.IsDevelopment()
@@ -167,6 +176,20 @@ if (args is ["recover-owner-mfa"])
     {
         // Recovery must fail closed without writing database details or credentials to the console.
         Console.Error.WriteLine("Kurtarma sonucu doğrulanamadı; tekrar denemeden önce işlem kaydını kontrol edin.");
+        Environment.ExitCode = 1;
+    }
+    return;
+}
+
+if (args is ["issue-owner-password-reset"])
+{
+    try
+    {
+        Environment.ExitCode = await IssueOwnerPasswordReset.RunAsync(app.Services, CancellationToken.None);
+    }
+    catch (Exception exception) when (exception is DbUpdateException or NpgsqlException or OperationCanceledException or IOException or UnauthorizedAccessException)
+    {
+        Console.Error.WriteLine("Token teslimi doğrulanamadı; özel dosyayı ve işlem kaydını kontrol edin. Aynı referansla otomatik tekrar yapmayın.");
         Environment.ExitCode = 1;
     }
     return;
