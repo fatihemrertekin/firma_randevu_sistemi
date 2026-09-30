@@ -8,7 +8,7 @@ Güncelleme: 2026-09-30
 | --- | --- | --- |
 | P00 — İş ve ürün tanımı | `done` | [P00 planı](plans/P00.md), [ürün kararları](PRODUCT.md#2-ürün-kararları), kapsam/politika ve belge kontrolü tamam. Bu yalnız planlama kanıtıdır. |
 | P01 — Temel ve CI | `done` | Yerel kontroller ve [P01 kanıtı](plans/P01.md#kanıt) tamam. `10527c1` (PR #1) `main` ve `origin/main` üzerinde doğrulandı. Kullanıcının GitHub ekran görüntüsünde `320401f` ve `5b36130` için CI #1/#2 yeşil. |
-| P02 — Kimlik ve tanımlar | `in_progress` | Owner oturumu P02-01, Owner MFA P02-02 ve yetkili MFA kurtarma P02-03 tamamlandı; [P02 planı ve kanıtı](plans/P02.md). |
+| P02 — Kimlik ve tanımlar | `in_progress` | P02-01–P02-04 tamamlandı; [P02 planı ve kanıtı](plans/P02.md), P02-04 için PR #3 ve başarılı push CI aşağıda. |
 | P03–P17 | `planned` | Yalnız [ROADMAP](ROADMAP.md) düzeyinde; uygulama kanıtı yok. |
 
 ## P00'da doğrulananlar
@@ -64,4 +64,18 @@ Güncelleme: 2026-09-30
 
 ## Sıradaki iş
 
-P02-03 tamamlandı; P02 bütünü hâlâ `in_progress`. Sıradaki tek küçük iş adayı: MFA ile giriş yapmış Owner için mevcut parolayı doğrulayan parola değiştirme ve eski oturumları iptal etme akışı. Uygulamaya başlamadan kullanıcı onayını bekle. P03'e geçme. P02-01–P02-03 geliştirme dalı `feature/p02-owner-oturum`dur; P02-01 `931b7e7`, P02-02 `ab76a20` commit'leriyle kayıtlıdır. GitHub PR/CI ve birleştirme işlemleri yukarıdaki yetkiyle yürütülür.
+30.09.2026 devam oturumunda PR #2'nin `c8dca57` ile birleştiği, son PR kontrollerinin 2/2 ve [main CI #10](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/36753252586) sonucunun başarılı olduğu GitHub'da yeniden doğrulandı. Başlangıçta yerel main/origin/main/GitHub main eşit ve çalışma ağacı temizdi.
+
+## P02-04'te doğrulananlar
+
+- Ürün sahibi MFA Owner'ın mevcut parolayla parola değiştirmesini ve mevcut oturum dahil tüm eski ana/geçici MFA oturumlarını iptal etmeyi onayladı. Güncel `origin/main` üzerinden `codex/p02-owner-parola-degistirme` açıldı; eski `feature/p02-owner-oturum` dalından devam edilmedi.
+- API ve form eklendi. Mevcut Identity şeması/politikası, CSRF, hesap kilidi ve istek limiti kullanılıyor; kullanıcı satırı transaction içinde kilitleniyor. MFA anahtarı ve kullanılmamış kurtarma kodları korunuyor. Yeni migration/ücretli servis yok; yalnız web etkileşim testleri için MIT lisanslı jsdom devDependency eklendi.
+- Sunucu 11/11, web 9/9 test geçti. PostgreSQL'de yetki/CSRF/alan/parola reddi, eski ana/geçici oturum iptali, tekrar MFA, kurtarma kodunun korunması, hesap kilidi/429, commit hatasında rollback ve paralel iki istekte yalnız bir başarı doğrulandı. Web testleri bekleme/çift gönderim, hata, alan temizliği ve yeniden giriş davranışını doğruladı.
+- Temiz npm ci, typecheck/lint/build; kilitli NuGet restore, derleme (0 uyarı/0 hata) ve format geçti. npm audit ve NuGet transitif bağımlılık kontrolü bulgu göstermedi. Compose config/build/up sağlıklı; live/ready 200, anonim me/change-password 401.
+- Mevcut yerel Owner hesabında parola değiştirilmedi; gerçek tarayıcı/cihaz E2E ve üretim deploy yapılmadı. Ayrıntılar ve geri dönüş [P02 planında](plans/P02.md#p02-04--owner-parola-değiştirme).
+- `1588dd3` ile GitHub'a gönderildi; [PR #3](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/3) açıldı. Bu commit'in [push CI koşusu](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/36759215065) başarılı olarak GitHub'da doğrulandı. Bu belge kanıt commit'ini izler; PR'ın güncel son commit kontrolleri yeşil olmadan merge yapılmaz. Güncel merge/son CI durumu PR'dan doğrulanır.
+- Sonraki belge commit'inin [CI koşusunda](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/36759768717) paralellik testi zaman aşımına uğradı. Test aynı açık transaction içinde `pg_stat_activity` görüntüsünü tekrar okuyordu; kilit izleme ayrı DbContext/bağlantıya alındı. İki isteğin kilitte beklemesi ve tek `204`/tek `409` kontrolleri korunur; düzeltme sonrası yerel sunucu testleri 11/11 geçti. Başarısız CI ile merge yapılmadı. [PostgreSQL görüntü davranışı](https://www.postgresql.org/docs/18/monitoring-stats.html#MONITORING-STATS-VIEWING) doğrulandı.
+
+## Sıradaki iş ve onay sınırı
+
+P02-04 tamamlandı; P02 bütünü `in_progress`. Sonraki tek küçük iş adayı Owner parola sıfırlama akışının kapsamını, token teslimini ve kabul kontrollerini belirlemek; uygulamadan önce kullanıcı onayını bekle. P03'e geçme. GitHub işlemleri yeşil kontroller sonrası PR üzerinden yapılır; doğrudan main push yoktur.

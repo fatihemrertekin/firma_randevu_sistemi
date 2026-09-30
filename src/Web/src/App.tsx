@@ -1,4 +1,5 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
+import PasswordChangeForm from './PasswordChangeForm'
 import styles from './App.module.css'
 
 type Account = { email: string; mfaEnabled: boolean; ownerAccess: boolean }
@@ -35,6 +36,69 @@ export default function App() {
   const [setupInfo, setSetupInfo] = useState<SetupInfo | null>(null)
   const [setupPassword, setSetupPassword] = useState('')
   const [recoveryCodes, setRecoveryCodes] = useState<string[] | null>(null)
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [notice, setNotice] = useState('')
+  const passwordChangePending = useRef(false)
+
+  function clearPasswordFields() {
+    setCurrentPassword('')
+    setNewPassword('')
+    setConfirmPassword('')
+  }
+
+  async function handlePasswordChange(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (busy || passwordChangePending.current) return
+    setError('')
+    setNotice('')
+    if (newPassword !== confirmPassword) {
+      setError('Yeni parola ve tekrarı aynı olmalı.')
+      return
+    }
+    passwordChangePending.current = true
+    setBusy(true)
+    try {
+      const response = await postWithCsrf('/api/auth/change-password', {
+        currentPassword, newPassword, confirmPassword,
+      })
+      clearPasswordFields()
+      if (response.status === 401 || response.status === 403 || response.status === 409) {
+        setAccount(null)
+        setMfaRequired(false)
+        setCode('')
+        setError('Oturum geçersiz. Yeniden giriş yapın.')
+        return
+      }
+      if (!response.ok) {
+        if (response.status === 429) {
+          setError('Çok fazla deneme. Daha sonra tekrar deneyin.')
+        } else if (response.status === 400) {
+          const problem = (await response.json()) as { title?: string }
+          setError(problem.title ?? 'Parola alanlarını kontrol edin.')
+        } else {
+          setError('Sonuç doğrulanamadı. Yeniden giriş yapmayı deneyin.')
+        }
+        return
+      }
+      setAccount(null)
+      setMfaRequired(false)
+      setUseRecoveryCode(false)
+      setSetupInfo(null)
+      setRecoveryCodes(null)
+      setSetupPassword('')
+      setPassword('')
+      setCode('')
+      setNotice('Parolanız değişti ve bütün oturumlar kapatıldı. Yeni parolanız ve ikinci adımla yeniden giriş yapın.')
+    } catch {
+      clearPasswordFields()
+      setError('Sonuç doğrulanamadı. Yeniden giriş yapmayı deneyin.')
+    } finally {
+      passwordChangePending.current = false
+      setBusy(false)
+    }
+  }
 
   useEffect(() => {
     getAccount()
@@ -48,6 +112,7 @@ export default function App() {
     if (busy) return
     setBusy(true)
     setError('')
+    setNotice('')
     try {
       const response = await postWithCsrf('/api/auth/login', { email, password })
       setPassword('')
@@ -147,6 +212,7 @@ export default function App() {
       setAccount(null)
       setSetupInfo(null)
       setSetupPassword('')
+      clearPasswordFields()
     } catch {
       setError('Çıkış yapılamadı. Lütfen yeniden deneyin.')
     } finally {
@@ -175,6 +241,10 @@ export default function App() {
               <h1 id="page-title">Hoş geldiniz</h1>
               <p>{account.email}</p>
               <p>İki aşamalı giriş açık. Yönetim ekranları hazırlanıyor.</p>
+              <PasswordChangeForm currentPassword={currentPassword} newPassword={newPassword}
+                confirmPassword={confirmPassword} busy={busy}
+                onCurrentPassword={setCurrentPassword} onNewPassword={setNewPassword}
+                onConfirmPassword={setConfirmPassword} onSubmit={handlePasswordChange} />
               <button type="button" onClick={handleLogout} disabled={busy}>
                 {busy ? 'Çıkış yapılıyor…' : 'Çıkış yap'}
               </button>
@@ -256,6 +326,7 @@ export default function App() {
           </>
         )}
         {error && <p className={styles.error} role="alert">{error}</p>}
+        {notice && <p role="status">{notice}</p>}
       </section>
     </main>
   )

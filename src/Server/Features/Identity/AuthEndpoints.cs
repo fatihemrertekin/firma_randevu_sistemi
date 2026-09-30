@@ -91,6 +91,7 @@ public static class AuthEndpoints
         }).RequireAuthorization("OwnerSetup");
 
         auth.MapMfaEndpoints();
+        auth.MapPasswordEndpoints();
     }
 
     internal static async Task<bool> HasValidCsrfAsync(IAntiforgery antiforgery, HttpContext context)
