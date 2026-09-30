@@ -7,7 +7,7 @@ Güncelleme: 2026-09-30
 | Aşama | Durum | Kanıt / engel |
 | --- | --- | --- |
 | P00 — İş ve ürün tanımı | `done` | [P00 planı](plans/P00.md), [ürün kararları](PRODUCT.md#2-ürün-kararları), kapsam/politika ve belge kontrolü tamam. Bu yalnız planlama kanıtıdır. |
-| P01 — Temel ve CI | `in_progress` | Yerel kurulum ve kontroller geçti; [P01 kanıtı](plans/P01.md#kanıt). GitHub Actions iş akışı henüz uzak depoda çalıştırılmadı. |
+| P01 — Temel ve CI | `in_progress` | Yerel kurulum ve kontroller geçti; özellik dalı GitHub'a gönderildi. [P01 kanıtı](plans/P01.md#kanıt). Özel depodaki CI sonucu henüz doğrulanamadı. |
 | P02–P17 | `planned` | Yalnız [ROADMAP](ROADMAP.md) düzeyinde; uygulama kanıtı yok. |
 
 ## P00'da doğrulananlar
@@ -26,7 +26,7 @@ Güncelleme: 2026-09-30
 - SDK, PostgreSQL, Node ve temel lisans seçimi resmi kaynaklarla [ADR-001](adr/001-teknoloji-secimi.md) içinde kaydedildi. SDK, paketler ve imajlar belirli sürüm/tag'lere sabitlendi; NuGet/npm lock dosyaları var.
 - `dotnet restore --locked-mode`, derleme (0 uyarı), 3 sunucu testi ve `dotnet format --verify-no-changes` geçti. Web tarafında `npm ci`, tip, lint, 1 test, build ve `npm audit --audit-level=high` (0 bulgu) geçti.
 - Docker Compose `config` ve `up -d --build --wait` geçti. Yerel `/health/live`, `/health/ready` ve ana sayfa HTTP 200 döndü; uygulama kullanıcı kimliği 1654, DB uygulama rolü superuser değil. Sentetik kayıt PostgreSQL yeniden başlatıldıktan sonra okundu ve test tablosu kaldırıldı.
-- [CI iş akışı](../.github/workflows/ci.yml) eklendi; yereldeki eşdeğer kontroller geçti. Uzak GitHub Actions çalışması görülmedi. Değişiklikler henüz uzak depoya gönderilmedi.
+- [CI iş akışı](../.github/workflows/ci.yml) eklendi; yereldeki eşdeğer kontroller geçti. `320401f` commit'i `feature/p01-temel-ci` dalına gönderildi; `git ls-remote` aynı SHA'yı doğruladı. Uzak GitHub Actions sonucu görülmedi: depo özel, bağlı GitHub aracı bu depoya erişemedi.
 - Projeye özel `.gitignore` ile `deploy/.env`, derleme çıktıları, paket önbellekleri ve yedekler dışarıda tutuluyor; örnek `.env` takip edilebilir. Gerçek veri, SMS, ödeme ve üretim dağıtımı yapılmadı.
 
 ## İleride netleşecek ayrıntılar
@@ -36,4 +36,4 @@ Güncelleme: 2026-09-30
 
 ## Sıradaki iş
 
-P01 değişikliklerini gözden geçirip GitHub'a gönder; CI'ın gerçek koşusunu doğrula, sonucu [P01 planına](plans/P01.md) işle ve ardından P01'i `done` olarak kapat. P02 kimlik/tanım işlerine geçmeden kullanıcının aşama onayını bekle.
+GitHub Actions'ta `feature/p01-temel-ci` dalının CI sonucunu edin; başarısızsa ilgili iş günlüğüne göre düzelt. Başarılı koşuyu [P01 planına](plans/P01.md) işle ve ardından P01'i `done` olarak kapat. P02 kimlik/tanım işlerine geçmeden kullanıcının aşama onayını bekle.
