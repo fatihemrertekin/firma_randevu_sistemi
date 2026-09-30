@@ -95,4 +95,6 @@ docker compose --env-file deploy/.env -f deploy/compose.local.yaml config --quie
 - `deploy`: yerel Compose, Dockerfile ve örnek ayarlar.
 - `docs`: ürün, yol haritası, aktif aşama ve teknoloji kararı.
 
-Şu anki ekranda rezervasyon işlemi yoktur; davet, parola sıfırlama, çalışan ve hizmet tanımları sonraki P02 işleridir.
+MFA ile giriş yaptıktan sonra hesap ekranındaki “Parola değiştir” formuyla mevcut parolanızı doğrulayarak yeni parola belirleyebilirsiniz. Başarıda bu tarayıcı dahil bütün eski oturumlar kapanır; yeni parola ve doğrulayıcı/kullanılmamış kurtarma koduyla yeniden giriş gerekir. Doğrulayıcı kurulumu ve kurtarma kodları korunur. Bağlantı kesilip sonuç belirsiz kalırsa otomatik tekrar yerine yeniden girişle durumu kontrol edin.
+
+Şu anki ekranda rezervasyon işlemi yoktur; davet, parola sıfırlama, çalışan ve hizmet tanımları sonraki P02 işleridir. Web etkileşim testleri Vitest/jsdom üzerinde çalışır; gerçek tarayıcı Playwright akışı henüz yoktur.
