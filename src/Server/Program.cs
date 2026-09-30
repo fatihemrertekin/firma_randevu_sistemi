@@ -1,7 +1,186 @@
 using Npgsql;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.EntityFrameworkCore;
+using System.Threading.RateLimiting;
+using Server.Features.Identity;
+using Server.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddDbContext<AppDbContext>((services, options) =>
+    options.UseNpgsql(services.GetRequiredService<IConfiguration>()
+        .GetConnectionString("AppDatabase")));
+builder.Services.AddProblemDetails();
+
+var instanceId = builder.Configuration["Auth:InstanceId"];
+var keysDirectory = builder.Configuration["Auth:KeysDirectory"];
+if (builder.Environment.IsDevelopment())
+{
+    instanceId ??= "firma-randevu-development";
+    keysDirectory ??= Path.Combine(builder.Environment.ContentRootPath, ".local", "keys");
+}
+if (string.IsNullOrWhiteSpace(instanceId) || string.IsNullOrWhiteSpace(keysDirectory))
+{
+    throw new InvalidOperationException("Auth:InstanceId ve Auth:KeysDirectory gerekli.");
+}
+Directory.CreateDirectory(keysDirectory);
+builder.Services.AddDataProtection()
+    .SetApplicationName(instanceId)
+    .PersistKeysToFileSystem(new DirectoryInfo(keysDirectory));
+
+var secureCookie = builder.Environment.IsDevelopment()
+    ? CookieSecurePolicy.SameAsRequest
+    : CookieSecurePolicy.Always;
+builder.Services.AddIdentity<AppUser, IdentityRole<Guid>>(options =>
+    {
+        options.User.RequireUniqueEmail = true;
+        options.SignIn.RequireConfirmedEmail = true;
+        options.Password.RequiredLength = 12;
+        options.Password.RequireDigit = true;
+        options.Password.RequireUppercase = true;
+        options.Password.RequireLowercase = true;
+        options.Password.RequireNonAlphanumeric = true;
+        options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+        options.Lockout.MaxFailedAccessAttempts = 5;
+        options.Lockout.AllowedForNewUsers = true;
+    })
+    .AddEntityFrameworkStores<AppDbContext>()
+    .AddDefaultTokenProviders();
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.Cookie.Name = builder.Environment.IsDevelopment()
+        ? "FirmaRandevu.Dev"
+        : "__Host-FirmaRandevu";
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SecurePolicy = secureCookie;
+    options.Cookie.SameSite = SameSiteMode.Strict;
+    options.Cookie.Path = "/";
+    options.ExpireTimeSpan = TimeSpan.FromHours(8);
+    options.SlidingExpiration = false;
+    options.Events.OnRedirectToLogin = context =>
+    {
+        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+        return Task.CompletedTask;
+    };
+    options.Events.OnRedirectToAccessDenied = context =>
+    {
+        context.Response.StatusCode = StatusCodes.Status403Forbidden;
+        return Task.CompletedTask;
+    };
+});
+builder.Services.Configure<CookieAuthenticationOptions>(IdentityConstants.TwoFactorUserIdScheme, options =>
+{
+    options.Cookie.Name = builder.Environment.IsDevelopment()
+        ? "FirmaRandevu.TwoFactor.Dev"
+        : "__Host-FirmaRandevu.TwoFactor";
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SecurePolicy = secureCookie;
+    options.Cookie.SameSite = SameSiteMode.Strict;
+    options.Cookie.Path = "/";
+    options.ExpireTimeSpan = TimeSpan.FromMinutes(5);
+    options.SlidingExpiration = false;
+    options.Events.OnSigningIn = async context =>
+    {
+        var users = context.HttpContext.RequestServices.GetRequiredService<UserManager<AppUser>>();
+        var userId = context.Principal?.FindFirstValue(ClaimTypes.Name);
+        var user = userId is null ? null : await users.FindByIdAsync(userId);
+        if (user?.SecurityStamp is not null && context.Principal?.Identity is ClaimsIdentity identity)
+        {
+            identity.AddClaim(new Claim("mfa_security_stamp", user.SecurityStamp));
+        }
+    };
+    options.Events.OnValidatePrincipal = async context =>
+    {
+        var users = context.HttpContext.RequestServices.GetRequiredService<UserManager<AppUser>>();
+        var userId = context.Principal?.FindFirstValue(ClaimTypes.Name);
+        var user = userId is null ? null : await users.FindByIdAsync(userId);
+        var stamp = context.Principal?.FindFirstValue("mfa_security_stamp");
+        if (user is null || !user.TwoFactorEnabled || string.IsNullOrEmpty(stamp) || stamp != user.SecurityStamp)
+        {
+            context.RejectPrincipal();
+            await context.HttpContext.SignOutAsync(IdentityConstants.TwoFactorUserIdScheme);
+        }
+    };
+});
+builder.Services.Configure<SecurityStampValidatorOptions>(options =>
+{
+    options.ValidationInterval = TimeSpan.Zero;
+    options.OnRefreshingPrincipal = context =>
+    {
+        // Identity rebuilds the principal after a valid stamp check. Keep the MFA
+        // authentication method from that verified cookie so Owner access survives.
+        if (context.CurrentPrincipal?.HasClaim("amr", "mfa") == true &&
+            context.NewPrincipal?.Identity is ClaimsIdentity identity)
+        {
+            identity.AddClaim(new Claim("amr", "mfa"));
+        }
+        return Task.CompletedTask;
+    };
+});
+builder.Services.AddAuthorizationBuilder()
+    .AddPolicy("OwnerSetup", policy => policy.RequireRole("Owner"))
+    .AddPolicy("Owner", policy => policy.RequireRole("Owner").RequireClaim("amr", "mfa"));
+builder.Services.AddAntiforgery(options =>
+{
+    options.HeaderName = "X-CSRF-TOKEN";
+    options.Cookie.SecurePolicy = secureCookie;
+    options.Cookie.SameSite = SameSiteMode.Strict;
+    options.Cookie.HttpOnly = true;
+});
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(_ =>
+        RateLimitPartition.GetFixedWindowLimiter("all-requests", _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = 600,
+            Window = TimeSpan.FromMinutes(1)
+        }));
+    options.AddPolicy("login", context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            (context.Connection.RemoteIpAddress?.ToString() ?? "unknown") + context.Request.Path,
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 10,
+                Window = TimeSpan.FromMinutes(5)
+            }));
+});
 var app = builder.Build();
+
+if (args is ["bootstrap-owner"])
+{
+    Environment.ExitCode = await BootstrapOwner.RunAsync(app.Services, CancellationToken.None);
+    return;
+}
+
+if (args is ["recover-owner-mfa"])
+{
+    try
+    {
+        Environment.ExitCode = await RecoverOwnerMfa.RunAsync(app.Services, CancellationToken.None);
+    }
+    catch (Exception exception) when (exception is DbUpdateException or NpgsqlException or OperationCanceledException)
+    {
+        // Recovery must fail closed without writing database details or credentials to the console.
+        Console.Error.WriteLine("Kurtarma sonucu doğrulanamadı; tekrar denemeden önce işlem kaydını kontrol edin.");
+        Environment.ExitCode = 1;
+    }
+    return;
+}
+
+if (!app.Environment.IsDevelopment())
+{
+    app.UseExceptionHandler();
+}
+app.UseRouting();
+app.UseRateLimiter();
+app.UseAuthentication();
+app.UseAuthorization();
+app.MapAuthEndpoints();
 
 app.MapGet("/health/live", () => Results.Ok(new { status = "ok" }));
 
