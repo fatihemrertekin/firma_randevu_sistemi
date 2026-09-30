@@ -1,6 +1,6 @@
 # STATUS — Güncel durum ve sıradaki iş
 
-Güncelleme: 2026-09-30
+Güncelleme: 2026-10-01
 
 ## Aşamalar
 
@@ -8,7 +8,7 @@ Güncelleme: 2026-09-30
 | --- | --- | --- |
 | P00 — İş ve ürün tanımı | `done` | [P00 planı](plans/P00.md), [ürün kararları](PRODUCT.md#2-ürün-kararları), kapsam/politika ve belge kontrolü tamam. Bu yalnız planlama kanıtıdır. |
 | P01 — Temel ve CI | `done` | Yerel kontroller ve [P01 kanıtı](plans/P01.md#kanıt) tamam. `10527c1` (PR #1) `main` ve `origin/main` üzerinde doğrulandı. Kullanıcının GitHub ekran görüntüsünde `320401f` ve `5b36130` için CI #1/#2 yeşil. |
-| P02 — Kimlik ve tanımlar | `in_progress` | P02-01–P02-04 tamamlandı; [P02 planı ve kanıtı](plans/P02.md), P02-04 için PR #3 ve başarılı push CI aşağıda. |
+| P02 — Kimlik ve tanımlar | `in_progress` | P02-01–P02-04 tamamlandı; P02-05 Owner parola sıfırlama onaylandı ve kabul/PR süreci devam ediyor. [P02 planı](plans/P02.md). |
 | P03–P17 | `planned` | Yalnız [ROADMAP](ROADMAP.md) düzeyinde; uygulama kanıtı yok. |
 
 ## P00'da doğrulananlar
@@ -78,4 +78,18 @@ Güncelleme: 2026-09-30
 
 ## Sıradaki iş ve onay sınırı
 
-P02-04 tamamlandı; P02 bütünü `in_progress`. Sonraki tek küçük iş adayı Owner parola sıfırlama akışının kapsamını, token teslimini ve kabul kontrollerini belirlemek; uygulamadan önce kullanıcı onayını bekle. P03'e geçme. GitHub işlemleri yeşil kontroller sonrası PR üzerinden yapılır; doğrudan main push yoktur.
+P02-05 kapsamı ürün sahibi tarafından onaylandı; uygulama/kabul/PR sürecini tamamla. P02 bütünü `in_progress`; P03'e geçme. Bundan sonraki küçük işi belirleyip başlamadan önce kullanıcı onayını bekle. GitHub işlemleri yeşil kontroller sonrası PR üzerinden yapılır; doğrudan main push yoktur.
+
+## P02-04 sonradan doğrulanan kanıt (30.09.2026)
+
+- [PR #3](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/3) `6484236` ile main'e birleşti. Son PR commit'i `714e9b7` için iki verify kontrolü ve [birleşme sonrası main CI](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/36761990261) başarılı olarak GitHub API'den doğrulandı. P02-05 başlangıcında yerel main, origin/main ve uzak main aynıydı; çalışma ağacı temizdi.
+- Git dışındaki `.local/p02-browser-test-report.md` sonradan yapılan gerçek tarayıcı doğrulamasını içeriyor: Owner kuruldu ve MFA açıldı; TOTP/kurtarma koduyla giriş, yenileme, çıkış, parola değiştirme, yeni parola+mevcut MFA ile tekrar giriş geçti. Bu, yukarıdaki önceki oturumların “yapılmadı” kayıtlarından sonra alınan kanıttır. İkinci bağımsız tarayıcıda oturum iptali denenmedi; PostgreSQL test kanıtı mevcut. Rapor/Git kayıtları karşılaştırıldı; eski testler yeniden başlatılmadı ve mevcut Owner yeniden oluşturulmadı.
+- Kurulumun eski Türkçe karakter bozulması ve `libgssapi_krb5.so.2` uyarısı çözülmemiştir. Yeni sıfırlama script'inin kaynak kodlaması kendi kapsamında UTF-8 BOM'dur; bu, eski scriptlerin düzeldiği anlamına gelmez.
+
+## P02-05 — Owner parola sıfırlama
+
+- Onaylanan kapsam: yetkili operatör komutu/özel dosyayla 30 dakikalık token teslimi, girişten erişilen form ve CSRF korumalı POST, ayrı üretim/tamamlanma işlem kayıtları. Otomatik e-posta/SMS, Staff ve P03 hariç. Yeni dal güncel origin/main üzerinden `codex/p02-owner-parola-sifirlama` olarak açıldı.
+- İlk tam sunucu kapısı 16/16 geçti; hesap bazlı sınır eklendikten sonraki ilgili PostgreSQL testleri 5/5 geçti. Web typecheck/lint, 16/16 test ve build başarılı; derleme 0 uyarı/0 hata ve format doğrulaması başarılı. Sandbox NuGet/Docker erişim engelleri yetkili ortamda güvenlik ayarı değiştirilmeden aşıldı.
+- Ayrı sentetik DB/Owner/MFA ile teslim script'i ve Docker bind mount çalıştı. Windows ACL'de miras kapalı, tek kural yalnız mevcut kullanıcıya ait; token içerik çıktıya alınmadan doğrulandı. Gerçek tarayıcıda kullanıcı token/yeni parola/tekrarını girip sıfırlamayı tamamladı; başarı bildirimi ve giriş ekranına dönüş görüldü. Kullanıcının yeni parolası kabul edilip yalnız MFA adımı açıldı; sıfırlamadan önceki sentetik TOTP anahtarıyla ikinci adım tamamlandı ve Owner ekranı açıldı. Test hesabı dışında mevcut yerel Owner kullanılmadı. Görüntüler Git dışında `.local/p02-05-browser-reset-success.jpg` ve `.local/p02-05-browser-owner-final.jpg` içinde.
+- Sentetik DB'de tek Issued/tek Completed kaydı, MFA açık; kullanılmış token tekrarında 400 doğrulandı. Yerel migration iki kez geçti; audit uygulama rolünde SELECT/INSERT açık, UPDATE/DELETE/TRUNCATE kapalı. Güncellenen yerel uygulamada live/ready 200; mevcut Owner kurulumunda sıfırlama audit sayısı 0 kaldı.
+- Güncel yerel/uzak kabul kanıtı ve geri dönüş [P02 planında](plans/P02.md#p02-05--owner-parola-sıfırlama) tutulur. Üretim dağıtımı veya gerçek mesaj gönderimi yoktur.

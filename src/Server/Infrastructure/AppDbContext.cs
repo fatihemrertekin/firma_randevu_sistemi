@@ -20,6 +20,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     : IdentityDbContext<AppUser, IdentityRole<Guid>, Guid>(options)
 {
     public DbSet<OwnerMfaRecoveryAudit> OwnerMfaRecoveryAudits => Set<OwnerMfaRecoveryAudit>();
+    public DbSet<OwnerPasswordResetAudit> OwnerPasswordResetAudits => Set<OwnerPasswordResetAudit>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -29,5 +30,12 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
         audit.Property(entry => entry.OperatorReference).HasMaxLength(64);
         audit.Property(entry => entry.RequestReference).HasMaxLength(64);
         audit.HasIndex(entry => new { entry.InstanceId, entry.RequestReference }).IsUnique();
+        var resetAudit = builder.Entity<OwnerPasswordResetAudit>();
+        resetAudit.Property(entry => entry.InstanceId).HasMaxLength(128);
+        resetAudit.Property(entry => entry.OperatorReference).HasMaxLength(64);
+        resetAudit.Property(entry => entry.RequestReference).HasMaxLength(64);
+        resetAudit.Property(entry => entry.Kind).HasMaxLength(16);
+        resetAudit.HasIndex(entry => new { entry.InstanceId, entry.RequestReference, entry.Kind }).IsUnique();
+        resetAudit.HasIndex(entry => new { entry.GrantId, entry.Kind }).IsUnique();
     }
 }

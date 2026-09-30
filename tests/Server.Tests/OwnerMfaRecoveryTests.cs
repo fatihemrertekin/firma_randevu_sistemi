@@ -187,7 +187,7 @@ public sealed partial class OwnerMfaTests
         }
     }
 
-    private static async Task<RecoverySeed> CreateRecoveryAppAsync(string connectionString)
+    private static async Task<RecoverySeed> CreateRecoveryAppAsync(string connectionString, TimeProvider? clock = null)
     {
         var options = new DbContextOptionsBuilder<AppDbContext>().UseNpgsql(connectionString).Options;
         await using (var db = new AppDbContext(options))
@@ -197,6 +197,7 @@ public sealed partial class OwnerMfaTests
         var app = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
         {
             builder.UseEnvironment("Development");
+            if (clock is not null) builder.ConfigureServices(services => services.AddSingleton(clock));
             builder.ConfigureAppConfiguration((_, configuration) =>
                 configuration.AddInMemoryCollection(new Dictionary<string, string?>
                 {

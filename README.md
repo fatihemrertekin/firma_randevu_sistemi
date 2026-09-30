@@ -65,6 +65,26 @@ Bu işlem yalnız doğrulayıcı ve bütün kurtarma kodları kaybolduğunda, me
 
 Bu kurtarma eski anahtarı geri etkinleştirerek geri alınmaz; tamamlanması yeni MFA kurulumuyladır. Kod rollback'i için audit tablosunu silmek gerekmez. Üretim operatör yetkileri, yedek ve gerçek firma runbook'u P06 kapsamındadır; bu script yerel sentetik kurulum içindir.
 
+## Owner parola sıfırlama (yerel, yetkili operatör)
+
+Owner parolayı unuttuğunda destek, sahipliği bağımsız kurulum kayıtları üzerinden doğrular. Başvuranın söylediği e-posta veya telefon tek başına yeterli değildir. Operatör firma/Owner UUID, benzersiz destek referansı ve teslim kanalını doğrulamadan token üretmez. Operatör erişimi uygulamada gizli bir admin hesabı değildir; host/DB erişimi ve ayrı destek kaydıyla denetlenir.
+
+1. Güncel imajı derleyin ve yukarıdaki migration komutunu uygulayın. `P02OwnerPasswordResetAudit` yalnız yeni işlem tablosunu ekler; uygulama rolüne bu tabloda yalnız SELECT/INSERT verilir.
+2. Windows PowerShell'de aşağıdaki komutu çalıştırın. Script firma/Owner hedefini açıkça onaylatır ve token yazılmadan önce yalnız mevcut Windows kullanıcısının erişebildiği bir dizin hazırlar:
+
+   ```powershell
+   powershell -NoProfile -ExecutionPolicy Bypass -File .\deploy\Issue-LocalOwnerPasswordReset.ps1
+   ```
+
+   Ayrı sentetik kurulumlarda `-ComposeFile` ve `-EnvFile` ile hedef dosyalar seçilebilir; firma kimliği kontrolü yine zorunludur. Token `.local/owner-password-reset/<rastgele-dizin>/token.txt` içindedir. İçerik konsola/Docker loguna yazılmaz, mevcut dosya üzerine yazılmaz. Yeni script Windows PowerShell'in Türkçe kaynak metnini okuyabilmesi için UTF-8 BOM kullanır.
+3. **30 dakika geçerli** tokenı önceden doğrulanmış özel kanaldan yalnız Owner'a teslim edin. Tokenı sohbet, destek kaydı, log veya Git'e koymayın; yeni parolayı operatör istemez/belirlemez. Teslim/kullanım sonrası geçici dosyayı silin. Bu iş otomatik e-posta/SMS göndermeyi veya herkese açık token üretme API'sini içermez.
+4. Owner giriş ekranında “Parolamı unuttum” formuna tokenı, yeni parolayı ve tekrarını girer. Token URL'ye veya kalıcı tarayıcı deposuna yazılmaz. POST, CSRF ve IP/hesap/global istek sınırlarıyla korunur. Token üretmek mevcut parolayı, oturumları veya MFA'yı değiştirmez.
+5. Başarıda mevcut dahil tüm eski ana/geçici oturumlar ve eski sıfırlama tokenları geçersizleşir; otomatik giriş yapılmaz. MFA anahtarı/kullanılmamış kurtarma kodları, rol, kilit bitişi ve hata sayacı korunur. Yeni parola ve mevcut ikinci adımla giriş gerekir; hesap kilitliyse kilit süresi beklenir. MFA da kayıpsa ayrı yetkili MFA kurtarma prosedürü gerekir.
+
+`OwnerPasswordResetAudits` üretim ve tamamlanmayı ayrı, değiştirilemez satırlarda kaydeder; token/parola içermez. Başarıyla kullanılana kadar aynı hesabın ayrı destek referanslarıyla üretilmiş birden çok tokenı geçerli olabilir; başarılı sıfırlama hepsini geçersizleştirir. Yeniden üretim eski oturumları kapatmaz. Aynı başarılı üretim referansı tekrar kullanılamaz.
+
+DB/audit hatasında parola değişikliği geri alınır. Commit veya dosya teslimi sırasında bağlantı kesilirse otomatik tekrar yapmayın; önce işlem kaydını/özel dosyayı ve normal giriş sonucunu kontrol edin. Başarılı işlem kod rollback'iyle eski parolayı veya oturumları geri açmaz. Migration `Down` işlem kayıtlarını sildiği için gerçek kurulumda otomatik çalıştırılmaz; eski kodla yeni tablo korunabilir. Linux'ta doğrudan CLI kullanımı için operatör özel çıktı dizinini önceden `0700` ile hazırlamalıdır; komut dosyayı `0600` oluşturur. Üretim teslim kanalı/HTTPS/host yetkileri P06 kabulünün yerine geçmez.
+
 ## Kontroller (Windows PowerShell)
 
 Önce web çıktısını üretin; sunucu testi ana sayfanın aynı uygulamadan sunulduğunu doğrular.
@@ -97,4 +117,4 @@ docker compose --env-file deploy/.env -f deploy/compose.local.yaml config --quie
 
 MFA ile giriş yaptıktan sonra hesap ekranındaki “Parola değiştir” formuyla mevcut parolanızı doğrulayarak yeni parola belirleyebilirsiniz. Başarıda bu tarayıcı dahil bütün eski oturumlar kapanır; yeni parola ve doğrulayıcı/kullanılmamış kurtarma koduyla yeniden giriş gerekir. Doğrulayıcı kurulumu ve kurtarma kodları korunur. Bağlantı kesilip sonuç belirsiz kalırsa otomatik tekrar yerine yeniden girişle durumu kontrol edin.
 
-Şu anki ekranda rezervasyon işlemi yoktur; davet, parola sıfırlama, çalışan ve hizmet tanımları sonraki P02 işleridir. Web etkileşim testleri Vitest/jsdom üzerinde çalışır; gerçek tarayıcı Playwright akışı henüz yoktur.
+Şu anki ekranda rezervasyon işlemi yoktur; Staff daveti, çalışan ve hizmet tanımları sonraki P02 işleridir. Web etkileşim testleri Vitest/jsdom üzerinde çalışır; otomatik Playwright akışı henüz yoktur. Elle tarayıcı kontrolleri ve sınırları STATUS/P02 planında ayrıca kaydedilir.

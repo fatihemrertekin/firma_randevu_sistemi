@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import PasswordChangeForm from './PasswordChangeForm'
+import PasswordResetForm from './PasswordResetForm'
 import styles from './App.module.css'
 
 type Account = { email: string; mfaEnabled: boolean; ownerAccess: boolean }
@@ -41,6 +42,7 @@ export default function App() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [notice, setNotice] = useState('')
   const passwordChangePending = useRef(false)
+  const [resettingPassword, setResettingPassword] = useState(false)
 
   function clearPasswordFields() {
     setCurrentPassword('')
@@ -226,6 +228,17 @@ export default function App() {
         <span className={styles.eyebrow}>Randevu</span>
         {loading ? (
           <p role="status">Oturum kontrol ediliyor…</p>
+        ) : resettingPassword ? (
+          <PasswordResetForm onRequest={body => postWithCsrf('/api/auth/reset-password', body)}
+            onCancel={() => setResettingPassword(false)} onDone={() => {
+              setResettingPassword(false)
+              setAccount(null)
+              setMfaRequired(false)
+              setPassword('')
+              setCode('')
+              clearPasswordFields()
+              setNotice('Parolanız sıfırlandı ve bütün oturumlar kapatıldı. Yeni parolanız ve ikinci adımla yeniden giriş yapın.')
+            }} />
         ) : recoveryCodes ? (
           <>
             <h1 id="page-title">Kurtarma kodlarını saklayın</h1>
@@ -323,6 +336,12 @@ export default function App() {
                 {busy ? 'Giriş yapılıyor…' : 'Giriş yap'}
               </button>
             </form>
+            <button type="button" disabled={busy} onClick={() => {
+              setResettingPassword(true)
+              setPassword('')
+              setError('')
+              setNotice('')
+            }}>Parolamı unuttum</button>
           </>
         )}
         {error && <p className={styles.error} role="alert">{error}</p>}
