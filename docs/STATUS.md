@@ -8,7 +8,7 @@ Güncelleme: 2026-10-01
 | --- | --- | --- |
 | P00 — İş ve ürün tanımı | `done` | [P00 planı](plans/P00.md), [ürün kararları](PRODUCT.md#2-ürün-kararları), kapsam/politika ve belge kontrolü tamam. Bu yalnız planlama kanıtıdır. |
 | P01 — Temel ve CI | `done` | Yerel kontroller ve [P01 kanıtı](plans/P01.md#kanıt) tamam. `10527c1` (PR #1) `main` ve `origin/main` üzerinde doğrulandı. Kullanıcının GitHub ekran görüntüsünde `320401f` ve `5b36130` için CI #1/#2 yeşil. |
-| P02 — Kimlik ve tanımlar | `in_progress` | P02-01–P02-06 tamamlandı; Staff daveti yerel/tarayıcı kabulü ve kod CI kanıtı aşağıdadır. P02'nin kalan işleri ayrı onay gerektirir. [P02 planı](plans/P02.md). |
+| P02 — Kimlik ve tanımlar | `in_progress` | P02-01–P02-07 tamamlandı; Staff daveti/parola değişikliği kabulü ve CI kanıtı aşağıdadır. P02'nin kalan işleri ayrı onay gerektirir. [P02 planı](plans/P02.md). |
 | P03–P17 | `planned` | Yalnız [ROADMAP](ROADMAP.md) düzeyinde; uygulama kanıtı yok. |
 
 ## P00'da doğrulananlar
@@ -78,7 +78,7 @@ Güncelleme: 2026-10-01
 
 ## Sıradaki iş ve onay sınırı
 
-P02-06 Staff daveti kabulü tamamlandı. Sıradaki tek küçük iş adayı Staff'ın mevcut parolasını doğrulayarak kendi parolasını değiştirmesi ve eski oturumlarının kapatılmasıdır; henüz onaylanmadı veya uygulanmadı. Önce kapsam/kabul kontrollerini öner ve ürün sahibinin onayını bekle. P02 bütünü `in_progress`; P03'e geçme. GitHub işlemleri yeşil kontroller sonrası PR üzerinden yapılır; doğrudan main push yoktur.
+P02-07 Staff parola değiştirme kabulü tamamlandı. Sıradaki iş P02'nin kalanından tek küçük iş için kapsam/kabul önerisi hazırlamak ve ürün sahibinin ayrı onayını beklemektir. Yeni iş başlatılmaz. P02 bütünü `in_progress`; P03'e geçme. GitHub işlemleri yeşil kontroller sonrası PR üzerinden yapılır; doğrudan main push yoktur.
 
 ## P02-04 sonradan doğrulanan kanıt (30.09.2026)
 
@@ -105,3 +105,18 @@ P02-06 Staff daveti kabulü tamamlandı. Sıradaki tek küçük iş adayı Staff
 - Kullanıcı otomatik kopyalamanın çalışmadığını bildirip düzeltme/kaldırma istedi. “Davet kodunu kopyala” düğmesi tamamen kaldırıldı. Maskeli kodu açıkça gösterme, odakta seçme, elle kopyalama ve temizleme yolu kaldı; regresyon testi düğmenin bulunmamasını ve göster/seç/gizle/temizle davranışını doğrular. Elle aktarım tarayıcı kabulünde çalıştı; mobil cihaz kabulü ayrıca yapılmadı.
 - [PR #5](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/5) kod commit'i `00d6667` için [push CI](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/36784379615) ve [PR CI](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/36784389131) başarılı olarak doğrulandı. Bu son düğme kaldırma/kanıt commit'i de yeşil olmadan merge yapılmaz; güncel son commit, merge ve main CI PR/GitHub'dan doğrulanır.
 - Ayrı sentetik uygulama/DB/ağ/anahtar volume'u, geçici MFA dosyası ve agent'ın test sekmesi kaldırıldı; mevcut yerel kurulum korundu. Son ekranlar Git dışındaki `.local/p02-06-browser-staff-final.jpg` ve `.local/p02-06-browser-staff-logout.jpg`; son Git/GitHub devam kaydı `.local/p02-06-browser-test-report.md` içindedir. Üretim dağıtımı veya gerçek mesaj gönderimi yoktur.
+
+## P02-06 son merge ve P02-07 başlangıcı (01.10.2026)
+
+- Güncel Git/GitHub doğrulaması: PR #5 merged, son head 5ade87d için iki verify başarılı; merge 5e792798fb0ef7566b925fa666ffc26476c6e178 ve main CI 36786031899 completed/success. Başlangıç main/origin/main/GitHub main eşit, çalışma ağacı temizdi. Git dışındaki p02-06 raporuyla karşılaştırıldı; eski kabul yeniden başlatılmadı.
+- P02-07 kapsam/kabul önerisi ürün sahibi tarafından onaylandı. Güncel origin/main'den feature/p02-07-staff-parola-degistirme açıldı. Staff kendi parola formu ve API yetkisi eklendi; Owner MFA şartı korunuyor. Yeni migration/paket/dış servis yok.
+- Yerel sunucu 26/26 ve web 35/35; typecheck/lint/build, kilitli restore ve 0 uyarı/0 hata derleme başarılı. Ayrı sentetik DB/anahtar/uygulamada gerçek Chrome Staff formu görüldü; yeni parola girişi ve normal yeniden giriş kullanıcı devrini bekliyor. Mevcut Owner/parola/MFA değiştirilmedi.
+- P02-07 in_progress; P02 bütünü in_progress. Son kabul, PR/CI ve temizlik kanıtı tamamlanınca kaydedilecek. Sonraki küçük işe ayrı onay olmadan başlanmaz; P03'e geçilmez.
+
+
+## P02-07 son yerel kabul
+
+- Kullanıcı yeni parolayı kendisi girip değişiklik ve normal giriş adımlarını tamamladı; Staff ekranını bildirdi. Gerçek Chrome'da kendi hesap/parola formu, boş alanlar ve Owner formlarının yokluğu görüldü; yenileme/çıkış geçti. Eski sentetik parola 401; hesap yalnız Staff. Yeni parola okunmadı veya kaydedilmedi.
+- Yeni uygulama imajında ana yerel live/ready 200; mevcut MFA'lı Owner sayısı 1, StaffInvitations 0. Ana hesap yeniden kurulmadı veya değiştirilmedi. Yalnız ayrı P02-07 test DB/uygulama/ağ/anahtar volume'u, geçici MFA dosyası ve test sekmesi kaldırıldı.
+- P02-07 done; P02 bütünü in_progress. Ayrıntılı kabul/geri dönüş P02 planında. Üretim dağıtımı, mobil gerçek cihaz ve eski karakter/libgssapi düzeltmesi yok. Sonraki küçük iş/P03 başlanmadı.
+- [PR #6](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/6) kod head 845003f için [push CI](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/36788919258) completed/success. Son PR CI ve belge commit'inin kontrolleri yeşil olmadan merge yok; güncel merge/main CI GitHub'dan doğrulanır. Git dışı devam kaydı .local/p02-07-browser-test-report.md.

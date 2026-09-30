@@ -132,7 +132,11 @@ builder.Services.Configure<SecurityStampValidatorOptions>(options =>
 });
 builder.Services.AddAuthorizationBuilder()
     .AddPolicy("OwnerSetup", policy => policy.RequireRole("Owner"))
-    .AddPolicy("Owner", policy => policy.RequireRole("Owner").RequireClaim("amr", "mfa"));
+    .AddPolicy("Owner", policy => policy.RequireRole("Owner").RequireClaim("amr", "mfa"))
+    .AddPolicy("PasswordChange", policy => policy.RequireAuthenticatedUser().RequireAssertion(context =>
+        context.User.IsInRole("Owner")
+            ? context.User.HasClaim("amr", "mfa")
+            : context.User.IsInRole("Staff")));
 builder.Services.AddAntiforgery(options =>
 {
     options.HeaderName = "X-CSRF-TOKEN";

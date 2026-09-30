@@ -91,8 +91,6 @@ public sealed partial class OwnerMfaTests
         Assert.Equal(HttpStatusCode.Forbidden, staffIssue.StatusCode);
         using var mfa = await PostAsync(anonymous, "/api/auth/mfa/setup", new { password = Password }, await GetCsrfAsync(anonymous));
         Assert.Equal(HttpStatusCode.Forbidden, mfa.StatusCode);
-        using var change = await PostAsync(anonymous, "/api/auth/change-password", new { currentPassword = Password, newPassword = NewPassword, confirmPassword = NewPassword }, await GetCsrfAsync(anonymous));
-        Assert.Equal(HttpStatusCode.Forbidden, change.StatusCode);
         using var logout = await PostAsync(anonymous, "/api/auth/logout", new { }, await GetCsrfAsync(anonymous));
         Assert.Equal(HttpStatusCode.NoContent, logout.StatusCode);
         using var after = await anonymous.GetAsync("/api/auth/me", TestContext.Current.CancellationToken);

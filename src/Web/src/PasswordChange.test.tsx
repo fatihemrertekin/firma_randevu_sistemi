@@ -6,7 +6,8 @@ import App from './App'
 
 let container: HTMLDivElement
 let root: Root
-const owner = { email: 'owner@example.test', mfaEnabled: true, ownerAccess: true }
+const owner = { email: 'owner@example.test', mfaEnabled: true, ownerAccess: true, staffAccess: false }
+const staff = { email: 'staff@example.test', mfaEnabled: false, ownerAccess: false, staffAccess: true }
 
 beforeEach(() => {
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true)
@@ -59,12 +60,16 @@ async function submit() {
   await act(async () => form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })))
 }
 
-describe('Owner parola değişikliği', () => {
+describe.each([['Owner', owner], ['Staff', staff]] as const)('%s parola değişikliği', (_, account) => {
   it('gönderim sürerken alanları kilitler, ikinci isteği engeller ve başarıda girişe döner', async () => {
     let finish: ((response: Response) => void) | undefined
     const response = new Promise<Response>(resolve => { finish = resolve })
-    const requests = mockRequests(() => response)
+    const requests = mockRequests(() => response, account)
     await renderApp()
+    if (account.staffAccess) {
+      expect(container.textContent).not.toContain('ikinci adımla')
+      expect(container.querySelector('form[aria-label="Staff daveti oluştur"]')).toBeNull()
+    }
     await fillForm()
     await submit()
     expect(container.textContent).toContain('Parola değiştiriliyor…')
@@ -77,13 +82,14 @@ describe('Owner parola değişikliği', () => {
     await act(async () => finish?.(new Response(null, { status: 204 })))
     expect(container.textContent).toContain('İşletme girişi')
     expect(container.querySelector('[role="status"]')?.textContent).toContain('bütün oturumlar kapatıldı')
+    if (account.staffAccess) expect(container.querySelector('[role="status"]')?.textContent).not.toContain('ikinci adımla')
     expect(container.querySelector<HTMLInputElement>('#password')?.value).toBe('')
     expect(container.querySelector('#current-password')).toBeNull()
     expect(container.textContent).not.toContain('Synthetic!New456')
   })
 
   it('tekrar uyuşmazlığında istek göndermez; sunucu hatasında parola alanlarını temizler', async () => {
-    const requests = mockRequests(async () => Response.json({ title: 'Mevcut parola doğrulanamadı.' }, { status: 400 }))
+    const requests = mockRequests(async () => Response.json({ title: 'Mevcut parola doğrulanamadı.' }, { status: 400 }), account)
     await renderApp()
     await fillForm('different')
     await submit()
@@ -97,7 +103,7 @@ describe('Owner parola değişikliği', () => {
   })
 
   it.each([401, 403, 409])('geçersiz oturum yanıtında (%i) yeniden giriş ister', async status => {
-    mockRequests(async () => new Response(null, { status }))
+    mockRequests(async () => new Response(null, { status }), account)
     await renderApp()
     await fillForm()
     await submit()
@@ -106,7 +112,7 @@ describe('Owner parola değişikliği', () => {
   })
 
   it.each([429, 500])('limit/hata yanıtında (%i) başarı göstermez ve tekrar göndermeyi açar', async status => {
-    mockRequests(async () => new Response(null, { status }))
+    mockRequests(async () => new Response(null, { status }), account)
     await renderApp()
     await fillForm()
     await submit()
@@ -115,7 +121,18 @@ describe('Owner parola değişikliği', () => {
     expect(container.querySelector<HTMLButtonElement>('button[type="submit"]')?.disabled).toBe(false)
   })
 
-  it('MFA yönetim yetkisi tamamlanmadığında parola formunu göstermez', async () => {
+  it('bağlantı kesildiğinde başarı göstermez ve parola alanlarını temizler', async () => {
+    mockRequests(async () => { throw new Error('synthetic connection failure') }, account)
+    await renderApp()
+    await fillForm()
+    await submit()
+    expect(container.querySelector('[role="alert"]')?.textContent).toContain('Sonuç doğrulanamadı')
+    expect(container.querySelector('[role="status"]')).toBeNull()
+    expect(Array.from(container.querySelectorAll<HTMLInputElement>('form[aria-label="Parola değiştirme"] input'))
+      .every(input => input.value === '' && !input.disabled)).toBe(true)
+  })
+
+  it('rol/MFA yetkisi olmadığında parola formunu göstermez', async () => {
     mockRequests(async () => new Response(null, { status: 204 }), { ...owner, ownerAccess: false })
     await renderApp()
     expect(container.querySelector('form[aria-label="Parola değiştirme"]')).toBeNull()

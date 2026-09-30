@@ -1,6 +1,7 @@
 import type { FormEvent } from 'react'
 
 type Props = {
+  requiresSecondFactor?: boolean
   currentPassword: string
   newPassword: string
   confirmPassword: string
@@ -16,7 +17,9 @@ export default function PasswordChangeForm(props: Props) {
     <form onSubmit={props.onSubmit} aria-label="Parola değiştirme" aria-busy={props.busy}>
       <h2>Parola değiştir</h2>
       <p id="password-rules">Yeni parola en az 12 karakter; büyük/küçük harf, rakam ve özel karakter içermeli.</p>
-      <p>Değişiklik sonrası bütün oturumlar kapanır. Yeni parolanız ve ikinci adımla yeniden giriş yapın.</p>
+      <p>Değişiklik sonrası bütün oturumlar kapanır. {props.requiresSecondFactor === false
+        ? 'Yeni parolanızla yeniden giriş yapın.'
+        : 'Yeni parolanız ve ikinci adımla yeniden giriş yapın.'}</p>
       <label htmlFor="current-password">Mevcut parola</label>
       <input id="current-password" type="password" autoComplete="current-password" required maxLength={1024}
         disabled={props.busy} value={props.currentPassword}

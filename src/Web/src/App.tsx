@@ -95,7 +95,9 @@ export default function App() {
       setSetupPassword('')
       setPassword('')
       setCode('')
-      setNotice('Parolanız değişti ve bütün oturumlar kapatıldı. Yeni parolanız ve ikinci adımla yeniden giriş yapın.')
+      setNotice(account?.staffAccess && !account.ownerAccess
+        ? 'Parolanız değişti ve bütün oturumlar kapatıldı. Yeni parolanızla yeniden giriş yapın.'
+        : 'Parolanız değişti ve bütün oturumlar kapatıldı. Yeni parolanız ve ikinci adımla yeniden giriş yapın.')
     } catch {
       clearPasswordFields()
       setError('Sonuç doğrulanamadı. Yeniden giriş yapmayı deneyin.')
@@ -264,6 +266,11 @@ export default function App() {
               <h1 id="page-title">Staff hesabınız açık</h1>
               <p>{account.email}</p>
               <p>Çalışan ekranları hazırlanıyor. İşletme yönetimi erişiminiz yok.</p>
+              <PasswordChangeForm requiresSecondFactor={account.mfaEnabled || account.ownerAccess}
+                currentPassword={currentPassword} newPassword={newPassword}
+                confirmPassword={confirmPassword} busy={busy}
+                onCurrentPassword={setCurrentPassword} onNewPassword={setNewPassword}
+                onConfirmPassword={setConfirmPassword} onSubmit={handlePasswordChange} />
               <button type="button" onClick={handleLogout} disabled={busy}>Çıkış yap</button>
             </>
           ) : account.mfaEnabled && account.ownerAccess ? (
