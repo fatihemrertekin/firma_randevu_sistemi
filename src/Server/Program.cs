@@ -1,6 +1,7 @@
 using Npgsql;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.RateLimiting;
@@ -82,6 +83,28 @@ builder.Services.Configure<CookieAuthenticationOptions>(IdentityConstants.TwoFac
     options.Cookie.Path = "/";
     options.ExpireTimeSpan = TimeSpan.FromMinutes(5);
     options.SlidingExpiration = false;
+    options.Events.OnSigningIn = async context =>
+    {
+        var users = context.HttpContext.RequestServices.GetRequiredService<UserManager<AppUser>>();
+        var userId = context.Principal?.FindFirstValue(ClaimTypes.Name);
+        var user = userId is null ? null : await users.FindByIdAsync(userId);
+        if (user?.SecurityStamp is not null && context.Principal?.Identity is ClaimsIdentity identity)
+        {
+            identity.AddClaim(new Claim("mfa_security_stamp", user.SecurityStamp));
+        }
+    };
+    options.Events.OnValidatePrincipal = async context =>
+    {
+        var users = context.HttpContext.RequestServices.GetRequiredService<UserManager<AppUser>>();
+        var userId = context.Principal?.FindFirstValue(ClaimTypes.Name);
+        var user = userId is null ? null : await users.FindByIdAsync(userId);
+        var stamp = context.Principal?.FindFirstValue("mfa_security_stamp");
+        if (user is null || !user.TwoFactorEnabled || string.IsNullOrEmpty(stamp) || stamp != user.SecurityStamp)
+        {
+            context.RejectPrincipal();
+            await context.HttpContext.SignOutAsync(IdentityConstants.TwoFactorUserIdScheme);
+        }
+    };
 });
 builder.Services.Configure<SecurityStampValidatorOptions>(options =>
 {
@@ -131,6 +154,21 @@ var app = builder.Build();
 if (args is ["bootstrap-owner"])
 {
     Environment.ExitCode = await BootstrapOwner.RunAsync(app.Services, CancellationToken.None);
+    return;
+}
+
+if (args is ["recover-owner-mfa"])
+{
+    try
+    {
+        Environment.ExitCode = await RecoverOwnerMfa.RunAsync(app.Services, CancellationToken.None);
+    }
+    catch (Exception exception) when (exception is DbUpdateException or NpgsqlException or OperationCanceledException)
+    {
+        // Recovery must fail closed without writing database details or credentials to the console.
+        Console.Error.WriteLine("Kurtarma sonucu doğrulanamadı; tekrar denemeden önce işlem kaydını kontrol edin.");
+        Environment.ExitCode = 1;
+    }
     return;
 }
 

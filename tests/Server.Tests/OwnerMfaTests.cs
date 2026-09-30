@@ -15,7 +15,7 @@ using Xunit;
 
 namespace Server.Tests;
 
-public sealed class OwnerMfaTests
+public sealed partial class OwnerMfaTests
 {
     private const string Email = "mfa-owner@example.test";
     private const string Password = "Synthetic!Owner123";

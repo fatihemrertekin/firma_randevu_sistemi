@@ -8,7 +8,7 @@ Güncelleme: 2026-09-30
 | --- | --- | --- |
 | P00 — İş ve ürün tanımı | `done` | [P00 planı](plans/P00.md), [ürün kararları](PRODUCT.md#2-ürün-kararları), kapsam/politika ve belge kontrolü tamam. Bu yalnız planlama kanıtıdır. |
 | P01 — Temel ve CI | `done` | Yerel kontroller ve [P01 kanıtı](plans/P01.md#kanıt) tamam. `10527c1` (PR #1) `main` ve `origin/main` üzerinde doğrulandı. Kullanıcının GitHub ekran görüntüsünde `320401f` ve `5b36130` için CI #1/#2 yeşil. |
-| P02 — Kimlik ve tanımlar | `in_progress` | Owner oturumu P02-01 ve Owner MFA P02-02 tamamlandı; [P02 planı ve kanıtı](plans/P02.md). |
+| P02 — Kimlik ve tanımlar | `in_progress` | Owner oturumu P02-01, Owner MFA P02-02 ve yetkili MFA kurtarma P02-03 tamamlandı; [P02 planı ve kanıtı](plans/P02.md). |
 | P03–P17 | `planned` | Yalnız [ROADMAP](ROADMAP.md) düzeyinde; uygulama kanıtı yok. |
 
 ## P00'da doğrulananlar
@@ -48,6 +48,19 @@ Güncelleme: 2026-09-30
 - Gerçek PostgreSQL testinde anonim kurulum 401, CSRF'siz kurulum/kod 400, yanlış parola/kod reddi, MFA sonrası parola ile yalnız geçici adım, eski oturumun iptali, TOTP ile Owner yetkisi ve kurtarma kodunun ikinci kez reddi doğrulandı. Sunucu testleri 5/5; web tip/lint/test/build ve sunucu biçim kontrolü geçti.
 - Yerel Compose imajı yeniden derlenip çalıştı; sağlık uçları 200 ve anonim MFA kurulum isteği 401 döndü. Fiziksel doğrulayıcı cihazla elle test ve uzak CI bu oturumda çalıştırılmadı.
 
+## P02-03'te doğrulananlar
+
+- Ürün sahibi 30.09.2026 tarihinde tek küçük iş olarak yetkili Owner MFA kurtarmayı onayladı. Firma/Owner UUID ve açık onayla çalışan `recover-owner-mfa` komutu, yerel PowerShell script'i ve yalnız bu işleme özel audit tablosu eklendi. Mevcut MFA kurulum ekranı yeniden kullanılır; yeni web endpoint veya dış servis yoktur.
+- Kurtarma eski doğrulayıcı/kurtarma kodlarını ve ana/geçici MFA oturumlarını geçersizleştirir. Parola, rol ve hesap kilidi korunur; yeni MFA ile giriş tamamlanmadan Owner yönetim yetkisi yoktur. İşlem kaydı ve Identity değişiklikleri aynı transaction'dadır.
+- Kilitli restore, derleme (0 uyarı/0 hata), sunucu testleri 7/7, format ve PowerShell parse kontrolü geçti. İki yeni gerçek PostgreSQL testinde yanlış hedef/rol/referans/onay reddi, eski kod/oturum reddi, yeniden kurulum, audit hatasında rollback, iki paralel komuttan tek başarı ve referansın yeniden kullanımının reddi doğrulandı.
+- Yerel Compose config/build/up ve migration'ın iki kez uygulanması geçti. Sağlık uçları 200, anonim `me` 401. Audit tablosunda uygulama rolünün SELECT/INSERT yetkisi var, UPDATE/DELETE/TRUNCATE yok; satır değiştirmeyen UPDATE denemesi reddedildi. İmaj içindeki komut eksik onayla çıkış kodu 1 verdi.
+- Mevcut yerel Owner hesabında kurtarma yapılmadı; yerel audit satırı sayısı 0. Başarılı kurtarma komut girişi ve ekran API akışı PostgreSQL testinde çalıştı. Etkileşimli script'in başarılı uçtan uca kullanımı, fiziksel doğrulayıcı cihaz, uzak CI ve üretim dağıtımı çalıştırılmadı. Web kodu değişmedi; Compose web derlemesi geçti, ayrı web tip/lint/test kapıları yeniden çalıştırılmadı.
+
+## GitHub işlem yetkisi ve doğrulama
+
+- Ürün sahibi 30.09.2026 tarihinde bu depo için commit/push, PR, CI takibi ve yeşil kontrollerden sonra `main` birleştirmesini agent'a yetkilendirdi. Önceki `main` merge yasağı bu yetkiyle kaldırıldı; doğrudan `main` push yerine PR kullanılır. Yeni geliştirme işi için ayrı onay sınırı devam eder.
+- GitHub hazırlığında web typecheck/lint/test (1/1)/build yeniden çalıştırıldı ve geçti. P02-01–P02-03 tek PR kapsamındadır; P02'nin tamamlandığı veya pilot yayına hazır olduğu iddia edilmez.
+
 ## Sıradaki iş
 
-P02'nin sonraki küçük işi için kullanıcı onayını bekle. P03'e geçme; `main` dalına doğrudan push veya merge yapma. Yerel çalışmalar `feature/p02-owner-oturum` dalındadır; P02-01 `931b7e7` commit'iyle kaydedildi.
+P02-03 tamamlandı; P02 bütünü hâlâ `in_progress`. Sıradaki tek küçük iş adayı: MFA ile giriş yapmış Owner için mevcut parolayı doğrulayan parola değiştirme ve eski oturumları iptal etme akışı. Uygulamaya başlamadan kullanıcı onayını bekle. P03'e geçme. P02-01–P02-03 geliştirme dalı `feature/p02-owner-oturum`dur; P02-01 `931b7e7`, P02-02 `ab76a20` commit'leriyle kayıtlıdır. GitHub PR/CI ve birleştirme işlemleri yukarıdaki yetkiyle yürütülür.
