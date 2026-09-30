@@ -85,6 +85,20 @@ Owner parolayı unuttuğunda destek, sahipliği bağımsız kurulum kayıtları 
 
 DB/audit hatasında parola değişikliği geri alınır. Commit veya dosya teslimi sırasında bağlantı kesilirse otomatik tekrar yapmayın; önce işlem kaydını/özel dosyayı ve normal giriş sonucunu kontrol edin. Başarılı işlem kod rollback'iyle eski parolayı veya oturumları geri açmaz. Migration `Down` işlem kayıtlarını sildiği için gerçek kurulumda otomatik çalıştırılmaz; eski kodla yeni tablo korunabilir. Linux'ta doğrudan CLI kullanımı için operatör özel çıktı dizinini önceden `0700` ile hazırlamalıdır; komut dosyayı `0600` oluşturur. Üretim teslim kanalı/HTTPS/host yetkileri P06 kabulünün yerine geçmez.
 
+## Kendi parolanızı değiştirme
+
+Giriş yaptığınız hesap ekranında mevcut parolanızı, yeni parolanızı ve tekrarını girin.
+Staff yalnız kendi parolasını değiştirebilir; Owner için tamamlanmış MFA girişi gerekir.
+Yeni parola mevcut Identity kurallarını karşılamalıdır. Başarıda mevcut dahil bütün eski
+oturumlar geçersizleşir. Staff yeni parolayla; Owner yeni parola ve mevcut ikinci adımla
+yeniden giriş yapar. Başka hesapların parolaları ve oturumları değişmez.
+
+Yanlış mevcut parola hesap deneme sayacına katılır; beş hatada 15 dakika kilit uygulanır.
+DB işlemi başarısızsa parola/stamp değişikliği geri alınır. Bağlantı kesilirse başarı
+varsaymayın ve otomatik tekrar göndermeyin; yeniden girişle sonucu kontrol edin.
+Bu işlem yeni şema gerektirmez. Kod rollback'i değişmiş parolayı veya iptal edilen
+oturumları geri açmaz. Staff parola kurtarma bu akışın kapsamına dahil değildir.
+
 ## Kontroller (Windows PowerShell)
 
 Önce web çıktısını üretin; sunucu testi ana sayfanın aynı uygulamadan sunulduğunu doğrular.

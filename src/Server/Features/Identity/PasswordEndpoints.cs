@@ -10,7 +10,7 @@ public static class PasswordEndpoints
     public static void MapPasswordEndpoints(this RouteGroupBuilder auth)
     {
         auth.MapPost("/change-password", ChangeAsync)
-            .RequireAuthorization("Owner").RequireRateLimiting("login");
+            .RequireAuthorization("PasswordChange").RequireRateLimiting("login");
     }
 
     private static async Task<IResult> ChangeAsync(
@@ -45,7 +45,15 @@ public static class PasswordEndpoints
         var user = await db.Users.FromSqlInterpolated(
             $"SELECT * FROM \"AspNetUsers\" WHERE \"Id\" = {userId} FOR UPDATE")
             .SingleOrDefaultAsync(timeout.Token);
-        if (user is null || !user.TwoFactorEnabled || !await users.IsInRoleAsync(user, "Owner"))
+        if (user is null)
+        {
+            return Results.Forbid();
+        }
+        // Recheck roles after acquiring the lock; Staff must never bypass an Owner's MFA.
+        var isOwner = await users.IsInRoleAsync(user, "Owner");
+        if (isOwner
+            ? !user.TwoFactorEnabled || !context.User.HasClaim("amr", "mfa")
+            : !await users.IsInRoleAsync(user, "Staff"))
         {
             return Results.Forbid();
         }
@@ -93,8 +101,8 @@ public static class PasswordEndpoints
         }
         await transaction.CommitAsync(timeout.Token);
         await signIn.SignOutAsync();
-        loggerFactory.CreateLogger("OwnerPasswordChange").LogInformation(
-            "Owner password changed. UserId: {UserId}, CorrelationId: {CorrelationId}", userId, context.TraceIdentifier);
+        loggerFactory.CreateLogger("PasswordChange").LogInformation(
+            "Password changed. UserId: {UserId}, CorrelationId: {CorrelationId}", userId, context.TraceIdentifier);
         return Results.NoContent();
     }
 
