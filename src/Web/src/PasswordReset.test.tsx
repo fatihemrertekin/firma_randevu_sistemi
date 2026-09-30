@@ -19,16 +19,16 @@ afterEach(async () => {
   vi.unstubAllGlobals()
 })
 
-async function openReset(handler: () => Promise<Response>) {
+async function openReset(handler: () => Promise<Response>, staff = false) {
   const requests = vi.fn(async (path: string) => {
     if (path === '/api/auth/me') return new Response(null, { status: 401 })
     if (path === '/api/auth/csrf') return Response.json({ token: 'synthetic-csrf' })
-    if (path === '/api/auth/reset-password') return handler()
+    if (path === (staff ? '/api/staff-password-resets/complete' : '/api/auth/reset-password')) return handler()
     throw new Error('Beklenmeyen test isteği')
   })
   vi.stubGlobal('fetch', requests)
   await act(async () => root.render(<App />))
-  const button = Array.from(container.querySelectorAll('button')).find(item => item.textContent === 'Parolamı unuttum')
+  const button = Array.from(container.querySelectorAll('button')).find(item => item.textContent === (staff ? 'Staff parolamı unuttum' : 'Parolamı unuttum'))
   if (!button) throw new Error('Sıfırlama bağlantısı yok')
   await act(async () => button.click())
   return requests
@@ -53,11 +53,12 @@ async function submitReset() {
   await act(async () => form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })))
 }
 
-describe('Owner parola sıfırlama', () => {
+describe.each([false, true])('Parola sıfırlama (Staff: %s)', staff => {
+  const path = staff ? '/api/staff-password-resets/complete' : '/api/auth/reset-password'
   it('girişten açılır, çift gönderimi engeller ve başarıda MFA ile giriş ister', async () => {
     let finish: ((response: Response) => void) | undefined
     const pending = new Promise<Response>(resolve => { finish = resolve })
-    const requests = await openReset(() => pending)
+    const requests = await openReset(() => pending, staff)
     expect(Array.from(container.querySelectorAll<HTMLInputElement>('input')).map(input => input.autocomplete))
       .toEqual(['off', 'new-password', 'new-password'])
     await fillReset()
@@ -65,25 +66,25 @@ describe('Owner parola sıfırlama', () => {
     expect(Array.from(container.querySelectorAll<HTMLInputElement>('input')).every(input => input.disabled)).toBe(true)
     expect(container.textContent).toContain('Parola sıfırlanıyor…')
     await submitReset()
-    expect(requests.mock.calls.filter(([path]) => path === '/api/auth/reset-password')).toHaveLength(1)
+    expect(requests.mock.calls.filter(([requestPath]) => requestPath === path)).toHaveLength(1)
     await act(async () => finish?.(new Response(null, { status: 204 })))
     expect(container.textContent).toContain('İşletme girişi')
-    expect(container.querySelector('[role="status"]')?.textContent).toContain('ikinci adımla yeniden giriş')
+    expect(container.querySelector('[role="status"]')?.textContent).toContain(staff ? 'Yeni parolanızla yeniden giriş' : 'ikinci adımla yeniden giriş')
     expect(container.querySelector('#reset-token')).toBeNull()
     expect(container.querySelector<HTMLInputElement>('#password')?.value).toBe('')
   })
 
   it('uyuşmayan parolada istek göndermez ve parolaları temizler', async () => {
-    const requests = await openReset(async () => new Response(null, { status: 204 }))
+    const requests = await openReset(async () => new Response(null, { status: 204 }), staff)
     await fillReset('different')
     await submitReset()
     expect(container.querySelector('[role="alert"]')?.textContent).toContain('aynı olmalı')
-    expect(requests.mock.calls.some(([path]) => path === '/api/auth/reset-password')).toBe(false)
+    expect(requests.mock.calls.some(([requestPath]) => requestPath === path)).toBe(false)
     expect(container.querySelector<HTMLInputElement>('#reset-password')?.value).toBe('')
   })
 
-  it.each([400, 429, 500])('sunucu reddinde (%i) başarı göstermez ve hassas alanları temizler', async status => {
-    await openReset(async () => Response.json({ title: 'Sıfırlama kodu geçersiz veya süresi dolmuş.' }, { status }))
+  it.each([400, 409, 429, 500])('sunucu reddinde (%i) başarı göstermez ve hassas alanları temizler', async status => {
+    await openReset(async () => Response.json({ title: 'Sıfırlama kodu geçersiz veya süresi dolmuş.' }, { status }), staff)
     await fillReset()
     await submitReset()
     expect(container.querySelector('[role="alert"]')).not.toBeNull()
@@ -92,22 +93,22 @@ describe('Owner parola sıfırlama', () => {
   })
 
   it('bağlantı kopmasında sonucu belirsiz gösterir ve otomatik tekrar yapmaz', async () => {
-    const requests = await openReset(async () => { throw new Error('synthetic network error') })
+    const requests = await openReset(async () => { throw new Error('synthetic network error') }, staff)
     await fillReset()
     await submitReset()
     expect(container.querySelector('[role="alert"]')?.textContent).toContain('Sonuç doğrulanamadı')
-    expect(requests.mock.calls.filter(([path]) => path === '/api/auth/reset-password')).toHaveLength(1)
+    expect(requests.mock.calls.filter(([requestPath]) => requestPath === path)).toHaveLength(1)
     expect(Array.from(container.querySelectorAll<HTMLInputElement>('input')).every(input => input.value === '')).toBe(true)
   })
 
   it('girişe dönünce kod ve parolalar yeni açılan forma taşınmaz', async () => {
-    await openReset(async () => new Response(null, { status: 204 }))
+    await openReset(async () => new Response(null, { status: 204 }), staff)
     await fillReset()
     const cancel = Array.from(container.querySelectorAll('button')).find(item => item.textContent === 'Girişe dön')
     if (!cancel) throw new Error('Dönüş düğmesi yok')
     await act(async () => cancel.click())
     expect(container.textContent).toContain('İşletme girişi')
-    const reopen = Array.from(container.querySelectorAll('button')).find(item => item.textContent === 'Parolamı unuttum')
+    const reopen = Array.from(container.querySelectorAll('button')).find(item => item.textContent === (staff ? 'Staff parolamı unuttum' : 'Parolamı unuttum'))
     if (!reopen) throw new Error('Sıfırlama düğmesi yok')
     await act(async () => reopen.click())
     expect(Array.from(container.querySelectorAll<HTMLInputElement>('input')).every(input => input.value === '')).toBe(true)

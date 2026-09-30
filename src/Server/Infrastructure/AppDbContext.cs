@@ -23,6 +23,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<OwnerPasswordResetAudit> OwnerPasswordResetAudits => Set<OwnerPasswordResetAudit>();
     public DbSet<StaffInvitation> StaffInvitations => Set<StaffInvitation>();
     public DbSet<StaffInvitationAudit> StaffInvitationAudits => Set<StaffInvitationAudit>();
+    public DbSet<StaffPasswordResetAudit> StaffPasswordResetAudits => Set<StaffPasswordResetAudit>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -56,6 +57,14 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
         var invitationAudit = builder.Entity<StaffInvitationAudit>();
         invitationAudit.Property(entry => entry.Kind).HasMaxLength(16);
         invitationAudit.HasOne<StaffInvitation>().WithMany().HasForeignKey(entry => entry.InvitationId)
+            .OnDelete(DeleteBehavior.Restrict);
+        var staffResetAudit = builder.Entity<StaffPasswordResetAudit>();
+        staffResetAudit.Property(entry => entry.InstanceId).HasMaxLength(128);
+        staffResetAudit.Property(entry => entry.Kind).HasMaxLength(16);
+        staffResetAudit.HasIndex(entry => new { entry.GrantId, entry.Kind }).IsUnique();
+        staffResetAudit.HasOne<AppUser>().WithMany().HasForeignKey(entry => entry.StaffId)
+            .OnDelete(DeleteBehavior.Restrict);
+        staffResetAudit.HasOne<AppUser>().WithMany().HasForeignKey(entry => entry.ActorId)
             .OnDelete(DeleteBehavior.Restrict);
     }
 }
