@@ -8,7 +8,7 @@ Güncelleme: 2026-09-30
 | --- | --- | --- |
 | P00 — İş ve ürün tanımı | `done` | [P00 planı](plans/P00.md), [ürün kararları](PRODUCT.md#2-ürün-kararları), kapsam/politika ve belge kontrolü tamam. Bu yalnız planlama kanıtıdır. |
 | P01 — Temel ve CI | `done` | Yerel kontroller ve [P01 kanıtı](plans/P01.md#kanıt) tamam. `10527c1` (PR #1) `main` ve `origin/main` üzerinde doğrulandı. Kullanıcının GitHub ekran görüntüsünde `320401f` ve `5b36130` için CI #1/#2 yeşil. |
-| P02 — Kimlik ve tanımlar | `in_progress` | Yalnız Owner oturumu P02-01 tamamlandı; [P02 planı ve kanıtı](plans/P02.md). |
+| P02 — Kimlik ve tanımlar | `in_progress` | Owner oturumu P02-01 ve Owner MFA P02-02 tamamlandı; [P02 planı ve kanıtı](plans/P02.md). |
 | P03–P17 | `planned` | Yalnız [ROADMAP](ROADMAP.md) düzeyinde; uygulama kanıtı yok. |
 
 ## P00'da doğrulananlar
@@ -42,6 +42,12 @@ Güncelleme: 2026-09-30
 - Gerçek PostgreSQL testinde Owner kurulumunun tekrar reddi, anonim 401, CSRF 400, yanlış parola 401, beş hatadan sonra hesap kilidi, giriş/çıkış ve istek sınırı 429 doğrulandı. Sunucu testleri 4/4; web tip/lint/test/build geçti.
 - Yerel Compose imajı derlenip sağlıklı başladı. Manuel Identity migration'ı iki kez sorunsuz uygulandı; `/health/live` ve `/health/ready` 200, anonim `/api/auth/me` 401 ve CSRF ucu 200 döndü. Uygulama rolünün tablo okuma yetkisi var, şema oluşturma yetkisi yok. Anahtar dosyası restart sonrasında korundu. Etkileşimli yerel Owner script'i çalıştırılmadı; kurulum işlevi testte doğrulandı. Uzak CI bu oturumda çalıştırılmadı.
 
+## P02-02'de doğrulananlar
+
+- Owner doğrulayıcı anahtarı kurulumu, TOTP ile ikinci adım, tek kullanımlık kurtarma kodları ve ilgili ekranlar eklendi. Yeni migration veya ücretli dış servis yok.
+- Gerçek PostgreSQL testinde anonim kurulum 401, CSRF'siz kurulum/kod 400, yanlış parola/kod reddi, MFA sonrası parola ile yalnız geçici adım, eski oturumun iptali, TOTP ile Owner yetkisi ve kurtarma kodunun ikinci kez reddi doğrulandı. Sunucu testleri 5/5; web tip/lint/test/build ve sunucu biçim kontrolü geçti.
+- Yerel Compose imajı yeniden derlenip çalıştı; sağlık uçları 200 ve anonim MFA kurulum isteği 401 döndü. Fiziksel doğrulayıcı cihazla elle test ve uzak CI bu oturumda çalıştırılmadı.
+
 ## Sıradaki iş
 
-P02'nin sonraki küçük işi için kullanıcı onayını bekle. P03'e geçme; `main` dalına doğrudan push veya merge yapma. Yerel çalışmalar `feature/p02-owner-oturum` dalındadır.
+P02'nin sonraki küçük işi için kullanıcı onayını bekle. P03'e geçme; `main` dalına doğrudan push veya merge yapma. Yerel çalışmalar `feature/p02-owner-oturum` dalındadır; P02-01 `931b7e7` commit'iyle kaydedildi.

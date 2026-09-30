@@ -1,6 +1,8 @@
 using Npgsql;
-using Microsoft.AspNetCore.DataProtection;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using System.Threading.RateLimiting;
@@ -45,7 +47,8 @@ builder.Services.AddIdentity<AppUser, IdentityRole<Guid>>(options =>
         options.Lockout.MaxFailedAccessAttempts = 5;
         options.Lockout.AllowedForNewUsers = true;
     })
-    .AddEntityFrameworkStores<AppDbContext>();
+    .AddEntityFrameworkStores<AppDbContext>()
+    .AddDefaultTokenProviders();
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.Cookie.Name = builder.Environment.IsDevelopment()
@@ -68,8 +71,36 @@ builder.Services.ConfigureApplicationCookie(options =>
         return Task.CompletedTask;
     };
 });
+builder.Services.Configure<CookieAuthenticationOptions>(IdentityConstants.TwoFactorUserIdScheme, options =>
+{
+    options.Cookie.Name = builder.Environment.IsDevelopment()
+        ? "FirmaRandevu.TwoFactor.Dev"
+        : "__Host-FirmaRandevu.TwoFactor";
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SecurePolicy = secureCookie;
+    options.Cookie.SameSite = SameSiteMode.Strict;
+    options.Cookie.Path = "/";
+    options.ExpireTimeSpan = TimeSpan.FromMinutes(5);
+    options.SlidingExpiration = false;
+});
+builder.Services.Configure<SecurityStampValidatorOptions>(options =>
+{
+    options.ValidationInterval = TimeSpan.Zero;
+    options.OnRefreshingPrincipal = context =>
+    {
+        // Identity rebuilds the principal after a valid stamp check. Keep the MFA
+        // authentication method from that verified cookie so Owner access survives.
+        if (context.CurrentPrincipal?.HasClaim("amr", "mfa") == true &&
+            context.NewPrincipal?.Identity is ClaimsIdentity identity)
+        {
+            identity.AddClaim(new Claim("amr", "mfa"));
+        }
+        return Task.CompletedTask;
+    };
+});
 builder.Services.AddAuthorizationBuilder()
-    .AddPolicy("Owner", policy => policy.RequireRole("Owner"));
+    .AddPolicy("OwnerSetup", policy => policy.RequireRole("Owner"))
+    .AddPolicy("Owner", policy => policy.RequireRole("Owner").RequireClaim("amr", "mfa"));
 builder.Services.AddAntiforgery(options =>
 {
     options.HeaderName = "X-CSRF-TOKEN";
@@ -88,7 +119,7 @@ builder.Services.AddRateLimiter(options =>
         }));
     options.AddPolicy("login", context =>
         RateLimitPartition.GetFixedWindowLimiter(
-            context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            (context.Connection.RemoteIpAddress?.ToString() ?? "unknown") + context.Request.Path,
             _ => new FixedWindowRateLimiterOptions
             {
                 PermitLimit = 10,

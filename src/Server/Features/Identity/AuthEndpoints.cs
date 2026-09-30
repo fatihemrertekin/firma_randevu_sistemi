@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Antiforgery;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Server.Infrastructure;
 
@@ -44,6 +45,10 @@ public static class AuthEndpoints
 
             var result = await signIn.PasswordSignInAsync(user, request.Password,
                 isPersistent: false, lockoutOnFailure: true);
+            if (result.RequiresTwoFactor)
+            {
+                return Results.Json(new { requiresTwoFactor = true }, statusCode: StatusCodes.Status202Accepted);
+            }
             if (!result.Succeeded)
             {
                 return Results.Problem(statusCode: StatusCodes.Status401Unauthorized,
@@ -68,16 +73,27 @@ public static class AuthEndpoints
             return Results.NoContent();
         }).RequireAuthorization();
 
-        auth.MapGet("/me", async (HttpContext context, UserManager<AppUser> users) =>
+        auth.MapGet("/me", async (
+            HttpContext context,
+            UserManager<AppUser> users,
+            IAuthorizationService authorization) =>
         {
             var user = await users.GetUserAsync(context.User);
+            var ownerAccess = await authorization.AuthorizeAsync(context.User, "Owner");
             return user is null
                 ? Results.Unauthorized()
-                : Results.Ok(new { email = user.Email });
-        }).RequireAuthorization("Owner");
+                : Results.Ok(new
+                {
+                    email = user.Email,
+                    mfaEnabled = user.TwoFactorEnabled,
+                    ownerAccess = ownerAccess.Succeeded
+                });
+        }).RequireAuthorization("OwnerSetup");
+
+        auth.MapMfaEndpoints();
     }
 
-    private static async Task<bool> HasValidCsrfAsync(IAntiforgery antiforgery, HttpContext context)
+    internal static async Task<bool> HasValidCsrfAsync(IAntiforgery antiforgery, HttpContext context)
     {
         try
         {
