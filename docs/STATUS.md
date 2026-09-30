@@ -8,7 +8,7 @@ Güncelleme: 2026-10-01
 | --- | --- | --- |
 | P00 — İş ve ürün tanımı | `done` | [P00 planı](plans/P00.md), [ürün kararları](PRODUCT.md#2-ürün-kararları), kapsam/politika ve belge kontrolü tamam. Bu yalnız planlama kanıtıdır. |
 | P01 — Temel ve CI | `done` | Yerel kontroller ve [P01 kanıtı](plans/P01.md#kanıt) tamam. `10527c1` (PR #1) `main` ve `origin/main` üzerinde doğrulandı. Kullanıcının GitHub ekran görüntüsünde `320401f` ve `5b36130` için CI #1/#2 yeşil. |
-| P02 — Kimlik ve tanımlar | `in_progress` | P02-01–P02-04 tamamlandı; P02-05 Owner parola sıfırlama onaylandı ve kabul/PR süreci devam ediyor. [P02 planı](plans/P02.md). |
+| P02 — Kimlik ve tanımlar | `in_progress` | P02-01–P02-05 tamamlandı. Owner parola sıfırlama yerel/tarayıcı kabulü ve uzak CI kanıtı aşağıda; P02'nin kalan işleri ayrı onay gerektirir. [P02 planı](plans/P02.md). |
 | P03–P17 | `planned` | Yalnız [ROADMAP](ROADMAP.md) düzeyinde; uygulama kanıtı yok. |
 
 ## P00'da doğrulananlar
@@ -78,7 +78,7 @@ Güncelleme: 2026-10-01
 
 ## Sıradaki iş ve onay sınırı
 
-P02-05 kapsamı ürün sahibi tarafından onaylandı; uygulama/kabul/PR sürecini tamamla. P02 bütünü `in_progress`; P03'e geçme. Bundan sonraki küçük işi belirleyip başlamadan önce kullanıcı onayını bekle. GitHub işlemleri yeşil kontroller sonrası PR üzerinden yapılır; doğrudan main push yoktur.
+P02-05 uygulama ve kabulü tamamlandı. P02 bütünü `in_progress`; P03'e geçme. Sıradaki küçük iş adayı Staff davetidir; kapsam/teslim yöntemi/kabul önerisini sun, uygulamadan önce kullanıcı onayını bekle. GitHub işlemleri yeşil kontroller sonrası PR üzerinden yapılır; doğrudan main push yoktur.
 
 ## P02-04 sonradan doğrulanan kanıt (30.09.2026)
 
@@ -89,7 +89,9 @@ P02-05 kapsamı ürün sahibi tarafından onaylandı; uygulama/kabul/PR sürecin
 ## P02-05 — Owner parola sıfırlama
 
 - Onaylanan kapsam: yetkili operatör komutu/özel dosyayla 30 dakikalık token teslimi, girişten erişilen form ve CSRF korumalı POST, ayrı üretim/tamamlanma işlem kayıtları. Otomatik e-posta/SMS, Staff ve P03 hariç. Yeni dal güncel origin/main üzerinden `codex/p02-owner-parola-sifirlama` olarak açıldı.
-- İlk tam sunucu kapısı 16/16 geçti; hesap bazlı sınır eklendikten sonraki ilgili PostgreSQL testleri 5/5 geçti. Web typecheck/lint, 16/16 test ve build başarılı; derleme 0 uyarı/0 hata ve format doğrulaması başarılı. Sandbox NuGet/Docker erişim engelleri yetkili ortamda güvenlik ayarı değiştirilmeden aşıldı.
+- Son kodda tam sunucu kapısı 16/16 geçti; hesap bazlı sınırı kapsayan ilgili PostgreSQL testleri 5/5 geçti. Web typecheck/lint, 16/16 test ve build başarılı; derleme 0 uyarı/0 hata ve format doğrulaması başarılı. Sandbox NuGet/Docker erişim engelleri yetkili ortamda güvenlik ayarı değiştirilmeden aşıldı.
 - Ayrı sentetik DB/Owner/MFA ile teslim script'i ve Docker bind mount çalıştı. Windows ACL'de miras kapalı, tek kural yalnız mevcut kullanıcıya ait; token içerik çıktıya alınmadan doğrulandı. Gerçek tarayıcıda kullanıcı token/yeni parola/tekrarını girip sıfırlamayı tamamladı; başarı bildirimi ve giriş ekranına dönüş görüldü. Kullanıcının yeni parolası kabul edilip yalnız MFA adımı açıldı; sıfırlamadan önceki sentetik TOTP anahtarıyla ikinci adım tamamlandı ve Owner ekranı açıldı. Test hesabı dışında mevcut yerel Owner kullanılmadı. Görüntüler Git dışında `.local/p02-05-browser-reset-success.jpg` ve `.local/p02-05-browser-owner-final.jpg` içinde.
 - Sentetik DB'de tek Issued/tek Completed kaydı, MFA açık; kullanılmış token tekrarında 400 doğrulandı. Yerel migration iki kez geçti; audit uygulama rolünde SELECT/INSERT açık, UPDATE/DELETE/TRUNCATE kapalı. Güncellenen yerel uygulamada live/ready 200; mevcut Owner kurulumunda sıfırlama audit sayısı 0 kaldı.
 - Güncel yerel/uzak kabul kanıtı ve geri dönüş [P02 planında](plans/P02.md#p02-05--owner-parola-sıfırlama) tutulur. Üretim dağıtımı veya gerçek mesaj gönderimi yoktur.
+- `8eccc09` ile [PR #4](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/4) açıldı. Bu kod commit'inin [push CI](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/36778704363) ve [PR CI](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/36778987450) kontrolleri başarılı olarak GitHub API'den doğrulandı. Bu kanıtı ekleyen belge commit'i de yeşil olmadan merge yapılmaz; güncel son commit/merge ve birleşme sonrası main CI PR/GitHub'dan yeniden doğrulanır.
+- Ayrı sentetik tarayıcı testinin uygulaması/DB'si/ağı/anahtar volume'u ve geçici token/MFA dosyaları kaldırıldı; mevcut yerel kurulum korundu. Git dışındaki `.local/p02-05-browser-test-report.md` son Git/GitHub kanıtının devam kaydıdır.
