@@ -1,0 +1,37 @@
+.page {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+  background: linear-gradient(145deg, #eff8f6, #e2edf6);
+}
+
+.card {
+  width: min(100%, 38rem);
+  padding: clamp(2rem, 5vw, 4rem);
+  border-radius: 1.5rem;
+  background: #fff;
+  box-shadow: 0 18px 55px rgb(16 44 58 / 10%);
+}
+
+.eyebrow {
+  color: #157060;
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.card h1 {
+  margin: 1rem 0;
+  color: #102c3a;
+  font-size: clamp(2rem, 6vw, 3.5rem);
+  line-height: 1.08;
+}
+
+.card p {
+  margin: 0;
+  color: #47616e;
+  font-size: 1.1rem;
+  line-height: 1.6;
+}

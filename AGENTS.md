@@ -43,13 +43,13 @@ Aşama planı şablonu: amaç/senaryo; dahil-hariç kapsam; bağımlılık; veri
 
 ## 3. Komutlar
 
-P01'de gerçek komutlarla doldur; henüz olmayan komutu çalışmış gösterme. Hedef kapılar:
+Depo kökünden çalışan P01 kapıları (Windows PowerShell'de `npm` yerine `npm.cmd`):
 
-- Backend: dotnet restore, build, test, format
-- Frontend: npm ci, typecheck, lint, test, build
-- E2E: ilgili Playwright akışı
-- Dağıtım: Compose doğrulama, imaj build
-- Küçük değişiklikte ilgili kapılar, sürümde tümü.
+- Frontend: `cd src/Web`; `npm ci --ignore-scripts`; `npm run typecheck`; `npm run lint`; `npm test`; `npm run build`; `cd ../..`.
+- Backend: `dotnet restore FirmaRandevu.slnx --locked-mode`; `dotnet build FirmaRandevu.slnx --no-restore`; `dotnet test FirmaRandevu.slnx --no-restore`; `dotnet format FirmaRandevu.slnx --verify-no-changes --no-restore`.
+- Yerel altyapı: `powershell -NoProfile -ExecutionPolicy Bypass -File .\deploy\Initialize-LocalEnv.ps1`; `docker compose --env-file deploy/.env -f deploy/compose.local.yaml config --quiet`; `docker compose --env-file deploy/.env -f deploy/compose.local.yaml up -d --build --wait`.
+- E2E: Playwright akışı henüz yok; ilgili aşamada gerçek komut eklenecek.
+- Küçük değişiklikte ilgili kapılar, sürümde tümü. Komut açıklamaları ve sağlık uçları [README](README.md) içindedir.
 
 ## 4. Teknoloji ve uygulama yapısı
 
