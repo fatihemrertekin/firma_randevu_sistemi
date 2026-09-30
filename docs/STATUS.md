@@ -8,7 +8,7 @@ Güncelleme: 2026-09-30
 | --- | --- | --- |
 | P00 — İş ve ürün tanımı | `done` | [P00 planı](plans/P00.md), [ürün kararları](PRODUCT.md#2-ürün-kararları), kapsam/politika ve belge kontrolü tamam. Bu yalnız planlama kanıtıdır. |
 | P01 — Temel ve CI | `done` | Yerel kontroller ve [P01 kanıtı](plans/P01.md#kanıt) tamam. `10527c1` (PR #1) `main` ve `origin/main` üzerinde doğrulandı. Kullanıcının GitHub ekran görüntüsünde `320401f` ve `5b36130` için CI #1/#2 yeşil. |
-| P02 — Kimlik ve tanımlar | `in_progress` | P02-01–P02-03 tamamlandı; P02-04 Owner parola değiştirme yerel kabulü tamam, yeni PR/CI teslimi sürüyor; [P02 planı ve kanıtı](plans/P02.md). |
+| P02 — Kimlik ve tanımlar | `in_progress` | P02-01–P02-04 tamamlandı; [P02 planı ve kanıtı](plans/P02.md), P02-04 için PR #3 ve başarılı push CI aşağıda. |
 | P03–P17 | `planned` | Yalnız [ROADMAP](ROADMAP.md) düzeyinde; uygulama kanıtı yok. |
 
 ## P00'da doğrulananlar
@@ -72,8 +72,9 @@ Güncelleme: 2026-09-30
 - API ve form eklendi. Mevcut Identity şeması/politikası, CSRF, hesap kilidi ve istek limiti kullanılıyor; kullanıcı satırı transaction içinde kilitleniyor. MFA anahtarı ve kullanılmamış kurtarma kodları korunuyor. Yeni migration/ücretli servis yok; yalnız web etkileşim testleri için MIT lisanslı jsdom devDependency eklendi.
 - Sunucu 11/11, web 9/9 test geçti. PostgreSQL'de yetki/CSRF/alan/parola reddi, eski ana/geçici oturum iptali, tekrar MFA, kurtarma kodunun korunması, hesap kilidi/429, commit hatasında rollback ve paralel iki istekte yalnız bir başarı doğrulandı. Web testleri bekleme/çift gönderim, hata, alan temizliği ve yeniden giriş davranışını doğruladı.
 - Temiz npm ci, typecheck/lint/build; kilitli NuGet restore, derleme (0 uyarı/0 hata) ve format geçti. npm audit ve NuGet transitif bağımlılık kontrolü bulgu göstermedi. Compose config/build/up sağlıklı; live/ready 200, anonim me/change-password 401.
-- Mevcut yerel Owner hesabında parola değiştirilmedi; gerçek tarayıcı/cihaz E2E ve üretim deploy yapılmadı. Ayrıntılar ve geri dönüş [P02 planında](plans/P02.md#p02-04--owner-parola-değiştirme). Yeni PR/CI/birleştirme kanıtı teslimde eklenecek.
+- Mevcut yerel Owner hesabında parola değiştirilmedi; gerçek tarayıcı/cihaz E2E ve üretim deploy yapılmadı. Ayrıntılar ve geri dönüş [P02 planında](plans/P02.md#p02-04--owner-parola-değiştirme).
+- `1588dd3` ile GitHub'a gönderildi; [PR #3](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/3) açıldı. Bu commit'in [push CI koşusu](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/36759215065) başarılı olarak GitHub'da doğrulandı. Bu belge kanıt commit'ini izler; PR'ın güncel son commit kontrolleri yeşil olmadan merge yapılmaz. Güncel merge/son CI durumu PR'dan doğrulanır.
 
 ## Sıradaki iş ve onay sınırı
 
-P02-04 yerel kabulü tamam; yetkili PR/CI/birleştirme adımları sürüyor. P02 bütünü `in_progress`. Sonraki tek küçük iş adayı Owner parola sıfırlama akışının kapsamını, token teslimini ve kabul kontrollerini belirlemek; uygulamadan önce kullanıcı onayını bekle. P03'e geçme. GitHub işlemleri yeşil kontroller sonrası PR üzerinden yapılır; doğrudan main push yoktur.
+P02-04 tamamlandı; P02 bütünü `in_progress`. Sonraki tek küçük iş adayı Owner parola sıfırlama akışının kapsamını, token teslimini ve kabul kontrollerini belirlemek; uygulamadan önce kullanıcı onayını bekle. P03'e geçme. GitHub işlemleri yeşil kontroller sonrası PR üzerinden yapılır; doğrudan main push yoktur.
