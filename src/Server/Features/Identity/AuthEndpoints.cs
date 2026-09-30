@@ -86,13 +86,15 @@ public static class AuthEndpoints
                 {
                     email = user.Email,
                     mfaEnabled = user.TwoFactorEnabled,
-                    ownerAccess = ownerAccess.Succeeded
+                    ownerAccess = ownerAccess.Succeeded,
+                    staffAccess = context.User.IsInRole("Staff")
                 });
-        }).RequireAuthorization("OwnerSetup");
+        }).RequireAuthorization(policy => policy.RequireRole("Owner", "Staff"));
 
         auth.MapMfaEndpoints();
         auth.MapPasswordEndpoints();
         auth.MapPasswordResetEndpoints();
+        app.MapStaffInvitationEndpoints();
     }
 
     internal static async Task<bool> HasValidCsrfAsync(IAntiforgery antiforgery, HttpContext context)

@@ -54,6 +54,11 @@
   font: inherit;
 }
 
+.card input[type='checkbox'] {
+  width: auto;
+  margin-right: 0.5rem;
+}
+
 .card button {
   margin-top: 0.5rem;
   margin-right: 0.5rem;

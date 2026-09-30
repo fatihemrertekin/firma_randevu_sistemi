@@ -8,7 +8,7 @@ Güncelleme: 2026-10-01
 | --- | --- | --- |
 | P00 — İş ve ürün tanımı | `done` | [P00 planı](plans/P00.md), [ürün kararları](PRODUCT.md#2-ürün-kararları), kapsam/politika ve belge kontrolü tamam. Bu yalnız planlama kanıtıdır. |
 | P01 — Temel ve CI | `done` | Yerel kontroller ve [P01 kanıtı](plans/P01.md#kanıt) tamam. `10527c1` (PR #1) `main` ve `origin/main` üzerinde doğrulandı. Kullanıcının GitHub ekran görüntüsünde `320401f` ve `5b36130` için CI #1/#2 yeşil. |
-| P02 — Kimlik ve tanımlar | `in_progress` | P02-01–P02-05 tamamlandı. Owner parola sıfırlama yerel/tarayıcı kabulü ve uzak CI kanıtı aşağıda; P02'nin kalan işleri ayrı onay gerektirir. [P02 planı](plans/P02.md). |
+| P02 — Kimlik ve tanımlar | `in_progress` | P02-01–P02-06 tamamlandı; Staff daveti yerel/tarayıcı kabulü ve kod CI kanıtı aşağıdadır. P02'nin kalan işleri ayrı onay gerektirir. [P02 planı](plans/P02.md). |
 | P03–P17 | `planned` | Yalnız [ROADMAP](ROADMAP.md) düzeyinde; uygulama kanıtı yok. |
 
 ## P00'da doğrulananlar
@@ -78,7 +78,7 @@ Güncelleme: 2026-10-01
 
 ## Sıradaki iş ve onay sınırı
 
-P02-05 uygulama ve kabulü tamamlandı. P02 bütünü `in_progress`; P03'e geçme. Sıradaki küçük iş adayı Staff davetidir; kapsam/teslim yöntemi/kabul önerisini sun, uygulamadan önce kullanıcı onayını bekle. GitHub işlemleri yeşil kontroller sonrası PR üzerinden yapılır; doğrudan main push yoktur.
+P02-06 Staff daveti kabulü tamamlandı. Sıradaki tek küçük iş adayı Staff'ın mevcut parolasını doğrulayarak kendi parolasını değiştirmesi ve eski oturumlarının kapatılmasıdır; henüz onaylanmadı veya uygulanmadı. Önce kapsam/kabul kontrollerini öner ve ürün sahibinin onayını bekle. P02 bütünü `in_progress`; P03'e geçme. GitHub işlemleri yeşil kontroller sonrası PR üzerinden yapılır; doğrudan main push yoktur.
 
 ## P02-04 sonradan doğrulanan kanıt (30.09.2026)
 
@@ -95,3 +95,13 @@ P02-05 uygulama ve kabulü tamamlandı. P02 bütünü `in_progress`; P03'e geçm
 - Güncel yerel/uzak kabul kanıtı ve geri dönüş [P02 planında](plans/P02.md#p02-05--owner-parola-sıfırlama) tutulur. Üretim dağıtımı veya gerçek mesaj gönderimi yoktur.
 - `8eccc09` ile [PR #4](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/4) açıldı. Bu kod commit'inin [push CI](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/36778704363) ve [PR CI](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/36778987450) kontrolleri başarılı olarak GitHub API'den doğrulandı. Bu kanıtı ekleyen belge commit'i de yeşil olmadan merge yapılmaz; güncel son commit/merge ve birleşme sonrası main CI PR/GitHub'dan yeniden doğrulanır.
 - Ayrı sentetik tarayıcı testinin uygulaması/DB'si/ağı/anahtar volume'u ve geçici token/MFA dosyaları kaldırıldı; mevcut yerel kurulum korundu. Git dışındaki `.local/p02-05-browser-test-report.md` son Git/GitHub kanıtının devam kaydıdır.
+
+## P02-06 — Staff daveti
+
+- Başlangıçta [PR #4](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/4) merge'i `d36167a`, son PR kontrolleri 2/2 ve [main CI](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/36780041401) başarı olarak yeniden doğrulandı. Yerel main/origin/main/GitHub main eşit, çalışma ağacı temizdi; yeni `codex/p02-staff-davet` dalı origin/main üzerinden açıldı.
+- Dahil: MFA Owner'ın adres/alıcı doğrulamasıyla 24 saatlik davet üretmesi, tek yanıtta kod gösterimi ve özel manuel teslim; bekleyen davetin iptali; Staff'ın kendi parolasıyla hesabını açması ve kendi oturum/çıkışı. Otomatik mesaj, Owner ataması, Staff iş/randevu izinleri, MFA/kurtarma/hesap kapatma ve P03 hariç.
+- Son sunucu kapısı 22/22 geçti; beklerken iptal edilmiş Owner oturumu da reddediliyor. Son kopyalama düğmesi kaldırıldıktan sonra web typecheck/lint, 25/25 test ve build başarılı; sunucu derleme ve format geçti. Migration iki kez geçti; audit SELECT/INSERT açık, UPDATE/DELETE/TRUNCATE kapalı. Ana kurulum davet sayısı 0; son imajda live/ready 200. Mevcut Owner korunuyor.
+- Ayrı `p02-invite-browser` kurulumunda sentetik Owner/MFA ile gerçek tarayıcıda davet üretimi ve bekleyen davet iptali doğrulandı. Kullanıcı kodu elle aktarıp yeni Staff parolası/tekrarını kendisi gönderdi; hesap açılışı ve normal Staff girişinde “Çalışan ekranları hazırlanıyor. İşletme yönetimi erişiminiz yok.” ekranını bildirdi. Son imaj yenilenince Staff oturumu korundu; yalnız kendi hesap ekranı ve çıkış doğrulandı. DB'de iki Issued, bir Revoked, bir Accepted ve kabul edilen hesabın yalnız Staff rolü görüldü. Kullanıcı parolası okunmadı veya kaydedilmedi.
+- Kullanıcı otomatik kopyalamanın çalışmadığını bildirip düzeltme/kaldırma istedi. “Davet kodunu kopyala” düğmesi tamamen kaldırıldı. Maskeli kodu açıkça gösterme, odakta seçme, elle kopyalama ve temizleme yolu kaldı; regresyon testi düğmenin bulunmamasını ve göster/seç/gizle/temizle davranışını doğrular. Elle aktarım tarayıcı kabulünde çalıştı; mobil cihaz kabulü ayrıca yapılmadı.
+- [PR #5](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/5) kod commit'i `00d6667` için [push CI](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/36784379615) ve [PR CI](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/36784389131) başarılı olarak doğrulandı. Bu son düğme kaldırma/kanıt commit'i de yeşil olmadan merge yapılmaz; güncel son commit, merge ve main CI PR/GitHub'dan doğrulanır.
+- Ayrı sentetik uygulama/DB/ağ/anahtar volume'u, geçici MFA dosyası ve agent'ın test sekmesi kaldırıldı; mevcut yerel kurulum korundu. Son ekranlar Git dışındaki `.local/p02-06-browser-staff-final.jpg` ve `.local/p02-06-browser-staff-logout.jpg`; son Git/GitHub devam kaydı `.local/p02-06-browser-test-report.md` içindedir. Üretim dağıtımı veya gerçek mesaj gönderimi yoktur.
