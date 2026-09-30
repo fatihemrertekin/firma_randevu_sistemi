@@ -60,6 +60,7 @@ Güncelleme: 2026-09-30
 
 - Ürün sahibi 30.09.2026 tarihinde bu depo için commit/push, PR, CI takibi ve yeşil kontrollerden sonra `main` birleştirmesini agent'a yetkilendirdi. Önceki `main` merge yasağı bu yetkiyle kaldırıldı; doğrudan `main` push yerine PR kullanılır. Yeni geliştirme işi için ayrı onay sınırı devam eder.
 - GitHub hazırlığında web typecheck/lint/test (1/1)/build yeniden çalıştırıldı ve geçti. P02-01–P02-03 tek PR kapsamındadır; P02'nin tamamlandığı veya pilot yayına hazır olduğu iddia edilmez.
+- P02-03 `82ced92` commit'iyle GitHub'a gönderildi ve [PR #2](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/2) açıldı. Bu commit'in [push CI koşusu](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/36752334356) GitHub'da başarılı olarak doğrulandı: web/sunucu kapıları, Compose imajı ve PostgreSQL restart kanıtı geçti. Bu, yukarıdaki yerel geliştirme kayıtlarından sonra alınmış uzak CI kanıtıdır. PR'ın son commit kontrolleri yeşil olmadan merge yapılmaz.
 
 ## Sıradaki iş
 
