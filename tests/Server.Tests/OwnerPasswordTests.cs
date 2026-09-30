@@ -203,10 +203,14 @@ public sealed partial class OwnerMfaTests
         var firstChange = PostAsync(first, PasswordPath, body, firstCsrf);
         var secondChange = PostAsync(second, PasswordPath, body, secondCsrf);
         var waiting = 0;
+        // Query outside the blocker transaction: PostgreSQL caches activity snapshots
+        // within a transaction, so polling there can keep seeing the first result.
+        using var monitorScope = app.Services.CreateScope();
+        var monitorDb = monitorScope.ServiceProvider.GetRequiredService<Server.Infrastructure.AppDbContext>();
         using var waitTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(10));
         while (waiting < 2)
         {
-            waiting = await db.Database.SqlQueryRaw<int>(
+            waiting = await monitorDb.Database.SqlQueryRaw<int>(
                 "SELECT COUNT(*)::int AS \"Value\" FROM pg_stat_activity WHERE datname = current_database() AND wait_event_type = 'Lock'")
                 .SingleAsync(waitTimeout.Token);
             if (waiting < 2) await Task.Delay(20, waitTimeout.Token);

@@ -74,6 +74,7 @@ Güncelleme: 2026-09-30
 - Temiz npm ci, typecheck/lint/build; kilitli NuGet restore, derleme (0 uyarı/0 hata) ve format geçti. npm audit ve NuGet transitif bağımlılık kontrolü bulgu göstermedi. Compose config/build/up sağlıklı; live/ready 200, anonim me/change-password 401.
 - Mevcut yerel Owner hesabında parola değiştirilmedi; gerçek tarayıcı/cihaz E2E ve üretim deploy yapılmadı. Ayrıntılar ve geri dönüş [P02 planında](plans/P02.md#p02-04--owner-parola-değiştirme).
 - `1588dd3` ile GitHub'a gönderildi; [PR #3](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/3) açıldı. Bu commit'in [push CI koşusu](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/36759215065) başarılı olarak GitHub'da doğrulandı. Bu belge kanıt commit'ini izler; PR'ın güncel son commit kontrolleri yeşil olmadan merge yapılmaz. Güncel merge/son CI durumu PR'dan doğrulanır.
+- Sonraki belge commit'inin [CI koşusunda](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/36759768717) paralellik testi zaman aşımına uğradı. Test aynı açık transaction içinde `pg_stat_activity` görüntüsünü tekrar okuyordu; kilit izleme ayrı DbContext/bağlantıya alındı. İki isteğin kilitte beklemesi ve tek `204`/tek `409` kontrolleri korunur; düzeltme sonrası yerel sunucu testleri 11/11 geçti. Başarısız CI ile merge yapılmadı. [PostgreSQL görüntü davranışı](https://www.postgresql.org/docs/18/monitoring-stats.html#MONITORING-STATS-VIEWING) doğrulandı.
 
 ## Sıradaki iş ve onay sınırı
 
