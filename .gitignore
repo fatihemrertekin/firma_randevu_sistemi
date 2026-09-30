@@ -1,0 +1,42 @@
+# .NET derleme ve araç çıktıları
+**/bin/
+**/obj/
+*.user
+*.suo
+.vs/
+.vscode/
+TestResults/
+coverage/
+
+# Web derleme ve paket önbellekleri
+**/node_modules/
+src/Web/dist/
+src/Server/wwwroot/
+.npm-cache/
+.nuget/
+
+# Yerel altyapı ve sırlar
+.env
+.env.*
+!.env.example
+!.env.*.example
+**/appsettings.*.local.json
+**/appsettings.Development.json
+**/secrets.json
+*.pfx
+*.pem
+*.key
+.docker-config/
+
+# İşletim sistemi / editör
+.DS_Store
+Thumbs.db
+*.swp
+
+# Yedek ve veri dışa aktarımları
+*.dump
+*.backup
+*.bak
+*.sql.gz
+exports/
+backups/

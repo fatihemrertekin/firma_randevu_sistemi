@@ -1,0 +1,86 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: npm
+          cache-dependency-path: src/Web/package-lock.json
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.401
+          cache: true
+          cache-dependency-path: |
+            src/Server/packages.lock.json
+            tests/Server.Tests/packages.lock.json
+
+      - name: Web bağımlılıkları
+        run: npm ci --ignore-scripts
+        working-directory: src/Web
+
+      - name: Web kontrolleri
+        run: |
+          npm run typecheck
+          npm run lint
+          npm test
+          npm run build
+        working-directory: src/Web
+
+      - name: Sunucu bağımlılıkları
+        run: dotnet restore FirmaRandevu.slnx --locked-mode
+
+      - name: Sunucu kontrolleri
+        run: |
+          dotnet build FirmaRandevu.slnx --no-restore
+          dotnet test FirmaRandevu.slnx --no-restore
+          dotnet format FirmaRandevu.slnx --verify-no-changes --no-restore
+
+      - name: Geçici yerel test parolaları
+        run: |
+          echo "POSTGRES_PASSWORD=$(openssl rand -hex 32)" >> deploy/.env
+          echo "APP_DB_PASSWORD=$(openssl rand -hex 32)" >> deploy/.env
+          echo 'DB_PORT=55432' >> deploy/.env
+
+      - name: Compose ve imaj
+        run: |
+          docker compose --env-file deploy/.env -f deploy/compose.local.yaml config --quiet
+          docker compose --env-file deploy/.env -f deploy/compose.local.yaml up -d --build --wait
+          test "$(docker image inspect firma-randevu:local --format '{{.Config.User}}')" != root
+          curl --fail --silent --show-error --retry 20 --retry-connrefused --retry-delay 2 http://127.0.0.1:8080/health/live
+          curl --fail --silent --show-error --retry 20 --retry-connrefused --retry-delay 2 http://127.0.0.1:8080/health/ready
+          curl --fail --silent --show-error http://127.0.0.1:8080/ | grep 'lang="tr"'
+
+      - name: Veritabanı yeniden başlatma kanıtı
+        run: |
+          docker compose --env-file deploy/.env -f deploy/compose.local.yaml exec -T db \
+            psql -U postgres -d firma_randevu -v ON_ERROR_STOP=1 \
+            -c "CREATE TABLE p01_restart_check (value text NOT NULL); INSERT INTO p01_restart_check VALUES ('korundu');"
+          docker compose --env-file deploy/.env -f deploy/compose.local.yaml restart db
+          for attempt in $(seq 1 20); do
+            if docker compose --env-file deploy/.env -f deploy/compose.local.yaml exec -T db \
+              pg_isready -U postgres -d firma_randevu >/dev/null 2>&1; then
+              break
+            fi
+            sleep 2
+          done
+          test "$(docker compose --env-file deploy/.env -f deploy/compose.local.yaml exec -T db \
+            psql -U postgres -d firma_randevu -tAc 'SELECT value FROM p01_restart_check;')" = korundu
+          curl --fail --silent --show-error --retry 20 --retry-connrefused --retry-delay 2 http://127.0.0.1:8080/health/ready
+
+      - name: Yerel test servislerini durdur
+        if: always()
+        run: |
+          if [ -f deploy/.env ]; then
+            docker compose --env-file deploy/.env -f deploy/compose.local.yaml down
+          fi

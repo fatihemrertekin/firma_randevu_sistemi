@@ -1,0 +1,46 @@
+name: firma-randevu-local
+
+services:
+  db:
+    image: postgres:18.6-trixie
+    environment:
+      POSTGRES_DB: firma_randevu
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?deploy/.env içinde POSTGRES_PASSWORD gerekli}
+      APP_DB_PASSWORD: ${APP_DB_PASSWORD:?deploy/.env içinde APP_DB_PASSWORD gerekli}
+    ports:
+      - "127.0.0.1:${DB_PORT:-55432}:5432"
+    volumes:
+      - db_data:/var/lib/postgresql
+      - ./initdb/01-app-user.sh:/docker-entrypoint-initdb.d/01-app-user.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d firma_randevu"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+    restart: unless-stopped
+
+  app:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    image: firma-randevu:local
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__AppDatabase: Host=db;Port=5432;Database=firma_randevu;Username=app_user;Password=${APP_DB_PASSWORD:?deploy/.env içinde APP_DB_PASSWORD gerekli};Timeout=3
+    ports:
+      - "127.0.0.1:8080:8080"
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    restart: unless-stopped
+
+volumes:
+  db_data:
