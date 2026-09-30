@@ -8,6 +8,7 @@ export default function StaffInvitations({ post }: Props) {
   const [email, setEmail] = useState('')
   const [verified, setVerified] = useState(false)
   const [issued, setIssued] = useState<Issued | null>(null)
+  const [showCode, setShowCode] = useState(false)
   const [list, setList] = useState<Invitation[]>([])
   const [busy, setBusy] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -39,6 +40,7 @@ export default function StaffInvitations({ post }: Props) {
     setError('')
     setNotice('')
     setIssued(null)
+    setShowCode(false)
     try {
       const response = await post('/api/staff-invitations/', { email, verifiedRecipient: verified })
       if (response.ok) {
@@ -67,7 +69,7 @@ export default function StaffInvitations({ post }: Props) {
     try {
       const response = await post(`/api/staff-invitations/${id}/revoke`, {})
       if (!response.ok) throw new Error('Davet iptali doğrulanamadı. Listeyi yenileyip kontrol edin.')
-      if (issued?.id === id) setIssued(null)
+      if (issued?.id === id) { setIssued(null); setShowCode(false) }
       setNotice('Davet iptal edildi. Bu işlem kullanılmış bir davetten açılan hesabı kapatmaz.')
       await load()
     } catch (failure) { setError(failure instanceof Error ? failure.message : 'Davet iptali doğrulanamadı.') }
@@ -87,13 +89,16 @@ export default function StaffInvitations({ post }: Props) {
     </form>
     {issued && <div>
       <label htmlFor="issued-invitation">Davet kodu — yalnız bu ekranda gösterilir</label>
-      <input id="issued-invitation" type="password" autoComplete="off" readOnly value={issued.token} />
+      <input id="issued-invitation" type={showCode ? 'text' : 'password'} autoComplete="off" readOnly value={issued.token}
+        onFocus={event => { if (showCode) event.currentTarget.select() }} />
       <p>Son kullanım: {new Date(issued.expiresAt).toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul' })} (İstanbul)</p>
       <button type="button" disabled={busy} onClick={async () => {
         try { await navigator.clipboard.writeText(issued.token); setNotice('Davet kodu kopyalandı. Yalnız doğrulanmış çalışana teslim edin.') }
-        catch { setError('Kopyalanamadı; kod alanını seçip kendiniz kopyalayın.') }
+        catch { setError('Kopyalanamadı. “Kodu göster”e basın, kod alanına tıklayın ve seçili kodu kendiniz kopyalayın.') }
       }}>Davet kodunu kopyala</button>
-      <button type="button" disabled={busy} onClick={() => setIssued(null)}>Kodu teslim ettim, temizle</button>
+      <button type="button" disabled={busy} onClick={() => setShowCode(!showCode)}>{showCode ? 'Kodu gizle' : 'Kodu göster'}</button>
+      {showCode && <p>Kod alanına tıklayın; seçili kodu Ctrl+C ile kopyalayın. Yalnız doğrulanmış çalışana teslim edin, ardından kodu temizleyin.</p>}
+      <button type="button" disabled={busy} onClick={() => { setIssued(null); setShowCode(false) }}>Kodu teslim ettim, temizle</button>
     </div>}
     <h3>Bekleyen davetler</h3>
     {loading ? <p role="status">Davetler yükleniyor…</p> : list.length === 0 ? <p>Geçerli bekleyen davet yok.</p> : <ul>
