@@ -8,7 +8,7 @@ Güncelleme: 2026-10-01
 | --- | --- | --- |
 | P00 — İş ve ürün tanımı | `done` | [P00 planı](plans/P00.md), [ürün kararları](PRODUCT.md#2-ürün-kararları), kapsam/politika ve belge kontrolü tamam. Bu yalnız planlama kanıtıdır. |
 | P01 — Temel ve CI | `done` | Yerel kontroller ve [P01 kanıtı](plans/P01.md#kanıt) tamam. `10527c1` (PR #1) `main` ve `origin/main` üzerinde doğrulandı. Kullanıcının GitHub ekran görüntüsünde `320401f` ve `5b36130` için CI #1/#2 yeşil. |
-| P02 — Kimlik ve tanımlar | `in_progress` | P02-01–P02-10 yerel kabulü tamamlandı; frontend düzeni ve son kanıt aşağıdadır. P02'nin kalan işleri ayrı onay gerektirir. [P02 planı](plans/P02.md). |
+| P02 — Kimlik ve tanımlar | `in_progress` | P02-01–P02-11 yerel kabulü tamamlandı; frontend düzeni ve son kanıt aşağıdadır. P02'nin kalan işleri ayrı onay gerektirir. [P02 planı](plans/P02.md). |
 | P03–P17 | `planned` | Yalnız [ROADMAP](ROADMAP.md) düzeyinde; uygulama kanıtı yok. |
 
 ## P00'da doğrulananlar
@@ -164,3 +164,11 @@ P02-09 kabulü tamamlandı; P02 bütünü devam eder. Sıradaki küçük iş hen
 01.10.2026: PR #8 birleşme/main CI/Git eşitliği Git dışı raporla ve GitHub ile doğrulandı. Güncel main d651fc9 üzerinden feature/p02-10-frontend-duzeni açıldı. Ürün sahibi mevcut ekranların düzenlenmesini ve gönderdiği koyu görselli tasarım yönünü onayladı; kapsam/kabul/geri dönüş [P02-10](plans/P02.md#p02-10--frontend-düzeni-ve-tasarım) içinde. P02-10 yerel kabulü done; nihai PR/CI kapanışı Git dışı rapor ve GitHub üzerinden izlenir. Yeni işlev, logo/tanımlar veya P03 yok. Sonraki küçük iş ayrı onay gerektirir.
 
 Web 74/74 ve sunucu 37/37; kalite kapıları/npm audit, son imaj/sağlık ve ayrı sentetik gerçek Chrome masaüstü/mobil genişlik/klavye kabulü geçti. Test kaynakları temizlendi, mevcut Owner korundu. Tasarım yönü PRODUCT içinde kalıcıdır. Ayrıntılı kanıt P02-10 planında; son GitHub kaydı .local/p02-10-browser-test-report.md içindedir.
+
+## P02-10 kapanışı ve P02-11 minimal form kabulü
+
+PR #9 squash merge 5cc7e0aa309557bf78e773b50ce23e5ca4902883; push CI 36897978994, PR CI 36898087714 ve birleşme sonrası main CI 36898626103 completed/success olarak GitHub ile doğrulandı. Yerel main/origin/main/GitHub main eşit ve temizdi. Ürün sahibinin minimal form talebiyle güncel main üzerinden feature/p02-11-minimal-giris açıldı.
+
+P02-11 yerel kabul done: dış çerçeve kaldırıldı, parola yardımı etiket yanında, çalışan yardım/davet aynı satırda metin eylemleri. Web 74/74 ve typecheck/lint/build; son imaj/ready 200; Chrome masaüstü/375/320 px taşma, yan yana yerleşim, yardım/davet geçişleri ve görünür Tab odağı geçti. Veri/API/MFA/parola davranışı değişmedi, mevcut Owner kullanılmadı. Ayrıntı [P02-11](plans/P02.md#p02-11--minimal-giriş-formu-01102026), son GitHub kapanışı Git dışı .local/p02-11-browser-test-report.md içindedir.
+
+Son istek, firmanın destekle iletişime geçmeden parola sıfırlaması için rapordur. Otomatik e-posta akışı henüz uygulanmaz; rapor/kapsam onayı beklenir. P02 devam eder; başka iş veya P03 başlatılmaz.

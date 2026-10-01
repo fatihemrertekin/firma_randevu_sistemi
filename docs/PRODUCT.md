@@ -35,6 +35,8 @@ Ticari politikalar: Modelimiz aylık ücretli ve reklamsızdır; kota/maliyet ş
 
 ## 4. Görsel tasarım yönü (01.10.2026 onayı)
 
-Ürün sahibi koyu zeminli, ince çerçeveli, görselli giriş ekranını örnek gösterdi ve sonraki ekranların da bu dili taşımasını istedi. Petrol/lacivert zemin, açık okunur metin ve turkuaz vurgu ortak renk değişkenleriyle uygulanır. Masaüstü girişte form kartı ve sektöre uygun dekoratif görsel yan yana; mobilde form önceliklidir. Yönetimde aynı palet, belirgin bölüm gezinmesi, ana/yardımcı işlem ayrımı ve görünür klavye odağı kullanılır.
+Ürün sahibi koyu zeminli, görselli giriş ekranını örnek gösterdi ve sonraki ekranların da bu dili taşımasını istedi. Petrol/lacivert zemin, açık okunur metin ve turkuaz vurgu ortak renk değişkenleriyle uygulanır. Masaüstü girişte sade form ve sektöre uygun dekoratif görsel yan yana; mobilde form önceliklidir. Yönetimde aynı palet, belirgin bölüm gezinmesi, ana/yardımcı işlem ayrımı ve görünür klavye odağı kullanılır.
+
+Son form tercihi: dış kart çerçevesi kaldırılır; tek belirgin ana giriş düğmesi kullanılır. Parola yardımı parola etiketinin yanında, çalışan parola yardımı ve davet seçenekleri aynı satırda metin eylemleridir. Dar ekranda da yardımcı işlemler alt alta büyük düğmeler olarak sunulmaz; gerekirse metin kendi sütununda satır kırar.
 
 Örnek ekranın logo, satış, iletişim, hukuki onay veya henüz uygulanmamış özellikleri ürüne taşınmaz. Mevcut işlevler esas alınır; tasarım tercihi yeni özellik veya aşama yetkisi vermez. İlk görsel, yerleşik imagegen ile üretilmiş kişisiz/yazısız kuaför fotoğrafıdır; harici resim/font isteği yoktur. Görselin üretim kaydı [P02-10](plans/P02.md#p02-10--frontend-düzeni-ve-tasarım) içindedir.

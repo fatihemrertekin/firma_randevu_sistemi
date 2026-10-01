@@ -115,37 +115,41 @@ export default function AuthenticationScreens({ auth }: { auth: ReturnType<typeo
         ) : (
           <>
             <h1 id="page-title">İşletme girişi</h1>
-            <form onSubmit={handleLogin}>
+            <form className={styles.loginForm} onSubmit={handleLogin}>
               <label htmlFor="email">E-posta</label>
               <input id="email" type="email" autoComplete="username" required
                 value={email} onChange={event => setEmail(event.target.value)} />
-              <label htmlFor="password">Parola</label>
+              <div className={styles.passwordHeading}>
+                <label htmlFor="password">Parola</label>
+                <button className={styles.textAction} type="button" disabled={busy} onClick={() => {
+                  setResettingPassword(true)
+                  setResettingStaffPassword(false)
+                  setPassword('')
+                  setError('')
+                  setNotice('')
+                }}>Parolamı unuttum</button>
+              </div>
               <input id="password" type="password" autoComplete="current-password" required
                 value={password} onChange={event => setPassword(event.target.value)} />
               <button type="submit" disabled={busy}>
                 {busy ? 'Giriş yapılıyor…' : 'Giriş yap'}
               </button>
             </form>
-            <button type="button" disabled={busy} onClick={() => {
-              setResettingPassword(true)
-              setResettingStaffPassword(false)
-              setPassword('')
-              setError('')
-              setNotice('')
-            }}>Parolamı unuttum</button>
-            <button type="button" disabled={busy} onClick={() => {
-              setResettingPassword(true)
-              setResettingStaffPassword(true)
-              setPassword('')
-              setError('')
-              setNotice('')
-            }}>Çalışan parolamı unuttum</button>
-            <button type="button" disabled={busy} onClick={() => {
-              setAcceptingInvitation(true)
-              setPassword('')
-              setError('')
-              setNotice('')
-            }}>Çalışan davetim var</button>
+            <div className={styles.loginOptions} role="group" aria-label="Çalışan giriş seçenekleri">
+              <button className={styles.textAction} type="button" disabled={busy} onClick={() => {
+                setResettingPassword(true)
+                setResettingStaffPassword(true)
+                setPassword('')
+                setError('')
+                setNotice('')
+              }}>Çalışan parolamı unuttum</button>
+              <button className={styles.textAction} type="button" disabled={busy} onClick={() => {
+                setAcceptingInvitation(true)
+                setPassword('')
+                setError('')
+                setNotice('')
+              }}>Çalışan davetim var</button>
+            </div>
           </>
         )}
         <ErrorMessage message={error} />
