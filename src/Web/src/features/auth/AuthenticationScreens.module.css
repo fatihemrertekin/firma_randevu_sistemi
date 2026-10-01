@@ -1,10 +1,20 @@
 .page { min-height: 100vh; display: grid; grid-template-columns: minmax(22rem, 29rem) minmax(0, 1fr); background: var(--background); }
-.card { align-self: center; width: calc(100% - 3rem); margin: 1.5rem; padding: 1.75rem; border: 1px solid var(--border); border-radius: 1.25rem; background: var(--surface); box-shadow: var(--shadow); }
-.card h1 { font-size: 1.875rem; margin: 1.5rem 0 .75rem; }
+.card { align-self: center; width: calc(100% - 3rem); margin: 1.5rem; padding: 1.75rem; }
+.card h1 { font-size: 1.75rem; margin: 1.25rem 0 1.5rem; }
 .eyebrow { color: var(--primary); font-size: .875rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
 .secret { overflow-wrap: anywhere; padding: .75rem; background: var(--background); border-radius: .5rem; }
 .codes { display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); gap: .75rem; padding-left: 1.25rem; }
 .error { margin-top: 1rem; }
+.loginForm { gap: .625rem; }
+.loginForm label { font-size: .875rem; font-weight: 500; color: var(--muted); }
+.loginForm input { padding: .75rem .875rem; border-radius: .375rem; }
+.loginForm button[type='submit'] { margin: .75rem 0 0; background: var(--primary); border-radius: .375rem; }
+.passwordHeading { display: flex; align-items: center; justify-content: space-between; gap: .5rem; }
+.card .textAction { margin: 0; padding: .375rem 0; border: 0; border-radius: .25rem; background: transparent; color: var(--muted); font-size: .75rem; font-weight: 500; line-height: 1.5; }
+.card .textAction:hover:enabled { color: var(--primary); text-decoration: underline; }
+.loginOptions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin-top: 1rem; padding-top: .75rem; border-top: 1px solid var(--border); }
+.loginOptions .textAction { text-align: left; }
+.loginOptions .textAction:last-child { text-align: right; }
 .hero { position: relative; display: flex; align-items: center; min-width: 0; padding: clamp(2rem, 5vw, 5rem); border-left: 1px solid var(--border); }
 .heroContent { position: relative; max-width: 36rem; }
 .hero h2 { font-family: Georgia, 'Times New Roman', serif; font-size: clamp(2.5rem, 4.5vw, 4.5rem); line-height: 1.12; letter-spacing: -.03em; margin: 1.5rem 0; }
