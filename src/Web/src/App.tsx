@@ -4,6 +4,7 @@ import PasswordResetForm from './PasswordResetForm'
 import StaffInvitations from './StaffInvitations'
 import StaffInvitationAcceptForm from './StaffInvitationAcceptForm'
 import StaffPasswordReset from './StaffPasswordReset'
+import BusinessProfile from './BusinessProfile'
 import styles from './App.module.css'
 
 type Account = { email: string; mfaEnabled: boolean; ownerAccess: boolean; staffAccess: boolean }
@@ -16,12 +17,13 @@ async function getAccount(): Promise<Account | null> {
   return (await response.json()) as Account
 }
 
-async function postWithCsrf(path: string, body: object): Promise<Response> {
-  const tokenResponse = await fetch('/api/auth/csrf', { cache: 'no-store' })
+async function postWithCsrf(path: string, body: object, signal?: AbortSignal): Promise<Response> {
+  const tokenResponse = await fetch('/api/auth/csrf', { cache: 'no-store', ...(signal ? { signal } : {}) })
   if (!tokenResponse.ok) throw new Error('İstek doğrulaması alınamadı.')
   const { token } = (await tokenResponse.json()) as { token: string }
   return fetch(path, {
     method: 'POST',
+    ...(signal ? { signal } : {}),
     headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token },
     body: JSON.stringify(body),
   })
@@ -283,6 +285,7 @@ export default function App() {
               <h1 id="page-title">Hoş geldiniz</h1>
               <p>{account.email}</p>
               <p>İki aşamalı giriş açık. Yönetim ekranları hazırlanıyor.</p>
+              <BusinessProfile post={postWithCsrf} />
               <PasswordChangeForm currentPassword={currentPassword} newPassword={newPassword}
                 confirmPassword={confirmPassword} busy={busy}
                 onCurrentPassword={setCurrentPassword} onNewPassword={setNewPassword}

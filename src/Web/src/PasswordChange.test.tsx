@@ -27,6 +27,7 @@ function mockRequests(change: () => Promise<Response>, account = owner) {
     if (path === '/api/auth/me') return Response.json(account)
     if (path === '/api/auth/csrf') return Response.json({ token: 'synthetic-csrf' })
     if (path === '/api/staff-invitations/') return Response.json([])
+    if (path === '/api/business-profile/') return Response.json({ name: '', phone: null, email: null, address: null, version: 'synthetic-version' })
     if (path === '/api/auth/change-password') return change()
     throw new Error('Beklenmeyen test isteği')
   })
