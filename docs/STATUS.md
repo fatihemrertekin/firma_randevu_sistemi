@@ -78,7 +78,7 @@ Güncelleme: 2026-10-01
 
 ## Sıradaki iş ve onay sınırı
 
-P02-07 Staff parola değiştirme kabulü tamamlandı. Sıradaki iş P02'nin kalanından tek küçük iş için kapsam/kabul önerisi hazırlamak ve ürün sahibinin ayrı onayını beklemektir. Yeni iş başlatılmaz. P02 bütünü `in_progress`; P03'e geçme. GitHub işlemleri yeşil kontroller sonrası PR üzerinden yapılır; doğrudan main push yoktur.
+P02-09 işletme profili kabulü tamamlandı. Sıradaki iş P02'nin kalanından tek küçük iş için kapsam/kabul önerisi hazırlamak ve ürün sahibinin ayrı onayını beklemektir. Yeni iş başlatılmaz. P02 bütünü `in_progress`; P03'e geçme. GitHub işlemleri yeşil kontroller sonrası PR üzerinden yapılır; doğrudan main push yoktur.
 
 ## P02-04 sonradan doğrulanan kanıt (30.09.2026)
 
@@ -151,3 +151,9 @@ Git dışı P02-07/P02-08 raporları güncel GitHub API ile karşılaştırıld�
 - Mevcut yerel kurulum başlangıçta kapalıydı. Orijinal DB host portu 55432 Windows tarafından reddedildi. Kalıcı deploy/.env/Compose veya Windows ayarı değiştirilmedi; yalnız Git dışı .local/p02-09-local-no-db-port.yaml ile DB host portu yayımlanmadan mevcut DB/anahtar volume'ları kullanıldı. App 8080 üzerinde kalır. Bu oturumdaki başlatma komutu: docker compose --env-file deploy/.env -f deploy/compose.local.yaml -f .local/p02-09-local-no-db-port.yaml up -d --wait. Orijinal dosyalar korunur; host portu sorununun kalıcı çözümü ayrı iş/onay gerektirir.
 - Ana DB'de migration iki kez geçti. Hesap/parola/hash/stamp ve Identity token/MFA verisi migration öncesi/sonrası içerik parmak iziyle yalnız eşitlik çıktısı alınarak karşılaştırıldı; aynı. MFA hesap sayısı 1, profil sayısı 1, yeni audit 0. Mevcut Owner yeniden oluşturulmadı veya parola/MFA'sı değiştirilmedi. Önceki yerel imaj firma-randevu:p02-09-rollback olarak korundu ve yeni şemayla ready 200 verdi; yeni imaj live/ready 200. Kod rollback'inde tablolar korunur, gerçek yerel DB'de Down çalıştırılmadı.
 - P02-09 yerel kabulü done; P02 bütünü in_progress. Üretim dağıtımı, eski karakter/libgssapi düzeltmesi ve başka küçük iş/P03 yoktur. Son PR/head/CI/merge/main CI doğrulaması Git dışı .local/p02-09-browser-test-report.md içinde sürdürülür; sonraki işe ayrı onay gerekir.
+
+## P02-09 GitHub kaydı ve sonraki iş sınırı
+
+[PR #8](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/8) yalnız onaylanan işletme profilini ve kabul belgelerini içerir. Kod/kabul commit'i e2b0e56 için [push CI](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/36890915277) ve [PR CI](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/36890918490) başlatıldı. Bu belge güncellemesini içeren son head'in kontrolleri ayrıca doğrulanır; CI yeşil olmadan merge uygulanmaz. Nihai merge/main CI/eşitlik/temizlik devam kaydı Git dışı .local/p02-09-browser-test-report.md içindedir ve güncel GitHub ile karşılaştırılır.
+
+P02-09 kabulü tamamlandı; P02 bütünü devam eder. Sıradaki küçük iş henüz onaylanmadı: yalnız yeni kapsam/kabul önerisi hazırlanabilir, ayrı ürün sahibi onayı olmadan uygulama başlamaz. Logo/çalışan/hizmet/mesai/Staff pasifleştirme ve P03'e geçilmedi.
