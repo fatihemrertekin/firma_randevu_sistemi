@@ -31,3 +31,10 @@ Ticari politikalar: Modelimiz aylık ücretli ve reklamsızdır; kota/maliyet ş
 - Maliyet: VPS+IP+yedek+harici depolama+domain/12+mesaj/e-posta+komisyon+lisans+muhasebe/SGK/vergi+emek+kur/risk. P07'de resmi tarifeyi tarih/para birimi/vergiyle kaydet. Fiyat = değişken gider+sabit gider payı+emek+kâr. Başabaş = sabit gider/(net abonelik geliri−firma başı değişken gider); payda pozitif olmalı. Henüz olmayan müşterilere güvenerek gideri bölme.
 - Hetzner saatlik/aylık tavanlı; kapatmak faturayı durdurmaz, silmek gerekir. Ayrı IP/volume/snapshot'ı kontrol et. Müşteri ayrılınca ortak VPS gideri sürer. Son müşteriden sonra ihracat/saklama tamamlanarak gereksiz kaynaklar silinir; zorunlu depolama gideri kalabilir.
 - Tarihli gözlem (bayatlayabilir, uygulama zamanında yeniden doğrula): 29.09.2026'da Hetzner CX23/CX33 stok yok görünüyordu; en ucuz planı bulunur varsayma.
+
+
+## 4. Görsel tasarım yönü (01.10.2026 onayı)
+
+Ürün sahibi koyu zeminli, ince çerçeveli, görselli giriş ekranını örnek gösterdi ve sonraki ekranların da bu dili taşımasını istedi. Petrol/lacivert zemin, açık okunur metin ve turkuaz vurgu ortak renk değişkenleriyle uygulanır. Masaüstü girişte form kartı ve sektöre uygun dekoratif görsel yan yana; mobilde form önceliklidir. Yönetimde aynı palet, belirgin bölüm gezinmesi, ana/yardımcı işlem ayrımı ve görünür klavye odağı kullanılır.
+
+Örnek ekranın logo, satış, iletişim, hukuki onay veya henüz uygulanmamış özellikleri ürüne taşınmaz. Mevcut işlevler esas alınır; tasarım tercihi yeni özellik veya aşama yetkisi vermez. İlk görsel, yerleşik imagegen ile üretilmiş kişisiz/yazısız kuaför fotoğrafıdır; harici resim/font isteği yoktur. Görselin üretim kaydı [P02-10](plans/P02.md#p02-10--frontend-düzeni-ve-tasarım) içindedir.

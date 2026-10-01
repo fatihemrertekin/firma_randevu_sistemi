@@ -1,0 +1,24 @@
+.page { min-height: 100vh; display: grid; grid-template-columns: minmax(22rem, 29rem) minmax(0, 1fr); background: var(--background); }
+.card { align-self: center; width: calc(100% - 3rem); margin: 1.5rem; padding: 1.75rem; border: 1px solid var(--border); border-radius: 1.25rem; background: var(--surface); box-shadow: var(--shadow); }
+.card h1 { font-size: 1.875rem; margin: 1.5rem 0 .75rem; }
+.eyebrow { color: var(--primary); font-size: .875rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.secret { overflow-wrap: anywhere; padding: .75rem; background: var(--background); border-radius: .5rem; }
+.codes { display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); gap: .75rem; padding-left: 1.25rem; }
+.error { margin-top: 1rem; }
+.hero { position: relative; display: flex; align-items: center; min-width: 0; padding: clamp(2rem, 5vw, 5rem); border-left: 1px solid var(--border); }
+.heroContent { position: relative; max-width: 36rem; }
+.hero h2 { font-family: Georgia, 'Times New Roman', serif; font-size: clamp(2.5rem, 4.5vw, 4.5rem); line-height: 1.12; letter-spacing: -.03em; margin: 1.5rem 0; }
+.hero h2 span { color: var(--primary); }
+.heroContent > p { max-width: 29rem; color: var(--text); font-size: 1.125rem; }
+.badge { display: inline-block; padding: .6rem .9rem; border: 1px solid var(--border); border-radius: 2rem; background: #0d2025d9; color: var(--primary); font-size: .875rem; }
+.highlights { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; margin-top: 2rem; }
+.highlights > div { padding: 1rem; border: 1px solid var(--border); border-radius: .75rem; background: #101a22e8; }
+.highlights p { font-size: .875rem; margin: .5rem 0 0; }
+@media (min-width: 901px) {
+  .hero { background: linear-gradient(90deg, #081219eb, #0812197a), url('../../assets/salon-login.jpg') center / cover; }
+}
+@media (max-width: 900px) {
+  .page { grid-template-columns: minmax(0, 1fr); justify-items: center; }
+  .card { width: min(calc(100% - 2rem), 34rem); margin: 1rem; padding: 1.5rem; }
+  .hero { display: none; }
+}

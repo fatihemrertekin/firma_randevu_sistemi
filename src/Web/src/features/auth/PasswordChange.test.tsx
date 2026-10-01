@@ -2,7 +2,7 @@
 import { act } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import App from './App'
+import App from '../../App'
 
 let container: HTMLDivElement
 let root: Root
@@ -37,6 +37,8 @@ function mockRequests(change: () => Promise<Response>, account = owner) {
 
 async function renderApp() {
   await act(async () => root.render(<App />))
+  const security = Array.from(container.querySelectorAll('nav button')).find(button => button.textContent === 'Hesap ve güvenlik')
+  if (security) await act(async () => (security as HTMLButtonElement).click())
 }
 
 async function fillPassword(id: string, value: string) {
@@ -69,7 +71,7 @@ describe.each([['Owner', owner], ['Staff', staff]] as const)('%s parola değişi
     await renderApp()
     if (account.staffAccess) {
       expect(container.textContent).not.toContain('ikinci adımla')
-      expect(container.querySelector('form[aria-label="Staff daveti oluştur"]')).toBeNull()
+      expect(container.querySelector('form[aria-label="Çalışan daveti oluştur"]')).toBeNull()
     }
     await fillForm()
     await submit()

@@ -2,6 +2,8 @@
 
 Türkiye'deki tek şubeli hizmet işletmeleri için planlanan markalı randevu uygulaması. P01 temel kurulum tamamlandı; P02'de Owner oturumu eklendi. Gerçek rezervasyon henüz yoktur. Güncel durum için [STATUS](docs/STATUS.md), ürün kararları için [PRODUCT](docs/PRODUCT.md), aşamalar için [ROADMAP](docs/ROADMAP.md).
 
+Frontend `src/Web/src/features/auth`, `features/business` ve `features/staff` altında mevcut özelliklere göre düzenlenir. `app` oturum API yardımcısını ve yönetim yerleşimini, `components` ortak bileşenleri, `styles` ortak renk/form kurallarını barındırır. Testler ilgili özelliğin yanındadır. Yönetim ekranında işletme bilgileri, hesap ve güvenlik, çalışan erişimleri ayrı bölümlerdir; çalışan hesabında yalnız hesap ve güvenlik görünür.
+
 ## Gerekenler
 
 - .NET SDK 10.0.401 (`global.json`)

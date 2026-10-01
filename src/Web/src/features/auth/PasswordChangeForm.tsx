@@ -6,6 +6,7 @@ type Props = {
   newPassword: string
   confirmPassword: string
   busy: boolean
+  mismatch?: boolean
   onCurrentPassword: (value: string) => void
   onNewPassword: (value: string) => void
   onConfirmPassword: (value: string) => void
@@ -30,8 +31,10 @@ export default function PasswordChangeForm(props: Props) {
         onChange={event => props.onNewPassword(event.target.value)} />
       <label htmlFor="confirm-password">Yeni parola tekrarı</label>
       <input id="confirm-password" type="password" autoComplete="new-password" required maxLength={1024}
+        aria-invalid={props.mismatch || undefined} aria-describedby={props.mismatch ? 'password-mismatch' : undefined}
         disabled={props.busy} value={props.confirmPassword}
         onChange={event => props.onConfirmPassword(event.target.value)} />
+      {props.mismatch && <p id="password-mismatch">Yeni parola ve tekrarı aynı olmalı.</p>}
       <button type="submit" disabled={props.busy}>
         {props.busy ? 'Parola değiştiriliyor…' : 'Parolayı değiştir'}
       </button>

@@ -1,3 +1,4 @@
+import ErrorMessage from '../../components/ErrorMessage'
 import { useRef, useState, type FormEvent } from 'react'
 
 type ResetBody = { token: string; newPassword: string; confirmPassword: string }
@@ -48,7 +49,7 @@ export default function PasswordResetForm({ onRequest, onDone, onCancel, staff =
 
   return (
     <>
-      <h1 id="page-title">{staff ? 'Staff parola sıfırlama' : 'Owner parola sıfırlama'}</h1>
+      <h1 id="page-title">{staff ? 'Çalışan parola sıfırlama' : 'İşletme sahibi parola sıfırlama'}</h1>
       <p>{staff
         ? 'İşletme sahibinden, kimliğiniz doğrulandıktan sonra aldığınız 30 dakika geçerli kodu kullanın.'
         : 'Destekten, kimliğiniz doğrulandıktan sonra aldığınız 30 dakika geçerli kodu kullanın. Kod istemek için destekle iletişime geçin.'}</p>
@@ -67,7 +68,7 @@ export default function PasswordResetForm({ onRequest, onDone, onCancel, staff =
         <button type="submit" disabled={busy}>{busy ? 'Parola sıfırlanıyor…' : 'Parolayı sıfırla'}</button>
       </form>
       <button type="button" onClick={onCancel} disabled={busy}>Girişe dön</button>
-      {error && <p role="alert">{error}</p>}
+      <ErrorMessage message={error} />
     </>
   )
 }

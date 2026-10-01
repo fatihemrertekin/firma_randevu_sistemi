@@ -2,7 +2,7 @@
 import { act } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import App from './App'
+import App from '../../App'
 import StaffInvitations from './StaffInvitations'
 
 let container: HTMLDivElement
@@ -39,7 +39,7 @@ async function acceptApp(response: () => Promise<Response>) {
   })
   vi.stubGlobal('fetch', requests)
   await act(async () => root.render(<App />))
-  await click('Staff davetim var')
+  await click('Çalışan davetim var')
   return requests
 }
 async function fillAccept(confirm = 'Synthetic!Staff123') {
@@ -49,7 +49,7 @@ async function fillAccept(confirm = 'Synthetic!Staff123') {
   await fill('accept-confirm', confirm)
 }
 
-describe('Staff daveti', () => {
+describe('Çalışan daveti', () => {
   it('alıcı onayı ister, çift üretimi engeller; kodu geçici/maskeli gösterir ve iptalde temizler', async () => {
     let issued = false
     vi.stubGlobal('fetch', vi.fn(async () => Response.json(issued ? [{ id: 'invite-1', email: 'staff@example.test', expiresAt: '2026-10-02T00:00:00Z' }] : [])))
@@ -62,13 +62,13 @@ describe('Staff daveti', () => {
     await act(async () => root.render(<StaffInvitations post={post} />))
     await fill('invite-email', 'staff@example.test')
     expect(container.querySelector<HTMLButtonElement>('button[type="submit"]')?.disabled).toBe(true)
-    await submit('Staff daveti oluştur')
+    await submit('Çalışan daveti oluştur')
     expect(post).not.toHaveBeenCalled()
     const checkbox = container.querySelector<HTMLInputElement>('input[type="checkbox"]')
     if (!checkbox) throw new Error('Alıcı onayı yok')
     await act(async () => checkbox.click())
-    await submit('Staff daveti oluştur')
-    await submit('Staff daveti oluştur')
+    await submit('Çalışan daveti oluştur')
+    await submit('Çalışan daveti oluştur')
     expect(post).toHaveBeenCalledTimes(1)
     expect(container.querySelector<HTMLInputElement>('#invite-email')?.disabled).toBe(true)
     if (!finish) throw new Error('Yanıt yok')
@@ -87,13 +87,13 @@ describe('Staff daveti', () => {
     const waiting = new Promise<Response>(resolve => { finish = resolve })
     const requests = await acceptApp(() => waiting)
     await fillAccept()
-    await submit('Staff davetini kabul et')
-    await submit('Staff davetini kabul et')
+    await submit('Çalışan davetini kabul et')
+    await submit('Çalışan davetini kabul et')
     expect(requests.mock.calls.filter(([path]) => path === '/api/staff-invitations/accept')).toHaveLength(1)
     expect(Array.from(container.querySelectorAll<HTMLInputElement>('input')).every(input => input.disabled)).toBe(true)
     if (!finish) throw new Error('Yanıt yok')
     await act(async () => finish?.(new Response(null, { status: 204 })))
-    expect(container.textContent).toContain('Staff hesabınız açıldı')
+    expect(container.textContent).toContain('Çalışan hesabınız açıldı')
     expect(container.textContent).toContain('İşletme girişi')
     expect(container.querySelector('#accept-token')).toBeNull()
     expect(container.querySelector<HTMLInputElement>('#password')?.value).toBe('')
@@ -107,7 +107,7 @@ describe('Staff daveti', () => {
     const checkbox = container.querySelector<HTMLInputElement>('input[type="checkbox"]')
     if (!checkbox) throw new Error('Alıcı onayı yok')
     await act(async () => checkbox.click())
-    await submit('Staff daveti oluştur')
+    await submit('Çalışan daveti oluştur')
     expect(Array.from(container.querySelectorAll('button')).some(button => button.textContent === 'Davet kodunu kopyala')).toBe(false)
     expect(container.querySelector<HTMLInputElement>('#issued-invitation')?.type).toBe('password')
     await click('Kodu göster')
@@ -126,19 +126,19 @@ describe('Staff daveti', () => {
   it('parola uyuşmazlığını göndermeden reddeder; iptal/yeniden açmada sırları temizler', async () => {
     const requests = await acceptApp(async () => new Response(null, { status: 204 }))
     await fillAccept('different')
-    await submit('Staff davetini kabul et')
+    await submit('Çalışan davetini kabul et')
     expect(container.textContent).toContain('aynı olmalı')
     expect(requests.mock.calls.some(([path]) => path === '/api/staff-invitations/accept')).toBe(false)
     expect(container.querySelector<HTMLInputElement>('#accept-password')?.value).toBe('')
     await click('Girişe dön')
-    await click('Staff davetim var')
+    await click('Çalışan davetim var')
     expect(container.querySelector<HTMLInputElement>('#accept-token')?.value).toBe('')
   })
 
   it.each([400, 429, 500])('hata/limit (%i) yanıtında sırları temizler, başarı iddia etmez', async status => {
     await acceptApp(async () => status === 400 ? Response.json({ title: 'Davet geçersiz.' }, { status }) : new Response(null, { status }))
     await fillAccept()
-    await submit('Staff davetini kabul et')
+    await submit('Çalışan davetini kabul et')
     expect(container.querySelector('[role="alert"]')).not.toBeNull()
     expect(container.querySelector<HTMLInputElement>('#accept-token')?.value).toBe('')
     expect(container.querySelector<HTMLInputElement>('#accept-password')?.value).toBe('')
@@ -148,7 +148,7 @@ describe('Staff daveti', () => {
   it('bağlantı belirsizliğinde otomatik tekrar yapmaz', async () => {
     const requests = await acceptApp(async () => { throw new TypeError('synthetic network failure') })
     await fillAccept()
-    await submit('Staff davetini kabul et')
+    await submit('Çalışan davetini kabul et')
     expect(container.textContent).toContain('otomatik tekrar yapılmadı')
     expect(requests.mock.calls.filter(([path]) => path === '/api/staff-invitations/accept')).toHaveLength(1)
   })
@@ -156,7 +156,7 @@ describe('Staff daveti', () => {
   it('Staff kendi hesabını görür, Owner formlarını göremez', async () => {
     vi.stubGlobal('fetch', vi.fn(async () => Response.json({ email: 'staff@example.test', staffAccess: true, ownerAccess: false, mfaEnabled: false })))
     await act(async () => root.render(<App />))
-    expect(container.textContent).toContain('Staff hesabınız açık')
+    expect(container.textContent).toContain('Çalışan hesabınız açık')
     expect(container.textContent).toContain('staff@example.test')
     expect(container.querySelector('form[aria-label="Parola değiştirme"]')).not.toBeNull()
     expect(container.textContent).not.toContain('Davet oluştur')

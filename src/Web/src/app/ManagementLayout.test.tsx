@@ -1,0 +1,201 @@
+// @vitest-environment jsdom
+import { act } from 'react'
+import { createRoot, type Root } from 'react-dom/client'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import App from '../App'
+
+let container: HTMLDivElement
+let root: Root
+const owner = { email: 'owner@example.test', mfaEnabled: true, ownerAccess: true, staffAccess: false }
+const profile = { name: 'Örnek Kuaför', phone: null, email: null, address: null, version: 'synthetic-version' }
+
+beforeEach(() => {
+  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true)
+  vi.stubGlobal('fetch', vi.fn(async (path: string) => {
+    if (path === '/api/auth/me') return Response.json(owner)
+    if (path === '/api/business-profile/') return Response.json(profile)
+    if (path === '/api/staff-invitations/') return Response.json([])
+    if (path === '/api/auth/csrf') return Response.json({ token: 'synthetic-csrf' })
+    if (path === '/api/staff-password-resets/') return Response.json({ token: 'synthetic-delivery-code', expiresAt: '2026-10-01T23:00:00Z' })
+    if (path === '/api/auth/logout') return new Response(null, { status: 204 })
+    throw new Error('Beklenmeyen test isteği')
+  }))
+  container = document.createElement('div')
+  document.body.append(container)
+  root = createRoot(container)
+})
+afterEach(async () => { await act(async () => root.unmount()); container.remove(); vi.unstubAllGlobals() })
+async function render() { await act(async () => root.render(<App />)) }
+async function click(text: string) {
+  const button = Array.from(container.querySelectorAll('button')).find(item => item.textContent === text)
+  if (!button) throw new Error('Düğme yok: ' + text)
+  await act(async () => button.click())
+}
+async function fill(id: string, value: string) {
+  const input = container.querySelector<HTMLInputElement>('#' + id)
+  const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set
+  if (!input || !setter) throw new Error('Alan yok')
+  await act(async () => { setter.call(input, value); input.dispatchEvent(new Event('input', { bubbles: true })) })
+}
+async function submit(label: string) {
+  const form = container.querySelector(`form[aria-label="${label}"]`)
+  if (!form) throw new Error('Form yok')
+  await act(async () => form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })))
+}
+
+describe('Yönetim gezinmesi', () => {
+  it('bölüm değiştirirken profil taslağını korur; parola alanlarını temizler ve başlığa odaklanır', async () => {
+    await render()
+    await fill('business-name', 'Kaydedilmemiş ad')
+    await click('Hesap ve güvenlik')
+    expect(document.activeElement).toBe(container.querySelector('h1'))
+    expect(container.querySelector('nav [aria-current="page"]')?.textContent).toBe('Hesap ve güvenlik')
+    expect(container.querySelector('#business-profile-title')?.closest('[hidden]')).not.toBeNull()
+    await fill('current-password', 'Synthetic!Password123')
+    await click('İşletme bilgileri')
+    expect(container.querySelector<HTMLInputElement>('#business-name')?.value).toBe('Kaydedilmemiş ad')
+    await click('Hesap ve güvenlik')
+    expect(container.querySelector<HTMLInputElement>('#current-password')?.value).toBe('')
+  })
+
+  it('profil yenilemesini onaylatır; vazgeçince taslağı, onaylayınca sunucu bilgisini tutar', async () => {
+    await render()
+    await fill('business-name', 'Taslak')
+    await click('Güncel bilgileri yükle')
+    expect(container.querySelector<HTMLInputElement>('#business-name')?.value).toBe('Taslak')
+    await click('Değişiklikleri koru')
+    expect(container.querySelector('[aria-label="Kaydedilmemiş değişiklikler"]')).toBeNull()
+    await click('Güncel bilgileri yükle')
+    await click('Değişiklikleri sil ve yükle')
+    expect(container.querySelector<HTMLInputElement>('#business-name')?.value).toBe(profile.name)
+  })
+
+  it('işlem beklerken gezinmeyi ve çıkışı kapatır; teslim kodlarını bölümden ayrılınca temizler', async () => {
+    await render()
+    await click('Çalışan erişimleri')
+    let finish: ((response: Response) => void) | undefined
+    const requests = vi.mocked(fetch)
+    const original = requests.getMockImplementation()
+    requests.mockImplementation(async (input, options) => {
+      if (input === '/api/staff-password-resets/') return new Promise<Response>(resolve => { finish = resolve })
+      if (!original) throw new Error('Test isteği yok')
+      return original(input, options)
+    })
+    await fill('staff-reset-email', 'staff@example.test')
+    const checkbox = container.querySelector<HTMLInputElement>('form[aria-label="Çalışan sıfırlama kodu üret"] input[type="checkbox"]')
+    if (!checkbox) throw new Error('Onay yok')
+    await act(async () => checkbox.click())
+    await submit('Çalışan sıfırlama kodu üret')
+    expect(Array.from(container.querySelectorAll<HTMLButtonElement>('nav button')).every(button => button.disabled)).toBe(true)
+    expect(Array.from(container.querySelectorAll('button')).find(button => button.textContent === 'Çıkış yap')?.disabled).toBe(true)
+    if (!finish) throw new Error('Yanıt yok')
+    await act(async () => finish?.(Response.json({ token: 'synthetic-delivery-code', expiresAt: '2026-10-01T23:00:00Z' })))
+    expect(container.querySelector('#issued-staff-reset')).not.toBeNull()
+    await click('Hesap ve güvenlik')
+    expect(container.querySelector('#issued-staff-reset')).toBeNull()
+    await click('Çalışan erişimleri')
+    expect(container.querySelector('#issued-staff-reset')).toBeNull()
+  })
+
+  it('çıkışta yönetim ve taslakları kaldırır; giriş ekranına döner', async () => {
+    await render()
+    await fill('business-name', 'Taslak')
+    await click('Çıkış yap')
+    expect(container.querySelector('nav')).toBeNull()
+    expect(container.querySelector('#business-name')).toBeNull()
+    expect(container.querySelector('h1')?.textContent).toBe('İşletme girişi')
+  })
+
+  it('eşzamanlı iki erişim isteğinin ikisi de bitmeden gezinmeyi açmaz', async () => {
+    await render()
+    await click('Çalışan erişimleri')
+    const completions: Record<string, (response: Response) => void> = {}
+    const requests = vi.mocked(fetch)
+    const original = requests.getMockImplementation()
+    requests.mockImplementation(async (input, options) => {
+      if ((input === '/api/staff-invitations/' || input === '/api/staff-password-resets/') && options?.method === 'POST') {
+        return new Promise<Response>(resolve => { completions[String(input)] = resolve })
+      }
+      if (!original) throw new Error('Test isteği yok')
+      return original(input, options)
+    })
+    await fill('invite-email', 'invite@example.test')
+    await fill('staff-reset-email', 'staff@example.test')
+    for (const checkbox of container.querySelectorAll<HTMLInputElement>('input[type="checkbox"]')) await act(async () => checkbox.click())
+    await submit('Çalışan daveti oluştur')
+    await submit('Çalışan sıfırlama kodu üret')
+    await act(async () => completions['/api/staff-invitations/']?.(Response.json({ id: 'invite', token: 'synthetic-invite', expiresAt: '2026-10-02T01:00:00Z' })))
+    expect(Array.from(container.querySelectorAll<HTMLButtonElement>('nav button')).every(button => button.disabled)).toBe(true)
+    await act(async () => completions['/api/staff-password-resets/']?.(Response.json({ token: 'synthetic-reset', expiresAt: '2026-10-01T23:00:00Z' })))
+    expect(Array.from(container.querySelectorAll<HTMLButtonElement>('nav button')).every(button => !button.disabled)).toBe(true)
+  })
+
+  it.each([
+    { ...owner, ownerAccess: false, staffAccess: true, mfaEnabled: false },
+    { ...owner, staffAccess: true },
+  ])('çalışan görünümünde işletme ve erişim yönetimini açmaz', async account => {
+    vi.stubGlobal('fetch', vi.fn(async () => Response.json(account)))
+    await render()
+    expect(container.querySelectorAll('nav button')).toHaveLength(1)
+    expect(container.querySelector('#business-name')).toBeNull()
+    expect(container.textContent).not.toContain('Davet oluştur')
+    expect(container.querySelector('form[aria-label="Parola değiştirme"]')).not.toBeNull()
+  })
+
+  it('geçici MFA oturumuna yönetim bölümleri sunmaz', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => Response.json({ ...owner, ownerAccess: false })))
+    await render()
+    expect(container.querySelector('nav')).toBeNull()
+    expect(container.querySelector('h1')?.textContent).toBe('Yeniden giriş yapın')
+  })
+
+  it('profil alanı hatasını alanla ilişkilendirir; sunucu hatasında açıklamaya odaklanır', async () => {
+    await render()
+    await fill('business-email', 'gecersiz-adres')
+    const button = container.querySelector<HTMLButtonElement>('button[type="submit"]')
+    if (!button) throw new Error('Kaydet yok')
+    await act(async () => button.click())
+    expect(container.querySelector('#business-email')?.getAttribute('aria-invalid')).toBe('true')
+    expect(container.querySelector('#business-email')?.getAttribute('aria-describedby')).toBe('business-field-error')
+    await fill('business-email', 'salon@example.test')
+    expect(container.querySelector('#business-email')?.hasAttribute('aria-invalid')).toBe(false)
+    const requests = vi.mocked(fetch)
+    const original = requests.getMockImplementation()
+    requests.mockImplementation(async (input, options) => {
+      if (input === '/api/business-profile/' && options?.method === 'POST') return Response.json({ title: 'Telefon alanını kontrol edin.' }, { status: 400 })
+      if (!original) throw new Error('Test isteği yok')
+      return original(input, options)
+    })
+    await submit('İşletme profilini düzenle')
+    expect(document.activeElement?.getAttribute('role')).toBe('alert')
+    expect(document.activeElement?.textContent).toContain('Telefon alanını kontrol edin.')
+  })
+
+  it('giriş ve ikinci adım tamamlanmadan işletme yönetimini göstermez', async () => {
+    let loggedIn = false
+    const requests = vi.fn(async (path: string) => {
+      if (path === '/api/auth/me') return loggedIn ? Response.json(owner) : new Response(null, { status: 401 })
+      if (path === '/api/auth/csrf') return Response.json({ token: 'synthetic-csrf' })
+      if (path === '/api/auth/login') return new Response(null, { status: 202 })
+      if (path === '/api/auth/mfa/login') { loggedIn = true; return new Response(null, { status: 204 }) }
+      if (path === '/api/business-profile/') return Response.json(profile)
+      throw new Error('Beklenmeyen test isteği')
+    })
+    vi.stubGlobal('fetch', requests)
+    await render()
+    await fill('email', owner.email)
+    await fill('password', 'Synthetic!Password123')
+    const form = container.querySelector('form')
+    if (!form) throw new Error('Giriş yok')
+    await act(async () => form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })))
+    expect(container.querySelector('nav')).toBeNull()
+    expect(container.querySelector('h1')?.textContent).toBe('İkinci adımı tamamlayın')
+    await fill('mfa-code', '123456')
+    const mfaForm = container.querySelector('form')
+    if (!mfaForm) throw new Error('İkinci adım yok')
+    await act(async () => mfaForm.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })))
+    expect(container.querySelector('nav')).not.toBeNull()
+    expect(container.querySelector('h1')?.textContent).toBe('İşletme bilgileri')
+    expect(requests.mock.calls.filter(([path]) => path === '/api/auth/csrf')).toHaveLength(2)
+  })
+})
