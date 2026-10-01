@@ -8,6 +8,7 @@ import StaffInvitations from '../features/staff/StaffInvitations'
 import StaffPasswordReset from '../features/staff/StaffPasswordReset'
 import styles from './ManagementLayout.module.css'
 import ErrorMessage from '../components/ErrorMessage'
+import OwnerRecoveryEmail from '../features/auth/OwnerRecoveryEmail'
 
 type Section = 'business' | 'security' | 'access'
 const sections = [
@@ -61,6 +62,9 @@ export default function ManagementLayout({ auth, account }: Props) {
         <p>{current.description}</p>
         {owner && <div hidden={section !== 'business'} className={styles.panel}>
           <BusinessProfile post={post} />
+        </div>}
+        {owner && section === 'security' && <div className={styles.panel}>
+          <OwnerRecoveryEmail post={post} disabled={blocked} />
         </div>}
         {section === 'security' && <div className={styles.panel}>
           <p>{account.mfaEnabled ? 'İki aşamalı giriş açık.' : 'Çalışan hesabınız açık.'}</p>

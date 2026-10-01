@@ -54,6 +54,7 @@ builder.Services.AddIdentity<AppUser, IdentityRole<Guid>>(options =>
     .AddDefaultTokenProviders()
     .AddTokenProvider<OwnerPasswordResetTokenProvider>("OwnerPasswordReset");
 builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddSingleton<IOwnerEmailVerificationDelivery, LocalOwnerEmailVerificationDelivery>();
 builder.Services.AddSingleton(PartitionedRateLimiter.Create<Guid, Guid>(ownerId =>
     RateLimitPartition.GetFixedWindowLimiter(ownerId, _ => new FixedWindowRateLimiterOptions
     {

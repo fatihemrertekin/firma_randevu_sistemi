@@ -94,6 +94,7 @@ public static class AuthEndpoints
         auth.MapMfaEndpoints();
         auth.MapPasswordEndpoints();
         auth.MapPasswordResetEndpoints();
+        auth.MapOwnerRecoveryEmailEndpoints();
         app.MapStaffInvitationEndpoints();
         app.MapStaffPasswordResetEndpoints();
     }

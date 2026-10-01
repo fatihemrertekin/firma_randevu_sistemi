@@ -8,7 +8,7 @@ Güncelleme: 2026-10-01
 | --- | --- | --- |
 | P00 — İş ve ürün tanımı | `done` | [P00 planı](plans/P00.md), [ürün kararları](PRODUCT.md#2-ürün-kararları), kapsam/politika ve belge kontrolü tamam. Bu yalnız planlama kanıtıdır. |
 | P01 — Temel ve CI | `done` | Yerel kontroller ve [P01 kanıtı](plans/P01.md#kanıt) tamam. `10527c1` (PR #1) `main` ve `origin/main` üzerinde doğrulandı. Kullanıcının GitHub ekran görüntüsünde `320401f` ve `5b36130` için CI #1/#2 yeşil. |
-| P02 — Kimlik ve tanımlar | `in_progress` | P02-01–P02-11 yerel kabulü tamamlandı; frontend düzeni ve son kanıt aşağıdadır. P02'nin kalan işleri ayrı onay gerektirir. [P02 planı](plans/P02.md). |
+| P02 — Kimlik ve tanımlar | `in_progress` | P02-01–P02-12 yerel kabulü tamamlandı; son kanıt aşağıdadır. P02'nin kalan işleri ayrı onay gerektirir. [P02 planı](plans/P02.md). |
 | P03–P17 | `planned` | Yalnız [ROADMAP](ROADMAP.md) düzeyinde; uygulama kanıtı yok. |
 
 ## P00'da doğrulananlar
@@ -172,3 +172,11 @@ PR #9 squash merge 5cc7e0aa309557bf78e773b50ce23e5ca4902883; push CI 36897978994
 P02-11 yerel kabul done: dış çerçeve kaldırıldı, parola yardımı etiket yanında, çalışan yardım/davet aynı satırda metin eylemleri. Web 74/74 ve typecheck/lint/build; son imaj/ready 200; Chrome masaüstü/375/320 px taşma, yan yana yerleşim, yardım/davet geçişleri ve görünür Tab odağı geçti. Veri/API/MFA/parola davranışı değişmedi, mevcut Owner kullanılmadı. Ayrıntı [P02-11](plans/P02.md#p02-11--minimal-giriş-formu-01102026), son GitHub kapanışı Git dışı .local/p02-11-browser-test-report.md içindedir.
 
 Son istek, firmanın destekle iletişime geçmeden parola sıfırlaması için rapordur. Otomatik e-posta akışı henüz uygulanmaz; rapor/kapsam onayı beklenir. P02 devam eder; başka iş veya P03 başlatılmaz.
+## P02-12 başlangıcı — Onaylanan kurtarma e-postası doğrulama
+
+Ürün sahibi self servis raporundaki ilk küçük işi onayladı: yalnız Owner mevcut hesap e-postasını doğrulama ve yerel teslim testi. Main 814a68960e8f85de3476dfd31740e2209cf0e621 / main CI 36901608804 success eşit/temiz doğrulanarak feature/p02-12-owner-eposta-dogrulama açıldı. Ayrıntılı kapsam/kabul/geri dönüş P02-12 planında. Otomatik parola sıfırlama, canlı gönderim, Staff ve diğer işler onay kapsamında değildir.
+## P02-12 yerel kabulü ve sonraki sınır
+
+Owner hesap e-postası doğrulama ve sentetik özel dosya teslimi yerel kabulü done: sunucu 44/44, web 81/81; kalite/bağımlılık kontrolleri, gerçek Chrome açık onay/tek kullanım/restart ve 375 px yan yana düğme kabulü geçti. Migration tekrar/geri dönüş sentetik DB'de, ekleyici kurulum ve kimlik korunması ana DB'de doğrulandı. Sentetik kaynaklar temizlendi; ana live/ready 200. Ayrıntı P02-12 planında, nihai PR/head/CI/merge/main kaydı Git dışı .local/p02-12-browser-test-report.md içindedir.
+
+P02 devam eder. Gerçek Internet teslimi ve otomatik parola sıfırlama henüz uygulanmadı. Mevcut Owner sıfırlama destek kodu, Staff sıfırlama Owner kodu ve Staff daveti manuel kod akışlarıyla çalışır; UI metinleri bu mevcut durumu anlatır. Ürün sahibinin son ekran sorusu kapsam genişletme onayı değildir. Sonraki tek küçük iş için ayrı onay beklenir; başka P02 işi veya P03 başlatılmaz.

@@ -13,6 +13,7 @@ beforeEach(() => {
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true)
   vi.stubGlobal('fetch', vi.fn(async (path: string) => {
     if (path === '/api/auth/me') return Response.json(owner)
+    if (path === '/api/auth/recovery-email/') return Response.json({ email: owner.email, verifiedAt: null, deliveryAvailable: false })
     if (path === '/api/business-profile/') return Response.json(profile)
     if (path === '/api/staff-invitations/') return Response.json([])
     if (path === '/api/auth/csrf') return Response.json({ token: 'synthetic-csrf' })
