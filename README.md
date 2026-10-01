@@ -155,3 +155,13 @@ Kod rollback'inde ek tablolar/Staff rolü korunabilir. `Down` audit/davet kayıt
 CSRF, rol/hesap doğrulaması, IP/endpoint/global ve hesap sınırları sunucudadır. Issue ve Complete kayıtları firma/Grant/Staff/Actor UUID, tür ve UTC zaman tutar; e-posta, kod ve parola içermez. Parola/stamp ve tüketim kaydı aynı transaction'dadır; audit veya commit hatasında geri alınır, paralel kullanımdan yalnız biri başarılı olur. Bağlantı belirsizliğinde otomatik tekrar yoktur; önce normal girişle sonucu kontrol edin. Kod teslimi belirsizse teslim etmeyin, süre dolduktan sonra yeniden üretin.
 
 Kod rollback'inde audit tablosu korunur. `Down` işlem kayıtlarını sildiğinden gerçek kurulumda otomatik kullanılmaz. Başarılı sıfırlama eski parolayı/oturumları geri açarak geri alınmaz; gerekirse yeniden doğrulanmış sıfırlama yapılır. Staff MFA, hesap kapatma ve genel audit ekranı bu işin dışındadır.
+
+## İşletme profili
+
+`P02BusinessProfile` migration'ını ayrı yönetici rolüyle uygulayın; yerelde `deploy/Apply-LocalMigration.ps1` kullanılır. Migration boş bir profil ekler, hesapları/parolaları/MFA'yı değiştirmez. Uygulama rolünün profil tablosunda yalnız SELECT/UPDATE; bu işe özel işlem tablosunda yalnız SELECT/INSERT yetkisi vardır.
+
+MFA ile giriş yapmış Owner, “İşletme profili” formunda işletme adını (2–150 karakter), isteğe bağlı telefonu, iletişim e-postasını ve adresi kaydeder. Telefon Türkiye cep/sabit biçiminde alınır ve `+90` biçiminde saklanır; e-posta en fazla 254, adres en fazla 500 karakterdir. İletişim e-postası giriş hesabının adresini değiştirmez ve bir mesaj servisi yapılandırmaz. Staff/anonim/MFA tamamlamamış Owner profil API'sini kullanamaz. `GET /api/business-profile/` okur, CSRF korumalı `POST /api/business-profile/` günceller.
+
+Başarıda sunucudan gelen bilgiler gösterilir. Eski açık form `409` alır; “Güncel bilgileri yükle” kaydedilmemiş değişiklikleri silip son kaydı getirir. Bağlantı/500 sonucunda başarı iddia edilmez veya otomatik tekrar yapılmaz; yeniden yükleyerek sonucu kontrol edin. Profil ve Actor UUID/sürüm/UTC zaman içeren işlem kaydı aynı transaction'dadır; işlem kaydı iletişim değerlerini içermez. Kaydetme hesabın parolasını/oturumunu/MFA'sını değiştirmez.
+
+Geri dönüşte önceki uygulama imajı kullanılabilir; yeni profil ve işlem tabloları korunur. `Down` bu tabloları sildiğinden gerçek kurulumda otomatik uygulanmaz. Logo, çalışan/hizmet/mesai, genel işlem kaydı ekranı ve kamuya açık profil bu işin dışındadır.

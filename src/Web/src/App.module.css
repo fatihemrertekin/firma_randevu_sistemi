@@ -46,7 +46,8 @@
   color: #102c3a;
 }
 
-.card input {
+.card input,
+.card textarea {
   width: 100%;
   padding: 0.8rem;
   border: 1px solid #8ca4ae;
@@ -78,9 +79,14 @@
 }
 
 .card input:focus-visible,
+.card textarea:focus-visible,
 .card button:focus-visible {
   outline: 3px solid #e59c38;
   outline-offset: 2px;
+}
+
+.card textarea {
+  resize: vertical;
 }
 
 .card .error {

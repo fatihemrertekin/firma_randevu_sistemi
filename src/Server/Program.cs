@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using System.Threading.RateLimiting;
 using Server.Features.Identity;
+using Server.Features.Business;
 using Server.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -208,6 +209,7 @@ app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapAuthEndpoints();
+app.MapBusinessProfileEndpoints();
 
 app.MapGet("/health/live", () => Results.Ok(new { status = "ok" }));
 

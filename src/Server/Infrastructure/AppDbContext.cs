@@ -24,10 +24,24 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<StaffInvitation> StaffInvitations => Set<StaffInvitation>();
     public DbSet<StaffInvitationAudit> StaffInvitationAudits => Set<StaffInvitationAudit>();
     public DbSet<StaffPasswordResetAudit> StaffPasswordResetAudits => Set<StaffPasswordResetAudit>();
+    public DbSet<BusinessProfile> BusinessProfiles => Set<BusinessProfile>();
+    public DbSet<BusinessProfileAudit> BusinessProfileAudits => Set<BusinessProfileAudit>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
+        var profile = builder.Entity<BusinessProfile>();
+        profile.ToTable(table => table.HasCheckConstraint("CK_BusinessProfiles_Singleton", "\"Id\" = 1"));
+        profile.Property(entry => entry.Id).ValueGeneratedNever();
+        profile.Property(entry => entry.Name).HasMaxLength(150);
+        profile.Property(entry => entry.Phone).HasMaxLength(13);
+        profile.Property(entry => entry.Email).HasMaxLength(254);
+        profile.Property(entry => entry.Address).HasMaxLength(500);
+        profile.Property(entry => entry.Version).IsConcurrencyToken();
+        profile.HasData(new BusinessProfile { Id = 1, Name = "", Version = Guid.Parse("21dd6c8a-8755-4111-a7f1-a527f9b1c6b3") });
+        var profileAudit = builder.Entity<BusinessProfileAudit>();
+        profileAudit.HasOne<AppUser>().WithMany().HasForeignKey(entry => entry.ActorId).OnDelete(DeleteBehavior.Restrict);
+        profileAudit.HasIndex(entry => entry.ProfileVersion).IsUnique();
         var audit = builder.Entity<OwnerMfaRecoveryAudit>();
         audit.Property(entry => entry.InstanceId).HasMaxLength(128);
         audit.Property(entry => entry.OperatorReference).HasMaxLength(64);
