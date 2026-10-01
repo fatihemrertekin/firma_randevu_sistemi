@@ -25,6 +25,7 @@ afterEach(async () => {
 function mockRequests(change: () => Promise<Response>, account = owner) {
   const requests = vi.fn(async (path: string) => {
     if (path === '/api/auth/me') return Response.json(account)
+    if (path === '/api/auth/recovery-email/') return Response.json({ email: account.email, verifiedAt: null, deliveryAvailable: false })
     if (path === '/api/auth/csrf') return Response.json({ token: 'synthetic-csrf' })
     if (path === '/api/staff-invitations/') return Response.json([])
     if (path === '/api/business-profile/') return Response.json({ name: '', phone: null, email: null, address: null, version: 'synthetic-version' })

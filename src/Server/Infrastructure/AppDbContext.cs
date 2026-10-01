@@ -26,10 +26,18 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<StaffPasswordResetAudit> StaffPasswordResetAudits => Set<StaffPasswordResetAudit>();
     public DbSet<BusinessProfile> BusinessProfiles => Set<BusinessProfile>();
     public DbSet<BusinessProfileAudit> BusinessProfileAudits => Set<BusinessProfileAudit>();
+    public DbSet<OwnerRecoveryEmail> OwnerRecoveryEmails => Set<OwnerRecoveryEmail>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
+        var recoveryEmail = builder.Entity<OwnerRecoveryEmail>();
+        recoveryEmail.HasKey(entry => entry.OwnerId);
+        recoveryEmail.Property(entry => entry.EmailHash).HasMaxLength(64);
+        recoveryEmail.Property(entry => entry.StampHash).HasMaxLength(64);
+        recoveryEmail.Property(entry => entry.TokenHash).HasMaxLength(64);
+        recoveryEmail.HasIndex(entry => entry.TokenHash).IsUnique();
+        recoveryEmail.HasOne<AppUser>().WithMany().HasForeignKey(entry => entry.OwnerId).OnDelete(DeleteBehavior.Restrict);
         var profile = builder.Entity<BusinessProfile>();
         profile.ToTable(table => table.HasCheckConstraint("CK_BusinessProfiles_Singleton", "\"Id\" = 1"));
         profile.Property(entry => entry.Id).ValueGeneratedNever();

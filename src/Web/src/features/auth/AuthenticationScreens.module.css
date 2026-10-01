@@ -5,6 +5,8 @@
 .secret { overflow-wrap: anywhere; padding: .75rem; background: var(--background); border-radius: .5rem; }
 .codes { display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); gap: .75rem; padding-left: 1.25rem; }
 .error { margin-top: 1rem; }
+.confirmationPage { grid-template-columns: minmax(0, 1fr); justify-items: center; }
+.confirmationCard { max-width: 34rem; }
 .loginForm { gap: .625rem; }
 .loginForm label { font-size: .875rem; font-weight: 500; color: var(--muted); }
 .loginForm input { padding: .75rem .875rem; border-radius: .375rem; }
@@ -32,3 +34,7 @@
   .card { width: min(calc(100% - 2rem), 34rem); margin: 1rem; padding: 1.5rem; }
   .hero { display: none; }
 }
+
+.confirmationActions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem; }
+.confirmationActions form { min-width: 0; }
+.confirmationActions button { width: 100%; margin: 0; }
