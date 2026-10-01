@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
+import ManualDeliveryCode from './ManualDeliveryCode'
 
 type Invitation = { id: string; email: string; expiresAt: string }
 type Issued = { id: string; token: string; expiresAt: string }
@@ -8,7 +9,6 @@ export default function StaffInvitations({ post }: Props) {
   const [email, setEmail] = useState('')
   const [verified, setVerified] = useState(false)
   const [issued, setIssued] = useState<Issued | null>(null)
-  const [showCode, setShowCode] = useState(false)
   const [list, setList] = useState<Invitation[]>([])
   const [busy, setBusy] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -40,7 +40,6 @@ export default function StaffInvitations({ post }: Props) {
     setError('')
     setNotice('')
     setIssued(null)
-    setShowCode(false)
     try {
       const response = await post('/api/staff-invitations/', { email, verifiedRecipient: verified })
       if (response.ok) {
@@ -69,7 +68,7 @@ export default function StaffInvitations({ post }: Props) {
     try {
       const response = await post(`/api/staff-invitations/${id}/revoke`, {})
       if (!response.ok) throw new Error('Davet iptali doğrulanamadı. Listeyi yenileyip kontrol edin.')
-      if (issued?.id === id) { setIssued(null); setShowCode(false) }
+      if (issued?.id === id) setIssued(null)
       setNotice('Davet iptal edildi. Bu işlem kullanılmış bir davetten açılan hesabı kapatmaz.')
       await load()
     } catch (failure) { setError(failure instanceof Error ? failure.message : 'Davet iptali doğrulanamadı.') }
@@ -87,15 +86,9 @@ export default function StaffInvitations({ post }: Props) {
         onChange={event => setVerified(event.target.checked)} /> E-postanın çalışana ait olduğunu doğruladım; kodu yalnız kendisine teslim edeceğim.</label>
       <button type="submit" disabled={busy || !verified}>{busy ? 'İşlem sürüyor…' : 'Davet oluştur'}</button>
     </form>
-    {issued && <div>
-      <label htmlFor="issued-invitation">Davet kodu — yalnız bu ekranda gösterilir</label>
-      <input id="issued-invitation" type={showCode ? 'text' : 'password'} autoComplete="off" readOnly value={issued.token}
-        onFocus={event => { if (showCode) event.currentTarget.select() }} />
-      <p>Son kullanım: {new Date(issued.expiresAt).toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul' })} (İstanbul)</p>
-      <button type="button" disabled={busy} onClick={() => setShowCode(!showCode)}>{showCode ? 'Kodu gizle' : 'Kodu göster'}</button>
-      {showCode && <p>Kod alanına tıklayın; seçili kodu bilgisayarda Ctrl+C ile, telefonda kopyalama menüsüyle kopyalayın. Yalnız doğrulanmış çalışana teslim edin, ardından kodu temizleyin.</p>}
-      <button type="button" disabled={busy} onClick={() => { setIssued(null); setShowCode(false) }}>Kodu teslim ettim, temizle</button>
-    </div>}
+    {issued && <ManualDeliveryCode key={issued.token} inputId="issued-invitation"
+      label="Davet kodu — yalnız bu ekranda gösterilir" token={issued.token}
+      expiresAt={issued.expiresAt} busy={busy} onClear={() => setIssued(null)} />}
     <h3>Bekleyen davetler</h3>
     {loading ? <p role="status">Davetler yükleniyor…</p> : list.length === 0 ? <p>Geçerli bekleyen davet yok.</p> : <ul>
       {list.map(item => <li key={item.id}>{item.email} — {new Date(item.expiresAt).toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul' })}

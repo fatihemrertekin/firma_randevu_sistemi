@@ -95,6 +95,7 @@ public static class AuthEndpoints
         auth.MapPasswordEndpoints();
         auth.MapPasswordResetEndpoints();
         app.MapStaffInvitationEndpoints();
+        app.MapStaffPasswordResetEndpoints();
     }
 
     internal static async Task<bool> HasValidCsrfAsync(IAntiforgery antiforgery, HttpContext context)

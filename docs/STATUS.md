@@ -8,7 +8,7 @@ Güncelleme: 2026-10-01
 | --- | --- | --- |
 | P00 — İş ve ürün tanımı | `done` | [P00 planı](plans/P00.md), [ürün kararları](PRODUCT.md#2-ürün-kararları), kapsam/politika ve belge kontrolü tamam. Bu yalnız planlama kanıtıdır. |
 | P01 — Temel ve CI | `done` | Yerel kontroller ve [P01 kanıtı](plans/P01.md#kanıt) tamam. `10527c1` (PR #1) `main` ve `origin/main` üzerinde doğrulandı. Kullanıcının GitHub ekran görüntüsünde `320401f` ve `5b36130` için CI #1/#2 yeşil. |
-| P02 — Kimlik ve tanımlar | `in_progress` | P02-01–P02-07 tamamlandı; Staff daveti/parola değişikliği kabulü ve CI kanıtı aşağıdadır. P02'nin kalan işleri ayrı onay gerektirir. [P02 planı](plans/P02.md). |
+| P02 — Kimlik ve tanımlar | `in_progress` | P02-01–P02-08 kabulü tamamlandı; Staff unutulan parola sıfırlaması ve CI kanıtı aşağıdadır. P02'nin kalan işleri ayrı onay gerektirir. [P02 planı](plans/P02.md). |
 | P03–P17 | `planned` | Yalnız [ROADMAP](ROADMAP.md) düzeyinde; uygulama kanıtı yok. |
 
 ## P00'da doğrulananlar
@@ -120,3 +120,19 @@ P02-07 Staff parola değiştirme kabulü tamamlandı. Sıradaki iş P02'nin kala
 - Yeni uygulama imajında ana yerel live/ready 200; mevcut MFA'lı Owner sayısı 1, StaffInvitations 0. Ana hesap yeniden kurulmadı veya değiştirilmedi. Yalnız ayrı P02-07 test DB/uygulama/ağ/anahtar volume'u, geçici MFA dosyası ve test sekmesi kaldırıldı.
 - P02-07 done; P02 bütünü in_progress. Ayrıntılı kabul/geri dönüş P02 planında. Üretim dağıtımı, mobil gerçek cihaz ve eski karakter/libgssapi düzeltmesi yok. Sonraki küçük iş/P03 başlanmadı.
 - [PR #6](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/6) kod head 845003f için [push CI](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/36788919258) completed/success. Son PR CI ve belge commit'inin kontrolleri yeşil olmadan merge yok; güncel merge/main CI GitHub'dan doğrulanır. Git dışı devam kaydı .local/p02-07-browser-test-report.md.
+
+## P02-08 — Staff unutulan parola sıfırlaması
+
+- P02-07 son PR #6 push/PR CI 36789365461/36789369338 başarılı, merge 184e8fe7251d7a1dd0ed3bb8de8ea48ac1da2b3f ve main CI 36789786380 başarı olarak GitHub'dan doğrulandı; yerel raporla karşılaştırıldı. Başlangıç main/origin/main/GitHub main eşit ve temizdi.
+- Ürün sahibi bu küçük işi onayladı; güncel origin/main üzerinden feature/p02-08-staff-parola-sifirlama açıldı. MFA Owner mevcut Staff için 30 dakikalık tek kullanımlık kod üretir, manuel teslim edilir; Staff yeni parolasını kendisi belirler, eski oturumlar/kodlar iptal olur. Owner MFA/parola korunur; dış mesaj/MFA/hesap kapatma/P03 hariç.
+- Ayrı işlem tablosu SELECT/INSERT yetkili; kod/parola/e-posta audit'e gitmez. Ayrıntılı kapsam/kabul/geri dönüş P02 planında. Yeni genel altyapı veya paket yok.
+- P02-08 in_progress; son sunucu/web doğrulamaları, ayrı sentetik tarayıcı kabulü ve PR/CI/merge/temizlik kanıtı bekleniyor. P02 bütünü in_progress; başka küçük iş veya P03 ayrı onay gerektirir.
+- Yerel son kapılar: sunucu 32/32, web 53/53; kilitli restore, 0 uyarı/0 hata build, format verify, typecheck/lint/build geçti. npm audit ve transitif NuGet taraması bulgu göstermedi. Altı yeni PostgreSQL testi yetki/rol/firma/süre/oturum/lockout/rollback/paralellik/limitleri doğruladı. Migration iki kez başarılı; audit SELECT/INSERT açık, UPDATE/DELETE/TRUNCATE kapalı ve satır değiştirmeyen UPDATE DB'de reddedildi. Mevcut yerel MFA Owner sayısı 1, yeni reset audit sayısı 0; Owner'a sıfırlama uygulanmadı.
+- Ayrı p02-staff-reset-browser DB/keys/uygulamasında sentetik Owner MFA girişinden gerçek Chrome kod üretimi geçti. Kod maskeli ve süreli sunuldu. Elle aktarım, yeni parola/gönderim ve normal Staff girişi kullanıcı devrini bekliyor; yeni parola okunmayacak. Henüz tarayıcı kabulü/temizlik veya merge tamamlanmış sayılmaz.
+
+## P02-08 son kabul ve GitHub takibi
+
+- Kullanıcı kodu elle aktardı, yeni parolayı kendisi belirleyip gönderdi ve normal girişten sonra Staff ekranını bildirdi. Agent gerçek Chrome'da Staff ekranını/boş parola alanlarını/Owner formlarının yokluğunu gördü. Son imajda yenileme ve çıkış geçti; yeniden açılan Staff sıfırlama formunda alanlar boştu. Eski sentetik parola API'de 401, DB'de tek Issued/tek Completed ve yalnız Staff rolü doğrulandı. Yeni parola okunmadı/çıktıya alınmadı. Başarı bildirimi otomatik web testinde kanıtlandı; kullanıcı adımları sırasında agent tarafından ayrıca gözlenmedi.
+- Yalnız firma-randevu-p02-08-test uygulama/DB/ağ/keys volume'u, geçici MFA dosyası ve test sekmesi kaldırıldı. Ana yerel imaj son kodla güncellendi; live/ready 200, mevcut MFA Owner sayısı 1 ve yeni audit sayısı 0. Mevcut Owner/parola/MFA'ya müdahale edilmedi. Görüntüler ve kapanış devam kaydı Git dışı .local/p02-08-browser-* dosyalarındadır.
+- [PR #7](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/7) kod head ec8819a93c8b0df610dca17d57f485c731dd8e0d için [push CI 36793396806](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/36793396806) ve [PR CI 36793401100](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/36793401100) completed/success. Son kabul belge commit'i de yeşil olmadan merge uygulanmaz. Nihai head/merge/main CI eşitlik/temizlik doğrulaması .local/p02-08-browser-test-report.md içinde sürdürülür.
+- P02-08 kabulü done; P02 bütünü in_progress. Yeni küçük iş veya P03 başlatılmadı; ayrı ürün sahibi onayı beklenir. Mobil cihaz/üretim kabulü ve eski Türkçe karakter/libgssapi düzeltmesi yapılmadı.

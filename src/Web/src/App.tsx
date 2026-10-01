@@ -3,6 +3,7 @@ import PasswordChangeForm from './PasswordChangeForm'
 import PasswordResetForm from './PasswordResetForm'
 import StaffInvitations from './StaffInvitations'
 import StaffInvitationAcceptForm from './StaffInvitationAcceptForm'
+import StaffPasswordReset from './StaffPasswordReset'
 import styles from './App.module.css'
 
 type Account = { email: string; mfaEnabled: boolean; ownerAccess: boolean; staffAccess: boolean }
@@ -45,6 +46,7 @@ export default function App() {
   const [notice, setNotice] = useState('')
   const passwordChangePending = useRef(false)
   const [resettingPassword, setResettingPassword] = useState(false)
+  const [resettingStaffPassword, setResettingStaffPassword] = useState(false)
   const [acceptingInvitation, setAcceptingInvitation] = useState(false)
 
   function clearPasswordFields() {
@@ -241,7 +243,8 @@ export default function App() {
               setNotice('Staff hesabınız açıldı. E-postanız ve belirlediğiniz parolayla giriş yapın.')
             }} />
         ) : resettingPassword ? (
-          <PasswordResetForm onRequest={body => postWithCsrf('/api/auth/reset-password', body)}
+          <PasswordResetForm staff={resettingStaffPassword} onRequest={body => postWithCsrf(
+            resettingStaffPassword ? '/api/staff-password-resets/complete' : '/api/auth/reset-password', body)}
             onCancel={() => setResettingPassword(false)} onDone={() => {
               setResettingPassword(false)
               setAccount(null)
@@ -249,7 +252,9 @@ export default function App() {
               setPassword('')
               setCode('')
               clearPasswordFields()
-              setNotice('Parolanız sıfırlandı ve bütün oturumlar kapatıldı. Yeni parolanız ve ikinci adımla yeniden giriş yapın.')
+              setNotice(resettingStaffPassword
+                ? 'Parolanız sıfırlandı ve bütün oturumlar kapatıldı. Yeni parolanızla yeniden giriş yapın.'
+                : 'Parolanız sıfırlandı ve bütün oturumlar kapatıldı. Yeni parolanız ve ikinci adımla yeniden giriş yapın.')
             }} />
         ) : recoveryCodes ? (
           <>
@@ -283,6 +288,7 @@ export default function App() {
                 onCurrentPassword={setCurrentPassword} onNewPassword={setNewPassword}
                 onConfirmPassword={setConfirmPassword} onSubmit={handlePasswordChange} />
               <StaffInvitations post={postWithCsrf} />
+              <StaffPasswordReset post={postWithCsrf} />
               <button type="button" onClick={handleLogout} disabled={busy}>
                 {busy ? 'Çıkış yapılıyor…' : 'Çıkış yap'}
               </button>
@@ -363,10 +369,18 @@ export default function App() {
             </form>
             <button type="button" disabled={busy} onClick={() => {
               setResettingPassword(true)
+              setResettingStaffPassword(false)
               setPassword('')
               setError('')
               setNotice('')
             }}>Parolamı unuttum</button>
+            <button type="button" disabled={busy} onClick={() => {
+              setResettingPassword(true)
+              setResettingStaffPassword(true)
+              setPassword('')
+              setError('')
+              setNotice('')
+            }}>Staff parolamı unuttum</button>
             <button type="button" disabled={busy} onClick={() => {
               setAcceptingInvitation(true)
               setPassword('')

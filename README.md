@@ -143,4 +143,15 @@ MFA ile giriş yaptıktan sonra hesap ekranındaki “Parola değiştir” formu
 
 Üretim/kabul/iptal audit satırları Actor UUID/işlem/tarih/davet UUID'sini içerir; audit'te e-posta/token/parola kopyası yoktur. Audit uygulama rolünde yalnız SELECT/INSERT; davet tablosunda SELECT/INSERT/UPDATE vardır. Hash/stamp/rol, davet tüketimi ve audit aynı PostgreSQL transaction'ında; paralel kabulden yalnız biri başarı verir. DB/audit/commit hatasında hesap ve tüketim geri alınır. Sonuç/teslim belirsizliğinde otomatik tekrar yoktur: Owner listeyi yenileyip kullanılmamış daveti iptal ederek yeniden üretebilir; Staff önce normal girişle sonucu kontrol eder.
 
-Kod rollback'inde ek tablolar/Staff rolü korunabilir. `Down` audit/davet kayıtlarını ve Staff rolünü sildiği için gerçek kurulumda otomatik kullanılmaz; kabul edilmiş hesapların erişimini etkiler. Staff MFA/parola kurtarma/hesap kapatma sonraki ayrı onaylı işlerdir. Üretim HTTPS/teslim/izolasyon/yedek kabulü henüz bu yerel işin kanıtı değildir.
+Kod rollback'inde ek tablolar/Staff rolü korunabilir. `Down` audit/davet kayıtlarını ve Staff rolünü sildiği için gerçek kurulumda otomatik kullanılmaz; kabul edilmiş hesapların erişimini etkiler. Staff MFA/hesap kapatma sonraki ayrı onaylı işlerdir. Üretim HTTPS/teslim/izolasyon/yedek kabulü henüz bu yerel işin kanıtı değildir.
+
+## Staff parola sıfırlama — manuel teslim
+
+1. `P02StaffPasswordResetAudit` migration'ını ayrı yönetici rolüyle uygulayın. Yerel `deploy/Apply-LocalMigration.ps1` yeni işlem tablosunu ekler; uygulama rolüne yalnız SELECT/INSERT verir. Başlangıçta otomatik migration yoktur.
+2. MFA ile giriş yapan Owner, “Staff parola sıfırlama kodu” formunda mevcut çalışanın e-postasını girer. Çalışanın kimliğini/adresini bağımsız olarak doğrulayıp yalnız kendisine teslim edeceğini onaylar. Owner veya çift rollü hesap hedeflenemez. Kod üretimi mevcut parolayı veya oturumları değiştirmez.
+3. Kodu gösterin, alana tıklayıp seçin ve elle kopyalayın. Özel kanaldan doğrulanmış çalışana teslim edip ekrandan temizleyin. Kod 30 dakika geçerlidir; URL, log veya kalıcı tarayıcı deposuna yazılmaz. E-posta/SMS gönderilmez; posta kutusu sahipliği otomatik doğrulanmış sayılmaz.
+4. Staff çıkış durumunda “Staff parolamı unuttum”u seçer, kodu ve kendi belirlediği yeni parolayı/tekrarını girer. Başarıda kod tüketilir, eski oturumlar ve önceki kodlar geçersizleşir. Yeni parolayla normal giriş gerekir; otomatik giriş yoktur. Owner parolası/MFA'sı ve diğer hesaplar korunur. Mevcut hesap kilidi/hata sayacı sıfırlanmaz.
+
+CSRF, rol/hesap doğrulaması, IP/endpoint/global ve hesap sınırları sunucudadır. Issue ve Complete kayıtları firma/Grant/Staff/Actor UUID, tür ve UTC zaman tutar; e-posta, kod ve parola içermez. Parola/stamp ve tüketim kaydı aynı transaction'dadır; audit veya commit hatasında geri alınır, paralel kullanımdan yalnız biri başarılı olur. Bağlantı belirsizliğinde otomatik tekrar yoktur; önce normal girişle sonucu kontrol edin. Kod teslimi belirsizse teslim etmeyin, süre dolduktan sonra yeniden üretin.
+
+Kod rollback'inde audit tablosu korunur. `Down` işlem kayıtlarını sildiğinden gerçek kurulumda otomatik kullanılmaz. Başarılı sıfırlama eski parolayı/oturumları geri açarak geri alınmaz; gerekirse yeniden doğrulanmış sıfırlama yapılır. Staff MFA, hesap kapatma ve genel audit ekranı bu işin dışındadır.

@@ -1,9 +1,9 @@
 import { useRef, useState, type FormEvent } from 'react'
 
 type ResetBody = { token: string; newPassword: string; confirmPassword: string }
-type Props = { onRequest: (body: ResetBody) => Promise<Response>; onDone: () => void; onCancel: () => void }
+type Props = { onRequest: (body: ResetBody) => Promise<Response>; onDone: () => void; onCancel: () => void; staff?: boolean }
 
-export default function PasswordResetForm({ onRequest, onDone, onCancel }: Props) {
+export default function PasswordResetForm({ onRequest, onDone, onCancel, staff = false }: Props) {
   const [token, setToken] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -27,7 +27,7 @@ export default function PasswordResetForm({ onRequest, onDone, onCancel }: Props
       const response = await onRequest({ token: token.trim(), newPassword, confirmPassword })
       if (response.status === 204) {
         onDone()
-      } else if (response.status === 400) {
+      } else if (response.status === 400 || response.status === 409) {
         const problem = (await response.json()) as { title?: string }
         setError(problem.title ?? 'Sıfırlama kodunu ve parola alanlarını kontrol edin.')
       } else if (response.status === 429) {
@@ -48,8 +48,10 @@ export default function PasswordResetForm({ onRequest, onDone, onCancel }: Props
 
   return (
     <>
-      <h1 id="page-title">Owner parola sıfırlama</h1>
-      <p>Destekten, kimliğiniz doğrulandıktan sonra aldığınız 30 dakika geçerli kodu kullanın. Kod istemek için destekle iletişime geçin.</p>
+      <h1 id="page-title">{staff ? 'Staff parola sıfırlama' : 'Owner parola sıfırlama'}</h1>
+      <p>{staff
+        ? 'İşletme sahibinden, kimliğiniz doğrulandıktan sonra aldığınız 30 dakika geçerli kodu kullanın.'
+        : 'Destekten, kimliğiniz doğrulandıktan sonra aldığınız 30 dakika geçerli kodu kullanın. Kod istemek için destekle iletişime geçin.'}</p>
       <form onSubmit={handleSubmit} aria-label="Parola sıfırlama" aria-busy={busy}>
         <label htmlFor="reset-token">Sıfırlama kodu</label>
         <input id="reset-token" type="password" autoComplete="off" required maxLength={8192}
