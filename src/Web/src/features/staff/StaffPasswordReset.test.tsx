@@ -3,7 +3,7 @@ import { act } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import StaffPasswordReset from './StaffPasswordReset'
-import App from './App'
+import App from '../../App'
 
 let container: HTMLDivElement
 let root: Root
@@ -36,7 +36,7 @@ async function click(label: string) {
   await act(async () => button.click())
 }
 
-describe('Staff parola sıfırlama kodu üretme', () => {
+describe('Çalışan parola sıfırlama kodu üretme', () => {
   it('alıcı onayı ister, çift gönderimi engeller; kodu göster/seç/gizle/temizle ile geçici sunar', async () => {
     let finish: ((response: Response) => void) | undefined
     const waiting = new Promise<Response>(resolve => { finish = resolve })
@@ -96,6 +96,8 @@ describe('Staff parola sıfırlama kodu üretme', () => {
     vi.stubGlobal('fetch', vi.fn(async (path: string) => path === '/api/staff-invitations/' ? Response.json([]) :
       Response.json({ email: 'synthetic@example.test', staffAccess: !ownerAccess, ownerAccess, mfaEnabled: ownerAccess })))
     await act(async () => root.render(<App />))
-    expect(container.querySelector('form[aria-label="Staff sıfırlama kodu üret"]') !== null).toBe(ownerAccess)
+    const access = Array.from(container.querySelectorAll<HTMLButtonElement>('nav button')).find(button => button.textContent === 'Çalışan erişimleri')
+    if (access) await act(async () => access.click())
+    expect(container.querySelector('form[aria-label="Çalışan sıfırlama kodu üret"]') !== null).toBe(ownerAccess)
   })
 })

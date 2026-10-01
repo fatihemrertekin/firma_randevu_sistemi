@@ -2,7 +2,7 @@
 import { act } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import App from './App'
+import App from '../../App'
 
 let container: HTMLDivElement
 let root: Root
@@ -28,7 +28,7 @@ async function openReset(handler: () => Promise<Response>, staff = false) {
   })
   vi.stubGlobal('fetch', requests)
   await act(async () => root.render(<App />))
-  const button = Array.from(container.querySelectorAll('button')).find(item => item.textContent === (staff ? 'Staff parolamı unuttum' : 'Parolamı unuttum'))
+  const button = Array.from(container.querySelectorAll('button')).find(item => item.textContent === (staff ? 'Çalışan parolamı unuttum' : 'Parolamı unuttum'))
   if (!button) throw new Error('Sıfırlama bağlantısı yok')
   await act(async () => button.click())
   return requests
@@ -108,7 +108,7 @@ describe.each([false, true])('Parola sıfırlama (Staff: %s)', staff => {
     if (!cancel) throw new Error('Dönüş düğmesi yok')
     await act(async () => cancel.click())
     expect(container.textContent).toContain('İşletme girişi')
-    const reopen = Array.from(container.querySelectorAll('button')).find(item => item.textContent === (staff ? 'Staff parolamı unuttum' : 'Parolamı unuttum'))
+    const reopen = Array.from(container.querySelectorAll('button')).find(item => item.textContent === (staff ? 'Çalışan parolamı unuttum' : 'Parolamı unuttum'))
     if (!reopen) throw new Error('Sıfırlama düğmesi yok')
     await act(async () => reopen.click())
     expect(Array.from(container.querySelectorAll<HTMLInputElement>('input')).every(input => input.value === '')).toBe(true)

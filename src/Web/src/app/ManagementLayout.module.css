@@ -1,0 +1,25 @@
+.page { min-height: 100vh; }
+.header { display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; padding: 1rem clamp(1rem, 4vw, 3rem); background: var(--surface); border-bottom: 1px solid var(--border); }
+.brand { font-family: Georgia, 'Times New Roman', serif; font-size: 1.5rem; font-weight: 800; color: var(--primary); }
+.subtitle { margin-left: .75rem; color: var(--muted); }
+.account { display: flex; align-items: center; gap: 1rem; min-width: 0; }
+.account span { overflow-wrap: anywhere; font-size: .875rem; }
+.layout { max-width: 76rem; margin: auto; display: grid; grid-template-columns: 15rem minmax(0, 1fr); gap: 2rem; padding: 2rem; }
+.sidebar { align-self: start; }
+.role { font-weight: 600; padding: 0 .75rem; }
+.sidebar nav { display: grid; gap: .5rem; }
+.sidebar button { margin: 0; text-align: left; border-color: transparent; background: transparent; }
+.sidebar button[aria-current='page'] { background: var(--primary-soft); border-color: var(--primary); color: var(--primary); }
+.content { min-width: 0; }
+.content h1 { margin-top: 0; }
+.panel { margin-top: 1.5rem; padding: clamp(1.25rem, 3vw, 2rem); background: var(--surface); border: 1px solid var(--border); border-radius: 1rem; box-shadow: var(--shadow); }
+.panel > :first-child, .panel section > :first-child { margin-top: 0; }
+.panel form { max-width: 42rem; }
+@media (max-width: 720px) {
+  .header { flex-wrap: wrap; gap: .5rem; }
+  .account { justify-content: space-between; width: 100%; }
+  .layout { grid-template-columns: minmax(0, 1fr); padding: 1rem; gap: 1.25rem; }
+  .role { padding: 0; margin-bottom: .5rem; }
+  .sidebar nav { grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); }
+  .sidebar button { font-size: .875rem; }
+}

@@ -1,3 +1,4 @@
+import ErrorMessage from '../../components/ErrorMessage'
 import { useRef, useState, type FormEvent } from 'react'
 
 type Body = { email: string; token: string; password: string; confirmPassword: string }
@@ -34,9 +35,9 @@ export default function StaffInvitationAcceptForm({ post, onDone, onCancel }: Pr
     finally { setToken(''); setPassword(''); setConfirmPassword(''); pending.current = false; setBusy(false) }
   }
   return <>
-    <h1 id="page-title">Staff davetini kabul et</h1>
+    <h1 id="page-title">Çalışan davetini kabul et</h1>
     <p>İşletme sahibinin size verdiği kodu ve davet edilen e-postanızı kullanın. Kod 24 saat geçerlidir.</p>
-    <form onSubmit={submit} aria-label="Staff davetini kabul et" aria-busy={busy}>
+    <form onSubmit={submit} aria-label="Çalışan davetini kabul et" aria-busy={busy}>
       <label htmlFor="accept-email">Davet edilen e-posta</label>
       <input id="accept-email" type="email" autoComplete="username" required maxLength={256} disabled={busy}
         value={email} onChange={event => setEmail(event.target.value)} />
@@ -53,6 +54,6 @@ export default function StaffInvitationAcceptForm({ post, onDone, onCancel }: Pr
       <button type="submit" disabled={busy}>{busy ? 'Hesap açılıyor…' : 'Hesabımı aç'}</button>
     </form>
     <button type="button" disabled={busy} onClick={onCancel}>Girişe dön</button>
-    {error && <p role="alert">{error}</p>}
+    <ErrorMessage message={error} />
   </>
 }

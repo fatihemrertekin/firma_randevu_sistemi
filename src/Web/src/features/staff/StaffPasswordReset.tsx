@@ -1,5 +1,6 @@
+import ErrorMessage from '../../components/ErrorMessage'
 import { useRef, useState, type FormEvent } from 'react'
-import ManualDeliveryCode from './ManualDeliveryCode'
+import ManualDeliveryCode from '../../components/ManualDeliveryCode'
 
 type Issued = { token: string; expiresAt: string }
 type Props = { post: (path: string, body: object) => Promise<Response> }
@@ -27,7 +28,7 @@ export default function StaffPasswordReset({ post }: Props) {
         const problem = await response.json() as { title?: string }
         setError(problem.title ?? 'Hesabı ve alıcı onayını kontrol edin.')
       } else if (response.status === 401 || response.status === 403) {
-        setError('Owner oturumu geçersiz. Yeniden giriş yapın.')
+        setError('İşletme sahibi oturumu geçersiz. Yeniden giriş yapın.')
       } else if (response.status === 429) {
         setError('Çok fazla deneme. Daha sonra tekrar deneyin.')
       } else {
@@ -44,10 +45,10 @@ export default function StaffPasswordReset({ post }: Props) {
   }
 
   return <section aria-labelledby="staff-reset-title">
-    <h2 id="staff-reset-title">Staff parola sıfırlama kodu</h2>
+    <h2 id="staff-reset-title">Çalışan parola sıfırlama kodu</h2>
     <p>Parolasını unutan mevcut çalışan için 30 dakikalık kod üretin. Çalışan yeni parolasını kendisi belirler.
       Kodu yalnız kimliğini ve e-postasını doğruladığınız çalışana özel kanaldan teslim edin.</p>
-    <form onSubmit={issue} aria-label="Staff sıfırlama kodu üret" aria-busy={busy}>
+    <form onSubmit={issue} aria-label="Çalışan sıfırlama kodu üret" aria-busy={busy}>
       <label htmlFor="staff-reset-email">Parolasını unutan çalışanın e-postası</label>
       <input id="staff-reset-email" type="email" required maxLength={256} autoComplete="off" disabled={busy}
         value={email} onChange={event => setEmail(event.target.value)} />
@@ -56,8 +57,8 @@ export default function StaffPasswordReset({ post }: Props) {
       <button type="submit" disabled={busy || !verified}>{busy ? 'Kod üretiliyor…' : 'Sıfırlama kodu üret'}</button>
     </form>
     {issued && <ManualDeliveryCode key={issued.token} inputId="issued-staff-reset"
-      label="Staff sıfırlama kodu — yalnız bu ekranda gösterilir" token={issued.token}
+      label="Çalışan sıfırlama kodu — yalnız bu ekranda gösterilir" token={issued.token}
       expiresAt={issued.expiresAt} busy={busy} onClear={() => setIssued(null)} />}
-    {error && <p role="alert">{error}</p>}
+    <ErrorMessage message={error} />
   </section>
 }

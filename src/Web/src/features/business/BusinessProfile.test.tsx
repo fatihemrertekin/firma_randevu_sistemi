@@ -3,7 +3,7 @@ import { act } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import BusinessProfile from './BusinessProfile'
-import App from './App'
+import App from '../../App'
 
 let container: HTMLDivElement
 let root: Root
@@ -33,6 +33,8 @@ async function reload() {
   const button = Array.from(container.querySelectorAll('button')).find(item => item.textContent === 'Güncel bilgileri yükle')
   if (!button) throw new Error('Yenileme yok')
   await act(async () => button.click())
+  const confirm = Array.from(container.querySelectorAll('button')).find(item => item.textContent === 'Değişiklikleri sil ve yükle')
+  if (confirm) await act(async () => confirm.click())
 }
 
 describe('İşletme profili', () => {

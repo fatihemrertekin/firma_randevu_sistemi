@@ -1,5 +1,6 @@
+import ErrorMessage from '../../components/ErrorMessage'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
-import ManualDeliveryCode from './ManualDeliveryCode'
+import ManualDeliveryCode from '../../components/ManualDeliveryCode'
 
 type Invitation = { id: string; email: string; expiresAt: string }
 type Issued = { id: string; token: string; expiresAt: string }
@@ -76,9 +77,9 @@ export default function StaffInvitations({ post }: Props) {
   }
 
   return <section aria-labelledby="staff-invitation-title">
-    <h2 id="staff-invitation-title">Staff daveti</h2>
+    <h2 id="staff-invitation-title">Çalışan daveti</h2>
     <p>Çalışan kendi parolasını belirler. Kod 24 saat geçerli; yalnız doğruladığınız çalışana özel kanaldan teslim edin.</p>
-    <form onSubmit={issue} aria-label="Staff daveti oluştur" aria-busy={busy}>
+    <form onSubmit={issue} aria-label="Çalışan daveti oluştur" aria-busy={busy}>
       <label htmlFor="invite-email">Çalışanın e-postası</label>
       <input id="invite-email" type="email" required maxLength={256} autoComplete="off" disabled={busy}
         value={email} onChange={event => setEmail(event.target.value)} />
@@ -101,6 +102,6 @@ export default function StaffInvitations({ post }: Props) {
       try { await load() } catch (failure) { setError(failure instanceof Error ? failure.message : 'Davet listesi alınamadı.') }
       finally { setLoading(false) }
     }}>Davetleri yenile</button>
-    {error && <p role="alert">{error}</p>}{notice && <p role="status">{notice}</p>}
+    <ErrorMessage message={error} />{notice && <p role="status">{notice}</p>}
   </section>
 }
