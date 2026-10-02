@@ -13,7 +13,7 @@ Güncelleme: 2026-10-03. Güncel özet burada; kapsam ve kanıt bağlantıları 
 
 ## Son doğrulanan teslim ve sınırlar
 
-- P02-16 yerel kabulü `done`: MFA Owner Staff listesini görüp hesabı onayla pasifleştirir; yeni giriş, eski oturum ve sıfırlama kodu reddedilir, Owner korunur. Sunucu 82/82, web 106/106, kalite kapıları ve dört genişlikte gerçek API/tarayıcı kabulü geçti; [kanıt ve geri dönüş](plans/P02.md#p02-16--staff-hesaplarını-pasifleştirme). Ana yerel kurulumun DB/imajı güncellenmedi; Owner/MFA/SMTP değişmedi.
+- P02-16 yerel kabulü `done`: MFA Owner Staff listesini görüp hesabı onayla pasifleştirir; yeni giriş, eski oturum ve sıfırlama kodu reddedilir, Owner korunur. Sunucu 82/82, web 106/106, kalite kapıları ve dört genişlikte gerçek API/tarayıcı kabulü geçti; [kanıt ve geri dönüş](plans/P02.md#p02-16--staff-hesaplarını-pasifleştirme). 03.10.2026 ayrı onayla ana yerel DB/imajı güncellendi; şifreli yedek, sağlık/restart ve kimlik/anahtar/SMTP koruma kontrolleri geçti; [yerel güncelleme kanıtı](plans/P02.md#p02-16-ana-yerel-güncelleme--03102026).
 - [PR #14](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/14) `1f3584d` ile birleşti; [main CI](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/36956717787) başarılı. Bu sadeleştirme başlangıcında GitHub API üzerinden birleşme yeniden doğrulandı; yerel main/origin/main/GitHub main `e55be37` ile eşitti ve bu commit'in [CI sonucu](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/36959199297) başarılıydı. Çalışma ağacında kullanıcıya ait belge değişiklikleri vardı.
 - Yerel SMTP kalıcı özel dosyayla etkin; Owner adres doğrulaması ve sıfırlama iletisinin yeni parola ekranına ulaşması kabul edildi. Mevcut Owner parolası/MFA'sı korunmuştur. Tam parola yenileme + normal giriş/MFA kabulü P02-14'te ayrı sentetik hesapta yapıldı; [SMTP kararı](adr/002-kimlik-epostasi-smtp.md).
 - Staff daveti ve parola sıfırlama Owner'ın manuel teslim koduyla çalışır. Üretim DNS/HTTPS/işletim kabulü, diğer alıcı sağlayıcılarında gerçek gelen kutusu teslimi ve gerçek pilot yapılmadı; yerel kabul bunların yerine geçmez.
@@ -31,7 +31,7 @@ Program.cs bakımı `done`: başlangıç 265 satırdan 69 satıra indi; önce/so
 
 ## Sıradaki iş
 
-Onaylanan bakım sırası ve P02-16 yerel kabulü tamamlandı; GitHub teslimi [PR #19](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/19) üzerinden yürür; birleşme ve CI sonucu PR üzerinden doğrulanır. Sonraki öneri: P02-16 migration/imajını ana yerel kuruluma yedek ve Owner/MFA koruma kontrolüyle uygulamak. Bu işletim işi ayrıca onay bekler. Yeniden etkinleştirme veya başka P02/P03 geliştirmesi başlamaz; doğrudan main push yoktur.
+Onaylanan bakım sırası, P02-16 ve ana yerel güncellemesi tamamlandı. [PR #19](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/19) `f8232d3` ile birleşti ve [main CI](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/37068066623) başarılı. Sonraki öneri: P02 çalışan tanımları için küçük kapsamı netleştirip onay almak. Çalışan hesabı erişimi ile randevu alacak personel tanımı ayrı işlerdir. Yeni geliştirme veya P03 başlamaz; doğrudan main push yoktur.
 
 ## Gelecek plan kaydı — destek ve işletim ekranı (02.10.2026)
 
