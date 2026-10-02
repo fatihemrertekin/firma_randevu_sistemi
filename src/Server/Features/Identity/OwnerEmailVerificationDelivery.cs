@@ -10,7 +10,7 @@ public interface IOwnerEmailVerificationDelivery
 }
 
 // A local development mailbox, never an Internet sender. No production fallback.
-public sealed class LocalOwnerEmailVerificationDelivery : IOwnerEmailVerificationDelivery
+public sealed class LocalOwnerEmailVerificationDelivery : IOwnerEmailVerificationDelivery, IOwnerPasswordResetDelivery
 {
     private readonly string? directory;
     private readonly Uri? origin;
@@ -37,7 +37,15 @@ public sealed class LocalOwnerEmailVerificationDelivery : IOwnerEmailVerificatio
         !email.Any(char.IsControl) && MailAddress.TryCreate(email, out var address) &&
         address.Address == email && address.Host.EndsWith(".test", StringComparison.OrdinalIgnoreCase);
 
-    public async Task DeliverAsync(string email, string token, DateTimeOffset expiresAt, CancellationToken cancellationToken)
+    public Task DeliverAsync(string email, string token, DateTimeOffset expiresAt, CancellationToken cancellationToken) =>
+        WriteAsync(email, token, expiresAt, "verify-owner-email", Guid.NewGuid(), cancellationToken);
+
+    Task IOwnerPasswordResetDelivery.DeliverAsync(string email, string token, DateTimeOffset expiresAt,
+        Guid deliveryId, CancellationToken cancellationToken) =>
+        WriteAsync(email, token, expiresAt, "reset-owner-password", deliveryId, cancellationToken);
+
+    private async Task WriteAsync(string email, string token, DateTimeOffset expiresAt, string purpose,
+        Guid deliveryId, CancellationToken cancellationToken)
     {
         if (!CanDeliver(email) || directory is null || origin is null || !OperatingSystem.IsLinux())
             throw new IOException("Yerel doğrulama teslimi kullanılamıyor.");
@@ -47,15 +55,18 @@ public sealed class LocalOwnerEmailVerificationDelivery : IOwnerEmailVerificatio
             UnixFileMode.OtherRead | UnixFileMode.OtherWrite | UnixFileMode.OtherExecute)) != 0 ||
             new DirectoryInfo(directory).LinkTarget is not null)
             throw new IOException("Yerel posta dizini özel ve bağlantısız olmalı.");
-        var link = new Uri(origin, "/#verify-owner-email=" + Uri.EscapeDataString(token)).AbsoluteUri;
-        var body = $"Hesap e-postanızı doğrulamak için bağlantıyı açıp onaylayın:\n{link}\n" +
-            $"Son geçerlilik (UTC): {expiresAt:O}\nBu işlem parolanızı veya iki aşamalı girişinizi değiştirmez.";
+        var link = new Uri(origin, "/#" + purpose + "=" + Uri.EscapeDataString(token)).AbsoluteUri;
+        var description = purpose == "verify-owner-email" ? "Hesap e-postanızı doğrulamak için bağlantıyı açıp onaylayın:"
+            : "Parolanızı yenilemek için bağlantıyı açın. İstemediyseniz bu iletiyi yok sayın:";
+        var body = $"{description}\n{link}\n" +
+            $"Son geçerlilik (UTC): {expiresAt:O}\nBağlantıyı açmak parolanızı değiştirmez. İki aşamalı girişiniz korunur.";
         var message = $"From: no-reply@example.test\r\nTo: {email}\r\n" +
-            "Subject: Randevu - E-posta dogrulama\r\nMIME-Version: 1.0\r\n" +
+            $"Subject: Randevu - {(purpose == "verify-owner-email" ? "E-posta dogrulama" : "Parola yenileme")}\r\nMIME-Version: 1.0\r\n" +
             "Content-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: base64\r\n\r\n" +
             Convert.ToBase64String(Encoding.UTF8.GetBytes(body), Base64FormattingOptions.InsertLineBreaks);
-        var filePath = Path.Combine(directory, Guid.NewGuid().ToString("N") + ".eml");
-        var temporaryPath = filePath + ".tmp";
+        var filePath = Path.Combine(directory, deliveryId.ToString("N") + ".eml");
+        if (File.Exists(filePath)) return; // Stable delivery ID prevents duplicates after an acknowledgement/restart failure.
+        var temporaryPath = filePath + "." + Guid.NewGuid().ToString("N") + ".tmp";
         try
         {
             await using (var stream = new FileStream(temporaryPath, new FileStreamOptions
@@ -70,7 +81,8 @@ public sealed class LocalOwnerEmailVerificationDelivery : IOwnerEmailVerificatio
                 await stream.WriteAsync(Encoding.UTF8.GetBytes(message), cancellationToken);
                 await stream.FlushAsync(cancellationToken);
             }
-            File.Move(temporaryPath, filePath);
+            try { File.Move(temporaryPath, filePath); }
+            catch (IOException) when (File.Exists(filePath)) { /* Another valid lease delivered the same grant. */ }
         }
         finally { if (File.Exists(temporaryPath)) File.Delete(temporaryPath); }
     }

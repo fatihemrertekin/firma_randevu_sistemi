@@ -1,5 +1,6 @@
 import ErrorMessage from '../../components/ErrorMessage'
 import PasswordResetForm from './PasswordResetForm'
+import OwnerPasswordResetRequest from './OwnerPasswordResetRequest'
 import StaffInvitationAcceptForm from './StaffInvitationAcceptForm'
 import type useAuthentication from './useAuthentication'
 import { postWithCsrf } from '../../app/api'
@@ -27,6 +28,12 @@ export default function AuthenticationScreens({ auth }: { auth: ReturnType<typeo
               setPassword('')
               setNotice('Çalışan hesabınız açıldı. E-postanız ve belirlediğiniz parolayla giriş yapın.')
             }} />
+        ) : resettingPassword && !resettingStaffPassword ? (
+          <OwnerPasswordResetRequest onCancel={() => setResettingPassword(false)} onDone={() => {
+            setResettingPassword(false); setAccount(null); setMfaRequired(false)
+            setPassword(''); setCode(''); clearPasswordFields()
+            setNotice('Parolanız sıfırlandı. Yeni parolanız ve ikinci adımla yeniden giriş yapın.')
+          }} />
         ) : resettingPassword ? (
           <PasswordResetForm staff={resettingStaffPassword} onRequest={body => postWithCsrf(
             resettingStaffPassword ? '/api/staff-password-resets/complete' : '/api/auth/reset-password', body)}

@@ -1,6 +1,6 @@
 # STATUS — Güncel durum ve sıradaki iş
 
-Güncelleme: 2026-10-01
+Güncelleme: 2026-10-02
 
 ## Aşamalar
 
@@ -8,7 +8,7 @@ Güncelleme: 2026-10-01
 | --- | --- | --- |
 | P00 — İş ve ürün tanımı | `done` | [P00 planı](plans/P00.md), [ürün kararları](PRODUCT.md#2-ürün-kararları), kapsam/politika ve belge kontrolü tamam. Bu yalnız planlama kanıtıdır. |
 | P01 — Temel ve CI | `done` | Yerel kontroller ve [P01 kanıtı](plans/P01.md#kanıt) tamam. `10527c1` (PR #1) `main` ve `origin/main` üzerinde doğrulandı. Kullanıcının GitHub ekran görüntüsünde `320401f` ve `5b36130` için CI #1/#2 yeşil. |
-| P02 — Kimlik ve tanımlar | `in_progress` | P02-01–P02-12 yerel kabulü tamamlandı; son kanıt aşağıdadır. P02'nin kalan işleri ayrı onay gerektirir. [P02 planı](plans/P02.md). |
+| P02 — Kimlik ve tanımlar | `in_progress` | P02-01–P02-13 yerel kabulü tamamlandı; son kanıt aşağıdadır. P02'nin kalan işleri ayrı onay gerektirir. [P02 planı](plans/P02.md). |
 | P03–P17 | `planned` | Yalnız [ROADMAP](ROADMAP.md) düzeyinde; uygulama kanıtı yok. |
 
 ## P00'da doğrulananlar
@@ -180,3 +180,15 @@ Son istek, firmanın destekle iletişime geçmeden parola sıfırlaması için r
 Owner hesap e-postası doğrulama ve sentetik özel dosya teslimi yerel kabulü done: sunucu 44/44, web 81/81; kalite/bağımlılık kontrolleri, gerçek Chrome açık onay/tek kullanım/restart ve 375 px yan yana düğme kabulü geçti. Migration tekrar/geri dönüş sentetik DB'de, ekleyici kurulum ve kimlik korunması ana DB'de doğrulandı. Sentetik kaynaklar temizlendi; ana live/ready 200. Ayrıntı P02-12 planında, nihai PR/head/CI/merge/main kaydı Git dışı .local/p02-12-browser-test-report.md içindedir.
 
 P02 devam eder. Gerçek Internet teslimi ve otomatik parola sıfırlama henüz uygulanmadı. Mevcut Owner sıfırlama destek kodu, Staff sıfırlama Owner kodu ve Staff daveti manuel kod akışlarıyla çalışır; UI metinleri bu mevcut durumu anlatır. Ürün sahibinin son ekran sorusu kapsam genişletme onayı değildir. Sonraki tek küçük iş için ayrı onay beklenir; başka P02 işi veya P03 başlatılmaz.
+
+## P02-13 başlangıcı (02.10.2026)
+
+P02-12 PR #11/main CI success ve temiz main eşitliği doğrulandı. Ürün sahibi Owner otomatik parola sıfırlama yerel akışını ve kalıcı teslim kuyruğunu onayladı. P02-13 in_progress; kapsam/kabul/geri dönüş P02 planında. Gerçek SMTP/DNS/Staff/P03 başlatılmaz.
+
+## P02-13 yerel kabulü ve sonraki sınır
+
+02.10.2026: Owner doğrulanmış hesap e-postası → bağlantı isteği → yeni parola → normal MFA girişi yerel kabulü done. Kalıcı şifreli DB teslim işi/BackgroundService, lease ve sonlu retry/expiry; genel yanıt, tek kullanım, firma/adres/stamp/rol ve paralel işlem güvenceleri eklendi. Minimal yan yana eylemler ve manuel özel kod yolu korundu. Sunucu 50/50, web 87/87 ve tüm kalite/bağımlılık kontrolleri geçti. Gerçek Chrome'da kullanıcı yeni parolayı kendisi girdi; MFA ile panel, son imajda restart/oturum/doğrulanmış adres ve mobil yerleşim doğrulandı. Kabulde bulunan aynı sekme başarı yönlendirmesi düzeltildi ve regresyon testi geçti.
+
+Migration tekrar/geri dönüş sentetik DB'de; özel yedek sonrası ekleyici ana kurulum ve hesap/parola/MFA korunması doğrulandı. Önceki imaj yeni şemada ve son imajda sağlık 200; ana teslim kapalı, sıfırlama işi 0. Sentetik ortam/özel dosyalar temizlendi. Ayrıntı [P02-13](plans/P02.md#p02-13-yerel-kabul-02102026); nihai PR/head/CI/merge/main kaydı Git dışı .local/p02-13-browser-test-report.md içinde güncel GitHub ile izlenir.
+
+P02 bütünü in_progress. Gerçek Internet e-posta teslimi yok; sonraki tek küçük iş önerisi Owner doğrulama/sıfırlama iletilerini gerçek posta kutusuna teslim edecek SMTP adaptörü ve sentetik adresle uçtan uca teslim kabulüdür. Sağlayıcı, maliyet/kota, DNS ve canlı yapılandırma somutlaşmadan yeni uygulama yapılmaz; ücretsiz/sınırsız teslim garanti edilmez. Bu öneri onay değildir. Staff/davet otomasyonu, diğer P02 işleri veya P03 için ayrı onay beklenir.

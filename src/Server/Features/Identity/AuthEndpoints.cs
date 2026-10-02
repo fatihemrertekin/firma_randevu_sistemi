@@ -10,6 +10,7 @@ public static class AuthEndpoints
     public static void MapAuthEndpoints(this IEndpointRouteBuilder app)
     {
         var auth = app.MapGroup("/api/auth");
+        OwnerSelfServiceResetFlow.MapEndpoint(auth);
 
         auth.MapGet("/csrf", (HttpContext context, IAntiforgery antiforgery) =>
         {
