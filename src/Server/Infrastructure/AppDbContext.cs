@@ -28,10 +28,12 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<BusinessProfileAudit> BusinessProfileAudits => Set<BusinessProfileAudit>();
     public DbSet<OwnerRecoveryEmail> OwnerRecoveryEmails => Set<OwnerRecoveryEmail>();
     public DbSet<OwnerSelfServiceReset> OwnerSelfServiceResets => Set<OwnerSelfServiceReset>();
+    public DbSet<IdentityEmailQuota> IdentityEmailQuotas => Set<IdentityEmailQuota>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
+        builder.Entity<IdentityEmailQuota>().HasKey(entry => entry.Day);
         var reset = builder.Entity<OwnerSelfServiceReset>();
         reset.HasKey(entry => entry.OwnerId);
         reset.HasIndex(entry => entry.GrantId).IsUnique();

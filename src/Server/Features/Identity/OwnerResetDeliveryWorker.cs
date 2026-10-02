@@ -84,6 +84,8 @@ public sealed class OwnerResetDeliveryWorker(IServiceScopeFactory scopes, OwnerS
                 status = "Delivered";
             }
             catch (CryptographicException) { status = "Failed"; }
+            catch (IdentityEmailDeliveryException failure)
+            { status = failure.Retryable && job.Attempts < 4 ? "Pending" : "Failed"; }
             catch (Exception failure) when (failure is IOException or UnauthorizedAccessException or OperationCanceledException)
             {
                 cancellationToken.ThrowIfCancellationRequested();

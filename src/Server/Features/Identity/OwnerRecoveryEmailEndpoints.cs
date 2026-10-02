@@ -86,11 +86,12 @@ public static class OwnerRecoveryEmailEndpoints
         }
         // Delivery runs after the transaction. A failure never returns a sent notice.
         try { await delivery.DeliverAsync(email, token, expiresAt, timeout.Token); }
-        catch (Exception failure) when (failure is IOException or UnauthorizedAccessException)
+        catch (Exception failure) when (failure is IOException or UnauthorizedAccessException or OperationCanceledException)
         {
+            using var cleanup = new CancellationTokenSource(TimeSpan.FromSeconds(3));
             await db.OwnerRecoveryEmails.Where(entry => entry.OwnerId == id &&
                 entry.TokenHash == TokenHash(token, configuration) && entry.VerifiedAt == null)
-                .ExecuteUpdateAsync(setters => setters.SetProperty(entry => entry.TokenHash, (string?)null), timeout.Token);
+                .ExecuteUpdateAsync(setters => setters.SetProperty(entry => entry.TokenHash, (string?)null), cleanup.Token);
             return Results.Problem(statusCode: 503, title: "Doğrulama iletisi teslim edilemedi. Bir dakika sonra yeniden deneyin.");
         }
         return Results.Ok(new { expiresAt });
