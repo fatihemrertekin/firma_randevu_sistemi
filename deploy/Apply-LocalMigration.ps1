@@ -35,6 +35,8 @@ GRANT SELECT, INSERT, UPDATE ON TABLE "OwnerRecoveryEmails" TO app_user;
 REVOKE DELETE, TRUNCATE ON TABLE "OwnerRecoveryEmails" FROM app_user;
 GRANT SELECT, INSERT, UPDATE ON TABLE "OwnerSelfServiceResets" TO app_user;
 REVOKE DELETE, TRUNCATE ON TABLE "OwnerSelfServiceResets" FROM app_user;
+GRANT SELECT, INSERT, UPDATE ON TABLE "IdentityEmailQuotas" TO app_user;
+REVOKE DELETE, TRUNCATE ON TABLE "IdentityEmailQuotas" FROM app_user;
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO app_user;
 '@ | docker compose --env-file deploy/.env -f deploy/compose.local.yaml exec -T db psql -U postgres -d firma_randevu -v ON_ERROR_STOP=1
 if ($LASTEXITCODE -ne 0) {

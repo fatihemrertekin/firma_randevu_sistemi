@@ -192,3 +192,13 @@ P02-12 PR #11/main CI success ve temiz main eşitliği doğrulandı. Ürün sahi
 Migration tekrar/geri dönüş sentetik DB'de; özel yedek sonrası ekleyici ana kurulum ve hesap/parola/MFA korunması doğrulandı. Önceki imaj yeni şemada ve son imajda sağlık 200; ana teslim kapalı, sıfırlama işi 0. Sentetik ortam/özel dosyalar temizlendi. Ayrıntı [P02-13](plans/P02.md#p02-13-yerel-kabul-02102026); nihai PR/head/CI/merge/main kaydı Git dışı .local/p02-13-browser-test-report.md içinde güncel GitHub ile izlenir.
 
 P02 bütünü in_progress. Gerçek Internet e-posta teslimi yok; sonraki tek küçük iş önerisi Owner doğrulama/sıfırlama iletilerini gerçek posta kutusuna teslim edecek SMTP adaptörü ve sentetik adresle uçtan uca teslim kabulüdür. Sağlayıcı, maliyet/kota, DNS ve canlı yapılandırma somutlaşmadan yeni uygulama yapılmaz; ücretsiz/sınırsız teslim garanti edilmez. Bu öneri onay değildir. Staff/davet otomasyonu, diğer P02 işleri veya P03 için ayrı onay beklenir.
+
+## P02-14 başlangıcı — gerçek SMTP teslimi
+
+02.10.2026: Kullanıcı MailKit + SMTP teknoloji/kapsamını ve ayrı gerçek test posta kutusu kabulünü onayladı. P02-13 PR #12/main ff1ed2f ve CI 36944541511 success yeniden doğrulandı; feature/p02-14-owner-smtp-teslim açıldı. P02-14 in_progress; kabul ve sınırlar P02 planındadır. Ayrı Gmail test hesabı hazır; sırlar kullanıcı tarafından özel yerel dosyaya girilecek. Gerçek ana Owner/parola/MFA korunur; başka küçük iş/P03 başlatılmaz. Yerel kullanıcı AGENTS.md değişikliği korunur, PR kapsamına alınmaz.
+
+## P02-14 yerel kabulü — 02.10.2026
+
+Owner doğrulama ve parola yenileme SMTP adaptörü ayrı gerçek test kutusunda kabul edildi. Kullanıcı e-posta doğrulama, yeni parolayla normal giriş ve MFA sonrası paneli tamamladı. Sunucu 70/70, web 87/87 ve kalite/bağımlılık kontrolleri geçti; migration tekrar/geri dönüş sentetik DB'de doğrulandı. Ana Owner/parola/MFA korundu, ana gönderim kapalı; sentetik SMTP ortamı ve özel dosyalar temizlendi. Ayrıntı [P02-14 kabulü](plans/P02.md#p02-14-yerel-kabulü--02102026), Git dışı .local/p02-14-browser-test-report.md ve ADR-002 içindedir.
+
+GitHub teslimi henüz CI/birleşme kapanışını bekler. Google uygulama şifresini kullanıcı kendi hesabından iptal eder. Yerel AGENTS.md/docs/UI-UX.md değişiklikleri korunur ve PR'a alınmaz. Ücretsiz/sınırsız teslim taahhüdü yoktur; Hotmail/kurumsal gerçek gelen kutusu testi ve üretim kabulü yapılmadı. P02 bütünü in_progress; yeni küçük iş/P03 için ayrı onay beklenir.

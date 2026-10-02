@@ -1,4 +1,5 @@
 .git
+.local
 .github
 .npm-cache
 .nuget
@@ -9,7 +10,8 @@
 src/Web/dist
 src/Server/wwwroot
 tests
-docs
+docs/*
+!docs/identity-email-licenses.txt
 *.user
 *.suo
 .env

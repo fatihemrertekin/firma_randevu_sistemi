@@ -54,8 +54,19 @@ builder.Services.AddIdentity<AppUser, IdentityRole<Guid>>(options =>
     .AddDefaultTokenProviders()
     .AddTokenProvider<OwnerPasswordResetTokenProvider>("OwnerPasswordReset");
 builder.Services.AddSingleton(TimeProvider.System);
-builder.Services.AddSingleton<IOwnerEmailVerificationDelivery, LocalOwnerEmailVerificationDelivery>();
-builder.Services.AddSingleton<IOwnerPasswordResetDelivery, LocalOwnerEmailVerificationDelivery>();
+builder.Services.AddSingleton<IdentityEmailOptions>();
+builder.Services.AddSingleton<IIdentityEmailTransport, SmtpIdentityEmailTransport>();
+builder.Services.AddSingleton<SmtpOwnerEmailDelivery>();
+builder.Services.AddSingleton<LocalOwnerEmailVerificationDelivery>();
+builder.Services.AddSingleton<IOwnerEmailVerificationDelivery>(services =>
+    (services.GetRequiredService<IConfiguration>()["IdentityEmail:Mode"] ?? "Local") switch
+    {
+        "Smtp" => services.GetRequiredService<SmtpOwnerEmailDelivery>(),
+        "Local" => services.GetRequiredService<LocalOwnerEmailVerificationDelivery>(),
+        _ => throw new InvalidOperationException("Kimlik e-postası teslim modu geçersiz.")
+    });
+builder.Services.AddSingleton<IOwnerPasswordResetDelivery>(services =>
+    (IOwnerPasswordResetDelivery)services.GetRequiredService<IOwnerEmailVerificationDelivery>());
 builder.Services.AddSingleton<OwnerSelfServiceResetFlow>();
 builder.Services.AddHostedService<OwnerResetDeliveryWorker>();
 builder.Services.AddSingleton(PartitionedRateLimiter.Create<Guid, Guid>(ownerId =>
@@ -168,6 +179,9 @@ builder.Services.AddRateLimiter(options =>
             }));
 });
 var app = builder.Build();
+// Validate the final configuration before accepting requests or starting the worker.
+_ = app.Services.GetRequiredService<IOwnerEmailVerificationDelivery>();
+_ = app.Services.GetRequiredService<OwnerSelfServiceResetFlow>();
 
 if (args is ["bootstrap-owner"])
 {

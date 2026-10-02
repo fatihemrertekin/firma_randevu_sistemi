@@ -10,6 +10,7 @@ namespace Server.Features.Identity;
 public interface IOwnerPasswordResetDelivery
 {
     bool CanDeliver(string email);
+    bool Available => CanDeliver("probe@example.test");
     Task DeliverAsync(string email, string token, DateTimeOffset expiresAt, Guid deliveryId, CancellationToken cancellationToken);
 }
 
@@ -22,10 +23,14 @@ public sealed class OwnerSelfServiceResetFlow(IConfiguration configuration, IWeb
     public bool Enabled { get; } = ValidateEnabled(configuration, environment);
     private static bool ValidateEnabled(IConfiguration configuration, IWebHostEnvironment environment)
     {
-        var enabled = configuration.GetValue<bool>("OwnerPasswordReset:LocalEnabled");
-        if (enabled && !environment.IsDevelopment())
+        var local = configuration.GetValue<bool>("OwnerPasswordReset:LocalEnabled");
+        var smtp = configuration.GetValue<bool>("OwnerPasswordReset:Enabled");
+        if (local && !environment.IsDevelopment())
             throw new InvalidOperationException("Yerel otomatik sıfırlama yalnız geliştirme ortamında açılabilir.");
-        return enabled;
+        if (smtp && (local || configuration["IdentityEmail:Mode"] != "Smtp" ||
+            string.IsNullOrWhiteSpace(configuration["Auth:InstanceId"])))
+            throw new InvalidOperationException("Otomatik sıfırlama için açık SMTP modu ve firma kimliği gerekli.");
+        return local || smtp;
     }
 
     public static bool Matches(OwnerSelfServiceReset job, AppUser owner, OwnerRecoveryEmail? email) =>
@@ -93,7 +98,7 @@ public sealed class OwnerSelfServiceResetFlow(IConfiguration configuration, IWeb
             IOwnerPasswordResetDelivery delivery) =>
         {
             context.Response.Headers.CacheControl = "no-store";
-            return Results.Ok(new { available = flow.Enabled && delivery.CanDeliver("probe@example.test") });
+            return Results.Ok(new { available = flow.Enabled && delivery.Available });
         }).AllowAnonymous();
         auth.MapPost("/password-reset-request", async (RequestBody request, HttpContext context,
             IAntiforgery antiforgery, OwnerSelfServiceResetFlow flow, AppDbContext db, UserManager<AppUser> users,
