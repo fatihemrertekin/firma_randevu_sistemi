@@ -4,7 +4,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Server.Infrastructure;
 
-public sealed class AppUser : IdentityUser<Guid> { }
+public sealed class AppUser : IdentityUser<Guid>
+{
+    public bool IsActive { get; set; } = true;
+}
 
 public sealed class OwnerMfaRecoveryAudit
 {
@@ -29,10 +32,15 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<OwnerRecoveryEmail> OwnerRecoveryEmails => Set<OwnerRecoveryEmail>();
     public DbSet<OwnerSelfServiceReset> OwnerSelfServiceResets => Set<OwnerSelfServiceReset>();
     public DbSet<IdentityEmailQuota> IdentityEmailQuotas => Set<IdentityEmailQuota>();
+    public DbSet<StaffDeactivationAudit> StaffDeactivationAudits => Set<StaffDeactivationAudit>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
+        builder.Entity<AppUser>().Property(user => user.IsActive).HasDefaultValue(true);
+        var deactivation = builder.Entity<StaffDeactivationAudit>();
+        deactivation.HasOne<AppUser>().WithMany().HasForeignKey(entry => entry.StaffId).OnDelete(DeleteBehavior.Restrict);
+        deactivation.HasOne<AppUser>().WithMany().HasForeignKey(entry => entry.ActorId).OnDelete(DeleteBehavior.Restrict);
         builder.Entity<IdentityEmailQuota>().HasKey(entry => entry.Day);
         var reset = builder.Entity<OwnerSelfServiceReset>();
         reset.HasKey(entry => entry.OwnerId);

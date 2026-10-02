@@ -6,6 +6,7 @@ import PasswordChangeForm from '../features/auth/PasswordChangeForm'
 import BusinessProfile from '../features/business/BusinessProfile'
 import StaffInvitations from '../features/staff/StaffInvitations'
 import StaffPasswordReset from '../features/staff/StaffPasswordReset'
+import StaffAccounts from '../features/staff/StaffAccounts'
 import styles from './ManagementLayout.module.css'
 import ErrorMessage from '../components/ErrorMessage'
 import OwnerRecoveryEmail from '../features/auth/OwnerRecoveryEmail'
@@ -15,7 +16,7 @@ type Section = 'business' | 'security' | 'access'
 const sections = [
   { id: 'business', title: 'İşletme bilgileri', description: 'İşletmenizin adını ve iletişim bilgilerini yönetin.' },
   { id: 'security', title: 'Hesap ve güvenlik', description: 'Hesabınızı koruyun ve parolanızı değiştirin.' },
-  { id: 'access', title: 'Çalışan erişimleri', description: 'Çalışanları davet edin ve parola sıfırlama kodu oluşturun.' },
+  { id: 'access', title: 'Çalışan erişimleri', description: 'Çalışan hesaplarını, davetleri ve parola sıfırlama işlemlerini yönetin.' },
 ] as const
 
 type Props = { auth: ReturnType<typeof useAuthentication>; account: Account }
@@ -86,6 +87,7 @@ export default function ManagementLayout({ auth, account }: Props) {
           {auth.notice && <p role="status">{auth.notice}</p>}
         </div>}
         {owner && section === 'access' && <>
+          <div className={styles.panel}><StaffAccounts post={post} /></div>
           <p>Bölümden ayrıldığınızda ekrandaki teslim kodları temizlenir.</p>
           <div className={styles.panel}><StaffInvitations post={post} /></div>
           <div className={styles.panel}><StaffPasswordReset post={post} /></div>

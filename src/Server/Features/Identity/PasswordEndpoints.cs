@@ -45,7 +45,7 @@ public static class PasswordEndpoints
         var user = await db.Users.FromSqlInterpolated(
             $"SELECT * FROM \"AspNetUsers\" WHERE \"Id\" = {userId} FOR UPDATE")
             .SingleOrDefaultAsync(timeout.Token);
-        if (user is null)
+        if (user is null || !user.IsActive)
         {
             return Results.Forbid();
         }

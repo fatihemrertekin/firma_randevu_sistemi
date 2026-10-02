@@ -17,6 +17,7 @@ beforeEach(() => {
     if (path === '/api/auth/recovery-email/') return Response.json({ email: owner.email, verifiedAt: null, deliveryAvailable: false })
     if (path === '/api/business-profile/') return Response.json(profile)
     if (path === '/api/staff-invitations/') return Response.json([])
+    if (path.startsWith('/api/staff-accounts/')) return Response.json({ items: [], page: 1, hasMore: false })
     if (path === '/api/auth/csrf') return Response.json({ token: 'synthetic-csrf' })
     if (path === '/api/staff-password-resets/') return Response.json({ token: 'synthetic-delivery-code', expiresAt: '2026-10-01T23:00:00Z' })
     if (path === '/api/auth/logout') return new Response(null, { status: 204 })

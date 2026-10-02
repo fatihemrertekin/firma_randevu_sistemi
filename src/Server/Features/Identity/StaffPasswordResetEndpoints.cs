@@ -68,12 +68,12 @@ public static class StaffPasswordResetEndpoints
         var normalized = users.NormalizeEmail(request.Email.Trim());
         // Reject Owner targets before taking a second account lock (including dual roles).
         var candidate = await db.Users.AsNoTracking().SingleOrDefaultAsync(user => user.NormalizedEmail == normalized, timeout.Token);
-        if (candidate is null || !await users.IsInRoleAsync(candidate, "Staff") || await users.IsInRoleAsync(candidate, "Owner"))
+        if (candidate is null || !candidate.IsActive || !await users.IsInRoleAsync(candidate, "Staff") || await users.IsInRoleAsync(candidate, "Owner"))
             return Results.Problem(statusCode: 400, title: "Sıfırlama yalnız mevcut Staff hesabı için yapılabilir.");
         var staff = await db.Users.FromSqlInterpolated(
             $"SELECT * FROM \"AspNetUsers\" WHERE \"NormalizedEmail\" = {normalized} FOR UPDATE")
             .SingleOrDefaultAsync(timeout.Token);
-        if (staff is null || !staff.EmailConfirmed || !await users.IsInRoleAsync(staff, "Staff") ||
+        if (staff is null || !staff.IsActive || !staff.EmailConfirmed || !await users.IsInRoleAsync(staff, "Staff") ||
             await users.IsInRoleAsync(staff, "Owner"))
             return Results.Problem(statusCode: 400, title: "Sıfırlama yalnız mevcut Staff hesabı için yapılabilir.");
         using var staffLease = await accountLimiter.AcquireAsync(staff.Id, cancellationToken: timeout.Token);
@@ -120,7 +120,7 @@ public static class StaffPasswordResetEndpoints
         db.ChangeTracker.Clear();
         var staff = await db.Users.FromSqlInterpolated(
             $"SELECT * FROM \"AspNetUsers\" WHERE \"Id\" = {issued.StaffId} FOR UPDATE").SingleOrDefaultAsync(timeout.Token);
-        if (staff is null || !staff.EmailConfirmed || !await users.IsInRoleAsync(staff, "Staff") ||
+        if (staff is null || !staff.IsActive || !staff.EmailConfirmed || !await users.IsInRoleAsync(staff, "Staff") ||
             await users.IsInRoleAsync(staff, "Owner") || clock.GetUtcNow() >= issued.ExpiresAt ||
             await db.StaffPasswordResetAudits.AnyAsync(entry => entry.GrantId == grantId && entry.Kind == "Completed", timeout.Token))
             return InvalidToken();

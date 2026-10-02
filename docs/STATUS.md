@@ -1,6 +1,6 @@
 # STATUS — Güncel durum ve sıradaki iş
 
-Güncelleme: 2026-10-02. Güncel özet burada; kapsam ve kanıt bağlantıları [P02 planında](plans/P02.md), önceki oturum kayıtları [arşivde](archive/2026-10-02/STATUS.md). Arşivdeki eski durum ve onay bekleme ifadeleri güncel yönlendirme değildir.
+Güncelleme: 2026-10-03. Güncel özet burada; kapsam ve kanıt bağlantıları [P02 planında](plans/P02.md), önceki oturum kayıtları [arşivde](archive/2026-10-02/STATUS.md). Arşivdeki eski durum ve onay bekleme ifadeleri güncel yönlendirme değildir.
 
 ## Aşamalar
 
@@ -8,12 +8,12 @@ Güncelleme: 2026-10-02. Güncel özet burada; kapsam ve kanıt bağlantıları 
 | --- | --- | --- |
 | P00 — İş ve ürün tanımı | `done` | [P00 planı](plans/P00.md) ve [ürün kararları](PRODUCT.md#2-ürün-kararları); işletme görüşmeleri ve gerçek pilot yapılmış sayılmaz. |
 | P01 — Temel ve CI | `done` | [P01 kanıtı](plans/P01.md#kanıt); PR #1 birleşme commit'i `10527c1`. |
-| P02 — Kimlik ve tanımlar | `in_progress` | P02-01–P02-15 onaylanan yerel kapsamları tamamlandı. Logo, çalışan/hizmet/mesai/yetkinlik ve diğer kalan işler ayrı onay ister; [aktif plan](plans/P02.md). |
+| P02 — Kimlik ve tanımlar | `in_progress` | P02-01–P02-16 onaylanan yerel kapsamları tamamlandı. Logo, çalışan/hizmet/mesai/yetkinlik ve diğer kalan işler ayrı onay ister; [aktif plan](plans/P02.md). |
 | P03–P17 | `planned` | Yalnız [ROADMAP](ROADMAP.md) düzeyinde; yeni uygulama yetkisi veya kabul kanıtı yok. |
 
 ## Son doğrulanan teslim ve sınırlar
 
-- P02-15: sunucu 74/74 ve web 97/97, kalite/bağımlılık kontrolleri, gerçek PostgreSQL ve dört ekran genişliğinde tarayıcı kabulü önceki geliştirme oturumunda geçti. Ayrıntılı kabul ve geri dönüş [planın kanıt bölümünde](plans/P02.md#kabul-ve-kanıt); bu belge düzenlemesinde uygulama testleri yeniden çalıştırılmadı.
+- P02-16 yerel kabulü `done`: MFA Owner Staff listesini görüp hesabı onayla pasifleştirir; yeni giriş, eski oturum ve sıfırlama kodu reddedilir, Owner korunur. Sunucu 82/82, web 106/106, kalite kapıları ve dört genişlikte gerçek API/tarayıcı kabulü geçti; [kanıt ve geri dönüş](plans/P02.md#p02-16--staff-hesaplarını-pasifleştirme). Ana yerel kurulumun DB/imajı güncellenmedi; Owner/MFA/SMTP değişmedi.
 - [PR #14](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/14) `1f3584d` ile birleşti; [main CI](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/36956717787) başarılı. Bu sadeleştirme başlangıcında GitHub API üzerinden birleşme yeniden doğrulandı; yerel main/origin/main/GitHub main `e55be37` ile eşitti ve bu commit'in [CI sonucu](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/36959199297) başarılıydı. Çalışma ağacında kullanıcıya ait belge değişiklikleri vardı.
 - Yerel SMTP kalıcı özel dosyayla etkin; Owner adres doğrulaması ve sıfırlama iletisinin yeni parola ekranına ulaşması kabul edildi. Mevcut Owner parolası/MFA'sı korunmuştur. Tam parola yenileme + normal giriş/MFA kabulü P02-14'te ayrı sentetik hesapta yapıldı; [SMTP kararı](adr/002-kimlik-epostasi-smtp.md).
 - Staff daveti ve parola sıfırlama Owner'ın manuel teslim koduyla çalışır. Üretim DNS/HTTPS/işletim kabulü, diğer alıcı sağlayıcılarında gerçek gelen kutusu teslimi ve gerçek pilot yapılmadı; yerel kabul bunların yerine geçmez.
@@ -31,8 +31,8 @@ Program.cs bakımı `done`: başlangıç 265 satırdan 69 satıra indi; önce/so
 
 ## Sıradaki iş
 
-Onaylanan bakım sırası tamamlandı. Sıradaki iş, P02'nin kalan kapsamından tek bir küçük işin kapsam/kabulünü sunmak ve ürün sahibinin ayrı onayını beklemektir. Bu bakım P02/P03 geliştirmesini onaylamaz; `useAuthentication` ve Identity akışları somut yeni ihtiyaç olmadan yeniden bölünmez. GitHub işleri PR üzerinden ve yeşil CI sonrası yürütülür; doğrudan main push yoktur.
+Onaylanan bakım sırası ve P02-16 yerel kabulü tamamlandı; GitHub teslimi [PR #19](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/19) üzerinden yürür; birleşme ve CI sonucu PR üzerinden doğrulanır. Sonraki öneri: P02-16 migration/imajını ana yerel kuruluma yedek ve Owner/MFA koruma kontrolüyle uygulamak. Bu işletim işi ayrıca onay bekler. Yeniden etkinleştirme veya başka P02/P03 geliştirmesi başlamaz; doğrudan main push yoktur.
 
 ## Gelecek plan kaydı — destek ve işletim ekranı (02.10.2026)
 
-Özel destek ekranı `planned`: ürün sahibi kurulum/bakım/destek işlemlerini ileride komut yazmadan yürütmek istiyor. [Ürün kararı](PRODUCT.md#satış-sonrası-destek-ekranı-kararı-02102026), [P06/P07 sırası](ROADMAP.md#p06--izolasyondeploykurtarma-p05) ve [işlem/güvenlik/kabul envanteri](OPERATIONS.md#5-planlanan-destek-ve-işletim-ekranı) tek kaynaklarıdır. Ekran geliştirmesi, Staff pasifleştirme veya başka aşama uygulaması onaylanmadı; bu kayıt yalnız gelecekteki kapsamı korur.
+Özel destek ekranı `planned`: ürün sahibi kurulum/bakım/destek işlemlerini ileride komut yazmadan yürütmek istiyor. [Ürün kararı](PRODUCT.md#satış-sonrası-destek-ekranı-kararı-02102026), [P06/P07 sırası](ROADMAP.md#p06--izolasyondeploykurtarma-p05) ve [işlem/güvenlik/kabul envanteri](OPERATIONS.md#5-planlanan-destek-ve-işletim-ekranı) tek kaynaklarıdır. Destek ekranı veya başka aşama uygulaması onaylanmadı; Staff hesap işlemi yalnız ayrı P02-16 onayıdır.
