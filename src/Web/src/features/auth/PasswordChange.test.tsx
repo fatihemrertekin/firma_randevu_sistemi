@@ -25,6 +25,7 @@ afterEach(async () => {
 function mockRequests(change: () => Promise<Response>, account = owner) {
   const requests = vi.fn(async (path: string) => {
     if (path === '/api/auth/me') return Response.json(account)
+    if (path === '/api/auth/mfa/recovery-codes') return Response.json({ remaining: 8 })
     if (path === '/api/auth/recovery-email/') return Response.json({ email: account.email, verifiedAt: null, deliveryAvailable: false })
     if (path === '/api/auth/csrf') return Response.json({ token: 'synthetic-csrf' })
     if (path === '/api/staff-invitations/') return Response.json([])
@@ -103,7 +104,7 @@ describe.each([['Owner', owner], ['Staff', staff]] as const)('%s parola değişi
     await submit()
     expect(container.querySelector('[role="alert"]')?.textContent).toContain('Mevcut parola doğrulanamadı')
     expect(Array.from(container.querySelectorAll<HTMLInputElement>('form[aria-label="Parola değiştirme"] input')).every(input => input.value === '')).toBe(true)
-    expect(container.querySelector<HTMLButtonElement>('button[type="submit"]')?.disabled).toBe(false)
+    expect(container.querySelector<HTMLButtonElement>('form[aria-label="Parola değiştirme"] button[type="submit"]')?.disabled).toBe(false)
   })
 
   it.each([401, 403, 409])('geçersiz oturum yanıtında (%i) yeniden giriş ister', async status => {
@@ -121,8 +122,8 @@ describe.each([['Owner', owner], ['Staff', staff]] as const)('%s parola değişi
     await fillForm()
     await submit()
     expect(container.querySelector('[role="alert"]')).not.toBeNull()
-    expect(container.querySelector('[role="status"]')).toBeNull()
-    expect(container.querySelector<HTMLButtonElement>('button[type="submit"]')?.disabled).toBe(false)
+    expect(container.querySelector('form[aria-label="Parola değiştirme"]')?.parentElement?.querySelector('[role="status"]')).toBeNull()
+    expect(container.querySelector<HTMLButtonElement>('form[aria-label="Parola değiştirme"] button[type="submit"]')?.disabled).toBe(false)
   })
 
   it('bağlantı kesildiğinde başarı göstermez ve parola alanlarını temizler', async () => {
@@ -131,7 +132,7 @@ describe.each([['Owner', owner], ['Staff', staff]] as const)('%s parola değişi
     await fillForm()
     await submit()
     expect(container.querySelector('[role="alert"]')?.textContent).toContain('Sonuç doğrulanamadı')
-    expect(container.querySelector('[role="status"]')).toBeNull()
+    expect(container.querySelector('form[aria-label="Parola değiştirme"]')?.parentElement?.querySelector('[role="status"]')).toBeNull()
     expect(Array.from(container.querySelectorAll<HTMLInputElement>('form[aria-label="Parola değiştirme"] input'))
       .every(input => input.value === '' && !input.disabled)).toBe(true)
   })

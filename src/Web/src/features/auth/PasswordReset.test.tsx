@@ -33,7 +33,7 @@ async function openReset(handler: () => Promise<Response>, staff = false) {
   if (!button) throw new Error('Sıfırlama bağlantısı yok')
   await act(async () => button.click())
   if (!staff) {
-    const manual = Array.from(container.querySelectorAll('button')).find(item => item.textContent === 'Özel kurtarma kodum var')
+    const manual = Array.from(container.querySelectorAll('button')).find(item => item.textContent === 'Parola sıfırlama kodum var')
     if (!manual) throw new Error('Manuel kurtarma seçeneği yok')
     await act(async () => manual.click())
   }

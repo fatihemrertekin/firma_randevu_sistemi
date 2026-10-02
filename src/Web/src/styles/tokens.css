@@ -11,4 +11,6 @@
   --error: #ffb4b4;
   --focus: #65dbc9;
   --shadow: 0 16px 50px rgb(0 0 0 / 20%);
+  --target-min: 44px;
+  --space-2: .5rem;
 }

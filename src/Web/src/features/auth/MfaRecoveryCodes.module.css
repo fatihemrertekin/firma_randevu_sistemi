@@ -1,0 +1,2 @@
+.confirmation { display: flex; align-items: center; gap: var(--space-2); min-height: var(--target-min); }
+.confirmation input { flex: none; }

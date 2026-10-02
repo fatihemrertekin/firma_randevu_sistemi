@@ -31,7 +31,8 @@ public static class AuthEndpoints
                     title: "Geçersiz istek doğrulaması.");
             }
 
-            if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrEmpty(request.Password))
+            if (string.IsNullOrWhiteSpace(request.Email) || request.Email.Length > 254 ||
+                string.IsNullOrEmpty(request.Password) || request.Password.Length > 1024)
             {
                 return Results.Problem(statusCode: StatusCodes.Status400BadRequest,
                     title: "E-posta ve parola gerekli.");
@@ -72,7 +73,7 @@ public static class AuthEndpoints
 
             await signIn.SignOutAsync();
             return Results.NoContent();
-        }).RequireAuthorization();
+        }).AllowAnonymous();
 
         auth.MapGet("/me", async (
             HttpContext context,
@@ -93,6 +94,7 @@ public static class AuthEndpoints
         }).RequireAuthorization(policy => policy.RequireRole("Owner", "Staff"));
 
         auth.MapMfaEndpoints();
+        auth.MapMfaRecoveryCodeEndpoints();
         auth.MapPasswordEndpoints();
         auth.MapPasswordResetEndpoints();
         auth.MapOwnerRecoveryEmailEndpoints();

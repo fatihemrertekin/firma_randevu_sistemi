@@ -15,6 +15,7 @@ public static class MfaEndpoints
             PasswordRequest request,
             HttpContext context,
             IAntiforgery antiforgery,
+            AppDbContext db,
             UserManager<AppUser> users,
             SignInManager<AppUser> signIn) =>
         {
@@ -24,7 +25,10 @@ public static class MfaEndpoints
                     title: "Geçersiz istek doğrulaması.");
             }
 
-            var user = await users.GetUserAsync(context.User);
+            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(context.RequestAborted);
+            timeout.CancelAfter(TimeSpan.FromSeconds(15));
+            await using var transaction = await db.Database.BeginTransactionAsync(timeout.Token);
+            var user = await GetSetupUserUnderLockAsync(context, db, users, timeout.Token);
             if (user is null)
             {
                 return Results.Unauthorized();
@@ -36,6 +40,7 @@ public static class MfaEndpoints
             }
             if (!await HasValidPasswordAsync(users, user, request.Password))
             {
+                await transaction.CommitAsync(timeout.Token);
                 return Results.Problem(statusCode: StatusCodes.Status401Unauthorized,
                     title: "Parola doğrulanamadı.");
             }
@@ -47,6 +52,7 @@ public static class MfaEndpoints
                     title: "Doğrulayıcı anahtarı oluşturulamadı.");
             }
             await users.ResetAccessFailedCountAsync(user);
+            await transaction.CommitAsync(timeout.Token);
             await signIn.RefreshSignInAsync(user);
             var key = await users.GetAuthenticatorKeyAsync(user);
             if (string.IsNullOrWhiteSpace(key))
@@ -75,7 +81,10 @@ public static class MfaEndpoints
                     title: "Geçersiz istek doğrulaması.");
             }
 
-            var user = await users.GetUserAsync(context.User);
+            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(context.RequestAborted);
+            timeout.CancelAfter(TimeSpan.FromSeconds(15));
+            await using var transaction = await db.Database.BeginTransactionAsync(timeout.Token);
+            var user = await GetSetupUserUnderLockAsync(context, db, users, timeout.Token);
             if (user is null)
             {
                 return Results.Unauthorized();
@@ -87,21 +96,22 @@ public static class MfaEndpoints
             }
             if (!await HasValidPasswordAsync(users, user, request.Password))
             {
+                await transaction.CommitAsync(timeout.Token);
                 return Results.Problem(statusCode: StatusCodes.Status401Unauthorized,
                     title: "Parola doğrulanamadı.");
             }
 
             var key = await users.GetAuthenticatorKeyAsync(user);
             var code = request.Code?.Replace(" ", string.Empty, StringComparison.Ordinal);
-            if (string.IsNullOrEmpty(key) || string.IsNullOrWhiteSpace(code) ||
+            if (string.IsNullOrEmpty(key) || string.IsNullOrWhiteSpace(code) || code.Length > 32 ||
                 !await users.VerifyTwoFactorTokenAsync(user, TokenOptions.DefaultAuthenticatorProvider, code))
             {
                 await users.AccessFailedAsync(user);
+                await transaction.CommitAsync(timeout.Token);
                 return Results.Problem(statusCode: StatusCodes.Status400BadRequest,
                     title: "Doğrulama kodu hatalı.");
             }
 
-            await using var transaction = await db.Database.BeginTransactionAsync(context.RequestAborted);
             await users.ResetAccessFailedCountAsync(user);
             var enabled = await users.SetTwoFactorEnabledAsync(user, true);
             if (!enabled.Succeeded)
@@ -118,7 +128,7 @@ public static class MfaEndpoints
             {
                 throw new InvalidOperationException("Oturumlar yenilenemedi.");
             }
-            await transaction.CommitAsync(context.RequestAborted);
+            await transaction.CommitAsync(timeout.Token);
 
             await signIn.SignOutAsync();
             context.Response.Headers.CacheControl = "no-store";
@@ -136,7 +146,7 @@ public static class MfaEndpoints
                 return Results.Problem(statusCode: StatusCodes.Status400BadRequest,
                     title: "Geçersiz istek doğrulaması.");
             }
-            if (string.IsNullOrWhiteSpace(request.Code))
+            if (string.IsNullOrWhiteSpace(request.Code) || request.Code.Length > 32)
             {
                 return Results.Problem(statusCode: StatusCodes.Status400BadRequest,
                     title: "Doğrulama kodu gerekli.");
@@ -162,7 +172,7 @@ public static class MfaEndpoints
                 return Results.Problem(statusCode: StatusCodes.Status400BadRequest,
                     title: "Geçersiz istek doğrulaması.");
             }
-            if (string.IsNullOrWhiteSpace(request.Code))
+            if (string.IsNullOrWhiteSpace(request.Code) || request.Code.Length > 32)
             {
                 return Results.Problem(statusCode: StatusCodes.Status400BadRequest,
                     title: "Kurtarma kodu gerekli.");
@@ -180,6 +190,18 @@ public static class MfaEndpoints
     public sealed record EnableRequest(string Password, string Code);
     public sealed record CodeRequest(string Code);
 
+    private static async Task<AppUser?> GetSetupUserUnderLockAsync(
+        HttpContext context, AppDbContext db, UserManager<AppUser> users, CancellationToken cancellationToken)
+    {
+        if (!Guid.TryParse(users.GetUserId(context.User), out var userId)) return null;
+        db.ChangeTracker.Clear();
+        var user = await db.Users.FromSqlInterpolated(
+            $"SELECT * FROM \"AspNetUsers\" WHERE \"Id\" = {userId} FOR UPDATE")
+            .SingleOrDefaultAsync(cancellationToken);
+        return user is not null && await users.IsInRoleAsync(user, "Owner") &&
+            user.SecurityStamp == context.User.FindFirst(users.Options.ClaimsIdentity.SecurityStampClaimType)?.Value ? user : null;
+    }
+
     private static async Task<bool> HasValidPasswordAsync(
         UserManager<AppUser> users, AppUser user, string? password)
     {
@@ -187,7 +209,7 @@ public static class MfaEndpoints
         {
             return false;
         }
-        if (!string.IsNullOrEmpty(password) && await users.CheckPasswordAsync(user, password))
+        if (!string.IsNullOrEmpty(password) && password.Length <= 1024 && await users.CheckPasswordAsync(user, password))
         {
             return true;
         }

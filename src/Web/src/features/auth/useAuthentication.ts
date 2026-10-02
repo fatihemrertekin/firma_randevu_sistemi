@@ -20,7 +20,7 @@ export default function useAuthentication() {
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [notice, setNotice] = useState('')
-  const passwordChangePending = useRef(false)
+  const requestPending = useRef(false)
   const [resettingPassword, setResettingPassword] = useState(false)
   const [resettingStaffPassword, setResettingStaffPassword] = useState(false)
   const [acceptingInvitation, setAcceptingInvitation] = useState(false)
@@ -33,14 +33,14 @@ export default function useAuthentication() {
 
   async function handlePasswordChange(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (busy || passwordChangePending.current) return
+    if (busy || requestPending.current) return
     setError('')
     setNotice('')
     if (newPassword !== confirmPassword) {
       setError('Yeni parola ve tekrarı aynı olmalı.')
       return
     }
-    passwordChangePending.current = true
+    requestPending.current = true
     setBusy(true)
     try {
       const response = await postWithCsrf('/api/auth/change-password', {
@@ -80,21 +80,25 @@ export default function useAuthentication() {
       clearPasswordFields()
       setError('Sonuç doğrulanamadı. Yeniden giriş yapmayı deneyin.')
     } finally {
-      passwordChangePending.current = false
+      requestPending.current = false
       setBusy(false)
     }
   }
 
   useEffect(() => {
-    getAccount()
-      .then(setAccount)
-      .catch(() => setError('Oturum durumu alınamadı. Sayfayı yenileyin.'))
-      .finally(() => setLoading(false))
+    const controller = new AbortController()
+    let active = true
+    getAccount(AbortSignal.any([controller.signal, AbortSignal.timeout(15000)]))
+      .then(value => { if (active) setAccount(value) })
+      .catch(() => { if (active) setError('Oturum durumu alınamadı. Sayfayı yenileyin.') })
+      .finally(() => { if (active) setLoading(false) })
+    return () => { active = false; controller.abort() }
   }, [])
 
   async function handleLogin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (busy) return
+    if (busy || requestPending.current) return
+    requestPending.current = true
     setBusy(true)
     setError('')
     setNotice('')
@@ -106,27 +110,32 @@ export default function useAuthentication() {
         return
       }
       if (!response.ok) {
-        setError(response.status === 401 ? 'E-posta veya parola hatalı.' : 'Giriş yapılamadı.')
+        setError(response.status === 429 ? 'Çok fazla deneme. Daha sonra tekrar deneyin.'
+          : response.status === 401 ? 'E-posta veya parola hatalı.' : 'Giriş yapılamadı.')
         return
       }
       setAccount(await getAccount())
     } catch {
       setError('Giriş yapılamadı. Lütfen yeniden deneyin.')
     } finally {
+      setPassword('')
+      requestPending.current = false
       setBusy(false)
     }
   }
 
   async function handleMfaLogin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (busy) return
+    if (busy || requestPending.current) return
+    requestPending.current = true
     setBusy(true)
     setError('')
     try {
       const path = useRecoveryCode ? '/api/auth/mfa/recovery-login' : '/api/auth/mfa/login'
       const response = await postWithCsrf(path, { code })
       if (!response.ok) {
-        setError('Kod doğrulanamadı. Lütfen yeniden deneyin.')
+        setError(response.status === 429 ? 'Çok fazla deneme. Daha sonra tekrar deneyin.'
+          : 'Kod doğrulanamadı. Güncel veya kullanılmamış kodu deneyin. Süre dolduysa girişe dönün.')
         return
       }
       setCode('')
@@ -136,19 +145,22 @@ export default function useAuthentication() {
     } catch {
       setError('Kod doğrulanamadı. Lütfen yeniden deneyin.')
     } finally {
+      requestPending.current = false
       setBusy(false)
     }
   }
 
   async function handleSetup(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (busy) return
+    if (busy || requestPending.current) return
+    requestPending.current = true
     setBusy(true)
     setError('')
     try {
       const response = await postWithCsrf('/api/auth/mfa/setup', { password: setupPassword })
       if (!response.ok) {
-        setError(response.status === 401 ? 'Parola doğrulanamadı.' : 'Kurulum başlatılamadı.')
+        setError(response.status === 429 ? 'Çok fazla deneme. Daha sonra tekrar deneyin.'
+          : response.status === 401 ? 'Parola doğrulanamadı.' : 'Kurulum başlatılamadı.')
         return
       }
       setSetupInfo((await response.json()) as SetupInfo)
@@ -156,13 +168,16 @@ export default function useAuthentication() {
     } catch {
       setError('Kurulum başlatılamadı. Lütfen yeniden deneyin.')
     } finally {
+      setSetupPassword('')
+      requestPending.current = false
       setBusy(false)
     }
   }
 
   async function handleEnable(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (busy) return
+    if (busy || requestPending.current) return
+    requestPending.current = true
     setBusy(true)
     setError('')
     try {
@@ -171,7 +186,8 @@ export default function useAuthentication() {
         code,
       })
       if (!response.ok) {
-        setError('Parola veya doğrulama kodu hatalı.')
+        setError(response.status === 429 ? 'Çok fazla deneme. Daha sonra tekrar deneyin.'
+          : 'Parola veya doğrulama kodu hatalı.')
         return
       }
       const body = (await response.json()) as { recoveryCodes: string[] }
@@ -183,12 +199,15 @@ export default function useAuthentication() {
     } catch {
       setError('İki aşamalı giriş açılamadı. Lütfen yeniden deneyin.')
     } finally {
+      setSetupPassword('')
+      requestPending.current = false
       setBusy(false)
     }
   }
 
   async function handleLogout() {
-    if (busy) return
+    if (busy || requestPending.current) return
+    requestPending.current = true
     setBusy(true)
     setError('')
     try {
@@ -198,9 +217,19 @@ export default function useAuthentication() {
       setSetupInfo(null)
       setSetupPassword('')
       clearPasswordFields()
+      setMfaRequired(false)
+      setUseRecoveryCode(false)
+      setCode('')
+      setPassword('')
+      setRecoveryCodes(null)
+      setResettingPassword(false)
+      setResettingStaffPassword(false)
+      setAcceptingInvitation(false)
+      setNotice('')
     } catch {
       setError('Çıkış yapılamadı. Lütfen yeniden deneyin.')
     } finally {
+      requestPending.current = false
       setBusy(false)
     }
   }

@@ -9,6 +9,7 @@ import StaffPasswordReset from '../features/staff/StaffPasswordReset'
 import styles from './ManagementLayout.module.css'
 import ErrorMessage from '../components/ErrorMessage'
 import OwnerRecoveryEmail from '../features/auth/OwnerRecoveryEmail'
+import MfaRecoveryCodes from '../features/auth/MfaRecoveryCodes'
 
 type Section = 'business' | 'security' | 'access'
 const sections = [
@@ -66,12 +67,19 @@ export default function ManagementLayout({ auth, account }: Props) {
         {owner && section === 'security' && <div className={styles.panel}>
           <OwnerRecoveryEmail post={post} disabled={blocked} />
         </div>}
+        {owner && section === 'security' && <div className={styles.panel}>
+          <MfaRecoveryCodes post={post} disabled={blocked} onReplaced={codes => {
+            auth.setAccount(null); auth.setRecoveryCodes(codes); auth.setPassword(''); auth.setCode('')
+            auth.setMfaRequired(false); auth.setUseRecoveryCode(false); auth.clearPasswordFields()
+            auth.setNotice('Eski MFA kurtarma kodları geçersiz. Yeni kodları saklayıp yeniden giriş yapın.')
+          }} />
+        </div>}
         {section === 'security' && <div className={styles.panel}>
           <p>{account.mfaEnabled ? 'İki aşamalı giriş açık.' : 'Çalışan hesabınız açık.'}</p>
           <PasswordChangeForm requiresSecondFactor={account.mfaEnabled || account.ownerAccess}
             mismatch={auth.error === 'Yeni parola ve tekrarı aynı olmalı.'}
             currentPassword={auth.currentPassword} newPassword={auth.newPassword}
-            confirmPassword={auth.confirmPassword} busy={auth.busy}
+            confirmPassword={auth.confirmPassword} busy={blocked}
             onCurrentPassword={auth.setCurrentPassword} onNewPassword={auth.setNewPassword}
             onConfirmPassword={auth.setConfirmPassword} onSubmit={auth.handlePasswordChange} />
           <ErrorMessage message={auth.error} />
