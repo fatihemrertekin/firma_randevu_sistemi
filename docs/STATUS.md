@@ -19,10 +19,16 @@ Güncelleme: 2026-10-02. Güncel özet burada; kapsam ve kanıt bağlantıları 
 - Staff daveti ve parola sıfırlama Owner'ın manuel teslim koduyla çalışır. Üretim DNS/HTTPS/işletim kabulü, diğer alıcı sağlayıcılarında gerçek gelen kutusu teslimi ve gerçek pilot yapılmadı; yerel kabul bunların yerine geçmez.
 - Eski Türkçe karakter/libgssapi uyarıları ve DB host portu için kullanılan yerel override geçmiş kayıtlarda açık kalmıştır. Kalıcı düzeltme kanıtı olmadan çözülmüş sayılmaz; pilot tarihi ve destek iletişim bilgileri de ayrıca netleşecektir.
 
-## Bu belge düzenlemesi
+## Bakım durumu
 
-Onaylanan ilk bakım adımı: STATUS ve P02 planını sadeleştirme; yerel belge kabulü `done`. Commitli geçmiş kayıtlar içerikleri korunarak arşive taşındı; göreli bağlantılar yeni konuma uyarlandı. Arşiv içerik eşitliği, dosya/başlık bağlantıları, tek sonraki iş ve mevcut kullanıcı değişikliklerinin korunması doğrulandı. Kod, veri veya uygulama ayarı değişmedi; GitHub teslimi bu işe özel PR/CI üzerinden tamamlanır.
+Belge sadeleştirmesi `done`: [PR #15](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/15), birleşme `94e9298` ve [main CI](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/37040331937) başarılı. Bekleyen destek ekranı planı yeni belge düzenine uyarlandı ve `1e06cab` ile commit'lendi; yalnız gelecekteki plan kaydıdır.
+
+Ürün sahibinin 02.10.2026 tarihinde onayladığı test düzenlemesinin yerel kabulü `done`: 12 bağımsız özellik sınıfı ve altı ortak destek dosyası; önce/sonra sunucu 74/74, 0 atlama, locked restore, 0 uyarı/hata build ve format verify başarılı. Test/veri/assertion ve ortak yardımcı uygulamaları korundu; [test düzeni ve kanıt](plans/P02.md#test-düzeni-ve-bakım-kabulü). Uygulama, migration veya SMTP ayarı değişmedi; GitHub teslimi PR ve yeşil CI üzerinden tamamlanır.
 
 ## Sıradaki iş
 
-Bu bakım adımı kapanınca yalnız sunucu testlerini özellik bazlı bağımsız sınıflara ayırmanın kapsam/kabul önerisini sun ve ürün sahibinin ayrı onayını bekle. Test düzenlemesi, Program.cs sadeleştirmesi, yeni AGENTS.md dosyaları veya P02/P03 geliştirmesi bu onayın kapsamında değildir. GitHub işleri PR üzerinden ve yeşil CI sonrası yürütülür; doğrudan main push yoktur.
+Sıradaki bakım önerisi yalnız Program.cs sadeleştirmesinin kapsam/kabulünü sunmak ve ürün sahibinin ayrı onayını beklemektir. Program.cs değişikliği, yeni AGENTS.md dosyaları veya P02/P03 geliştirmesi bu onayın kapsamında değildir. GitHub işleri PR üzerinden ve yeşil CI sonrası yürütülür; doğrudan main push yoktur.
+
+## Gelecek plan kaydı — destek ve işletim ekranı (02.10.2026)
+
+Özel destek ekranı `planned`: ürün sahibi kurulum/bakım/destek işlemlerini ileride komut yazmadan yürütmek istiyor. [Ürün kararı](PRODUCT.md#satış-sonrası-destek-ekranı-kararı-02102026), [P06/P07 sırası](ROADMAP.md#p06--izolasyondeploykurtarma-p05) ve [işlem/güvenlik/kabul envanteri](OPERATIONS.md#5-planlanan-destek-ve-işletim-ekranı) tek kaynaklarıdır. Ekran geliştirmesi, Staff pasifleştirme veya başka aşama uygulaması onaylanmadı; bu kayıt yalnız gelecekteki kapsamı korur.

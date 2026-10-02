@@ -10,12 +10,17 @@ using Microsoft.Extensions.Hosting;
 using Server.Features.Identity;
 using Server.Infrastructure;
 using Xunit;
+using static Server.Tests.Support.TestAccounts;
+using static Server.Tests.Support.AuthenticationTestSupport;
+using static Server.Tests.Support.IdentityTestEnvironment;
+using static Server.Tests.Support.PasswordTestSupport;
+using static Server.Tests.Support.EmailTestSupport;
 
 namespace Server.Tests;
 
-public sealed partial class OwnerMfaTests
+[Collection(AuthenticationTestCollection.Name)]
+public sealed class OwnerSelfServiceResetTests
 {
-    private const string SelfResetPath = "/api/auth/password-reset-request";
     private sealed class ResetDelivery : IOwnerPasswordResetDelivery
     {
         public List<string> Tokens { get; } = [];
@@ -43,29 +48,6 @@ public sealed partial class OwnerMfaTests
                 services.AddSingleton<IOwnerPasswordResetDelivery>(delivery);
             });
         });
-    private static async Task VerifyForSelfResetAsync(WebApplicationFactory<Program> app, Guid ownerId)
-    {
-        using var scope = app.Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        var owner = await db.Users.SingleAsync(entry => entry.Id == ownerId, TestContext.Current.CancellationToken);
-        db.OwnerRecoveryEmails.Add(new OwnerRecoveryEmail
-        {
-            OwnerId = ownerId,
-            EmailHash = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(owner.NormalizedEmail ?? ""))),
-            StampHash = "unused-verified-stamp",
-            RequestedAt = DateTimeOffset.UtcNow,
-            ExpiresAt = DateTimeOffset.UtcNow.AddMinutes(30),
-            VerifiedAt = DateTimeOffset.UtcNow
-        });
-        await db.SaveChangesAsync(TestContext.Current.CancellationToken);
-    }
-    private static async Task<HttpResponseMessage> AskSelfResetAsync(HttpClient client, string email = Email) =>
-        await PostAsync(client, SelfResetPath, new { email }, await GetCsrfAsync(client));
-    private static async Task ProcessSelfResetAsync(WebApplicationFactory<Program> app)
-    {
-        using var worker = ActivatorUtilities.CreateInstance<OwnerResetDeliveryWorker>(app.Services);
-        await worker.ProcessOneAsync(TestContext.Current.CancellationToken);
-    }
 
     [Fact]
     public async Task SelfResetUsesSameResponseForUnknownUnverifiedNonOwnerAndDisabledAndRequiresCsrf()

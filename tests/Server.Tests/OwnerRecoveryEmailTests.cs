@@ -9,12 +9,18 @@ using Microsoft.Extensions.FileProviders;
 using Server.Features.Identity;
 using Server.Infrastructure;
 using Xunit;
+using static Server.Tests.Support.TestAccounts;
+using static Server.Tests.Support.AuthenticationTestSupport;
+using static Server.Tests.Support.IdentityTestEnvironment;
+using static Server.Tests.Support.PasswordTestSupport;
+using static Server.Tests.Support.StaffTestSupport;
+using static Server.Tests.Support.EmailTestSupport;
 
 namespace Server.Tests;
 
-public sealed partial class OwnerMfaTests
+[Collection(AuthenticationTestCollection.Name)]
+public sealed class OwnerRecoveryEmailTests
 {
-    private const string RecoveryEmailPath = "/api/auth/recovery-email/";
     private const string VerifyEmailPath = "/api/auth/recovery-email/confirm";
     private sealed class EmailDelivery : IOwnerEmailVerificationDelivery
     {
@@ -32,8 +38,6 @@ public sealed partial class OwnerMfaTests
     private static WebApplicationFactory<Program> EmailApp(RecoverySeed seed, EmailDelivery delivery) =>
         seed.App.WithWebHostBuilder(builder => builder.ConfigureServices(services =>
             services.AddSingleton<IOwnerEmailVerificationDelivery>(delivery)));
-    private static async Task<HttpResponseMessage> RequestEmailAsync(HttpClient client) =>
-        await PostAsync(client, RecoveryEmailPath + "request", new { }, await GetCsrfAsync(client));
     private static async Task<HttpResponseMessage> VerifyEmailAsync(HttpClient client, string token) =>
         await PostAsync(client, VerifyEmailPath, new { token }, await GetCsrfAsync(client));
     private static async Task<OwnerRecoveryEmailEndpoints.StatusResponse> EmailStatusAsync(HttpClient client)
@@ -251,16 +255,6 @@ public sealed partial class OwnerMfaTests
         Assert.Null(record.TokenHash);
         Assert.Null(record.VerifiedAt);
         await AssertOriginalStateAsync(app, seed);
-    }
-
-    private sealed class EmailEnvironment : IWebHostEnvironment
-    {
-        public string EnvironmentName { get; set; } = "Production";
-        public string ApplicationName { get; set; } = "Server";
-        public string WebRootPath { get; set; } = "/app/wwwroot";
-        public IFileProvider WebRootFileProvider { get; set; } = new NullFileProvider();
-        public string ContentRootPath { get; set; } = "/app";
-        public IFileProvider ContentRootFileProvider { get; set; } = new NullFileProvider();
     }
 
     [Fact]
