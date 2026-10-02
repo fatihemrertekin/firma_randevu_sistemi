@@ -72,11 +72,13 @@ Pilot kapsamı [PRODUCT](PRODUCT.md#2-ürün-kararları) ile kararlaştırıldı
 ### P06 — İzolasyon/deploy/kurtarma (P05)
 
 - İş: Aynı imajla A/B sentetik firma; ayrı sır/ağ/volume/anahtar, Compose/Coolify şablonu, HTTPS, migration, yedek/restore, alarm/geri dönüş. Filo yönetimi: N firmaya toplu sürüm dağıtımı ve migration için runbook/script (sırayla, yedek sonrası, firma başına sonuç raporu).
+- Planlanan destek ve işletim ekranı: ürün sahibinin kurulum/bakım/destek işlemlerini PowerShell yazmadan firma seçimi ve izinli eylemlerle yürütmesi. Mevcut tüm ürün işletim yardımcıları ve ileride gereken operasyonlar envantere alınır; hedef yalnız parola sıfırlama değildir. Kapsam ve kabul sınırları [OPERATIONS §5](OPERATIONS.md#5-planlanan-destek-ve-işletim-ekranı) içindedir. 02.10.2026 kararı yalnız planlamadır; uygulama ayrıca onaylanır.
 - Çıkış: A cookie/token/DB parolası B'de geçmez; A uygulaması B DB/dosyasına erişemez. Deploy/restart veri/anahtar korur; temiz ortamda restore süresi/kayıp aralığı ölçülür. Canlı yetki yoksa yerel kanıtı tamamla.
 
 ### P07 — Ticari hazırlık ve pilot (P06)
 
 - İş: Manuel tahsilat, dönem/vade/paid-through/erişim durumları; temel veri ihracı, onboarding/offboarding, sözleşme taslağı, eğitim/destek ve gerçek maliyet hesabı.
+- Destek ekranının onaylanan iş dilimleri için satış sonrası kullanım rehberi, operatör erişimi ve yanlış firma/kimlik doğrulama/hata/geri dönüş kabulü hazırlanır; henüz yapılmamış ekran veya canlı işletim tamamlandı sayılmaz.
 - Çıkış: Ayın 1'i, ay ortası, gecikme, iptal/yeniden açma testleri. Ticari/hukuki hazırlık sonrası 1–3 gerçek pilot; öncesinde sentetik demo. MFA, yedek alarmı, destek ve ihracat çalışmadan satış yok. İleri modüller ilk satışın şartı değil.
 
 ### P08 — Müşteri ilişkileri (P07)

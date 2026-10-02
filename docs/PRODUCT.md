@@ -21,6 +21,12 @@ Ticari politikalar: Modelimiz aylık ücretli ve reklamsızdır; kota/maliyet ş
 5. **İşletme görüşmeleri.** Görüşmeleri ürün sahibi, ürün pilot için hazır olduğunda yürütecek; agent görüşme veya satış yapmayacak. Hedef 3–5 işletme; henüz görüşme/talep doğrulaması yok. Gerçek ücretli pilot ve hosting kararı öncesinde bulgular değerlendirilecek. Sentetik yerel geliştirme bu süre boyunca sürebilir.
 6. **İşletme politikaları.** Müşterinin bağlantıdan ne kadar kala iptal edebileceğini firma sahibi yönetim panelinden belirler; kural rezervasyon sırasında gösterilir ve sunucuda uygulanır. Manuel onay bekleyen `Pending` istek 30 dakika boyunca saati bloke eder; bu sürede onaylanmazsa otomatik iptal edilir ve saat serbest kalır. `NoShow` durumunu randevu başladıktan sonra Owner veya yetkili Staff işaretleyebilir. Pilot destek saatleri `Europe/Istanbul` ile Pazartesi–Cumartesi 08:00–19:00; kanallar e-posta ve telefon. İletişim adresi/numarası pilot hazırlığında belirlenecek. Destek formu sonraki aşama adayıdır; ilk yanıt süresi taahhüdü henüz yoktur. [P00 politika tablosu](plans/P00.md#işletme-politikaları) ayrıntıları izler.
 
+### Satış sonrası destek ekranı kararı (02.10.2026)
+
+Ürün sahibi, kurulum/bakım/destek için PowerShell veya sunucu komutu gerektiren bütün ürün işlemlerini ileride kendisine özel bir destek ve işletim ekranından yürütmeyi istedi. Hedef: firma seç → izinli işlemi seç → gerekli doğrulama/onay → sonucu gör; rutin destekte komut yazmak zorunlu olmayacak. Normal Owner parola yenilemesi mevcut doğrulanmış e-posta üzerinden self servis kalır; destek ekranı acil kurtarma ve diğer operatör işlemlerini kapsar.
+
+Durum `planned`: yalnız geleceğe yönelik plan kaydı onaylandı, ekranın geliştirilmesi başlamadı. P06/P07 hazırlığına bağlanır; ayrıntılı kapsam ve uygulama için ayrı onay gerekir. İşlem envanteri, güvenlik sınırları ve kabul hedefleri [OPERATIONS §5](OPERATIONS.md#5-planlanan-destek-ve-işletim-ekranı) içindedir.
+
 ## 3. Satış, ödeme, maliyet ve kapanış
 
 - Şirket henüz yok. Ücretli sürekli hizmet öncesi mali müşavirle mükellefiyet/kuruluş, fatura/e-belge, vergi ve SGK'yı netleştir. Bireysel ödeme hesabı/havale vergi muafiyeti değildir. KVKK/VERBIS ve ticari ileti/IYS uygulanırlığını uzmanla belirle; agent uygunluk belgesi vermez. Sentetik geliştirme sürer.
