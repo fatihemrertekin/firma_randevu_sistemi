@@ -31,7 +31,7 @@ Program.cs bakımı `done`: başlangıç 265 satırdan 69 satıra indi; önce/so
 
 ## Sıradaki iş
 
-Onaylanan bakım sırası ve P02-16 yerel kabulü tamamlandı; GitHub teslimi PR üzerinden yeşil CI ile kapatılacaktır. Sonraki öneri: P02-16 migration/imajını ana yerel kuruluma yedek ve Owner/MFA koruma kontrolüyle uygulamak. Bu işletim işi ayrıca onay bekler. Yeniden etkinleştirme veya başka P02/P03 geliştirmesi başlamaz; doğrudan main push yoktur.
+Onaylanan bakım sırası ve P02-16 yerel kabulü tamamlandı; GitHub teslimi [PR #19](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/19) üzerinden yürür; birleşme ve CI sonucu PR üzerinden doğrulanır. Sonraki öneri: P02-16 migration/imajını ana yerel kuruluma yedek ve Owner/MFA koruma kontrolüyle uygulamak. Bu işletim işi ayrıca onay bekler. Yeniden etkinleştirme veya başka P02/P03 geliştirmesi başlamaz; doğrudan main push yoktur.
 
 ## Gelecek plan kaydı — destek ve işletim ekranı (02.10.2026)
 
