@@ -143,6 +143,20 @@ Akış: endpoint/controller → gerektiğinde iş servisi → EF DbContext. Basi
 - Ana dal korumalı; CI yeşil olmadan birleştirme yok. Kullanıcının başka değişikliklerini geri alma.
 - PR açıklaması: ne değişti, neden, hangi testler çalıştı, riskler, migration varsa geri dönüş notu.
 
+## 11. Frontend ve deneyim sözleşmesi
+
+Amaç: estetik, güven veren, hızlı öğrenilen, günlük işi kolaylaştıran bir arayüz. Görsel kalite, işlevsellik, erişilebilirlik ve backend doğruluğu birlikte kabul ölçütüdür.
+
+- Görsel yön docs/PRODUCT.md'de onaylıdır. Somut token, bileşen, ekran tarifi, yasaklar, API-ekran matrisi ve görsel doğrulama adımları docs/UI-UX.md'dedir; UI işine başlamadan önce oku. Yeni tasarım dili kurma; genel görsel yönü değiştirmek ürün sahibi onayı ister.
+- Renk, ölçü, köşe, gölge ve hareket yalnız tokens.css değişkenlerinden gelir. Rastgele hex/px yok. Türkçe arayüz, işletme saat bölgesi ve ortak biçim yardımcıları.
+- Yeni ekran öncesi şunu 3–6 satırda yaz: amaç, ana işlem, bilgi sırası, mobil düzen, API bağlantıları, boş/hata/yükleme durumları.
+- Her görünür işlem mevcut API, DTO, yetki ve hata sözleşmesine bağlanır (docs/UI-UX.md matrisi). Eksik backend desteğini belirt; başarı veya veri uydurma. Uygulanmamış modülü menü, buton, grafik veya sahte istatistik olarak gösterme.
+- Fiyat, süre, uygunluk, durum geçişi ve yetkide backend son karardır. Başarıyı sunucu onayından sonra göster; çift gönderimi önle; 400/401/403/409/429 durumlarını docs/UI-UX.md eşleşmesine göre ele al; CSRF/oturum davranışını koru.
+- Her veri ekranında yükleme, boş, hata, başarı durumları ayrı tasarlanır. Formda görünür etiket, alan yanı hata, kaydedilmemiş değişiklik koruması.
+- Mobil önce; 320 px'te temel akış çalışır, zorunlu iki boyutlu takvim/tablo dışında yatay taşma yok. WCAG 2.2 AA, 44×44 px hedef, görünür odak, durum yalnız renkle verilmez, hareket azaltma tercihine uyulur. Sürükle-bırakın klavye/form alternatifi vardır.
+- React, strict TypeScript, CSS Modules. Gerçek tekrar ihtiyacından ortak bileşen çıkar; gereksiz framework/bağımlılık ekleme. Hassas veri ve tokenı kalıcı depolamaya/loglara yazma.
+- Kabul: ilgili frontend kapıları + 320/390/768/1280 px ekran görüntüleri (Playwright) + ajanın görüntüleri docs/UI-UX.md yasaklarına karşı kendi eleştirisi + gerçek API ile başarı/yetkisizlik/hata akışı. Mock entegrasyon kanıtı sayılmaz. Doğrulanmamış kontrol veya yalnız planlanmış ekran tamamlandı sayılmaz.
+
 ## Code Review Rules
 
 Başka kişi/firma verisi açılıyor mu? Paralel istek zaman/para/hak çoğaltıyor mu? Dış servis timeout'u, restart ve restore ne yapıyor? Sır/PII sızıyor mu? Daha sade yapı aynı güvenceyi sağlar mı? Kapsam dışı iş var mı? Kritik bulguyu dosya, etki ve düzeltme yönüyle bildir; biçimlendirmeyi CI'a bırak.
