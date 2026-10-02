@@ -27,7 +27,7 @@ Test düzenlemesi `done`: 12 bağımsız özellik sınıfı ve altı ortak deste
 
 Program.cs bakımı `done`: başlangıç 265 satırdan 69 satıra indi; önce/sonra 74/74 ve kalite/davranış kontrolleri geçti. [Başlangıç düzeni ve kanıt](plans/P02.md#uygulama-başlangıcı-ve-bakım-kabulü). [PR #17](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/17) `316e1fa` ile birleşti; [main CI](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/37048992061) başarılı.
 
-Ürün sahibinin ayrı onayladığı üç yerel AGENTS.md dosyasının yerel kabulü `done`: web, sunucu testleri ve belgeler için dokuzar satır; kök kurallarla uyum, bağlantılar ve 32 KiB sınırı doğrulandı. [Klasör talimatları ve kanıt](plans/P02.md#klasör-talimatları-ve-bakım-kabulü). Uygulama/test kodu ve kök AGENTS.md değişmedi; GitHub teslimi son commit'in yeşil CI kabulüyle yürütülür.
+Ürün sahibinin ayrı onayladığı üç yerel AGENTS.md dosyasının yerel kabulü `done`: web, sunucu testleri ve belgeler için dokuzar satır; kök kurallarla uyum, bağlantılar ve 32 KiB sınırı doğrulandı. [Klasör talimatları ve kanıt](plans/P02.md#klasör-talimatları-ve-bakım-kabulü). Uygulama/test kodu ve kök AGENTS.md değişmedi; GitHub kanıtı [PR #18](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/18) ve PR'ın son commit kontrollerinden takip edilir.
 
 ## Sıradaki iş
 
