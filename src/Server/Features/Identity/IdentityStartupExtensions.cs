@@ -48,6 +48,7 @@ public static class IdentityStartupExtensions
             {
                 options.User.RequireUniqueEmail = true;
                 options.SignIn.RequireConfirmedEmail = true;
+                options.SignIn.RequireConfirmedAccount = true;
                 options.Password.RequiredLength = 12;
                 options.Password.RequireDigit = true;
                 options.Password.RequireUppercase = true;
@@ -60,7 +61,9 @@ public static class IdentityStartupExtensions
             })
             .AddEntityFrameworkStores<AppDbContext>()
             .AddDefaultTokenProviders()
+            .AddUserConfirmation<ActiveUserConfirmation>()
             .AddTokenProvider<OwnerPasswordResetTokenProvider>("OwnerPasswordReset");
+        builder.Services.AddScoped<ISecurityStampValidator, ActiveSecurityStampValidator>();
     }
 
     private static void AddResetDeliveryServices(WebApplicationBuilder builder)
@@ -140,7 +143,7 @@ public static class IdentityStartupExtensions
                 var userId = context.Principal?.FindFirstValue(ClaimTypes.Name);
                 var user = userId is null ? null : await users.FindByIdAsync(userId);
                 var stamp = context.Principal?.FindFirstValue("mfa_security_stamp");
-                if (user is null || !user.TwoFactorEnabled || string.IsNullOrEmpty(stamp) || stamp != user.SecurityStamp)
+                if (user is null || !user.IsActive || !user.TwoFactorEnabled || string.IsNullOrEmpty(stamp) || stamp != user.SecurityStamp)
                 {
                     context.RejectPrincipal();
                     await context.HttpContext.SignOutAsync(IdentityConstants.TwoFactorUserIdScheme);

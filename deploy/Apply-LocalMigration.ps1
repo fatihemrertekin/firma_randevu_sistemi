@@ -27,6 +27,8 @@ GRANT SELECT, INSERT ON TABLE "StaffInvitationAudits" TO app_user;
 REVOKE UPDATE, DELETE, TRUNCATE ON TABLE "StaffInvitationAudits" FROM app_user;
 GRANT SELECT, INSERT ON TABLE "StaffPasswordResetAudits" TO app_user;
 REVOKE UPDATE, DELETE, TRUNCATE ON TABLE "StaffPasswordResetAudits" FROM app_user;
+GRANT SELECT, INSERT ON TABLE "StaffDeactivationAudits" TO app_user;
+REVOKE UPDATE, DELETE, TRUNCATE ON TABLE "StaffDeactivationAudits" FROM app_user;
 GRANT SELECT, UPDATE ON TABLE "BusinessProfiles" TO app_user;
 REVOKE INSERT, DELETE, TRUNCATE ON TABLE "BusinessProfiles" FROM app_user;
 GRANT SELECT, INSERT ON TABLE "BusinessProfileAudits" TO app_user;

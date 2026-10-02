@@ -205,6 +205,8 @@ aşamada ilgili satırlar eklenerek güncellenir; kodda olmayan endpoint için s
 | Owner sıfırlama bağlantısı iste | /api/auth/password-reset-request | POST | Hesap e-postası | Genel yanıt | Anonim | 400/429/503 | Hesap varlığı açılmaz; doğrulanmış Owner + outbox |
 | Owner parolayı sıfırla | /api/auth/reset-password | POST | Bağlantı/kod | Başka hesap açıksa hayır | Anonim | 400/409/429 | 30 dakika/tek kullanım; MFA korunur |
 | Çalışan davetleri | /api/staff-invitations/ | GET/POST | MFA | Hayır | Hayır | 400/401/403/409/429 | Kod yalnız oluşturma yanıtında, 24 saat |
+| Çalışan hesapları | /api/staff-accounts/ | GET | MFA | Hayır | Hayır | 400/401/403/429 | Aktif/pasif, sayfalama; Owner/çift rol hariç |
+| Çalışan hesabını pasifleştir | /api/staff-accounts/{id}/deactivate | POST | MFA | Hayır | Hayır | 400/401/403/404/409/429 | CSRF/sürüm; tekrar güvenli, oturum/kod iptali ve audit atomik |
 | Daveti iptal et | /api/staff-invitations/{id}/revoke | POST | MFA | Hayır | Hayır | 400/401/403/404/409/429 | Süre/tek kabul korunur |
 | Daveti kabul et | /api/staff-invitations/accept | POST | Hayır | Davetli | Anonim | 400/409/429 | Davet e-postası + kod + parola; otomatik giriş yok |
 | Çalışan sıfırlama kodu oluştur | /api/staff-password-resets/ | POST | MFA | Hayır | Hayır | 400/401/403/404/409/429 | Tek kullanımlı 30 dakika; Owner güvenli teslim eder |

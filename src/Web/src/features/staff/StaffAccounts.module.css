@@ -1,0 +1,8 @@
+.list { list-style: none; padding: 0; display: grid; gap: var(--space-2); }
+.row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: var(--space-2); }
+.account { min-width: 0; overflow-wrap: anywhere; }
+.actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.danger { border-color: var(--error); color: var(--error); }
+.confirm { background: var(--error); border-color: var(--error); color: var(--background); }
+.confirmation { min-width: 0; margin: 0; border-color: var(--error); }
+.heading:focus-visible { outline: solid var(--focus); }
