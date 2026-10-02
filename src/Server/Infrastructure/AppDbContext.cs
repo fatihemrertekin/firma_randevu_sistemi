@@ -27,10 +27,20 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<BusinessProfile> BusinessProfiles => Set<BusinessProfile>();
     public DbSet<BusinessProfileAudit> BusinessProfileAudits => Set<BusinessProfileAudit>();
     public DbSet<OwnerRecoveryEmail> OwnerRecoveryEmails => Set<OwnerRecoveryEmail>();
+    public DbSet<OwnerSelfServiceReset> OwnerSelfServiceResets => Set<OwnerSelfServiceReset>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
+        var reset = builder.Entity<OwnerSelfServiceReset>();
+        reset.HasKey(entry => entry.OwnerId);
+        reset.HasIndex(entry => entry.GrantId).IsUnique();
+        reset.HasIndex(entry => new { entry.Status, entry.NextAttemptAt });
+        reset.Property(entry => entry.EmailHash).HasMaxLength(64);
+        reset.Property(entry => entry.StampHash).HasMaxLength(64);
+        reset.Property(entry => entry.ProtectedPayload).HasMaxLength(16384);
+        reset.Property(entry => entry.Status).HasMaxLength(16);
+        reset.HasOne<AppUser>().WithMany().HasForeignKey(entry => entry.OwnerId).OnDelete(DeleteBehavior.Restrict);
         var recoveryEmail = builder.Entity<OwnerRecoveryEmail>();
         recoveryEmail.HasKey(entry => entry.OwnerId);
         recoveryEmail.Property(entry => entry.EmailHash).HasMaxLength(64);

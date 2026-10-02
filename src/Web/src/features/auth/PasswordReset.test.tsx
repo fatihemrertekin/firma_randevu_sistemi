@@ -23,6 +23,7 @@ async function openReset(handler: () => Promise<Response>, staff = false) {
   const requests = vi.fn(async (path: string) => {
     if (path === '/api/auth/me') return new Response(null, { status: 401 })
     if (path === '/api/auth/csrf') return Response.json({ token: 'synthetic-csrf' })
+    if (path === '/api/auth/password-reset-options') return Response.json({ available: false })
     if (path === (staff ? '/api/staff-password-resets/complete' : '/api/auth/reset-password')) return handler()
     throw new Error('Beklenmeyen test isteği')
   })
@@ -31,6 +32,11 @@ async function openReset(handler: () => Promise<Response>, staff = false) {
   const button = Array.from(container.querySelectorAll('button')).find(item => item.textContent === (staff ? 'Çalışan parolamı unuttum' : 'Parolamı unuttum'))
   if (!button) throw new Error('Sıfırlama bağlantısı yok')
   await act(async () => button.click())
+  if (!staff) {
+    const manual = Array.from(container.querySelectorAll('button')).find(item => item.textContent === 'Özel kurtarma kodum var')
+    if (!manual) throw new Error('Manuel kurtarma seçeneği yok')
+    await act(async () => manual.click())
+  }
   return requests
 }
 async function fill(id: string, value: string) {

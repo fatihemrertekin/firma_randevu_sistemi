@@ -46,7 +46,8 @@ public static class PasswordResetEndpoints
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(context.RequestAborted);
         timeout.CancelAfter(TimeSpan.FromSeconds(15));
         var issued = await db.OwnerPasswordResetAudits.AsNoTracking().SingleOrDefaultAsync(entry =>
-            entry.GrantId == grantId && entry.Kind == "Issued" && entry.InstanceId == configuration["Auth:InstanceId"], timeout.Token);
+            entry.GrantId == grantId && (entry.Kind == "Issued" || entry.Kind == OwnerSelfServiceResetFlow.IssuedKind) &&
+                entry.InstanceId == configuration["Auth:InstanceId"], timeout.Token);
         if (issued is null) return InvalidToken();
         using var lease = await accountLimiter.AcquireAsync(issued.OwnerId, cancellationToken: timeout.Token);
         if (!lease.IsAcquired) return Results.StatusCode(StatusCodes.Status429TooManyRequests);
@@ -60,6 +61,15 @@ public static class PasswordResetEndpoints
             clock.GetUtcNow() >= issued.ExpiresAt ||
             await db.OwnerPasswordResetAudits.AnyAsync(entry => entry.GrantId == grantId && entry.Kind == "Completed", timeout.Token))
             return InvalidToken();
+        OwnerSelfServiceReset? selfService = null;
+        if (issued.Kind == OwnerSelfServiceResetFlow.IssuedKind)
+        {
+            selfService = await db.OwnerSelfServiceResets.SingleOrDefaultAsync(entry => entry.OwnerId == user.Id, timeout.Token);
+            var email = await db.OwnerRecoveryEmails.SingleOrDefaultAsync(entry => entry.OwnerId == user.Id, timeout.Token);
+            if (selfService is null || selfService.GrantId != grantId ||
+                selfService.Status is not ("Delivered" or "Processing" or "Pending") ||
+                !OwnerSelfServiceResetFlow.Matches(selfService, user, email)) return InvalidToken();
+        }
         // ResetPasswordAsync checks the protected Identity token and changes hash/stamp;
         // it does not clear MFA, lockout or recovery codes. Do not refresh any session.
         var result = await users.ResetPasswordAsync(user, contents[1], request.NewPassword);
@@ -82,6 +92,13 @@ public static class PasswordResetEndpoints
             OccurredAt = clock.GetUtcNow(),
             ExpiresAt = issued.ExpiresAt
         });
+        if (selfService is not null)
+        {
+            selfService.Status = "Completed";
+            selfService.ProtectedPayload = null;
+            selfService.LeaseId = null;
+            selfService.LeaseUntil = null;
+        }
         await db.SaveChangesAsync(timeout.Token);
         await transaction.CommitAsync(timeout.Token);
         await signIn.SignOutAsync();

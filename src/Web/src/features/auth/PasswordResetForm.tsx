@@ -1,10 +1,11 @@
 import ErrorMessage from '../../components/ErrorMessage'
 import { useRef, useState, type FormEvent } from 'react'
+import styles from './AuthenticationScreens.module.css'
 
 type ResetBody = { token: string; newPassword: string; confirmPassword: string }
-type Props = { onRequest: (body: ResetBody) => Promise<Response>; onDone: () => void; onCancel: () => void; staff?: boolean }
+type Props = { onRequest: (body: ResetBody) => Promise<Response>; onDone: () => void; onCancel: () => void; staff?: boolean; linkToken?: string }
 
-export default function PasswordResetForm({ onRequest, onDone, onCancel, staff = false }: Props) {
+export default function PasswordResetForm({ onRequest, onDone, onCancel, staff = false, linkToken }: Props) {
   const [token, setToken] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -25,7 +26,7 @@ export default function PasswordResetForm({ onRequest, onDone, onCancel, staff =
     pending.current = true
     setBusy(true)
     try {
-      const response = await onRequest({ token: token.trim(), newPassword, confirmPassword })
+      const response = await onRequest({ token: linkToken ?? token.trim(), newPassword, confirmPassword })
       if (response.status === 204) {
         onDone()
       } else if (response.status === 400 || response.status === 409) {
@@ -52,11 +53,12 @@ export default function PasswordResetForm({ onRequest, onDone, onCancel, staff =
       <h1 id="page-title">{staff ? 'Çalışan parola sıfırlama' : 'İşletme sahibi parola sıfırlama'}</h1>
       <p>{staff
         ? 'İşletme sahibinden, kimliğiniz doğrulandıktan sonra aldığınız 30 dakika geçerli kodu kullanın.'
-        : 'Destekten, kimliğiniz doğrulandıktan sonra aldığınız 30 dakika geçerli kodu kullanın. Kod istemek için destekle iletişime geçin.'}</p>
+        : linkToken !== undefined ? 'E-posta bağlantınızla yeni parolanızı belirleyin. Sonraki girişte mevcut ikinci adımınızı kullanın.'
+        : 'Kimliğiniz doğrulandıktan sonra özel olarak teslim edilen 30 dakika geçerli kurtarma kodunu kullanın.'}</p>
       <form onSubmit={handleSubmit} aria-label="Parola sıfırlama" aria-busy={busy}>
-        <label htmlFor="reset-token">Sıfırlama kodu</label>
+        {linkToken === undefined && <><label htmlFor="reset-token">Sıfırlama kodu</label>
         <input id="reset-token" type="password" autoComplete="off" required maxLength={8192}
-          disabled={busy} value={token} onChange={event => setToken(event.target.value)} />
+          disabled={busy} value={token} onChange={event => setToken(event.target.value)} /></>}
         <p id="reset-rules">Yeni parola en az 12 karakter; büyük/küçük harf, rakam ve özel karakter içermeli.</p>
         <label htmlFor="reset-password">Yeni parola</label>
         <input id="reset-password" type="password" autoComplete="new-password" required minLength={12} maxLength={1024}
@@ -65,9 +67,11 @@ export default function PasswordResetForm({ onRequest, onDone, onCancel, staff =
         <label htmlFor="reset-confirm">Yeni parola tekrarı</label>
         <input id="reset-confirm" type="password" autoComplete="new-password" required maxLength={1024}
           disabled={busy} value={confirmPassword} onChange={event => setConfirmPassword(event.target.value)} />
-        <button type="submit" disabled={busy}>{busy ? 'Parola sıfırlanıyor…' : 'Parolayı sıfırla'}</button>
+        <div className={styles.confirmationActions}>
+          <button type="submit" disabled={busy}>{busy ? 'Parola sıfırlanıyor…' : 'Parolayı sıfırla'}</button>
+          <button type="button" onClick={onCancel} disabled={busy}>Girişe dön</button>
+        </div>
       </form>
-      <button type="button" onClick={onCancel} disabled={busy}>Girişe dön</button>
       <ErrorMessage message={error} />
     </>
   )
