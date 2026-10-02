@@ -7,14 +7,16 @@ import BusinessProfile from '../features/business/BusinessProfile'
 import StaffInvitations from '../features/staff/StaffInvitations'
 import StaffPasswordReset from '../features/staff/StaffPasswordReset'
 import StaffAccounts from '../features/staff/StaffAccounts'
+import StaffMembers from '../features/staff/StaffMembers'
 import styles from './ManagementLayout.module.css'
 import ErrorMessage from '../components/ErrorMessage'
 import OwnerRecoveryEmail from '../features/auth/OwnerRecoveryEmail'
 import MfaRecoveryCodes from '../features/auth/MfaRecoveryCodes'
 
-type Section = 'business' | 'security' | 'access'
+type Section = 'business' | 'security' | 'access' | 'personnel'
 const sections = [
   { id: 'business', title: 'İşletme bilgileri', description: 'İşletmenizin adını ve iletişim bilgilerini yönetin.' },
+  { id: 'personnel', title: 'Personel', description: 'İşletmede hizmet veren kişilerin adını ve aktiflik durumunu yönetin.' },
   { id: 'security', title: 'Hesap ve güvenlik', description: 'Hesabınızı koruyun ve parolanızı değiştirin.' },
   { id: 'access', title: 'Çalışan erişimleri', description: 'Çalışan hesaplarını, davetleri ve parola sıfırlama işlemlerini yönetin.' },
 ] as const
@@ -25,9 +27,11 @@ export default function ManagementLayout({ auth, account }: Props) {
   const owner = account.mfaEnabled && account.ownerAccess && !account.staffAccess
   const [section, setSection] = useState<Section>(owner ? 'business' : 'security')
   const [pendingRequests, setPendingRequests] = useState(0)
+  const [personnelDirty, setPersonnelDirty] = useState(false)
+  const [personnelBusy, setPersonnelBusy] = useState(false)
   const heading = useRef<HTMLHeadingElement>(null)
-  const blocked = auth.busy || pendingRequests > 0
-  const current = sections.find(item => item.id === section) ?? sections[1]
+  const blocked = auth.busy || pendingRequests > 0 || personnelBusy
+  const current = sections.find(item => item.id === section) ?? sections[0]
   const post = useCallback(async (path: string, body: object, signal?: AbortSignal) => {
     setPendingRequests(current => current + 1)
     try { return await postWithCsrf(path, body, signal) }
@@ -36,6 +40,8 @@ export default function ManagementLayout({ auth, account }: Props) {
 
   function navigate(next: Section) {
     if (blocked || section === next) return
+    if (personnelDirty && !window.confirm('Kaydedilmemiş personel değişiklikleri silinsin mi?')) return
+    setPersonnelDirty(false)
     auth.clearPasswordFields()
     auth.setError('')
     auth.setNotice('')
@@ -47,7 +53,10 @@ export default function ManagementLayout({ auth, account }: Props) {
     <header className={styles.header}>
       <div><span className={styles.brand}>Randevu</span><span className={styles.subtitle}>Yönetim</span></div>
       <div className={styles.account}><span>{account.email}</span>
-        <button type="button" disabled={blocked} onClick={auth.handleLogout}>Çıkış yap</button>
+        <button type="button" disabled={blocked} onClick={() => {
+          if (personnelDirty && !window.confirm('Kaydedilmemiş personel değişiklikleri silinsin ve çıkış yapılsın mı?')) return
+          setPersonnelDirty(false); void auth.handleLogout()
+        }}>Çıkış yap</button>
       </div>
     </header>
     <div className={styles.layout}>
@@ -64,6 +73,9 @@ export default function ManagementLayout({ auth, account }: Props) {
         <p>{current.description}</p>
         {owner && <div hidden={section !== 'business'} className={styles.panel}>
           <BusinessProfile post={post} />
+        </div>}
+        {owner && section === 'personnel' && <div className={styles.panel}>
+          <StaffMembers post={post} onDirtyChange={setPersonnelDirty} onBusyChange={setPersonnelBusy} />
         </div>}
         {owner && section === 'security' && <div className={styles.panel}>
           <OwnerRecoveryEmail post={post} disabled={blocked} />

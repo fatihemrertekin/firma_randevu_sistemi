@@ -271,17 +271,18 @@ public sealed class StaffAccountTests
         var options = new DbContextOptionsBuilder<AppDbContext>().UseNpgsql(database.GetConnectionString()).Options;
         await using var db = new AppDbContext(options);
         var migrations = db.Database.GetMigrations().ToArray();
-        Assert.EndsWith("StaffAccountDeactivation", migrations[^1]);
+        var index = Array.FindIndex(migrations, migration => migration.EndsWith("StaffAccountDeactivation", StringComparison.Ordinal));
+        Assert.True(index > 0);
         var migrator = db.GetService<IMigrator>();
-        await migrator.MigrateAsync(migrations[^2], TestContext.Current.CancellationToken);
+        await migrator.MigrateAsync(migrations[index - 1], TestContext.Current.CancellationToken);
         await db.Database.ExecuteSqlRawAsync("""
             INSERT INTO "AspNetUsers" ("Id", "UserName", "EmailConfirmed", "PhoneNumberConfirmed", "TwoFactorEnabled", "LockoutEnabled", "AccessFailedCount")
             VALUES ('8fab3fce-6c1b-490d-99ac-01d39a2b12d8', 'synthetic-existing', true, false, false, true, 0);
             """, TestContext.Current.CancellationToken);
-        await migrator.MigrateAsync(migrations[^1], TestContext.Current.CancellationToken);
+        await migrator.MigrateAsync(migrations[index], TestContext.Current.CancellationToken);
         Assert.True((await db.Users.AsNoTracking().SingleAsync(TestContext.Current.CancellationToken)).IsActive);
-        await migrator.MigrateAsync(migrations[^2], TestContext.Current.CancellationToken);
-        await migrator.MigrateAsync(migrations[^1], TestContext.Current.CancellationToken);
+        await migrator.MigrateAsync(migrations[index - 1], TestContext.Current.CancellationToken);
+        await migrator.MigrateAsync(migrations[index], TestContext.Current.CancellationToken);
         Assert.True((await db.Users.AsNoTracking().SingleAsync(TestContext.Current.CancellationToken)).IsActive);
         Assert.Empty(await db.StaffDeactivationAudits.ToArrayAsync(TestContext.Current.CancellationToken));
     }

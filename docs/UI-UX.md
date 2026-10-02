@@ -207,6 +207,11 @@ aşamada ilgili satırlar eklenerek güncellenir; kodda olmayan endpoint için s
 | Çalışan davetleri | /api/staff-invitations/ | GET/POST | MFA | Hayır | Hayır | 400/401/403/409/429 | Kod yalnız oluşturma yanıtında, 24 saat |
 | Çalışan hesapları | /api/staff-accounts/ | GET | MFA | Hayır | Hayır | 400/401/403/429 | Aktif/pasif, sayfalama; Owner/çift rol hariç |
 | Çalışan hesabını pasifleştir | /api/staff-accounts/{id}/deactivate | POST | MFA | Hayır | Hayır | 400/401/403/404/409/429 | CSRF/sürüm; tekrar güvenli, oturum/kod iptali ve audit atomik |
+| Personel listesi | /api/staff-members/ | GET | MFA | Hayır | Hayır | 400/401/403/429 | Ad/aktiflik, sunucu sayfalama; giriş hesaplarından bağımsız |
+| Güncel personel | /api/staff-members/{id} | GET | MFA | Hayır | Hayır | 401/403/404/429 | Form çakışmasında güncel sürümü yükle |
+| Personel ekle | /api/staff-members/ | POST | MFA | Hayır | Hayır | 400/401/403/409/429 | CSRF; aynı istek ID'si çift kayıt yaratmaz; audit atomik |
+| Personel adını düzenle | /api/staff-members/{id} | POST | MFA | Hayır | Hayır | 400/401/403/404/409/429 | CSRF/sürüm; ad alanı hatası; kaydedilmemiş değişiklik koruması |
+| Personel aktif/pasif | /api/staff-members/{id}/status | POST | MFA | Hayır | Hayır | 400/401/403/404/409/429 | CSRF/sürüm/onay; silme ve giriş hesabı değişikliği yok; audit atomik |
 | Daveti iptal et | /api/staff-invitations/{id}/revoke | POST | MFA | Hayır | Hayır | 400/401/403/404/409/429 | Süre/tek kabul korunur |
 | Daveti kabul et | /api/staff-invitations/accept | POST | Hayır | Davetli | Anonim | 400/409/429 | Davet e-postası + kod + parola; otomatik giriş yok |
 | Çalışan sıfırlama kodu oluştur | /api/staff-password-resets/ | POST | MFA | Hayır | Hayır | 400/401/403/404/409/429 | Tek kullanımlı 30 dakika; Owner güvenli teslim eder |

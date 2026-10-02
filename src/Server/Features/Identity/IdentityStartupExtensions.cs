@@ -200,6 +200,12 @@ public static class IdentityStartupExtensions
                         PermitLimit = 10,
                         Window = TimeSpan.FromMinutes(5)
                     }));
+            options.AddPolicy("staff-management", context => RateLimitPartition.GetFixedWindowLimiter(
+                context.Connection.RemoteIpAddress?.ToString() ?? "unknown", _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = 30,
+                    Window = TimeSpan.FromMinutes(1)
+                }));
         });
     }
 }

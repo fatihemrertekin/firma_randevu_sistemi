@@ -8,7 +8,7 @@ Güncelleme: 2026-10-03. Güncel özet burada; kapsam ve kanıt bağlantıları 
 | --- | --- | --- |
 | P00 — İş ve ürün tanımı | `done` | [P00 planı](plans/P00.md) ve [ürün kararları](PRODUCT.md#2-ürün-kararları); işletme görüşmeleri ve gerçek pilot yapılmış sayılmaz. |
 | P01 — Temel ve CI | `done` | [P01 kanıtı](plans/P01.md#kanıt); PR #1 birleşme commit'i `10527c1`. |
-| P02 — Kimlik ve tanımlar | `in_progress` | P02-01–P02-16 onaylanan yerel kapsamları tamamlandı. Logo, çalışan/hizmet/mesai/yetkinlik ve diğer kalan işler ayrı onay ister; [aktif plan](plans/P02.md). |
+| P02 — Kimlik ve tanımlar | `in_progress` | P02-01–P02-16 tamamlandı; P02-17 personel işi onayla sürüyor. Logo/hizmet/mesai/yetkinlik ve diğer kalan işler ayrı onay ister; [aktif plan](plans/P02.md). |
 | P03–P17 | `planned` | Yalnız [ROADMAP](ROADMAP.md) düzeyinde; yeni uygulama yetkisi veya kabul kanıtı yok. |
 
 ## Son doğrulanan teslim ve sınırlar
@@ -31,7 +31,7 @@ Program.cs bakımı `done`: başlangıç 265 satırdan 69 satıra indi; önce/so
 
 ## Sıradaki iş
 
-Onaylanan bakım sırası, P02-16 ve ana yerel güncellemesi tamamlandı. [PR #19](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/19) `f8232d3` ile birleşti ve [main CI](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/37068066623) başarılı. Sonraki öneri: P02 çalışan tanımları için küçük kapsamı netleştirip onay almak. Çalışan hesabı erişimi ile randevu alacak personel tanımı ayrı işlerdir. Yeni geliştirme veya P03 başlamaz; doğrudan main push yoktur.
+Onaylanan bakım sırası, P02-16 ve ana yerel güncellemesi tamamlandı. [PR #19](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/19) `f8232d3` ile birleşti ve [main CI](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/37068066623) başarılı. 03.10.2026 tarihinde [P02-17 temel personel tanımları](plans/P02.md#p02-17--temel-personel-tanımları) onaylandı; durum `in_progress`. Yalnız liste/ekleme/isim/durum/audit, kabul ve yedekli ana yerel teslim tamamlanıp durulacak. Hesap eşleştirme, hizmet/mesai/yetkinlik veya P03 başlamaz; doğrudan main push yoktur.
 
 ## Gelecek plan kaydı — destek ve işletim ekranı (02.10.2026)
 

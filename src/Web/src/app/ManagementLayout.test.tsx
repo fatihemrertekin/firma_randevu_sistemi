@@ -18,6 +18,7 @@ beforeEach(() => {
     if (path === '/api/business-profile/') return Response.json(profile)
     if (path === '/api/staff-invitations/') return Response.json([])
     if (path.startsWith('/api/staff-accounts/')) return Response.json({ items: [], page: 1, hasMore: false })
+    if (path.startsWith('/api/staff-members/')) return Response.json({ items: [], page: 1, hasMore: false })
     if (path === '/api/auth/csrf') return Response.json({ token: 'synthetic-csrf' })
     if (path === '/api/staff-password-resets/') return Response.json({ token: 'synthetic-delivery-code', expiresAt: '2026-10-01T23:00:00Z' })
     if (path === '/api/auth/logout') return new Response(null, { status: 204 })
@@ -47,6 +48,17 @@ async function submit(label: string) {
 }
 
 describe('Yönetim gezinmesi', () => {
+  it('kaydedilmemiş personel formundan gezinme ve çıkışı onaylatır; reddedince taslağı korur', async () => {
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false)
+    await render(); await click('Personel'); await click('Yeni personel'); await fill('member-name', 'Taslak Kişi')
+    await click('İşletme bilgileri'); await click('Çıkış yap')
+    expect(confirm).toHaveBeenCalledTimes(2)
+    expect(container.querySelector<HTMLInputElement>('#member-name')?.value).toBe('Taslak Kişi')
+    expect(vi.mocked(fetch).mock.calls.some(([path]) => path === '/api/auth/logout')).toBe(false)
+    confirm.mockReturnValue(true); await click('İşletme bilgileri'); await click('Personel')
+    expect(container.querySelector('#member-name')).toBeNull()
+    confirm.mockRestore()
+  })
   it('bölüm değiştirirken profil taslağını korur; parola alanlarını temizler ve başlığa odaklanır', async () => {
     await render()
     await fill('business-name', 'Kaydedilmemiş ad')
