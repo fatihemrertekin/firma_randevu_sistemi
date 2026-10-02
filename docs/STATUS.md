@@ -25,11 +25,13 @@ Belge sadeleştirmesi `done`: [PR #15](https://github.com/fatihemrertekin/firma_
 
 Test düzenlemesi `done`: 12 bağımsız özellik sınıfı ve altı ortak destek dosyası; önce/sonra sunucu 74/74, 0 atlama ve kalite kapıları başarılı. Test/veri/assertion ve yardımcı uygulamaları korundu; [test düzeni ve kanıt](plans/P02.md#test-düzeni-ve-bakım-kabulü). [PR #16](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/16) `ee0bfa8` ile birleşti; [main CI](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/37044579643) başarılı.
 
-Ürün sahibinin ayrı onayladığı Program.cs sadeleştirmesinin yerel kabulü `done`: başlangıç 265 satırdan 69 satıra indi; kimlik ayarları ve üç yönetim komutu ayrı uzantılarda tutulur. Önce/sonra sunucu 74/74, 0 atlama; locked restore, 0 uyarı/hata build, format verify ve kaynak/komut davranışı karşılaştırması geçti. [Başlangıç düzeni ve kanıt](plans/P02.md#uygulama-başlangıcı-ve-bakım-kabulü). GitHub kanıtı [PR #17](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/17) ve PR'ın son commit kontrollerinden takip edilir.
+Program.cs bakımı `done`: başlangıç 265 satırdan 69 satıra indi; önce/sonra 74/74 ve kalite/davranış kontrolleri geçti. [Başlangıç düzeni ve kanıt](plans/P02.md#uygulama-başlangıcı-ve-bakım-kabulü). [PR #17](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/17) `316e1fa` ile birleşti; [main CI](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/37048992061) başarılı.
+
+Ürün sahibinin ayrı onayladığı üç yerel AGENTS.md dosyasının yerel kabulü `done`: web, sunucu testleri ve belgeler için dokuzar satır; kök kurallarla uyum, bağlantılar ve 32 KiB sınırı doğrulandı. [Klasör talimatları ve kanıt](plans/P02.md#klasör-talimatları-ve-bakım-kabulü). Uygulama/test kodu ve kök AGENTS.md değişmedi; GitHub kanıtı [PR #18](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/18) ve PR'ın son commit kontrollerinden takip edilir.
 
 ## Sıradaki iş
 
-Sıradaki bakım önerisi `src/Web`, `tests/Server.Tests` ve `docs` için üç kısa AGENTS.md dosyasının kapsamını sunmak ve ürün sahibinin ayrı onayını beklemektir. Program.cs bakımı bu dosyaların eklenmesini veya P02/P03 geliştirmesini onaylamaz. GitHub işleri PR üzerinden ve yeşil CI sonrası yürütülür; doğrudan main push yoktur.
+Onaylanan bakım sırası tamamlandı. Sıradaki iş, P02'nin kalan kapsamından tek bir küçük işin kapsam/kabulünü sunmak ve ürün sahibinin ayrı onayını beklemektir. Bu bakım P02/P03 geliştirmesini onaylamaz; `useAuthentication` ve Identity akışları somut yeni ihtiyaç olmadan yeniden bölünmez. GitHub işleri PR üzerinden ve yeşil CI sonrası yürütülür; doğrudan main push yoktur.
 
 ## Gelecek plan kaydı — destek ve işletim ekranı (02.10.2026)
 
