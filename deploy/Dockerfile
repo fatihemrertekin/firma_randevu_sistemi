@@ -19,7 +19,7 @@ WORKDIR /app
 COPY --from=server-build /out ./
 COPY docs/identity-email-licenses.txt /app/identity-email-licenses.txt
 RUN mkdir /app/keys && chown $APP_UID:$APP_UID /app/keys
-ENV ASPNETCORE_URLS=http://+:8080
+ENV ASPNETCORE_HTTP_PORTS=8080
 USER $APP_UID
 EXPOSE 8080
 ENTRYPOINT ["dotnet", "Server.dll"]

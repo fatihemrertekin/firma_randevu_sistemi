@@ -32,8 +32,8 @@ services:
       db:
         condition: service_healthy
     environment:
-      ASPNETCORE_URLS: http://+:8080
       ASPNETCORE_ENVIRONMENT: Development
+      Logging__LogLevel__Microsoft.EntityFrameworkCore.Database.Command: Warning
       ConnectionStrings__AppDatabase: Host=db;Port=5432;Database=firma_randevu;Username=app_user;Password=${APP_DB_PASSWORD:?deploy/.env içinde APP_DB_PASSWORD gerekli};Timeout=3
       Auth__InstanceId: firma-randevu-local
       Auth__KeysDirectory: /app/keys
