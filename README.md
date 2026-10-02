@@ -227,3 +227,28 @@ Owner önce MFA ile giriş yapıp hesap e-postasına doğrulama iletisi ister, g
 Gmail, Hotmail ve kurumsal adresler alıcı olabilir; ilgili posta sunucusu spam/ret kuralları uygular. MailKit ve bağımlılıkları MIT lisanslıdır; bildirimler `docs/identity-email-licenses.txt` ve imajdaki `/app/identity-email-licenses.txt` dosyasındadır. Google'ın kişisel Gmail gönderim sınırları vardır; ücretsiz ve sınırsız teslim taahhüdü verilmez. Uygulama şifresi için [Google yönergesi](https://support.google.com/mail/answer/185833?hl=en), sınırlar için [Gmail yardım sayfası](https://support.google.com/mail/answer/22839?hl=en).
 
 Geri dönüşte otomatik sıfırlamayı kapatıp SMTP ayarlarını kaldırın; yerel varsayılanla önceki imaja dönülebilir. Ek kota tablosunu gerçek DB'de silmeyin; Down yalnız boş sentetik DB'de denenir. İmaj geri dönüşü değiştirilmiş parolayı veya iptal edilmiş oturumları geri açmaz. Test bitince ayrı konteyner/anahtar/özel dosyaları temizleyin ve Google uygulama şifresini kullanıcı hesabından iptal edin. Bu kabul üretim DNS/SPF/DKIM, diğer sağlayıcılarda gerçek teslim veya P06 canlıya çıkış kabulü değildir.
+
+### Kalıcı yerel Owner e-posta gönderimi
+
+Windows'ta mevcut tek Owner ve çalışan yerel DB için:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\deploy\Initialize-LocalIdentityEmail.ps1
+docker compose --env-file deploy/.env -f deploy/compose.local.yaml config --quiet
+docker compose --env-file deploy/.env -f deploy/compose.local.yaml up -d app --wait
+```
+
+Yardımcı, Gmail gönderen adresini ve **Google uygulama şifresini** bilgisayarda özel girişle alır; normal Gmail parolası kullanılmaz. Ayarlar `.local/identity-email-private/app.env` içinde yalnız Windows kullanıcısına verilen ACL ile saklanır. Dosya şifreli değildir; içeriğini sohbet/log/ekran görüntüsüne taşımayın. Git ve Docker build bağlamı `.local`'ı dışlar. Compose yalnız dosya varsa yükler; dosya yoksa önceki kapalı yerel varsayılan korunur. Mevcut dosyanın üzerine yazılmaz; Owner hesabı/e-postası/parolası/MFA değiştirilmez. Alıcı otomatik mevcut Owner adresidir, localhost:8080 origin ve günlük 50 SMTP denemesi sınırı kullanılır. Bu dosya çalışmaya devam etmesi için korunur; geçici test şifresi temizliğiyle birlikte kaldırılmaz. Şifre iptal edildiğinde veya değiştiğinde kullanıcı bu özel dosyayı yerelde güncelleyip app'i yeniden oluşturmalıdır. Değerleri gösteren `docker compose config` yerine `config --quiet` kullanın.
+
+Owner, normal giriş + MFA sonrası **Hesap ve güvenlik → Doğrulama gönder** ile mevcut hesap adresini ayrıca doğrular. Sonra **Parolamı unuttum** ekranındaki e-posta isteği kullanılabilir. Adres doğrulanmadığında veya uygun hesap bulunmadığında genel yanıt verilir; bu yanıt teslim kanıtı değildir. Kurulum anahtarlarını kalıcı tutun. Yerel ek Compose override'ınız varsa yukarıdaki komutlara aynı `-f` dosyasını ekleyin.
+
+Gönderimi geri almak için özel klasörde `app.env` dosyasını `app.env.disabled` olarak yeniden adlandırıp aynı Compose komutuyla app'i yeniden oluşturun. Yeniden etkinleştirmek için adı geri getirip app'i yeniden oluşturun. Veritabanını ve MFA/Data Protection volume'larını silmeyin. Bu yerel kurulum üretim HTTPS/DNS/operasyon kabulü yerine geçmez.
+
+### Parola ve MFA kurtarmasının farkı
+
+- E-posta bağlantısı **parolayı yeniler**; mevcut MFA uygulaması ve yedek kodları korunur.
+- **Parola sıfırlama kodum var**, e-posta erişimi kaybedildiğinde kimlik ayrıca doğrulanarak yetkili işletmeci tarafından teslim edilen 30 dakikalık parola kodunu kullanır. MFA yedek kodları bu formda geçerli değildir; normal e-posta sıfırlama destek görüşmesi gerektirmez.
+- **Kurtarma kodu kullan**, önce mevcut parola ile giriş yaptıktan sonra MFA uygulama kodunun yerine bir adet saklanmış MFA kodunu kullanır. Her kod tek kullanımlıdır.
+- MFA Owner, **Hesap ve güvenlik** bölümünde kalan kod sayısını görür; mevcut parolasını ve açık onayını vererek sekiz yeni kod oluşturabilir. Eski kodlar ve bütün oturumlar iptal edilir; parola ve MFA anahtarı değişmez. Yeni kodlar yalnız bir kez gösterilir. Sonuç ağ kesintisiyle belirsiz kalırsa normal parola + uygulama koduyla yeniden giriş yapıp kodları tekrar oluşturun.
+- Telefon ve tüm MFA kodları kaybedildiğinde e-posta sıfırlaması MFA'yı atlamaz. Mevcut bağımsız kimlik doğrulamalı işletmeci MFA kurtarma prosedürü son çaredir; ortak gizli yönetici girişi yoktur.
+- **Girişe dön** MFA bekleme ekranında geçici giriş cookie'sini de kapatır. Çıkış CSRF gerektirir; kapalı/geçersiz oturumda tekrar güvenle yapılabilir.

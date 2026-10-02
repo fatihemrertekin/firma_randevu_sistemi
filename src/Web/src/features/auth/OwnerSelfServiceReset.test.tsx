@@ -61,7 +61,7 @@ describe('Owner otomatik parola sıfırlama', () => {
     await submit()
     expect(requests).toHaveBeenCalledTimes(1)
     expect(container.textContent).toContain('henüz kullanılamıyor')
-    const manual = [...container.querySelectorAll('button')].find(button => button.textContent === 'Özel kurtarma kodum var')
+    const manual = [...container.querySelectorAll('button')].find(button => button.textContent === 'Parola sıfırlama kodum var')
     await act(async () => manual?.click())
     expect(container.querySelector('#reset-token')).not.toBeNull()
   })

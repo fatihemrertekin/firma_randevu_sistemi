@@ -12,6 +12,7 @@ const profile = { name: 'Örnek Kuaför', phone: null, email: null, address: nul
 beforeEach(() => {
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true)
   vi.stubGlobal('fetch', vi.fn(async (path: string) => {
+    if (path === '/api/auth/mfa/recovery-codes') return Response.json({ remaining: 8 })
     if (path === '/api/auth/me') return Response.json(owner)
     if (path === '/api/auth/recovery-email/') return Response.json({ email: owner.email, verifiedAt: null, deliveryAvailable: false })
     if (path === '/api/business-profile/') return Response.json(profile)

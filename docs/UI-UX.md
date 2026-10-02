@@ -181,12 +181,35 @@ Her yeni ekran öncesinde şu şablon doldurulur (3–6 satır):
 
 ## 7. API ↔ ekran ↔ yetki matrisi
 
-Kaynak: OpenAPI'den üretilen tipli istemci. Matris her aşamada ilgili satırlar eklenerek
-güncellenir; kodda olmayan endpoint için satır yazılmaz.
+Mevcut P02 istemcisi `src/Web/src/app/api.ts` ve ekranların açık DTO'larıdır; OpenAPI'den
+üretim henüz uygulanmadı. Bu tablo gerçek endpoint/yetkileri kaydeder. Matris her
+aşamada ilgili satırlar eklenerek güncellenir; kodda olmayan endpoint için satır yazılmaz.
 
 | Ekran / işlem | Endpoint | Yöntem | Owner | Staff | Müşteri | Hata durumları | Not (idempotency / sürüm) |
 |---|---|---|---|---|---|---|---|
-| _(aşama başında doldurulur)_ | | | | | | | |
+| Oturum bilgisi | /api/auth/me | GET | Evet | Evet | Hayır | 401/403 | MFA öncesi Owner erişimi false |
+| İstek doğrulaması | /api/auth/csrf | GET | Evet | Evet | Anonim | 429 | no-store, token bellekte |
+| Giriş | /api/auth/login | POST | Evet | Evet | Anonim | 400/401/429 | Owner için 202 → MFA; çift gönderim engeli |
+| Çıkış / MFA'dan geri dönüş | /api/auth/logout | POST | Evet | Evet | Anonim | 400/429 | CSRF; tekrar güvenli, geçici cookie de kapanır |
+| MFA kurulum anahtarı | /api/auth/mfa/setup | POST | OwnerSetup | Hayır | Hayır | 400/401/403/409/429 | Mevcut parola; hesap kilidi + güncel stamp |
+| MFA etkinleştirme | /api/auth/mfa/enable | POST | OwnerSetup | Hayır | Hayır | 400/401/403/409/429 | Parola + TOTP; kodlar bir kez, oturumlar iptal |
+| MFA uygulama kodu | /api/auth/mfa/login | POST | Bekleyen giriş | Bekleyen giriş | Hayır | 400/401/429 | Önce parola; 5 dakika geçici cookie |
+| MFA yedek kodu | /api/auth/mfa/recovery-login | POST | Bekleyen giriş | Bekleyen giriş | Hayır | 400/401/429 | Parola sonrası; kod tek kullanımlı |
+| Kalan MFA kodları | /api/auth/mfa/recovery-codes | GET | MFA | Hayır | Hayır | 401/403/429 | Yalnız sayı; kodlar tekrar gösterilmez |
+| MFA kodlarını yenile | /api/auth/mfa/recovery-codes | POST | MFA | Hayır | Hayır | 400/401/403/409/429 | Parola, CSRF, kilit; eski kod/oturum iptali |
+| Parola değiştir | /api/auth/change-password | POST | MFA | Evet | Hayır | 400/401/403/409/429 | Mevcut parola; bütün oturumlar iptal |
+| Kurtarma e-postası durumu | /api/auth/recovery-email/ | GET | MFA | Hayır | Hayır | 401/403/429 | Hesap adresi değiştirilemez |
+| Doğrulama gönder | /api/auth/recovery-email/request | POST | MFA | Hayır | Hayır | 400/401/403/409/429/503 | Kalıcı SMTP; uygulama 60 saniye yeniden istek sınırı |
+| E-posta doğrula | /api/auth/recovery-email/confirm | POST | Bağlantı | Bağlantı | Anonim | 400/409/429 | GET değiştirmez; açık POST tek kullanımlı |
+| Parola yenileme kullanılabilirliği | /api/auth/password-reset-options | GET | Evet | Evet | Anonim | 429 | Gerçek gönderim ayarı; no-store |
+| Owner sıfırlama bağlantısı iste | /api/auth/password-reset-request | POST | Hesap e-postası | Genel yanıt | Anonim | 400/429/503 | Hesap varlığı açılmaz; doğrulanmış Owner + outbox |
+| Owner parolayı sıfırla | /api/auth/reset-password | POST | Bağlantı/kod | Başka hesap açıksa hayır | Anonim | 400/409/429 | 30 dakika/tek kullanım; MFA korunur |
+| Çalışan davetleri | /api/staff-invitations/ | GET/POST | MFA | Hayır | Hayır | 400/401/403/409/429 | Kod yalnız oluşturma yanıtında, 24 saat |
+| Daveti iptal et | /api/staff-invitations/{id}/revoke | POST | MFA | Hayır | Hayır | 400/401/403/404/409/429 | Süre/tek kabul korunur |
+| Daveti kabul et | /api/staff-invitations/accept | POST | Hayır | Davetli | Anonim | 400/409/429 | Davet e-postası + kod + parola; otomatik giriş yok |
+| Çalışan sıfırlama kodu oluştur | /api/staff-password-resets/ | POST | MFA | Hayır | Hayır | 400/401/403/404/409/429 | Tek kullanımlı 30 dakika; Owner güvenli teslim eder |
+| Çalışan parolayı sıfırla | /api/staff-password-resets/complete | POST | Hayır | Kod | Anonim | 400/409/429 | Açık oturumla yapılmaz; sonra normal giriş |
+| İşletme profilini oku/kaydet | /api/business-profile/ | GET/POST | MFA | Hayır | Hayır | 400/401/403/409/429 | Açık DTO ve sürüm kontrolü; P02-09 mevcut iş |
 
 Kural: ekranda görünen her işlem bu tabloda bir satıra bağlıdır. Satırı olmayan işlem
 ekrana konmaz; eksik backend desteği aşama planında "eksik" olarak işaretlenir.

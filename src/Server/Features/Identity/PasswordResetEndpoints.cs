@@ -49,6 +49,9 @@ public static class PasswordResetEndpoints
             entry.GrantId == grantId && (entry.Kind == "Issued" || entry.Kind == OwnerSelfServiceResetFlow.IssuedKind) &&
                 entry.InstanceId == configuration["Auth:InstanceId"], timeout.Token);
         if (issued is null) return InvalidToken();
+        if (context.User.Identity?.IsAuthenticated == true && users.GetUserId(context.User) != issued.OwnerId.ToString())
+            return Results.Problem(statusCode: StatusCodes.Status409Conflict,
+                title: "Başka bir hesap açık. Önce çıkış yapıp sıfırlama bağlantısını yeniden açın.");
         using var lease = await accountLimiter.AcquireAsync(issued.OwnerId, cancellationToken: timeout.Token);
         if (!lease.IsAcquired) return Results.StatusCode(StatusCodes.Status429TooManyRequests);
         await using var transaction = await db.Database.BeginTransactionAsync(timeout.Token);

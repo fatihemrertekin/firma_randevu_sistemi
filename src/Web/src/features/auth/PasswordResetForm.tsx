@@ -54,7 +54,7 @@ export default function PasswordResetForm({ onRequest, onDone, onCancel, staff =
       <p>{staff
         ? 'İşletme sahibinden, kimliğiniz doğrulandıktan sonra aldığınız 30 dakika geçerli kodu kullanın.'
         : linkToken !== undefined ? 'E-posta bağlantınızla yeni parolanızı belirleyin. Sonraki girişte mevcut ikinci adımınızı kullanın.'
-        : 'Kimliğiniz doğrulandıktan sonra özel olarak teslim edilen 30 dakika geçerli kurtarma kodunu kullanın.'}</p>
+        : 'E-postaya erişemediğinizde, kimliğiniz ayrıca doğrulandıktan sonra size teslim edilen 30 dakika geçerli parola sıfırlama kodunu kullanın. MFA kurtarma kodları burada kullanılmaz; ikinci adımınız korunur.'}</p>
       <form onSubmit={handleSubmit} aria-label="Parola sıfırlama" aria-busy={busy}>
         {linkToken === undefined && <><label htmlFor="reset-token">Sıfırlama kodu</label>
         <input id="reset-token" type="password" autoComplete="off" required maxLength={8192}

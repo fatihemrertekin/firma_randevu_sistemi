@@ -25,6 +25,9 @@ services:
       context: ..
       dockerfile: deploy/Dockerfile
     image: firma-randevu:local
+    env_file:
+      - path: ../.local/identity-email-private/app.env
+        required: false
     depends_on:
       db:
         condition: service_healthy

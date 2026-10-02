@@ -74,10 +74,10 @@ export default function AuthenticationScreens({ auth }: { auth: ReturnType<typeo
                   <p className={styles.secret}><code>{setupInfo.key}</code></p>
                   <form onSubmit={handleEnable}>
                     <label htmlFor="enable-password">Parolanızı yeniden girin</label>
-                    <input id="enable-password" type="password" autoComplete="current-password" required
+                    <input id="enable-password" type="password" autoComplete="current-password" required disabled={busy} maxLength={1024}
                       value={setupPassword} onChange={event => setSetupPassword(event.target.value)} />
                     <label htmlFor="enable-code">Uygulamadaki altı haneli kod</label>
-                    <input id="enable-code" type="text" inputMode="numeric" autoComplete="one-time-code" required
+                    <input id="enable-code" type="text" inputMode="numeric" autoComplete="one-time-code" required disabled={busy} pattern="[0-9]{6}" maxLength={6}
                       value={code} onChange={event => setCode(event.target.value)} />
                     <button type="submit" disabled={busy}>
                       {busy ? 'Açılıyor…' : 'İki aşamalı girişi aç'}
@@ -87,7 +87,7 @@ export default function AuthenticationScreens({ auth }: { auth: ReturnType<typeo
               ) : (
                 <form onSubmit={handleSetup}>
                   <label htmlFor="setup-password">Parolanız</label>
-                  <input id="setup-password" type="password" autoComplete="current-password" required
+                  <input id="setup-password" type="password" autoComplete="current-password" required disabled={busy} maxLength={1024}
                     value={setupPassword} onChange={event => setSetupPassword(event.target.value)} />
                   <button type="submit" disabled={busy}>
                     {busy ? 'Hazırlanıyor…' : 'Kurulumu başlat'}
@@ -101,22 +101,24 @@ export default function AuthenticationScreens({ auth }: { auth: ReturnType<typeo
         ) : mfaRequired ? (
           <>
             <h1 id="page-title">İkinci adımı tamamlayın</h1>
+            <p id="mfa-help">{useRecoveryCode
+              ? 'MFA kurulurken sakladığınız kodlardan birini girin. Her kod yalnız bir kez kullanılır; parolanızın yerine geçmez.'
+              : 'Doğrulayıcı uygulamanızdaki güncel altı haneli kodu girin. Telefonunuza erişemiyorsanız sakladığınız MFA kurtarma kodunu kullanabilirsiniz.'}</p>
             <form onSubmit={handleMfaLogin}>
               <label htmlFor="mfa-code">
                 {useRecoveryCode ? 'Kurtarma kodu' : 'Doğrulayıcı uygulama kodu'}
               </label>
-              <input id="mfa-code" type="text" required
+              <input id="mfa-code" type="text" required disabled={busy} aria-describedby="mfa-help"
+                pattern={useRecoveryCode ? undefined : '[0-9]{6}'} maxLength={useRecoveryCode ? 32 : 6}
                 inputMode={useRecoveryCode ? 'text' : 'numeric'} autoComplete="one-time-code"
                 value={code} onChange={event => setCode(event.target.value)} />
-              <button type="submit" disabled={busy}>
+              <div className={styles.confirmationActions}><button type="submit" disabled={busy}>
                 {busy ? 'Doğrulanıyor…' : 'Doğrula'}
               </button>
+              <button type="button" onClick={handleLogout} disabled={busy}>Girişe dön</button></div>
             </form>
-            <button type="button" onClick={() => { setUseRecoveryCode(!useRecoveryCode); setCode(''); setError('') }}>
+            <button className={styles.textAction} type="button" disabled={busy} onClick={() => { setUseRecoveryCode(!useRecoveryCode); setCode(''); setError('') }}>
               {useRecoveryCode ? 'Uygulama kodu kullan' : 'Kurtarma kodu kullan'}
-            </button>
-            <button type="button" onClick={() => { setMfaRequired(false); setCode(''); setError('') }}>
-              Girişe dön
             </button>
           </>
         ) : (
@@ -124,7 +126,7 @@ export default function AuthenticationScreens({ auth }: { auth: ReturnType<typeo
             <h1 id="page-title">İşletme girişi</h1>
             <form className={styles.loginForm} onSubmit={handleLogin}>
               <label htmlFor="email">E-posta</label>
-              <input id="email" type="email" autoComplete="username" required
+              <input id="email" type="email" autoComplete="username" required disabled={busy} maxLength={254}
                 value={email} onChange={event => setEmail(event.target.value)} />
               <div className={styles.passwordHeading}>
                 <label htmlFor="password">Parola</label>
@@ -136,7 +138,7 @@ export default function AuthenticationScreens({ auth }: { auth: ReturnType<typeo
                   setNotice('')
                 }}>Parolamı unuttum</button>
               </div>
-              <input id="password" type="password" autoComplete="current-password" required
+              <input id="password" type="password" autoComplete="current-password" required disabled={busy} maxLength={1024}
                 value={password} onChange={event => setPassword(event.target.value)} />
               <button type="submit" disabled={busy}>
                 {busy ? 'Giriş yapılıyor…' : 'Giriş yap'}

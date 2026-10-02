@@ -60,6 +60,6 @@ export default function OwnerPasswordResetRequest({ onCancel, onDone }: { onCanc
     </form>
     <ErrorMessage message={error} />
     {notice && <p role="status">{notice}</p>}
-    <button className={styles.textAction} type="button" disabled={busy} onClick={() => setManual(true)}>Özel kurtarma kodum var</button>
+    <button className={styles.textAction} type="button" disabled={busy} onClick={() => setManual(true)}>Parola sıfırlama kodum var</button>
   </>
 }
