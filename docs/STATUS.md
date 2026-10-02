@@ -8,11 +8,12 @@ Güncelleme: 2026-10-03. Güncel özet burada; kapsam ve kanıt bağlantıları 
 | --- | --- | --- |
 | P00 — İş ve ürün tanımı | `done` | [P00 planı](plans/P00.md) ve [ürün kararları](PRODUCT.md#2-ürün-kararları); işletme görüşmeleri ve gerçek pilot yapılmış sayılmaz. |
 | P01 — Temel ve CI | `done` | [P01 kanıtı](plans/P01.md#kanıt); PR #1 birleşme commit'i `10527c1`. |
-| P02 — Kimlik ve tanımlar | `in_progress` | P02-01–P02-16 onaylanan yerel kapsamları tamamlandı. Logo, çalışan/hizmet/mesai/yetkinlik ve diğer kalan işler ayrı onay ister; [aktif plan](plans/P02.md). |
+| P02 — Kimlik ve tanımlar | `in_progress` | P02-01–P02-17 onaylanan yerel kapsamları tamamlandı. Logo/hizmet/mesai/yetkinlik ve diğer kalan işler ayrı onay ister; [aktif plan](plans/P02.md). |
 | P03–P17 | `planned` | Yalnız [ROADMAP](ROADMAP.md) düzeyinde; yeni uygulama yetkisi veya kabul kanıtı yok. |
 
 ## Son doğrulanan teslim ve sınırlar
 
+- P02-17 yerel kabulü ve ana yerel teslimi `done`: Personel listesi/ekleme/ad/durum, giriş hesabından bağımsızlık ve atomik audit; sunucu 90/90, web 117/117, kalite kapıları ve dört genişlikte gerçek API/Chrome kabulü geçti. Şifreli yedek sonrası ana DB/imaj güncellendi; mevcut Owner/parola/MFA/anahtar/SMTP ve işletme profili korundu, sağlık/restart başarılı. [Kabul](plans/P02.md#p02-17-geliştirme-kabulü--03102026), [yerel teslim/geri dönüş](plans/P02.md#p02-17-ana-yerel-teslim--03102026); GitHub sonucu [PR #21](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/21) son commit kontrollerinden doğrulanır.
 - P02-16 yerel kabulü `done`: MFA Owner Staff listesini görüp hesabı onayla pasifleştirir; yeni giriş, eski oturum ve sıfırlama kodu reddedilir, Owner korunur. Sunucu 82/82, web 106/106, kalite kapıları ve dört genişlikte gerçek API/tarayıcı kabulü geçti; [kanıt ve geri dönüş](plans/P02.md#p02-16--staff-hesaplarını-pasifleştirme). 03.10.2026 ayrı onayla ana yerel DB/imajı güncellendi; şifreli yedek, sağlık/restart ve kimlik/anahtar/SMTP koruma kontrolleri geçti; [yerel güncelleme kanıtı](plans/P02.md#p02-16-ana-yerel-güncelleme--03102026).
 - [PR #14](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/14) `1f3584d` ile birleşti; [main CI](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/36956717787) başarılı. Bu sadeleştirme başlangıcında GitHub API üzerinden birleşme yeniden doğrulandı; yerel main/origin/main/GitHub main `e55be37` ile eşitti ve bu commit'in [CI sonucu](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/36959199297) başarılıydı. Çalışma ağacında kullanıcıya ait belge değişiklikleri vardı.
 - Yerel SMTP kalıcı özel dosyayla etkin; Owner adres doğrulaması ve sıfırlama iletisinin yeni parola ekranına ulaşması kabul edildi. Mevcut Owner parolası/MFA'sı korunmuştur. Tam parola yenileme + normal giriş/MFA kabulü P02-14'te ayrı sentetik hesapta yapıldı; [SMTP kararı](adr/002-kimlik-epostasi-smtp.md).
@@ -31,7 +32,7 @@ Program.cs bakımı `done`: başlangıç 265 satırdan 69 satıra indi; önce/so
 
 ## Sıradaki iş
 
-Onaylanan bakım sırası, P02-16 ve ana yerel güncellemesi tamamlandı. [PR #19](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/19) `f8232d3` ile birleşti ve [main CI](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/37068066623) başarılı. Sonraki öneri: P02 çalışan tanımları için küçük kapsamı netleştirip onay almak. Çalışan hesabı erişimi ile randevu alacak personel tanımı ayrı işlerdir. Yeni geliştirme veya P03 başlamaz; doğrudan main push yoktur.
+P02-17 yerel kabulü ve ana yerel teslimi tamamlandı; GitHub teslimi PR #21 son commit kontrollerinden izlenir. Sonraki geliştirme önerisi temel hizmet tanımlarıdır (ad, süre, fiyat, aktif/pasif); yalnız öneridir, uygulama için ürün sahibi onayı gerekir. Hesap eşleştirme, mesai/yetkinlik veya P03 başlamaz; doğrudan main push yoktur.
 
 ## Gelecek plan kaydı — destek ve işletim ekranı (02.10.2026)
 

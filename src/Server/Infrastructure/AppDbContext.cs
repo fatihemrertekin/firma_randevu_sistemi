@@ -33,11 +33,25 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<OwnerSelfServiceReset> OwnerSelfServiceResets => Set<OwnerSelfServiceReset>();
     public DbSet<IdentityEmailQuota> IdentityEmailQuotas => Set<IdentityEmailQuota>();
     public DbSet<StaffDeactivationAudit> StaffDeactivationAudits => Set<StaffDeactivationAudit>();
+    public DbSet<StaffMember> StaffMembers => Set<StaffMember>();
+    public DbSet<StaffMemberAudit> StaffMemberAudits => Set<StaffMemberAudit>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
         builder.Entity<AppUser>().Property(user => user.IsActive).HasDefaultValue(true);
+        var member = builder.Entity<StaffMember>();
+        member.Property(entry => entry.Name).HasMaxLength(100);
+        member.Property(entry => entry.Version).IsConcurrencyToken();
+        member.ToTable(table => table.HasCheckConstraint("CK_StaffMembers_Name", "length(btrim(\"Name\")) > 0"));
+        member.HasIndex(entry => new { entry.Name, entry.Id });
+        var memberAudit = builder.Entity<StaffMemberAudit>();
+        memberAudit.Property(entry => entry.Kind).HasMaxLength(16);
+        memberAudit.ToTable(table => table.HasCheckConstraint("CK_StaffMemberAudits_Kind",
+            "\"Kind\" IN ('Created','Renamed','Activated','Deactivated')"));
+        memberAudit.HasIndex(entry => new { entry.StaffMemberId, entry.MemberVersion }).IsUnique();
+        memberAudit.HasOne<StaffMember>().WithMany().HasForeignKey(entry => entry.StaffMemberId).OnDelete(DeleteBehavior.Restrict);
+        memberAudit.HasOne<AppUser>().WithMany().HasForeignKey(entry => entry.ActorId).OnDelete(DeleteBehavior.Restrict);
         var deactivation = builder.Entity<StaffDeactivationAudit>();
         deactivation.HasOne<AppUser>().WithMany().HasForeignKey(entry => entry.StaffId).OnDelete(DeleteBehavior.Restrict);
         deactivation.HasOne<AppUser>().WithMany().HasForeignKey(entry => entry.ActorId).OnDelete(DeleteBehavior.Restrict);
