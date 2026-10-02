@@ -6,10 +6,15 @@ using Microsoft.Extensions.DependencyInjection;
 using Server.Features.Business;
 using Server.Infrastructure;
 using Xunit;
+using static Server.Tests.Support.TestAccounts;
+using static Server.Tests.Support.AuthenticationTestSupport;
+using static Server.Tests.Support.IdentityTestEnvironment;
+using static Server.Tests.Support.StaffTestSupport;
 
 namespace Server.Tests;
 
-public sealed partial class OwnerMfaTests
+[Collection(AuthenticationTestCollection.Name)]
+public sealed class BusinessProfileTests
 {
     private const string ProfilePath = "/api/business-profile/";
     private static async Task<BusinessProfileEndpoints.ProfileResponse> ReadProfileAsync(HttpClient client)

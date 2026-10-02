@@ -10,30 +10,16 @@ using Microsoft.Extensions.DependencyInjection;
 using Server.Features.Identity;
 using Server.Infrastructure;
 using Xunit;
+using static Server.Tests.Support.TestAccounts;
+using static Server.Tests.Support.AuthenticationTestSupport;
+using static Server.Tests.Support.IdentityTestEnvironment;
+using static Server.Tests.Support.StaffTestSupport;
 
 namespace Server.Tests;
 
-public sealed partial class OwnerMfaTests
+[Collection(AuthenticationTestCollection.Name)]
+public sealed class StaffInvitationTests
 {
-    private const string InvitePath = "/api/staff-invitations/";
-    private const string AcceptInvitePath = "/api/staff-invitations/accept";
-    private const string StaffEmail = "staff@example.test";
-
-    private static async Task<HttpClient> InviteOwnerAsync(RecoverySeed seeded)
-    {
-        var client = seeded.App.CreateClient();
-        await PasswordStepAsync(client);
-        await CompleteMfaAsync(client, seeded.Key);
-        return client;
-    }
-    private static async Task<StaffInvitationEndpoints.IssuedResponse> InviteAsync(HttpClient owner, string email = StaffEmail)
-    {
-        using var response = await PostAsync(owner, InvitePath, new { email, verifiedRecipient = true }, await GetCsrfAsync(owner));
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        return Assert.IsType<StaffInvitationEndpoints.IssuedResponse>(await response.Content.ReadFromJsonAsync<StaffInvitationEndpoints.IssuedResponse>(TestContext.Current.CancellationToken));
-    }
-    private static Task<HttpResponseMessage> AcceptInviteAsync(HttpClient client, string token, string csrf, string email = StaffEmail, string password = Password) =>
-        PostAsync(client, AcceptInvitePath, new { email, token, password, confirmPassword = password, role = "Owner" }, csrf);
 
     [Fact]
     public async Task InvitationRequiresMfaOwnerAndCsrfAndStaffOnlyGetsOwnSession()
@@ -278,15 +264,6 @@ public sealed partial class OwnerMfaTests
         for (var attempt = 0; attempt < 9; attempt++) { using var bad = await AcceptInviteAsync(client, "bad", csrf); Assert.Equal(HttpStatusCode.BadRequest, bad.StatusCode); }
         using var ipLimited = await AcceptInviteAsync(client, "bad", csrf);
         Assert.Equal(HttpStatusCode.TooManyRequests, ipLimited.StatusCode);
-    }
-
-    private static async Task AwaitInviteLocksAsync(WebApplicationFactory<Program> app)
-    {
-        using var scope = app.Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(10));
-        while (await db.Database.SqlQueryRaw<int>("SELECT COUNT(*)::int AS \"Value\" FROM pg_stat_activity WHERE datname = current_database() AND wait_event_type = 'Lock'")
-            .SingleAsync(timeout.Token) < 2) await Task.Delay(20, timeout.Token);
     }
 
     [Fact]

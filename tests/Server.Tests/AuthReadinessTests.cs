@@ -5,10 +5,15 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Server.Infrastructure;
 using Xunit;
+using static Server.Tests.Support.TestAccounts;
+using static Server.Tests.Support.AuthenticationTestSupport;
+using static Server.Tests.Support.IdentityTestEnvironment;
+using static Server.Tests.Support.PasswordTestSupport;
 
 namespace Server.Tests;
 
-public sealed partial class OwnerMfaTests
+[Collection(AuthenticationTestCollection.Name)]
+public sealed class AuthReadinessTests
 {
     [Fact]
     public async Task CancellingPendingMfaClearsItsCookieWithoutChangingTheAccount()

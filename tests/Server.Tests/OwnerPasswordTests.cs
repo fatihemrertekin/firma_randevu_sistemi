@@ -4,13 +4,16 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
+using static Server.Tests.Support.TestAccounts;
+using static Server.Tests.Support.AuthenticationTestSupport;
+using static Server.Tests.Support.IdentityTestEnvironment;
+using static Server.Tests.Support.PasswordTestSupport;
 
 namespace Server.Tests;
 
-public sealed partial class OwnerMfaTests
+[Collection(AuthenticationTestCollection.Name)]
+public sealed class OwnerPasswordTests
 {
-    private const string PasswordPath = "/api/auth/change-password";
-    private const string NewPassword = "Synthetic!Changed456";
 
     [Fact]
     public async Task PasswordChangeRequiresOwnerMfaCsrfAndValidPasswordsAndRevokesAllOldSessions()
@@ -236,16 +239,4 @@ public sealed partial class OwnerMfaTests
         Assert.Equal(seeded.Key, await users.GetAuthenticatorKeyAsync(owner));
         Assert.Equal(8, await users.CountRecoveryCodesAsync(owner));
     }
-
-    private static async Task CompleteMfaAsync(HttpClient client, string key)
-    {
-        using var response = await PostAsync(client, "/api/auth/mfa/login",
-            new { code = GenerateAuthenticatorCode(key) }, await GetCsrfAsync(client));
-        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
-    }
-
-    private static async Task<HttpResponseMessage> ChangePasswordAsync(
-        HttpClient client, string currentPassword, string newPassword, string confirmPassword) =>
-        await PostAsync(client, PasswordPath, new { currentPassword, newPassword, confirmPassword },
-            await GetCsrfAsync(client));
 }

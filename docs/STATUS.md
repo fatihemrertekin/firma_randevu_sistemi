@@ -21,11 +21,13 @@ Güncelleme: 2026-10-02. Güncel özet burada; kapsam ve kanıt bağlantıları 
 
 ## Bakım durumu
 
-Belge sadeleştirmesi `done`: [PR #15](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/15), birleşme `94e9298` ve [main CI](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/37040331937) başarılı. Geçmiş içerik ve bağlantılar korundu. Ürün sahibi 02.10.2026 tarihinde sunucu testlerini özellik bazlı bağımsız sınıflara ayırmayı ve bekleyen destek planı belge değişikliklerini uyarlayıp commit'lemeyi onayladı; bu ikinci bakım adımı `in_progress`. Ortak PostgreSQL/oturum/CSRF yardımcıları ayrılır; test senaryoları, yarış/rollback kontrolleri ve mevcut eşzamanlı çalışma sınırı korunur. Uygulama, veri veya SMTP ayarı değiştirilmez.
+Belge sadeleştirmesi `done`: [PR #15](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/15), birleşme `94e9298` ve [main CI](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/37040331937) başarılı. Bekleyen destek ekranı planı yeni belge düzenine uyarlandı ve `1e06cab` ile commit'lendi; yalnız gelecekteki plan kaydıdır.
+
+Ürün sahibinin 02.10.2026 tarihinde onayladığı test düzenlemesinin yerel kabulü `done`: 12 bağımsız özellik sınıfı ve altı ortak destek dosyası; önce/sonra sunucu 74/74, 0 atlama, locked restore, 0 uyarı/hata build ve format verify başarılı. Test/veri/assertion ve ortak yardımcı uygulamaları korundu; [test düzeni ve kanıt](plans/P02.md#test-düzeni-ve-bakım-kabulü). Uygulama, migration veya SMTP ayarı değişmedi; GitHub teslimi PR ve yeşil CI üzerinden tamamlanır.
 
 ## Sıradaki iş
 
-Onaylanan test düzenlemesi ve belge commit'leri kapanınca yalnız Program.cs sadeleştirmesinin kapsam/kabul önerisini sun ve ürün sahibinin ayrı onayını bekle. Program.cs değişikliği, yeni AGENTS.md dosyaları veya P02/P03 geliştirmesi bu onayın kapsamında değildir. GitHub işleri PR üzerinden ve yeşil CI sonrası yürütülür; doğrudan main push yoktur.
+Sıradaki bakım önerisi yalnız Program.cs sadeleştirmesinin kapsam/kabulünü sunmak ve ürün sahibinin ayrı onayını beklemektir. Program.cs değişikliği, yeni AGENTS.md dosyaları veya P02/P03 geliştirmesi bu onayın kapsamında değildir. GitHub işleri PR üzerinden ve yeşil CI sonrası yürütülür; doğrudan main push yoktur.
 
 ## Gelecek plan kaydı — destek ve işletim ekranı (02.10.2026)
 

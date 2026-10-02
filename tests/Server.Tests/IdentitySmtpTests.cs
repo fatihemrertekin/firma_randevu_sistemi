@@ -14,10 +14,15 @@ using MimeKit;
 using Server.Features.Identity;
 using Server.Infrastructure;
 using Xunit;
+using static Server.Tests.Support.TestAccounts;
+using static Server.Tests.Support.AuthenticationTestSupport;
+using static Server.Tests.Support.IdentityTestEnvironment;
+using static Server.Tests.Support.EmailTestSupport;
 
 namespace Server.Tests;
 
-public sealed partial class OwnerMfaTests
+[Collection(AuthenticationTestCollection.Name)]
+public sealed class IdentitySmtpTests
 {
     private static Dictionary<string, string?> SmtpSettings() => new()
     {

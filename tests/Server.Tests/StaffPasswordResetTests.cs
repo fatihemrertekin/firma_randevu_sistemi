@@ -10,10 +10,16 @@ using Microsoft.Extensions.DependencyInjection;
 using Server.Features.Identity;
 using Server.Infrastructure;
 using Xunit;
+using static Server.Tests.Support.TestAccounts;
+using static Server.Tests.Support.AuthenticationTestSupport;
+using static Server.Tests.Support.IdentityTestEnvironment;
+using static Server.Tests.Support.PasswordTestSupport;
+using static Server.Tests.Support.StaffTestSupport;
 
 namespace Server.Tests;
 
-public sealed partial class OwnerMfaTests
+[Collection(AuthenticationTestCollection.Name)]
+public sealed class StaffPasswordResetTests
 {
     private const string StaffResetIssuePath = "/api/staff-password-resets/";
     private const string StaffResetCompletePath = "/api/staff-password-resets/complete";

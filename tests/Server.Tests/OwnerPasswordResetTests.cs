@@ -10,23 +10,16 @@ using System.Threading.RateLimiting;
 using Server.Features.Identity;
 using Server.Infrastructure;
 using Xunit;
+using static Server.Tests.Support.TestAccounts;
+using static Server.Tests.Support.AuthenticationTestSupport;
+using static Server.Tests.Support.IdentityTestEnvironment;
+using static Server.Tests.Support.PasswordTestSupport;
 
 namespace Server.Tests;
 
-public sealed partial class OwnerMfaTests
+[Collection(AuthenticationTestCollection.Name)]
+public sealed class OwnerPasswordResetTests
 {
-    private const string ResetPath = "/api/auth/reset-password";
-    private static IssueOwnerPasswordReset.IssueRequest ResetIssue(RecoverySeed seed, string reference) =>
-        new(RecoveryInstance, seed.OwnerId, "operator-01", reference);
-
-    private static async Task<IssueOwnerPasswordReset.IssuedToken> IssueResetAsync(
-        WebApplicationFactory<Program> app, IssueOwnerPasswordReset.IssueRequest request) =>
-        Assert.IsType<IssueOwnerPasswordReset.IssuedToken>(await IssueOwnerPasswordReset.IssueAsync(
-            app.Services, request, TestContext.Current.CancellationToken));
-
-    private static async Task<HttpResponseMessage> ResetAsync(HttpClient client, string token,
-        string password = NewPassword, string? confirm = null) => await PostAsync(client, ResetPath,
-            new { token, newPassword = password, confirmPassword = confirm ?? password }, await GetCsrfAsync(client));
 
     [Fact]
     public async Task ResetIssuanceChecksTargetConfirmationAndReferenceAndWritesOnlyPrivateFile()
@@ -313,12 +306,5 @@ public sealed partial class OwnerMfaTests
         }
         finally { foreach (var response in results) response.Dispose(); }
         Assert.Equal(2, await db.OwnerPasswordResetAudits.CountAsync(TestContext.Current.CancellationToken));
-    }
-
-    private sealed class ResetClock : TimeProvider
-    {
-        private DateTimeOffset now = DateTimeOffset.UtcNow;
-        public override DateTimeOffset GetUtcNow() => now;
-        public void Advance(TimeSpan duration) => now += duration;
     }
 }
