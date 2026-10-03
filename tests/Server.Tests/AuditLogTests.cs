@@ -115,6 +115,24 @@ public sealed class AuditLogTests
         Assert.Equal(12, await db.Database.SqlQueryRaw<int>("SELECT count(*)::int AS \"Value\" FROM pg_indexes WHERE schemaname='public' AND indexname LIKE '%Audits_OccurredAt_Id'").SingleAsync(Token));
     }
 
+    [Fact]
+    public async Task AnonymousResetRequestDoesNotAttributeTheTargetOwnerAsAuthenticatedActor()
+    {
+        await using var database = RecoveryDatabase(); await database.StartAsync(Token);
+        var seed = await CreateRecoveryAppAsync(database.GetConnectionString()); await using var app = seed.App;
+        using var owner = await InviteOwnerAsync(seed); using var scope = app.Services.CreateScope(); var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var at = DateTimeOffset.UtcNow.AddMinutes(-1);
+        foreach (var kind in new[] { "SelfIssued", "Issued", "Completed" })
+            db.OwnerPasswordResetAudits.Add(new() { Id = Guid.NewGuid(), OwnerId = seed.OwnerId, GrantId = Guid.NewGuid(), InstanceId = "synthetic", OperatorReference = "SECRET-operator", RequestReference = "SECRET-request", Kind = kind, OccurredAt = at, ExpiresAt = at.AddMinutes(30) });
+        await db.SaveChangesAsync(Token); var before = await FingerprintAsync(db);
+        var page = await Read(owner, "?category=security"); Assert.Equal(3, page.Items.Length);
+        Assert.Contains(page.Items, item => item.Action == "Sıfırlama bağlantısı istendi" && item.Actor == "Oturum açılmadan");
+        Assert.Contains(page.Items, item => item.Action == "Sıfırlama oluşturuldu" && item.Actor == "Yerel bakım");
+        Assert.Contains(page.Items, item => item.Action == "Parola sıfırlandı" && item.Actor == Server.Tests.Support.TestAccounts.Email);
+        Assert.All(page.Items, item => Assert.Equal(Server.Tests.Support.TestAccounts.Email, item.Target));
+        Assert.Equal(before, await FingerprintAsync(db));
+    }
+
     private static Task<string> FingerprintAsync(AppDbContext db)
     {
         var tables = db.Model.GetEntityTypes().Select(type => type.GetTableName()).Where(name => name is not null).Distinct().Order();
