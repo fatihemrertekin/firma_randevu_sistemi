@@ -272,3 +272,11 @@ MFA Owner, **Personel → Çalışma saatleri** bölümünde her personelin yedi
 MFA Owner, **İşletme logosu** bölümünde PNG/JPEG dosyasını seçip önizleyerek kaydeder. En fazla 1 MiB ve 2048 × 2048 piksel; sunucu dosyayı yeniden PNG oluşturur ve oranı korunarak en fazla 512 × 512 piksele küçültür. SVG/HTML, animasyon, URL veya logo silme yoktur. Logo giriş ve yönetimde herkese görünür; logo API'si hesap/iletişim verisini açmaz. Dosya seçmek kaydetmez; eski sürüm reddedilir ve aynı güncel görüntü ikinci audit yaratmaz.
 
 `BusinessLogo` migration'ı ayrı logo/audit tablolarını ve boş logo satırını ekler. Logo DB yedeğine dahildir; dosya volume'u gerekmez. Kontrollü migration ve app_user yetkileri yukarıdaki komutla uygulanır. `Down` logo/audit verisini siler; ana ortamda otomatik yapılmaz. SkiaSharp/native paketleri kilitlenir; [lisans bildirimleri](docs/logo-image-licenses.txt) imaja dahildir. Kabul/geri dönüş [P02 planında](docs/plans/P02.md#p02-22--işletme-logosu); kalite kapıları yukarıdadır.
+
+## Değişiklik kayıtları (P02-23)
+
+MFA Owner, **Değişiklik kayıtları** bölümünde mevcut tanım, çalışan erişimi ve kurtarma kayıtlarını tarih/işlem/yapan hesap/ilgili kayıt olarak görür. Tümü/Tanımlar/Hesap ve güvenlik kategorileri, yenileme ve önceki/sonraki sayfa vardır. Saatler İstanbul bölgesinde, hesap ve hedef adları güncel kayıtlardan gösterilir; yerel kurtarma işlemlerinin aktörü “Yerel bakım”dır. Eski/yeni değerler, giriş geçmişi, kodlar, silme, dışa aktarma veya yeni audit yazımı eklenmez.
+
+`GET /api/audit-log/` yalnız MFA Owner içindir; no-store, 30/IP/dakika ve kategoriye bağlı cursor kullanır. Varsayılan sayfa 20 kayıt; sunucu sınırı 1–50'dir. `AuditLogIndexes` migration'ı yalnız 12 mevcut audit tablosuna sıralama indeksi ekler. Uygulama DB yetkileri değişmez; Down yalnız bu indeksleri kaldırır, kayıt silmez. Kontrollü yedek/migration ve kabul ayrıntıları [P02 planında](docs/plans/P02.md#p02-23--değişiklik-kayıtlarını-görüntüleme).
+
+İlgili kontroller: kökten `dotnet test FirmaRandevu.slnx --no-restore --filter FullyQualifiedName~AuditLogTests`; web dizininde `npm.cmd test -- AuditLog.test.tsx`. Yayında yukarıdaki tüm kalite kapıları çalıştırılır.
