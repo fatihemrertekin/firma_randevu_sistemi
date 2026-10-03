@@ -8,11 +8,12 @@ Güncelleme: 2026-10-03. Güncel özet burada; kapsam ve kanıt bağlantıları 
 | --- | --- | --- |
 | P00 — İş ve ürün tanımı | `done` | [P00 planı](plans/P00.md) ve [ürün kararları](PRODUCT.md#2-ürün-kararları); işletme görüşmeleri ve gerçek pilot yapılmış sayılmaz. |
 | P01 — Temel ve CI | `done` | [P01 kanıtı](plans/P01.md#kanıt); PR #1 birleşme commit'i `10527c1`. |
-| P02 — Kimlik ve tanımlar | `in_progress` | P02-01–P02-18 onaylanan yerel kapsamları tamamlandı. Logo/mesai/yetkinlik ve diğer kalan işler ayrı onay ister; [aktif plan](plans/P02.md). |
+| P02 — Kimlik ve tanımlar | `in_progress` | P02-01–P02-19 onaylanan yerel kapsamları tamamlandı. Logo/mesai ve diğer kalan işler ayrı onay ister; [aktif plan](plans/P02.md). |
 | P03–P17 | `planned` | Yalnız [ROADMAP](ROADMAP.md) düzeyinde; yeni uygulama yetkisi veya kabul kanıtı yok. |
 
 ## Son doğrulanan teslim ve sınırlar
 
+- P02-19 yerel kabulü ve ana yerel teslimi `done`: personelin hizmetlerini seç/kaldır, tam küme/sürüm/aktiflik ve atomik audit; sunucu 107/107, web 157/157, kalite kapıları ve UI-UX.md doğrultusunda dört genişlikte gerçek API/Chrome kabulü geçti. Yedekli ana güncellemede mevcut hesap/MFA/SMTP/personel/hizmet/işletme korundu; sağlık/restart geçti. [Kabul](plans/P02.md#p02-19-geliştirme-kabulü--03102026), [yerel teslim](plans/P02.md#p02-19-ana-yerel-teslim--03102026); GitHub sonucu [PR #23](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/23) son commit kontrollerinden doğrulanır.
 - P02-18 yerel kabulü ve ana yerel teslimi `done`: hizmet adı/süre/TL fiyatı/aktiflik ve atomik audit; sunucu 99/99, web 142/142, kalite kapıları ve UI-UX.md doğrultusunda dört genişlikte gerçek API/Chrome kabulü geçti. Yedekli ana güncellemede mevcut hesap/MFA/SMTP/personel/işletme korundu; sağlık/restart geçti. [Kabul](plans/P02.md#p02-18-geliştirme-kabulü--03102026), [yerel teslim](plans/P02.md#p02-18-ana-yerel-teslim--03102026); GitHub sonucu [PR #22](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/22) son commit kontrollerinden doğrulanır.
 - P02-17 yerel kabulü ve ana yerel teslimi `done`: Personel listesi/ekleme/ad/durum, giriş hesabından bağımsızlık ve atomik audit; sunucu 90/90, web 117/117, kalite kapıları ve dört genişlikte gerçek API/Chrome kabulü geçti. Şifreli yedek sonrası ana DB/imaj güncellendi; mevcut Owner/parola/MFA/anahtar/SMTP ve işletme profili korundu, sağlık/restart başarılı. [Kabul](plans/P02.md#p02-17-geliştirme-kabulü--03102026), [yerel teslim/geri dönüş](plans/P02.md#p02-17-ana-yerel-teslim--03102026); GitHub sonucu [PR #21](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/21) son commit kontrollerinden doğrulanır.
 - P02-16 yerel kabulü `done`: MFA Owner Staff listesini görüp hesabı onayla pasifleştirir; yeni giriş, eski oturum ve sıfırlama kodu reddedilir, Owner korunur. Sunucu 82/82, web 106/106, kalite kapıları ve dört genişlikte gerçek API/tarayıcı kabulü geçti; [kanıt ve geri dönüş](plans/P02.md#p02-16--staff-hesaplarını-pasifleştirme). 03.10.2026 ayrı onayla ana yerel DB/imajı güncellendi; şifreli yedek, sağlık/restart ve kimlik/anahtar/SMTP koruma kontrolleri geçti; [yerel güncelleme kanıtı](plans/P02.md#p02-16-ana-yerel-güncelleme--03102026).
@@ -33,7 +34,7 @@ Program.cs bakımı `done`: başlangıç 265 satırdan 69 satıra indi; önce/so
 
 ## Sıradaki iş
 
-P02-18 [PR #22](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/22), `3d1457e` birleşmesi ve [main CI](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/37082117661) ile tamamlandı. Ürün sahibi 03.10.2026 [P02-19 personel-hizmet eşleştirmesini](plans/P02.md#p02-19--personel-hizmet-eşleştirmesi) onayladı; durum `in_progress`. Yalnız bu iş ve yedekli ana yerel/PR teslimi bitirilip durulacak; mesai veya P03 başlamaz. Doğrudan main push yoktur.
+P02-19 yerel kabulü ve ana yerel teslimi tamamlandı; GitHub kapanışı son PR kontrollerinden doğrulanır. Sonraki öneri işletmenin haftalık açılış/kapanış saatlerini belirlemektir. Henüz onaylanmadı; yeni iş, personel mesaisi veya P03 başlamaz. Doğrudan main push yoktur.
 
 ## Gelecek plan kaydı — destek ve işletim ekranı (02.10.2026)
 
