@@ -23,6 +23,7 @@ public static class StaffMemberEndpoints
         members.MapPost("/{id:guid}", RenameAsync);
         members.MapPost("/{id:guid}/status", StatusAsync);
         members.MapStaffServiceEndpoints();
+        members.MapStaffHoursEndpoints();
     }
 
     private static MemberResponse Response(StaffMember member) => new(member.Id, member.Name, member.IsActive, member.Version);

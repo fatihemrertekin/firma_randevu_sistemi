@@ -214,6 +214,8 @@ aşamada ilgili satırlar eklenerek güncellenir; kodda olmayan endpoint için s
 | Personel aktif/pasif | /api/staff-members/{id}/status | POST | MFA | Hayır | Hayır | 400/401/403/404/409/429 | CSRF/sürüm/onay; silme ve giriş hesabı değişikliği yok; audit atomik |
 | Personelin hizmet seçimleri | /api/staff-members/{id}/services | GET | MFA | Hayır | Hayır | 400/401/403/404/429 | Tutarlı snapshot; sayfalı katalog, tam seçili ID/hizmet sürümleri/personel sürümü |
 | Personelin hizmetlerini kaydet | /api/staff-members/{id}/services | POST | MFA | Hayır | Hayır | 400/401/403/404/409/429 | CSRF; tam küme/aktiflik/sürümler; seçim+audit atomik, güncel aynı küme no-op; taslak/sayfa/odak korunur |
+| Personelin haftalık saatleri | /api/staff-members/{id}/hours | GET | MFA | Hayır | Hayır | 401/403/404/429 | Personel ve yedi gün aynı snapshot; belirlenmemiş durum/pasiflik; işletme haftasından bağımsız tanım |
+| Personelin haftasını kaydet | /api/staff-members/{id}/hours | POST | MFA | Hayır | Hayır | 400/401/403/404/409/429 | CSRF; aktif personel, tam hafta/personel sürümü/audit atomik; güncel aynı hafta no-op; alan hatası/taslak/geri dönüş/odak |
 | Hizmet listesi | /api/services/ | GET | MFA | Hayır | Hayır | 400/401/403/429 | Ad, dakika, iki basamaklı TRY fiyatı, aktiflik; sunucu sayfalama |
 | Güncel hizmet | /api/services/{id} | GET | MFA | Hayır | Hayır | 401/403/404/429 | Çakışmada formu koru; güncel ad/süre/fiyat/sürümü yükle |
 | Hizmet ekle | /api/services/ | POST | MFA | Hayır | Hayır | 400/401/403/409/429 | CSRF; ID ile çift kayıt engeli; ondalık fiyat metni, atomik audit |

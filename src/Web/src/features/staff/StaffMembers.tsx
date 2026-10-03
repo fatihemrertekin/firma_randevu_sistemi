@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import ErrorMessage from '../../components/ErrorMessage'
 import StaffMemberEditor from './StaffMemberEditor'
 import StaffServicesEditor from './StaffServicesEditor'
+import StaffHoursEditor from './StaffHoursEditor'
 import { MemberRequestError, memberFailure, readMember, readMemberPage, type StaffMember, type StaffMemberPage, type StaffPost } from './staffMembersApi'
 import styles from '../../components/DefinitionManagement.module.css'
 
@@ -16,6 +17,7 @@ export default function StaffMembers({ post, onDirtyChange, onBusyChange }: Prop
   const [editing, setEditing] = useState<{ member: StaffMember | null } | null>(null)
   const [target, setTarget] = useState<StaffMember | null>(null)
   const [assignment, setAssignment] = useState<StaffMember | null>(null)
+  const [hours, setHours] = useState<StaffMember | null>(null)
   const [busy, setBusy] = useState(false)
   const [stale, setStale] = useState(false)
   const sending = useRef(false)
@@ -26,12 +28,12 @@ export default function StaffMembers({ post, onDirtyChange, onBusyChange }: Prop
   const restoreFocus = useRef(false)
   useEffect(() => {
     if (target) confirm.current?.focus()
-    else if (!editing && !assignment && restoreFocus.current) {
+    else if (!editing && !assignment && !hours && restoreFocus.current) {
       restoreFocus.current = false
       if (opener.current?.isConnected) opener.current.focus()
       else addButton.current?.focus()
     }
-  }, [target, editing, assignment])
+  }, [target, editing, assignment, hours])
   useEffect(() => {
     const controller = new AbortController()
     void fetch(`/api/staff-members/?page=${page}`, { cache: 'no-store', signal: AbortSignal.any([controller.signal, AbortSignal.timeout(15000)]) })
@@ -59,7 +61,7 @@ export default function StaffMembers({ post, onDirtyChange, onBusyChange }: Prop
       setStale(true)
     } finally { sending.current = false; setBusy(false); onBusyChange(false) }
   }
-  const blocked = busy || loading || editing !== null || assignment !== null || target !== null
+  const blocked = busy || loading || editing !== null || assignment !== null || hours !== null || target !== null
   return <section aria-labelledby="staff-members-title">
     <h2 id="staff-members-title" ref={heading} className={styles.heading} tabIndex={-1}>Personel listesi</h2>
     <p>İşletmede hizmet veren kişileri tanımlayın. Kendinizi de ekleyebilirsiniz. Bu kayıtlar sisteme giriş hesabı oluşturmaz.</p>
@@ -67,7 +69,7 @@ export default function StaffMembers({ post, onDirtyChange, onBusyChange }: Prop
     {notice && <p role="status">{notice}</p>}
     {loading && <p role="status">Personel yükleniyor…</p>}
     {!loading && data?.items.length === 0 && <p>Bu sayfada personel yok. Yeni personel ekleyerek başlayın.</p>}
-    {!editing && !assignment && <button type="button" ref={addButton} className={styles.primary} disabled={busy || target !== null} onClick={event => {
+    {!editing && !assignment && !hours && <button type="button" ref={addButton} className={styles.primary} disabled={busy || target !== null} onClick={event => {
       opener.current = event.currentTarget; setEditing({ member: null }); setError(''); setNotice('')
     }}>Yeni personel</button>}
     {editing && <StaffMemberEditor member={editing.member} post={post} onDirtyChange={onDirtyChange} onBusyChange={onBusyChange}
@@ -75,9 +77,16 @@ export default function StaffMembers({ post, onDirtyChange, onBusyChange }: Prop
     {assignment && <StaffServicesEditor memberId={assignment.id} post={post} onDirtyChange={onDirtyChange} onBusyChange={onBusyChange}
       onCancel={() => { restoreFocus.current = true; setAssignment(null) }}
       onSaved={() => { setAssignment(null); setNotice('Personelin hizmet seçimleri kaydedildi.'); load(); heading.current?.focus() }} />}
+    {hours && <StaffHoursEditor memberId={hours.id} post={post} onDirtyChange={onDirtyChange} onBusyChange={onBusyChange}
+      onCancel={() => { restoreFocus.current = true; setHours(null) }}
+      onSaved={() => { setHours(null); setNotice('Personelin çalışma saatleri kaydedildi.'); load(); heading.current?.focus() }} />}
+    <div hidden={hours !== null}>
     {data && <ul className={styles.list}>{data.items.map(member => <li key={member.id} className={styles.row}>
       <div className={styles.identity}><strong>{member.name}</strong><p><span aria-hidden="true">{member.isActive ? '● ' : '○ '}</span>{member.isActive ? 'Aktif' : 'Pasif'}</p></div>
       <div className={styles.actions}>
+        <button type="button" disabled={blocked} aria-label={`${member.name} için çalışma saatleri`} onClick={event => {
+          opener.current = event.currentTarget; setHours(member); setError(''); setNotice('')
+        }}>Çalışma saatleri</button>
         <button type="button" disabled={blocked} aria-label={`${member.name} için hizmetleri seç`} onClick={event => {
           opener.current = event.currentTarget; setAssignment(member); setError(''); setNotice('')
         }}>Hizmetleri seç</button>
@@ -96,10 +105,11 @@ export default function StaffMembers({ post, onDirtyChange, onBusyChange }: Prop
       <button type="button" onClick={() => { restoreFocus.current = true; setTarget(null); setError('') }}>Vazgeç</button>
     </fieldset>}
     <div className={styles.actions}>
-      <button type="button" disabled={busy || loading || editing !== null || assignment !== null} onClick={() => { setNotice(''); load(); heading.current?.focus() }}>Listeyi yenile</button>
+      <button type="button" disabled={busy || loading || editing !== null || assignment !== null || hours !== null} onClick={() => { setNotice(''); load(); heading.current?.focus() }}>Listeyi yenile</button>
       <button type="button" disabled={blocked || page === 1} onClick={() => { setNotice(''); load(page - 1) }}>Önceki sayfa</button>
       <span>Sayfa {page}</span>
       <button type="button" disabled={blocked || !data?.hasMore} onClick={() => { setNotice(''); load(page + 1) }}>Sonraki sayfa</button>
+    </div>
     </div>
   </section>
 }
