@@ -13,6 +13,8 @@ Güncelleme: 2026-10-03. Güncel özet burada; kapsam ve kanıt bağlantıları 
 
 ## Son doğrulanan teslim ve sınırlar
 
+- P02-21 geliştirme kabulü `done`: personelin haftalık çalışma saatleri/çalışılmayan günler, MFA Owner ve atomik personel sürümü/audit; sunucu 123/123, web 180/180 ve dört genişlikte gerçek API/Chrome kabulü geçti. [Kapsam/kabul](plans/P02.md#p02-21--personelin-haftalık-çalışma-saatleri). GitHub ve yedekli ana yerel teslim sürüyor; bunlar henüz tamamlanmış sayılmaz.
+
 - P02-20 geliştirme ve ana yerel teslimi `done`: haftalık işletme saatleri/kapalı günler, MFA Owner ve atomik sürüm/audit; sunucu 114/114, web 171/171 ve dört genişlikte gerçek API/Chrome kabulü geçti. [PR #24](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/24) `d776daf` ile birleşti; aynı commit'in [main CI](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/37091965805) sonucu başarılı. Şifreli yedek ve kontrollü migration sonrası mevcut veri/MFA/anahtar/SMTP korundu; sağlık/restart geçti. [Kapsam/kabul](plans/P02.md#p02-20--haftalık-işletme-saatleri), [yerel teslim ve geri dönüş](plans/P02.md#p02-20-ana-yerel-teslim--03102026).
 
 - P02-19 yerel kabulü ve ana yerel teslimi `done`: personelin hizmetlerini seç/kaldır, tam küme/sürüm/aktiflik ve atomik audit; sunucu 107/107, web 157/157, kalite kapıları ve UI-UX.md doğrultusunda dört genişlikte gerçek API/Chrome kabulü geçti. Yedekli ana güncellemede mevcut hesap/MFA/SMTP/personel/hizmet/işletme korundu; sağlık/restart geçti. [Kabul](plans/P02.md#p02-19-geliştirme-kabulü--03102026), [yerel teslim](plans/P02.md#p02-19-ana-yerel-teslim--03102026); GitHub sonucu [PR #23](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/23) son commit kontrollerinden doğrulanır.
@@ -36,7 +38,7 @@ Program.cs bakımı `done`: başlangıç 265 satırdan 69 satıra indi; önce/so
 
 ## Sıradaki iş
 
-Öneri: personelin haftalık çalışma saatleri için ayrı küçük P02 kapsamı hazırlamak. Uygulama başlamadı; yeni onay gerekir. P02-20 sonrası durulur; randevu/P03 başlamaz, doğrudan main push yoktur.
+Onaylanan [P02-21 personel çalışma saatlerini](plans/P02.md#p02-21--personelin-haftalık-çalışma-saatleri) geliştir, kabul ve PR/CI/merge sonrasında yedekli ana yerel güncellemeyi doğrula. Sonraki öneriyi bildir ve dur; mola/izin/randevu/P03 başlamaz, doğrudan main push yoktur.
 
 ## Gelecek plan kaydı — destek ve işletim ekranı (02.10.2026)
 

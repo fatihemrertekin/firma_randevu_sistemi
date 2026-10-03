@@ -42,11 +42,25 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<BusinessHoursSchedule> BusinessHoursSchedules => Set<BusinessHoursSchedule>();
     public DbSet<BusinessOpeningDay> BusinessOpeningDays => Set<BusinessOpeningDay>();
     public DbSet<BusinessHoursAudit> BusinessHoursAudits => Set<BusinessHoursAudit>();
+    public DbSet<StaffWorkingDay> StaffWorkingDays => Set<StaffWorkingDay>();
+    public DbSet<StaffHoursAudit> StaffHoursAudits => Set<StaffHoursAudit>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
         builder.Entity<AppUser>().Property(user => user.IsActive).HasDefaultValue(true);
+        var workingDay = builder.Entity<StaffWorkingDay>();
+        workingDay.HasKey(entry => new { entry.StaffMemberId, entry.Day });
+        workingDay.HasOne<StaffMember>().WithMany().HasForeignKey(entry => entry.StaffMemberId).OnDelete(DeleteBehavior.Restrict);
+        workingDay.ToTable(table =>
+        {
+            table.HasCheckConstraint("CK_StaffWorkingDays_Day", "\"Day\" BETWEEN 0 AND 6");
+            table.HasCheckConstraint("CK_StaffWorkingDays_Hours", "(\"IsClosed\" AND \"OpensAtMinute\" IS NULL AND \"ClosesAtMinute\" IS NULL) OR (NOT \"IsClosed\" AND \"OpensAtMinute\" IS NOT NULL AND \"ClosesAtMinute\" IS NOT NULL AND \"OpensAtMinute\" BETWEEN 0 AND 1439 AND \"ClosesAtMinute\" BETWEEN 0 AND 1439 AND \"OpensAtMinute\" < \"ClosesAtMinute\")");
+        });
+        var staffHoursAudit = builder.Entity<StaffHoursAudit>();
+        staffHoursAudit.HasIndex(entry => new { entry.StaffMemberId, entry.MemberVersion }).IsUnique();
+        staffHoursAudit.HasOne<StaffMember>().WithMany().HasForeignKey(entry => entry.StaffMemberId).OnDelete(DeleteBehavior.Restrict);
+        staffHoursAudit.HasOne<AppUser>().WithMany().HasForeignKey(entry => entry.ActorId).OnDelete(DeleteBehavior.Restrict);
         var hours = builder.Entity<BusinessHoursSchedule>();
         hours.Property(entry => entry.Id).ValueGeneratedNever();
         hours.Property(entry => entry.Version).IsConcurrencyToken();

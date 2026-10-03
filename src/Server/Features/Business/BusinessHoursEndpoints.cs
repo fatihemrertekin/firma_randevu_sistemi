@@ -1,5 +1,4 @@
 using System.Data;
-using System.Globalization;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -10,10 +9,8 @@ namespace Server.Features.Business;
 
 public static class BusinessHoursEndpoints
 {
-    public sealed record DayRequest(int Day, bool? IsClosed, string? OpensAt, string? ClosesAt);
-    public sealed record DayResponse(int Day, bool IsClosed, string? OpensAt, string? ClosesAt);
-    public sealed record ScheduleResponse(bool IsConfigured, string TimeZone, Guid Version, DayResponse[] Days);
-    public sealed record UpdateRequest(Guid Version, DayRequest[]? Days);
+    public sealed record ScheduleResponse(bool IsConfigured, string TimeZone, Guid Version, WeeklyHours.DayResponse[] Days);
+    public sealed record UpdateRequest(Guid Version, WeeklyHours.DayRequest[]? Days);
 
     public static void MapBusinessHoursEndpoints(this IEndpointRouteBuilder app)
     {
@@ -29,10 +26,9 @@ public static class BusinessHoursEndpoints
         timeout.CancelAfter(TimeSpan.FromSeconds(15));
         return timeout;
     }
-    private static string? Hour(int? minute) => minute is null ? null : new TimeOnly(minute.Value / 60, minute.Value % 60).ToString("HH:mm", CultureInfo.InvariantCulture);
     private static ScheduleResponse Response(BusinessHoursSchedule schedule, BusinessOpeningDay[] days) =>
         new(schedule.IsConfigured, "Europe/Istanbul", schedule.Version,
-            days.OrderBy(item => item.Day).Select(item => new DayResponse(item.Day, item.IsClosed, Hour(item.OpensAtMinute), Hour(item.ClosesAtMinute))).ToArray());
+            days.OrderBy(item => item.Day).Select(item => new WeeklyHours.DayResponse(item.Day, item.IsClosed, WeeklyHours.Hour(item.OpensAtMinute), WeeklyHours.Hour(item.ClosesAtMinute))).ToArray());
     private static async Task<IResult> ReadAsync(HttpContext context, AppDbContext db)
     {
         using var timeout = Timeout(context);
@@ -43,39 +39,12 @@ public static class BusinessHoursEndpoints
         return Results.Ok(Response(schedule, days));
     }
 
-    private static int? Minute(string? text) => text is { Length: 5 } &&
-        TimeOnly.TryParseExact(text, "HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.None, out var value) ? value.Hour * 60 + value.Minute : null;
-    private static BusinessOpeningDay[] Validate(UpdateRequest request, out Dictionary<string, string[]> errors)
-    {
-        errors = [];
-        if (request.Version == Guid.Empty) errors["days"] = ["Saatlerin güncel sürümü gerekli. Güncel saatleri yükleyin."];
-        if (request.Days is not { Length: 7 } || request.Days.Any(item => item is null || item.Day is < 0 or > 6) || request.Days.Select(item => item.Day).Distinct().Count() != 7)
-        {
-            errors["days"] = ["Haftanın yedi günü birer kez gönderilmeli."];
-            return [];
-        }
-        var days = new List<BusinessOpeningDay>();
-        foreach (var item in request.Days)
-        {
-            var start = Minute(item.OpensAt); var end = Minute(item.ClosesAt);
-            if (item.IsClosed is null || (item.IsClosed == true && (item.OpensAt is not null || item.ClosesAt is not null)))
-                errors[$"day{item.Day}Closed"] = ["Açık/kapalı seçimi gerekli; kapalı günde saat gönderilmez."];
-            if (item.IsClosed == false)
-            {
-                if (start is null) errors[$"day{item.Day}OpensAt"] = ["Açılışı SS:dd biçiminde girin (00:00–23:59)."];
-                if (end is null) errors[$"day{item.Day}ClosesAt"] = ["Kapanışı SS:dd biçiminde girin (00:00–23:59)."];
-                else if (start is not null && end <= start) errors[$"day{item.Day}ClosesAt"] = ["Kapanış aynı gün içinde açılıştan sonra olmalı."];
-            }
-            days.Add(new BusinessOpeningDay { ScheduleId = 1, Day = item.Day, IsClosed = item.IsClosed == true, OpensAtMinute = start, ClosesAtMinute = end });
-        }
-        return days.OrderBy(item => item.Day).ToArray();
-    }
     private static async Task<IResult> UpdateAsync(UpdateRequest request, HttpContext context, IAntiforgery antiforgery,
         AppDbContext db, UserManager<AppUser> users, TimeProvider clock)
     {
         using var timeout = Timeout(context);
         if (!await AuthEndpoints.HasValidCsrfAsync(antiforgery, context)) return Results.Problem(statusCode: 400, title: "Geçersiz istek doğrulaması.");
-        var desired = Validate(request, out var errors);
+        var desired = WeeklyHours.Validate(request.Version, request.Days, out var errors).Select(item => new BusinessOpeningDay { ScheduleId = 1, Day = item.Day, IsClosed = item.IsClosed, OpensAtMinute = item.Start, ClosesAtMinute = item.End }).ToArray();
         if (errors.Count != 0) return Results.ValidationProblem(errors);
         await using var transaction = await db.Database.BeginTransactionAsync(timeout.Token);
         var owner = await OwnerMutationAuthorization.LockAsync(context, db, users, timeout.Token);
