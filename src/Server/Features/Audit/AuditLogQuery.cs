@@ -26,7 +26,7 @@ internal static class AuditLogQuery
           UNION ALL SELECT "Id", "OccurredAt", 8, "Kind", "ActorId", "InvitationId", NULL::uuid FROM "StaffInvitationAudits"
           UNION ALL SELECT "Id", "OccurredAt", 9, "Kind", "ActorId", "StaffId", NULL::uuid FROM "StaffPasswordResetAudits"
           UNION ALL SELECT "Id", "OccurredAt", 10, '', "ActorId", "StaffId", NULL::uuid FROM "StaffDeactivationAudits"
-          UNION ALL SELECT "Id", "OccurredAt", 11, "Kind", CASE WHEN "Kind" IN ('SelfIssued','Completed') THEN "OwnerId" ELSE NULL::uuid END, "OwnerId", NULL::uuid FROM "OwnerPasswordResetAudits"
+          UNION ALL SELECT "Id", "OccurredAt", 11, "Kind", CASE WHEN "Kind" = 'Completed' THEN "OwnerId" ELSE NULL::uuid END, "OwnerId", NULL::uuid FROM "OwnerPasswordResetAudits"
           UNION ALL SELECT "Id", "OccurredAt", 12, '', NULL::uuid, "OwnerId", NULL::uuid FROM "OwnerMfaRecoveryAudits"
         ), page AS (
           SELECT * FROM events
@@ -36,7 +36,8 @@ internal static class AuditLogQuery
           ORDER BY "OccurredAt" DESC, "Source" DESC, "Id" DESC LIMIT @limit
         )
         SELECT p."Id", p."OccurredAt", p."Source", p."Kind",
-          CASE WHEN p."ActorId" IS NULL THEN 'Yerel bakım' ELSE COALESCE(actor."Email", 'Hesap kaydı') END AS "Actor",
+          CASE WHEN p."Source" = 11 AND p."Kind" = 'SelfIssued' THEN 'Oturum açılmadan'
+               WHEN p."ActorId" IS NULL THEN 'Yerel bakım' ELSE COALESCE(actor."Email", 'Hesap kaydı') END AS "Actor",
           CASE WHEN p."Source" <= 3 THEN 'İşletme'
                WHEN p."Source" = 6 THEN COALESCE(member."Name", 'Personel kaydı') || ' · ' || COALESCE(service."Name", 'Hizmet kaydı')
                WHEN p."Source" IN (4,7) THEN COALESCE(member."Name", 'Personel kaydı')

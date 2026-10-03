@@ -1,6 +1,6 @@
 # STATUS — Güncel durum ve sıradaki iş
 
-Güncelleme: 2026-10-03. Güncel özet burada; kapsam ve kanıt bağlantıları [P02 planında](plans/P02.md), önceki oturum kayıtları [arşivde](archive/2026-10-02/STATUS.md). Arşivdeki eski durum ve onay bekleme ifadeleri güncel yönlendirme değildir.
+Güncelleme: 2026-10-04. Güncel özet burada; kapsam ve kanıt bağlantıları [P02 planında](plans/P02.md), önceki oturum kayıtları [arşivde](archive/2026-10-02/STATUS.md). Arşivdeki eski durum ve onay bekleme ifadeleri güncel yönlendirme değildir.
 
 ## Aşamalar
 
@@ -8,7 +8,7 @@ Güncelleme: 2026-10-03. Güncel özet burada; kapsam ve kanıt bağlantıları 
 | --- | --- | --- |
 | P00 — İş ve ürün tanımı | `done` | [P00 planı](plans/P00.md) ve [ürün kararları](PRODUCT.md#2-ürün-kararları); işletme görüşmeleri ve gerçek pilot yapılmış sayılmaz. |
 | P01 — Temel ve CI | `done` | [P01 kanıtı](plans/P01.md#kanıt); PR #1 birleşme commit'i `10527c1`. |
-| P02 — Kimlik ve tanımlar | `in_progress` | P02-01–P02-23 onaylanan yerel kapsamları tamamlandı. P02 kapanış kontrolü ve P03 ayrı onay ister; [aktif plan](plans/P02.md). |
+| P02 — Kimlik ve tanımlar | `in_progress` | P02-01–P02-22 ve P02-23 ilk teslimi tamamlandı; P02-23 anonim istek aktörü düzeltmesi sürüyor. P02 kapanış kontrolü ve P03 ayrı onay ister; [aktif plan](plans/P02.md). |
 | P03–P17 | `planned` | Yalnız [ROADMAP](ROADMAP.md) düzeyinde; yeni uygulama yetkisi veya kabul kanıtı yok. |
 
 ## Son doğrulanan teslim ve sınırlar
@@ -41,7 +41,7 @@ Program.cs bakımı `done`: başlangıç 265 satırdan 69 satıra indi; önce/so
 
 ## Sıradaki iş
 
-Öneri: P02 kapanış kontrolü ile tamamlanan kimlik/tanım kabul kanıtlarını ve P03'e kalan rezervasyon ölçütlerini ayırmak. Yeni iş için onay bekle; P03/randevu/izin/mola geliştirmesi başlamaz. P02-23 tamamlandı; doğrudan main push yapılmadı.
+P02-23'te bulunan anonim parola sıfırlama isteğinin yanlış Owner aktörü olarak gösterilmesini düzelt; aynı yetkiyle regresyon testi/PR/CI/merge ve yedekli ana güncellemeyi tamamla. Bundan sonra öneri yalnız P02 kapanış kontrolüdür; P03 başlamaz ve durulur.
 
 ## Gelecek plan kaydı — destek ve işletim ekranı (02.10.2026)
 
