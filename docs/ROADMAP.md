@@ -52,12 +52,12 @@ Pilot kapsamı [PRODUCT](PRODUCT.md#2-ürün-kararları) ile kararlaştırıldı
 ### P02 — Kimlik ve tanımlar (P01)
 
 - İş: Davet/giriş/çıkış/sıfırlama, Owner/Staff, MFA, audit; profil/logo, çalışan/hizmet, fiyat/süre, mesai ve yetkinlik.
-- Çıkış: Anonim/yetkisiz API işlemi ve CSRF engellenir; pasif hizmet yeni rezervasyonda yok, geçmişte durur. Dev kullanıcısı üretime taşınmaz.
+- Çıkış: Anonim/yetkisiz API işlemi ve CSRF engellenir; tanımların fiyat/süre/aktiflik ve sürüm kuralları sunucuda uygulanır, silmek yerine pasifleştirme kullanılır. Açık kayıt/varsayılan geliştirme hesabı yoktur; test hesapları ayrı sentetik ortamda kalır. Yerel kapanış ve üretim/pilot sınırları [P02 kabul kaydında](plans/P02.md#p02-kapanış-kontrolü--04102026) ayrıdır.
 
 ### P03 — Randevu motoru (P02)
 
 - İş: Uygunluk, mola/izin/istisna/tampon; oluştur/taşı/iptal/durum; constraint, concurrency, idempotency. ADR: çoklu hizmet/personel için zaman bloğu modeli (randevu satırı modeli), P10–P11 migration'ını zorlaştırmayacak şekilde.
-- Çıkış: Gerçek PostgreSQL'de aynı çalışan/zamana 20 farklı anahtarlı paralel istekten biri kaydolur. Bitişik slot, farklı çalışan, iptal sonrası boşalma, tampon, fiyat snapshot'ı, atomik taşıma ve izin ekleme yarışı testlidir.
+- Çıkış: Gerçek PostgreSQL'de aynı çalışan/zamana 20 farklı anahtarlı paralel istekten biri kaydolur. Bitişik slot, farklı çalışan, iptal sonrası boşalma, tampon, fiyat snapshot'ı, atomik taşıma ve izin ekleme yarışı testlidir. Pasif hizmet/personel yeni rezervasyonda seçilemez; mevcut P02 saat/yetkinlik tanımları uygunlukta uygulanır, geçmiş randevunun hizmet/fiyat/süre bilgisi korunur. Bunlar P02 tanım kabulüyle doğrulanmış sayılmaz.
 
 ### P04 — Rezervasyon ve panel (P03)
 

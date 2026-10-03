@@ -8,11 +8,12 @@ Güncelleme: 2026-10-04. Güncel özet burada; kapsam ve kanıt bağlantıları 
 | --- | --- | --- |
 | P00 — İş ve ürün tanımı | `done` | [P00 planı](plans/P00.md) ve [ürün kararları](PRODUCT.md#2-ürün-kararları); işletme görüşmeleri ve gerçek pilot yapılmış sayılmaz. |
 | P01 — Temel ve CI | `done` | [P01 kanıtı](plans/P01.md#kanıt); PR #1 birleşme commit'i `10527c1`. |
-| P02 — Kimlik ve tanımlar | `in_progress` | P02-01–P02-23 onaylanan yerel kapsamları tamamlandı. P02 kapanış kontrolü ve P03 ayrı onay ister; [aktif plan](plans/P02.md). |
+| P02 — Kimlik ve tanımlar | `done` | P02-01–P02-23 ve onaylanan yerel kapanış kontrolü tamamlandı; [kapanış kanıtı ve P03 sınırı](plans/P02.md#p02-kapanış-kontrolü--04102026). Üretim/pilot ve tam restore kabulü değildir. |
 | P03–P17 | `planned` | Yalnız [ROADMAP](ROADMAP.md) düzeyinde; yeni uygulama yetkisi veya kabul kanıtı yok. |
 
 ## Son doğrulanan teslim ve sınırlar
 
+- P02 yerel kapanış kontrolü `done`: başlangıç main `93c0feb`, aynı commit'in [CI sonucu](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/37158064817), 139 sunucu/201 web testi ve PR #1–#33 birleşmeleri yeniden doğrulandı. Kabul belgeleri ve mevcut yerel kanıtlar kontrol edildi; ana uygulamada yedi yönetim GET'i anonim 401, live/ready 200 ve DB host portu kapalı. Bu iş yalnız belge değiştirir; [kabul tablosu, kalan sınırlar ve yerel raporlar](plans/P02.md#p02-kapanış-kontrolü--04102026).
 - P02-23 geliştirme ve ana yerel teslimi `done`: MFA Owner mevcut 12 değişiklik kaynağını kategori/sayfa ile görür; yalnız sınırlı DTO, İstanbul saati ve güncel hesap/hedef adları. Anonim parola sıfırlama isteği “Oturum açılmadan” olarak gösterilir. Son kabul sunucu 139/139, web 201/201; ayrı sentetik gerçek API/Chrome ve dört genişlik doğrulandı. İlk [PR #30](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/30) tesliminden sonraki [düzeltme PR #32](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/32) `f7f7b7b` ile birleşti; aynı commit'in [main CI](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/37155309423) sonucu başarılı. Yeni şifreli yedek sonrası 31 tablonun verisi, Owner/MFA, anahtar/SMTP korundu; sağlık/restart geçti. [Kapsam/kabul](plans/P02.md#p02-23--değişiklik-kayıtlarını-görüntüleme), [son teslim/geri dönüş/yedek sınırı](plans/P02.md#p02-23-aktör-düzeltmesi--04102026).
 - P02-22 geliştirme ve ana yerel teslimi `done`: PNG/JPEG logo seç/önizle/kaydet/değiştir ve giriş/yönetimde göster; MFA Owner/sürüm/atomik audit. Sunucu 133/133, web 191/191 ve dört genişlikte gerçek API/Chrome kabulü geçti. [PR #28](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/28) `259dff6` ile birleşti; aynı commit'in [main CI](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/37147489023) sonucu başarılı. Şifreli yedek/manual migration sonrası 29 mevcut tablonun verisi, hesap/MFA, anahtar/SMTP korundu; sağlık/restart geçti. Ana logo boş bırakıldı. [Kapsam/kabul](plans/P02.md#p02-22--işletme-logosu), [yerel teslim/geri dönüş ve yedek sınırı](plans/P02.md#p02-22-ana-yerel-teslim--03102026).
 
@@ -41,7 +42,7 @@ Program.cs bakımı `done`: başlangıç 265 satırdan 69 satıra indi; önce/so
 
 ## Sıradaki iş
 
-Öneri yalnız P02 kapanış kontrolüdür: tamamlanan kimlik/tanım kanıtlarını ve P03'e kalan rezervasyon kabul ölçütlerini ayırmak. Bu yeni iş için ürün sahibinin ayrı onayı beklenir; P03/randevu geliştirmesi başlamaz.
+Öneri yalnız P03 başlangıç planını ve ilk küçük randevu motoru işinin kapsam/kabulünü hazırlamaktır; zaman bloğu modeli kararı bu aşamada değerlendirilir. Bu yeni iş için ürün sahibinin ayrı onayı beklenir. P03 planı, ADR veya randevu kodu bu kapanışta oluşturulmadı.
 
 ## Gelecek plan kaydı — destek ve işletim ekranı (02.10.2026)
 
