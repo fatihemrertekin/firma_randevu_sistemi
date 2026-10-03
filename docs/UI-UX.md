@@ -224,6 +224,7 @@ aşamada ilgili satırlar eklenerek güncellenir; kodda olmayan endpoint için s
 | Çalışan sıfırlama kodu oluştur | /api/staff-password-resets/ | POST | MFA | Hayır | Hayır | 400/401/403/404/409/429 | Tek kullanımlı 30 dakika; Owner güvenli teslim eder |
 | Çalışan parolayı sıfırla | /api/staff-password-resets/complete | POST | Hayır | Kod | Anonim | 400/409/429 | Açık oturumla yapılmaz; sonra normal giriş |
 | İşletme profilini oku/kaydet | /api/business-profile/ | GET/POST | MFA | Hayır | Hayır | 400/401/403/409/429 | Açık DTO ve sürüm kontrolü; P02-09 mevcut iş |
+| Haftalık işletme saatlerini oku/kaydet | /api/business-hours/ | GET/POST | MFA | Hayır | Hayır | 400/401/403/409/429 | Yedi gün, tek aralık, Europe/Istanbul; CSRF/sürüm ve atomik audit; belirlenmemiş durum, alan hatası/taslak, no-op |
 
 Kural: ekranda görünen her işlem bu tabloda bir satıra bağlıdır. Satırı olmayan işlem
 ekrana konmaz; eksik backend desteği aşama planında "eksik" olarak işaretlenir.

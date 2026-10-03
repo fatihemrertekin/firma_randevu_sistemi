@@ -16,6 +16,7 @@ beforeEach(() => {
     if (path === '/api/auth/me') return Response.json(owner)
     if (path === '/api/auth/recovery-email/') return Response.json({ email: owner.email, verifiedAt: null, deliveryAvailable: false })
     if (path === '/api/business-profile/') return Response.json(profile)
+    if (path === '/api/business-hours/') return Response.json({ isConfigured: false, timeZone: 'Europe/Istanbul', version: 'd317d899-8208-41f1-9b8e-c6fbde437cde', days: [] })
     if (path === '/api/staff-invitations/') return Response.json([])
     if (path.startsWith('/api/staff-accounts/')) return Response.json({ items: [], page: 1, hasMore: false })
     if (path.startsWith('/api/staff-members/')) return Response.json({ items: [], page: 1, hasMore: false })
@@ -49,6 +50,14 @@ async function submit(label: string) {
 }
 
 describe('Yönetim gezinmesi', () => {
+  it('işletme saatleri taslağında gezinme ve çıkışı korur', async () => {
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false)
+    await render(); await click('İşletme saatleri')
+    await act(async () => container.querySelector<HTMLInputElement>('[aria-label="Pazartesi kapalı"]')?.click())
+    await click('Personel'); await click('Çıkış yap'); expect(confirm).toHaveBeenCalledTimes(2)
+    expect(container.querySelector<HTMLInputElement>('[aria-label="Pazartesi kapalı"]')?.checked).toBe(false)
+    confirm.mockReturnValue(true); await click('Personel'); expect(container.querySelector('[aria-label="Pazartesi kapalı"]')).toBeNull(); confirm.mockRestore()
+  })
   it('personel hizmet taslağında gezinme/çıkışı korur; bekleyen kayıt sırasında ikisini de kapatır', async () => {
     const member = { id: 'member-1', name: 'Deneme Personel', isActive: true, version: 'member-version' }
     const service = { id: 'service-1', name: 'Kesim', durationMinutes: 30, price: '350.00', currency: 'TRY', isActive: true, version: 'service-version' }

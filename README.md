@@ -252,3 +252,11 @@ Gönderimi geri almak için özel klasörde `app.env` dosyasını `app.env.disab
 - MFA Owner, **Hesap ve güvenlik** bölümünde kalan kod sayısını görür; mevcut parolasını ve açık onayını vererek sekiz yeni kod oluşturabilir. Eski kodlar ve bütün oturumlar iptal edilir; parola ve MFA anahtarı değişmez. Yeni kodlar yalnız bir kez gösterilir. Sonuç ağ kesintisiyle belirsiz kalırsa normal parola + uygulama koduyla yeniden giriş yapıp kodları tekrar oluşturun.
 - Telefon ve tüm MFA kodları kaybedildiğinde e-posta sıfırlaması MFA'yı atlamaz. Mevcut bağımsız kimlik doğrulamalı işletmeci MFA kurtarma prosedürü son çaredir; ortak gizli yönetici girişi yoktur.
 - **Girişe dön** MFA bekleme ekranında geçici giriş cookie'sini de kapatır. Çıkış CSRF gerektirir; kapalı/geçersiz oturumda tekrar güvenle yapılabilir.
+
+## Haftalık işletme saatleri (P02-20)
+
+MFA ile giriş yapan Owner, **İşletme saatleri** bölümünde Pazartesi–Pazar için kapalı günleri ve açık günlerin tek açılış/kapanış aralığını kaydeder. Saatler Europe/Istanbul bölgesindedir; dakika hassasiyetinde 00:00–23:59 kullanılır ve kapanış aynı gün içinde açılıştan sonra olmalıdır. İlk kurulumda saatler belirlenmemiştir; ekrandaki başlangıç seçimleri işletme adına kaydedilmez. Personel mesaisi, istisna/mola ve randevu uygunluğu bu özelliğin dışındadır.
+
+`BusinessOpeningHours` migration'ı yalnız saat/audit tablolarını ekler. Yerel migration komutu `powershell -NoProfile -ExecutionPolicy Bypass -File .\deploy\Apply-LocalMigration.ps1` komutudur; mevcut uygulamada önce tutarlı yedek alınır, kontrollü yönetici DB yetkisiyle uygulanır ve sonrasında imaj/sağlık/veri koruma doğrulanır. Başlangıçta otomatik migration yoktur. Saat başlığı SELECT/UPDATE, günler SELECT/INSERT/UPDATE, audit SELECT/INSERT ile sınırlıdır. `Down` kaydedilmiş saatleri ve audit'i siler; ana veride otomatik çalıştırılmaz. Eklemeli yeni şemada eski imajla çalışma kabulü aşama planına kaydedilir; imaj geri dönüşü DB restore kabulü değildir.
+
+Özelliğe ait senaryolar dahil tüm gerçek PostgreSQL sunucu testleri depo kökünde `dotnet test FirmaRandevu.slnx --no-restore` ile çalışır. Tam kalite kapıları yukarıdaki test bölümündedir; kabul ve işletim kanıtının tek kaynağı [P02 planıdır](docs/plans/P02.md#p02-20--haftalık-işletme-saatleri).

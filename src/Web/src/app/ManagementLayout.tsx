@@ -4,6 +4,7 @@ import { postWithCsrf } from './api'
 import type useAuthentication from '../features/auth/useAuthentication'
 import PasswordChangeForm from '../features/auth/PasswordChangeForm'
 import BusinessProfile from '../features/business/BusinessProfile'
+import BusinessHours from '../features/business/BusinessHours'
 import StaffInvitations from '../features/staff/StaffInvitations'
 import StaffPasswordReset from '../features/staff/StaffPasswordReset'
 import StaffAccounts from '../features/staff/StaffAccounts'
@@ -14,9 +15,10 @@ import ErrorMessage from '../components/ErrorMessage'
 import OwnerRecoveryEmail from '../features/auth/OwnerRecoveryEmail'
 import MfaRecoveryCodes from '../features/auth/MfaRecoveryCodes'
 
-type Section = 'business' | 'security' | 'access' | 'personnel' | 'services'
+type Section = 'business' | 'hours' | 'security' | 'access' | 'personnel' | 'services'
 const sections = [
   { id: 'business', title: 'İşletme bilgileri', description: 'İşletmenizin adını ve iletişim bilgilerini yönetin.' },
+  { id: 'hours', title: 'İşletme saatleri', description: 'Haftalık açılış, kapanış ve kapalı günleri belirleyin.' },
   { id: 'personnel', title: 'Personel', description: 'İşletmede hizmet veren kişilerin adını ve aktiflik durumunu yönetin.' },
   { id: 'services', title: 'Hizmetler', description: 'Hizmetlerin adını, süresini ve fiyatını yönetin.' },
   { id: 'security', title: 'Hesap ve güvenlik', description: 'Hesabınızı koruyun ve parolanızı değiştirin.' },
@@ -78,6 +80,9 @@ export default function ManagementLayout({ auth, account }: Props) {
         </div>}
         {owner && section === 'personnel' && <div className={styles.panel}>
           <StaffMembers post={post} onDirtyChange={setDefinitionDirty} onBusyChange={setDefinitionBusy} />
+        </div>}
+        {owner && section === 'hours' && <div className={styles.panel}>
+          <BusinessHours post={post} onDirtyChange={setDefinitionDirty} onBusyChange={setDefinitionBusy} />
         </div>}
         {owner && section === 'services' && <div className={styles.panel}>
           <Services post={post} onDirtyChange={setDefinitionDirty} onBusyChange={setDefinitionBusy} />

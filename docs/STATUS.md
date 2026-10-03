@@ -13,6 +13,8 @@ Güncelleme: 2026-10-03. Güncel özet burada; kapsam ve kanıt bağlantıları 
 
 ## Son doğrulanan teslim ve sınırlar
 
+- P02-20 geliştirme kabulü `done`: haftalık işletme saatleri/kapalı günler, MFA Owner ve atomik sürüm/audit; sunucu 114/114, web 171/171 ve dört genişlikte gerçek API/Chrome kabulü geçti. [Kapsam/kabul](plans/P02.md#p02-20--haftalık-işletme-saatleri). GitHub ve yedekli ana yerel güncelleme sürüyor; bunlar henüz tamamlanmış sayılmaz.
+
 - P02-19 yerel kabulü ve ana yerel teslimi `done`: personelin hizmetlerini seç/kaldır, tam küme/sürüm/aktiflik ve atomik audit; sunucu 107/107, web 157/157, kalite kapıları ve UI-UX.md doğrultusunda dört genişlikte gerçek API/Chrome kabulü geçti. Yedekli ana güncellemede mevcut hesap/MFA/SMTP/personel/hizmet/işletme korundu; sağlık/restart geçti. [Kabul](plans/P02.md#p02-19-geliştirme-kabulü--03102026), [yerel teslim](plans/P02.md#p02-19-ana-yerel-teslim--03102026); GitHub sonucu [PR #23](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/23) son commit kontrollerinden doğrulanır.
 - P02-18 yerel kabulü ve ana yerel teslimi `done`: hizmet adı/süre/TL fiyatı/aktiflik ve atomik audit; sunucu 99/99, web 142/142, kalite kapıları ve UI-UX.md doğrultusunda dört genişlikte gerçek API/Chrome kabulü geçti. Yedekli ana güncellemede mevcut hesap/MFA/SMTP/personel/işletme korundu; sağlık/restart geçti. [Kabul](plans/P02.md#p02-18-geliştirme-kabulü--03102026), [yerel teslim](plans/P02.md#p02-18-ana-yerel-teslim--03102026); GitHub sonucu [PR #22](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/22) son commit kontrollerinden doğrulanır.
 - P02-17 yerel kabulü ve ana yerel teslimi `done`: Personel listesi/ekleme/ad/durum, giriş hesabından bağımsızlık ve atomik audit; sunucu 90/90, web 117/117, kalite kapıları ve dört genişlikte gerçek API/Chrome kabulü geçti. Şifreli yedek sonrası ana DB/imaj güncellendi; mevcut Owner/parola/MFA/anahtar/SMTP ve işletme profili korundu, sağlık/restart başarılı. [Kabul](plans/P02.md#p02-17-geliştirme-kabulü--03102026), [yerel teslim/geri dönüş](plans/P02.md#p02-17-ana-yerel-teslim--03102026); GitHub sonucu [PR #21](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/21) son commit kontrollerinden doğrulanır.
@@ -34,7 +36,7 @@ Program.cs bakımı `done`: başlangıç 265 satırdan 69 satıra indi; önce/so
 
 ## Sıradaki iş
 
-P02-19 yerel kabulü ve ana yerel teslimi tamamlandı; GitHub kapanışı son PR kontrollerinden doğrulanır. Sonraki öneri işletmenin haftalık açılış/kapanış saatlerini belirlemektir. Henüz onaylanmadı; yeni iş, personel mesaisi veya P03 başlamaz. Doğrudan main push yoktur.
+Onaylanan P02-20'nin PR/son commit CI/merge ve yedekli ana yerel teslimini tamamla. Sonuçları doğrulayarak kaydet, sonraki öneriyi bildir ve dur. Personel mesaisi/randevu/P03 başlamaz; doğrudan main push yoktur.
 
 ## Gelecek plan kaydı — destek ve işletim ekranı (02.10.2026)
 
