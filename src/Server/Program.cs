@@ -29,12 +29,14 @@ if (!app.Environment.IsDevelopment())
     app.UseExceptionHandler();
 }
 app.UseRouting();
+app.UseBusinessLogoUploadLimit();
 app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapAuthEndpoints();
 app.MapBusinessProfileEndpoints();
 app.MapBusinessHoursEndpoints();
+app.MapBusinessLogoEndpoints();
 app.MapStaffMemberEndpoints();
 app.MapServiceDefinitionEndpoints();
 

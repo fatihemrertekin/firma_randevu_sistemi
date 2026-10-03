@@ -2,6 +2,8 @@
 .card { align-self: center; width: calc(100% - 3rem); margin: 1.5rem; padding: 1.75rem; }
 .card h1 { font-size: 1.75rem; margin: 1.25rem 0 1.5rem; }
 .eyebrow { color: var(--primary); font-size: .875rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.branding { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.branding .eyebrow { flex-shrink: 0; max-width: 100%; }
 .secret { overflow-wrap: anywhere; padding: .75rem; background: var(--background); border-radius: .5rem; }
 .codes { display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); gap: .75rem; padding-left: 1.25rem; }
 .error { margin-top: 1rem; }

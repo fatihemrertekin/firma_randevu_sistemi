@@ -5,6 +5,7 @@ import StaffInvitationAcceptForm from './StaffInvitationAcceptForm'
 import type useAuthentication from './useAuthentication'
 import { postWithCsrf } from '../../app/api'
 import styles from './AuthenticationScreens.module.css'
+import BusinessMark from '../business/BusinessMark'
 
 export default function AuthenticationScreens({ auth }: { auth: ReturnType<typeof useAuthentication> }) {
   const {
@@ -18,7 +19,9 @@ export default function AuthenticationScreens({ auth }: { auth: ReturnType<typeo
   return (
     <main className={styles.page}>
       <section className={styles.card} aria-labelledby="page-title">
-        <span className={styles.eyebrow}>Randevu · İşletme paneli</span>
+        <div className={styles.branding}><BusinessMark />
+          <span className={styles.eyebrow}>Randevu · İşletme paneli</span>
+        </div>
         {loading ? (
           <p role="status">Oturum kontrol ediliyor…</p>
         ) : acceptingInvitation ? (
