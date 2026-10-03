@@ -19,6 +19,7 @@ beforeEach(() => {
     if (path === '/api/staff-invitations/') return Response.json([])
     if (path.startsWith('/api/staff-accounts/')) return Response.json({ items: [], page: 1, hasMore: false })
     if (path.startsWith('/api/staff-members/')) return Response.json({ items: [], page: 1, hasMore: false })
+    if (path.startsWith('/api/services/')) return Response.json({ items: [], page: 1, hasMore: false })
     if (path === '/api/auth/csrf') return Response.json({ token: 'synthetic-csrf' })
     if (path === '/api/staff-password-resets/') return Response.json({ token: 'synthetic-delivery-code', expiresAt: '2026-10-01T23:00:00Z' })
     if (path === '/api/auth/logout') return new Response(null, { status: 204 })
@@ -48,6 +49,26 @@ async function submit(label: string) {
 }
 
 describe('Yönetim gezinmesi', () => {
+  it('hizmet taslağında gezinme/çıkışı onaylatır ve bekleyen kayıt sırasında ikisini de kapatır', async () => {
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false)
+    await render(); await click('Hizmetler'); await click('Yeni hizmet'); await fill('service-name', 'Taslak Hizmet')
+    await click('Personel'); await click('Çıkış yap'); expect(confirm).toHaveBeenCalledTimes(2)
+    expect(container.querySelector<HTMLInputElement>('#service-name')?.value).toBe('Taslak Hizmet')
+    await fill('service-duration', '30'); await fill('service-price', '350,00')
+    let finish: ((response: Response) => void) | undefined
+    const original = vi.mocked(fetch).getMockImplementation()
+    vi.mocked(fetch).mockImplementation(async (input, options) => {
+      if (input === '/api/services/' && options?.method === 'POST') return new Promise<Response>(resolve => { finish = resolve })
+      if (!original) throw new Error('Test isteği yok')
+      return original(input, options)
+    })
+    await submit('Hizmet ekle')
+    expect(Array.from(container.querySelectorAll<HTMLButtonElement>('nav button')).every(button => button.disabled)).toBe(true)
+    expect(Array.from(container.querySelectorAll('button')).find(button => button.textContent === 'Çıkış yap')?.disabled).toBe(true)
+    await act(async () => finish?.(Response.json({ id: 'service-1', name: 'Taslak Hizmet', durationMinutes: 30, price: '350.00', currency: 'TRY', isActive: true, version: 'version-1' }, { status: 201 })))
+    await click('Personel'); expect(container.querySelector('#service-name')).toBeNull()
+    confirm.mockRestore()
+  })
   it('kaydedilmemiş personel formundan gezinme ve çıkışı onaylatır; reddedince taslağı korur', async () => {
     const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false)
     await render(); await click('Personel'); await click('Yeni personel'); await fill('member-name', 'Taslak Kişi')

@@ -3,6 +3,7 @@ using Npgsql;
 using Server.Features.Business;
 using Server.Features.Identity;
 using Server.Features.Staff;
+using Server.Features.Services;
 using Server.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -34,6 +35,7 @@ app.UseAuthorization();
 app.MapAuthEndpoints();
 app.MapBusinessProfileEndpoints();
 app.MapStaffMemberEndpoints();
+app.MapServiceDefinitionEndpoints();
 
 app.MapGet("/health/live", () => Results.Ok(new { status = "ok" }));
 

@@ -11,3 +11,8 @@
 .confirmation { min-width: 0; margin-block: calc(var(--space-2) * 2); border: calc(var(--space-2) / 8) solid var(--control-border); padding: calc(var(--space-2) * 2); }
 .confirmation button { margin: var(--space-2); }
 .fieldError { color: var(--error); }
+.danger { color: var(--error); border-color: var(--error); }
+.confirmation button.confirm { background: var(--error); color: var(--background); border-color: var(--error); font-weight: 700; }
+.skeleton { min-height: calc(var(--space-2) * 6); margin-block: calc(var(--space-2) * 2); background: var(--border); }
+
+.fields { display: grid; gap: var(--space-2); border: 0; padding: 0; min-width: 0; margin: 0; }

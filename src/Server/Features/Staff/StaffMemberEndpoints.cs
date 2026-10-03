@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -54,19 +53,6 @@ public static class StaffMemberEndpoints
         return member is null ? Results.NotFound() : Results.Ok(Response(member));
     }
 
-    private static async Task<AppUser?> LockOwnerAsync(HttpContext context, AppDbContext db,
-        UserManager<AppUser> users, CancellationToken token)
-    {
-        if (!Guid.TryParse(context.User.FindFirstValue(ClaimTypes.NameIdentifier), out var id)) return null;
-        db.ChangeTracker.Clear();
-        var owner = await db.Users.FromSqlInterpolated($"SELECT * FROM \"AspNetUsers\" WHERE \"Id\" = {id} FOR UPDATE")
-            .SingleOrDefaultAsync(token);
-        // Kimlik doğrulamasından sonra kilit beklerken iptal edilmiş oturum işlem yapamasın.
-        return owner is not null && owner.IsActive && owner.TwoFactorEnabled && context.User.HasClaim("amr", "mfa") &&
-            await users.IsInRoleAsync(owner, "Owner") && !await users.IsLockedOutAsync(owner) &&
-            owner.SecurityStamp == context.User.FindFirst(users.Options.ClaimsIdentity.SecurityStampClaimType)?.Value ? owner : null;
-    }
-
     private static void Audit(AppDbContext db, StaffMember member, Guid actorId, string kind, TimeProvider clock) =>
         db.StaffMemberAudits.Add(new StaffMemberAudit
         {
@@ -88,7 +74,7 @@ public static class StaffMemberEndpoints
         if (!ValidName(name)) return Results.Problem(statusCode: 400, title: "Ad soyad 1–100 karakter olmalı ve kontrol karakteri içermemeli.");
         if (request.Id == Guid.Empty) return Results.Problem(statusCode: 400, title: "Kayıt istek kimliği gerekli.");
         await using var transaction = await db.Database.BeginTransactionAsync(timeout.Token);
-        var owner = await LockOwnerAsync(context, db, users, timeout.Token);
+        var owner = await OwnerMutationAuthorization.LockAsync(context, db, users, timeout.Token);
         if (owner is null) return Results.Unauthorized();
         var version = Guid.NewGuid();
         // İki Owner aynı isteği gönderse de DB tek kayıt oluşturur; isim tekil değildir.
@@ -120,7 +106,7 @@ public static class StaffMemberEndpoints
         if (active is null && !ValidName(name)) return Results.Problem(statusCode: 400, title: "Ad soyad 1–100 karakter olmalı ve kontrol karakteri içermemeli.");
         if (version == Guid.Empty) return Results.Problem(statusCode: 400, title: "Personel sürümü gerekli.");
         await using var transaction = await db.Database.BeginTransactionAsync(timeout.Token);
-        var owner = await LockOwnerAsync(context, db, users, timeout.Token);
+        var owner = await OwnerMutationAuthorization.LockAsync(context, db, users, timeout.Token);
         if (owner is null) return Results.Unauthorized();
         var member = await db.StaffMembers.FromSqlInterpolated($"SELECT * FROM \"StaffMembers\" WHERE \"Id\" = {id} FOR UPDATE")
             .SingleOrDefaultAsync(timeout.Token);

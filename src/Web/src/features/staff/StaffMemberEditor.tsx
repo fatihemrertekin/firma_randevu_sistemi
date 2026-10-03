@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import ErrorMessage from '../../components/ErrorMessage'
+import useUnsavedChanges from '../../app/useUnsavedChanges'
 import { MemberRequestError, memberFailure, readMember, type StaffMember, type StaffPost } from './staffMembersApi'
-import styles from './StaffMembers.module.css'
+import styles from '../../components/DefinitionManagement.module.css'
 
 type Props = {
   member: StaffMember | null; post: StaffPost; onSaved: () => void; onCancel: () => void
@@ -19,13 +20,7 @@ export default function StaffMemberEditor({ member, post, onSaved, onCancel, onD
   const sending = useRef(false)
   const dirty = name !== (original?.name ?? '')
   useEffect(() => { input.current?.focus() }, [])
-  useEffect(() => { onDirtyChange(dirty) }, [dirty, onDirtyChange])
-  useEffect(() => {
-    if (!dirty) return
-    const warn = (event: BeforeUnloadEvent) => { event.preventDefault(); event.returnValue = '' }
-    window.addEventListener('beforeunload', warn)
-    return () => window.removeEventListener('beforeunload', warn)
-  }, [dirty])
+  useUnsavedChanges(dirty, onDirtyChange)
   function pending(value: boolean) { sending.current = value; setBusy(value); onBusyChange(value) }
   function cancel() {
     if (dirty && !window.confirm('Kaydedilmemiş personel değişiklikleri silinsin mi?')) return

@@ -35,11 +35,32 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<StaffDeactivationAudit> StaffDeactivationAudits => Set<StaffDeactivationAudit>();
     public DbSet<StaffMember> StaffMembers => Set<StaffMember>();
     public DbSet<StaffMemberAudit> StaffMemberAudits => Set<StaffMemberAudit>();
+    public DbSet<ServiceDefinition> ServiceDefinitions => Set<ServiceDefinition>();
+    public DbSet<ServiceDefinitionAudit> ServiceDefinitionAudits => Set<ServiceDefinitionAudit>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
         builder.Entity<AppUser>().Property(user => user.IsActive).HasDefaultValue(true);
+        var service = builder.Entity<ServiceDefinition>();
+        service.Property(entry => entry.Name).HasMaxLength(100);
+        service.Property(entry => entry.Currency).HasMaxLength(3);
+        service.Property(entry => entry.Price).HasPrecision(8, 2);
+        service.Property(entry => entry.Version).IsConcurrencyToken();
+        service.HasIndex(entry => new { entry.Name, entry.Id });
+        service.ToTable(table =>
+        {
+            table.HasCheckConstraint("CK_ServiceDefinitions_Name", "length(btrim(\"Name\")) > 0");
+            table.HasCheckConstraint("CK_ServiceDefinitions_Duration", "\"DurationMinutes\" BETWEEN 1 AND 1440");
+            table.HasCheckConstraint("CK_ServiceDefinitions_Price", "\"Price\" BETWEEN 0 AND 999999.99");
+            table.HasCheckConstraint("CK_ServiceDefinitions_Currency", "\"Currency\" = 'TRY'");
+        });
+        var serviceAudit = builder.Entity<ServiceDefinitionAudit>();
+        serviceAudit.Property(entry => entry.Kind).HasMaxLength(16);
+        serviceAudit.ToTable(table => table.HasCheckConstraint("CK_ServiceDefinitionAudits_Kind", "\"Kind\" IN ('Created','Updated','Activated','Deactivated')"));
+        serviceAudit.HasIndex(entry => new { entry.ServiceDefinitionId, entry.ServiceVersion }).IsUnique();
+        serviceAudit.HasOne<ServiceDefinition>().WithMany().HasForeignKey(entry => entry.ServiceDefinitionId).OnDelete(DeleteBehavior.Restrict);
+        serviceAudit.HasOne<AppUser>().WithMany().HasForeignKey(entry => entry.ActorId).OnDelete(DeleteBehavior.Restrict);
         var member = builder.Entity<StaffMember>();
         member.Property(entry => entry.Name).HasMaxLength(100);
         member.Property(entry => entry.Version).IsConcurrencyToken();

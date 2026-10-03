@@ -212,6 +212,11 @@ aşamada ilgili satırlar eklenerek güncellenir; kodda olmayan endpoint için s
 | Personel ekle | /api/staff-members/ | POST | MFA | Hayır | Hayır | 400/401/403/409/429 | CSRF; aynı istek ID'si çift kayıt yaratmaz; audit atomik |
 | Personel adını düzenle | /api/staff-members/{id} | POST | MFA | Hayır | Hayır | 400/401/403/404/409/429 | CSRF/sürüm; ad alanı hatası; kaydedilmemiş değişiklik koruması |
 | Personel aktif/pasif | /api/staff-members/{id}/status | POST | MFA | Hayır | Hayır | 400/401/403/404/409/429 | CSRF/sürüm/onay; silme ve giriş hesabı değişikliği yok; audit atomik |
+| Hizmet listesi | /api/services/ | GET | MFA | Hayır | Hayır | 400/401/403/429 | Ad, dakika, iki basamaklı TRY fiyatı, aktiflik; sunucu sayfalama |
+| Güncel hizmet | /api/services/{id} | GET | MFA | Hayır | Hayır | 401/403/404/429 | Çakışmada formu koru; güncel ad/süre/fiyat/sürümü yükle |
+| Hizmet ekle | /api/services/ | POST | MFA | Hayır | Hayır | 400/401/403/409/429 | CSRF; ID ile çift kayıt engeli; ondalık fiyat metni, atomik audit |
+| Hizmeti düzenle | /api/services/{id} | POST | MFA | Hayır | Hayır | 400/401/403/404/409/429 | CSRF/sürüm; ad/süre/fiyat birlikte; 400 alan yanında ve ilk hatalı alana odak |
+| Hizmet aktif/pasif | /api/services/{id}/status | POST | MFA | Hayır | Hayır | 400/401/403/404/409/429 | CSRF/sürüm/açık onay; silme yok, atomik audit |
 | Daveti iptal et | /api/staff-invitations/{id}/revoke | POST | MFA | Hayır | Hayır | 400/401/403/404/409/429 | Süre/tek kabul korunur |
 | Daveti kabul et | /api/staff-invitations/accept | POST | Hayır | Davetli | Anonim | 400/409/429 | Davet e-postası + kod + parola; otomatik giriş yok |
 | Çalışan sıfırlama kodu oluştur | /api/staff-password-resets/ | POST | MFA | Hayır | Hayır | 400/401/403/404/409/429 | Tek kullanımlı 30 dakika; Owner güvenli teslim eder |
