@@ -8,7 +8,7 @@ Güncelleme: 2026-10-03. Güncel özet burada; kapsam ve kanıt bağlantıları 
 | --- | --- | --- |
 | P00 — İş ve ürün tanımı | `done` | [P00 planı](plans/P00.md) ve [ürün kararları](PRODUCT.md#2-ürün-kararları); işletme görüşmeleri ve gerçek pilot yapılmış sayılmaz. |
 | P01 — Temel ve CI | `done` | [P01 kanıtı](plans/P01.md#kanıt); PR #1 birleşme commit'i `10527c1`. |
-| P02 — Kimlik ve tanımlar | `in_progress` | P02-01–P02-22 onaylanan yerel kapsamları tamamlandı. Genel değişiklik kayıtlarını görüntüleme ve diğer kalan işler ayrı onay ister; [aktif plan](plans/P02.md). |
+| P02 — Kimlik ve tanımlar | `in_progress` | P02-01–P02-22 onaylanan yerel kapsamları tamamlandı. P02-23 değişiklik kayıtlarını görüntüleme onaylandı ve geliştiriliyor; kalan işler ayrı onay ister; [aktif plan](plans/P02.md). |
 | P03–P17 | `planned` | Yalnız [ROADMAP](ROADMAP.md) düzeyinde; yeni uygulama yetkisi veya kabul kanıtı yok. |
 
 ## Son doğrulanan teslim ve sınırlar
@@ -40,7 +40,7 @@ Program.cs bakımı `done`: başlangıç 265 satırdan 69 satıra indi; önce/so
 
 ## Sıradaki iş
 
-Öneri: işletmede yapılan değişikliklerin kim/zaman/işlem kayıtlarını Owner'ın tek ekranda görüntülemesi. Bu yalnız sonraki küçük iş önerisidir; ayrı onay olmadan başlanmaz. P02-22 teslimi tamamlandı; burada dur. Mola/izin/randevu/P03 başlamaz, doğrudan main push yoktur.
+Onaylanan [P02-23 değişiklik kayıtlarını görüntülemeyi](plans/P02.md#p02-23--değişiklik-kayıtlarını-görüntüleme) geliştir; ayrı sentetik kabul ve PR/CI/merge sonrası yedekli ana yerel teslimi doğrula. Sonraki öneriyi bildir ve dur. Mola/izin/randevu/P03 başlamaz, doğrudan main push yoktur.
 
 ## Gelecek plan kaydı — destek ve işletim ekranı (02.10.2026)
 

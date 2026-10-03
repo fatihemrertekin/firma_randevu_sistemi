@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using Server.Features.Business;
+using Server.Features.Audit;
 using Server.Features.Identity;
 using Server.Features.Staff;
 using Server.Features.Services;
@@ -37,6 +38,7 @@ app.MapAuthEndpoints();
 app.MapBusinessProfileEndpoints();
 app.MapBusinessHoursEndpoints();
 app.MapBusinessLogoEndpoints();
+app.MapAuditLogEndpoints();
 app.MapStaffMemberEndpoints();
 app.MapServiceDefinitionEndpoints();
 

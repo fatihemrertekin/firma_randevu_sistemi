@@ -16,8 +16,9 @@ import OwnerRecoveryEmail from '../features/auth/OwnerRecoveryEmail'
 import MfaRecoveryCodes from '../features/auth/MfaRecoveryCodes'
 import BusinessLogo from '../features/business/BusinessLogo'
 import BusinessMark from '../features/business/BusinessMark'
+import AuditLog from '../features/audit/AuditLog'
 
-type Section = 'business' | 'logo' | 'hours' | 'security' | 'access' | 'personnel' | 'services'
+type Section = 'business' | 'logo' | 'hours' | 'security' | 'access' | 'personnel' | 'services' | 'audit'
 const sections = [
   { id: 'business', title: 'İşletme bilgileri', description: 'İşletmenizin adını ve iletişim bilgilerini yönetin.' },
   { id: 'logo', title: 'İşletme logosu', description: 'Giriş ve yönetim ekranlarını işletmenizin logosuyla kişiselleştirin.' },
@@ -26,6 +27,7 @@ const sections = [
   { id: 'services', title: 'Hizmetler', description: 'Hizmetlerin adını, süresini ve fiyatını yönetin.' },
   { id: 'security', title: 'Hesap ve güvenlik', description: 'Hesabınızı koruyun ve parolanızı değiştirin.' },
   { id: 'access', title: 'Çalışan erişimleri', description: 'Çalışan hesaplarını, davetleri ve parola sıfırlama işlemlerini yönetin.' },
+  { id: 'audit', title: 'Değişiklik kayıtları', description: 'Yapılan işlemlerin zamanını, yapan hesabı ve ilgili kaydı görüntüleyin.' },
 ] as const
 
 type Props = { auth: ReturnType<typeof useAuthentication>; account: Account }
@@ -94,6 +96,7 @@ export default function ManagementLayout({ auth, account }: Props) {
         {owner && section === 'services' && <div className={styles.panel}>
           <Services post={post} onDirtyChange={setDefinitionDirty} onBusyChange={setDefinitionBusy} />
         </div>}
+        {owner && section === 'audit' && <div className={styles.panel}><AuditLog /></div>}
         {owner && section === 'security' && <div className={styles.panel}>
           <OwnerRecoveryEmail post={post} disabled={blocked} />
         </div>}

@@ -1,6 +1,7 @@
 import ErrorMessage from '../../components/ErrorMessage'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import ManualDeliveryCode from '../../components/ManualDeliveryCode'
+import { formatBusinessDateTime } from '../../app/format'
 
 type Invitation = { id: string; email: string; expiresAt: string }
 type Issued = { id: string; token: string; expiresAt: string }
@@ -92,7 +93,7 @@ export default function StaffInvitations({ post }: Props) {
       expiresAt={issued.expiresAt} busy={busy} onClear={() => setIssued(null)} />}
     <h3>Bekleyen davetler</h3>
     {loading ? <p role="status">Davetler yükleniyor…</p> : list.length === 0 ? <p>Geçerli bekleyen davet yok.</p> : <ul>
-      {list.map(item => <li key={item.id}>{item.email} — {new Date(item.expiresAt).toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul' })}
+      {list.map(item => <li key={item.id}>{item.email} — {formatBusinessDateTime(item.expiresAt)}
         <button type="button" disabled={busy} onClick={() => revoke(item.id)} aria-label={`${item.email} davetini iptal et`}>Daveti iptal et</button>
       </li>)}
     </ul>}

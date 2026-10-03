@@ -50,6 +50,19 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
+        // Tek zaman çizelgesinin her kaynağında anahtarlı sayfalama: eski kayıt/veri değişmez.
+        builder.Entity<BusinessProfileAudit>().HasIndex(entry => new { entry.OccurredAt, entry.Id }).IsDescending(true, true);
+        builder.Entity<BusinessLogoAudit>().HasIndex(entry => new { entry.OccurredAt, entry.Id }).IsDescending(true, true);
+        builder.Entity<BusinessHoursAudit>().HasIndex(entry => new { entry.OccurredAt, entry.Id }).IsDescending(true, true);
+        builder.Entity<StaffMemberAudit>().HasIndex(entry => new { entry.OccurredAt, entry.Id }).IsDescending(true, true);
+        builder.Entity<ServiceDefinitionAudit>().HasIndex(entry => new { entry.OccurredAt, entry.Id }).IsDescending(true, true);
+        builder.Entity<StaffServiceAssignmentAudit>().HasIndex(entry => new { entry.OccurredAt, entry.Id }).IsDescending(true, true);
+        builder.Entity<StaffHoursAudit>().HasIndex(entry => new { entry.OccurredAt, entry.Id }).IsDescending(true, true);
+        builder.Entity<StaffInvitationAudit>().HasIndex(entry => new { entry.OccurredAt, entry.Id }).IsDescending(true, true);
+        builder.Entity<StaffPasswordResetAudit>().HasIndex(entry => new { entry.OccurredAt, entry.Id }).IsDescending(true, true);
+        builder.Entity<StaffDeactivationAudit>().HasIndex(entry => new { entry.OccurredAt, entry.Id }).IsDescending(true, true);
+        builder.Entity<OwnerPasswordResetAudit>().HasIndex(entry => new { entry.OccurredAt, entry.Id }).IsDescending(true, true);
+        builder.Entity<OwnerMfaRecoveryAudit>().HasIndex(entry => new { entry.OccurredAt, entry.Id }).IsDescending(true, true);
         var logo = builder.Entity<BusinessLogo>();
         logo.Property(entry => entry.Id).ValueGeneratedNever();
         logo.Property(entry => entry.Version).IsConcurrencyToken();
