@@ -16,6 +16,7 @@ beforeEach(() => {
     if (path === '/api/auth/me') return Response.json(owner)
     if (path === '/api/auth/recovery-email/') return Response.json({ email: owner.email, verifiedAt: null, deliveryAvailable: false })
     if (path === '/api/business-profile/') return Response.json(profile)
+    if (path === '/api/business-logo/') return Response.json({ hasLogo: false, version: 'a4ae913c-2ed5-4ebd-8b86-8ae3d311b348', imageUrl: null, width: null, height: null })
     if (path === '/api/business-hours/') return Response.json({ isConfigured: false, timeZone: 'Europe/Istanbul', version: 'd317d899-8208-41f1-9b8e-c6fbde437cde', days: [] })
     if (path === '/api/staff-invitations/') return Response.json([])
     if (path.startsWith('/api/staff-accounts/')) return Response.json({ items: [], page: 1, hasMore: false })

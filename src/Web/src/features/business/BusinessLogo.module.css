@@ -1,0 +1,6 @@
+.form.form { max-width: calc(var(--space-2) * 70); }
+.form button[type='submit'] { background: var(--primary); color: var(--background); }
+.preview { display: block; max-width: 100%; width: calc(var(--space-2) * 28); height: auto; max-height: calc(var(--space-2) * 20); object-fit: contain; margin-block: calc(var(--space-2) * 2); }
+.mark { display: inline-block; vertical-align: middle; object-fit: contain; width: calc(var(--space-2) * 12); height: calc(var(--space-2) * 6); max-width: 100%; margin-inline-end: var(--space-2); }
+.file { min-height: var(--target-min); overflow: hidden; }
+.file::file-selector-button { min-height: var(--target-min); border: calc(var(--space-2) / 8) solid var(--border); border-radius: var(--space-2); background: var(--surface); color: var(--text); font: inherit; padding-inline: var(--space-2); margin-inline-end: var(--space-2); cursor: pointer; }

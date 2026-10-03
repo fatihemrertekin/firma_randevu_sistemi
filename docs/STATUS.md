@@ -8,7 +8,7 @@ Güncelleme: 2026-10-03. Güncel özet burada; kapsam ve kanıt bağlantıları 
 | --- | --- | --- |
 | P00 — İş ve ürün tanımı | `done` | [P00 planı](plans/P00.md) ve [ürün kararları](PRODUCT.md#2-ürün-kararları); işletme görüşmeleri ve gerçek pilot yapılmış sayılmaz. |
 | P01 — Temel ve CI | `done` | [P01 kanıtı](plans/P01.md#kanıt); PR #1 birleşme commit'i `10527c1`. |
-| P02 — Kimlik ve tanımlar | `in_progress` | P02-01–P02-21 onaylanan yerel kapsamları tamamlandı. Logo ve diğer kalan işler ayrı onay ister; [aktif plan](plans/P02.md). |
+| P02 — Kimlik ve tanımlar | `in_progress` | P02-01–P02-21 onaylanan yerel kapsamları tamamlandı. P02-22 logo geliştirme kabulü geçti; GitHub/ana yerel teslim bekliyor. Diğer kalan işler ayrı onay ister; [aktif plan](plans/P02.md). |
 | P03–P17 | `planned` | Yalnız [ROADMAP](ROADMAP.md) düzeyinde; yeni uygulama yetkisi veya kabul kanıtı yok. |
 
 ## Son doğrulanan teslim ve sınırlar
@@ -38,7 +38,7 @@ Program.cs bakımı `done`: başlangıç 265 satırdan 69 satıra indi; önce/so
 
 ## Sıradaki iş
 
-Öneri: işletmenin logosunu yükleme/değiştirme için ayrı küçük P02 kapsamı hazırlamak. Uygulama başlamadı; yeni onay gerekir. P02-21 sonrası durulur; mola/izin/randevu/P03 başlamaz, doğrudan main push yoktur.
+Onaylanan [P02-22 işletme logosunun](plans/P02.md#p02-22--işletme-logosu) geliştirme kabulü geçti: 133 sunucu/191 web testi ve dört genişlikte gerçek API/Chrome. PR/CI/merge sonrasında yedekli ana yerel güncellemeyi doğrula. Sonraki öneriyi bildir ve dur; mola/izin/randevu/P03 başlamaz, doğrudan main push yoktur.
 
 ## Gelecek plan kaydı — destek ve işletim ekranı (02.10.2026)
 

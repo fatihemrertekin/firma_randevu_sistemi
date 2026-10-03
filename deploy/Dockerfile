@@ -18,6 +18,7 @@ FROM mcr.microsoft.com/dotnet/aspnet:10.0.12 AS runtime
 WORKDIR /app
 COPY --from=server-build /out ./
 COPY docs/identity-email-licenses.txt /app/identity-email-licenses.txt
+COPY docs/logo-image-licenses.txt /app/logo-image-licenses.txt
 RUN mkdir /app/keys && chown $APP_UID:$APP_UID /app/keys
 ENV ASPNETCORE_HTTP_PORTS=8080
 USER $APP_UID
