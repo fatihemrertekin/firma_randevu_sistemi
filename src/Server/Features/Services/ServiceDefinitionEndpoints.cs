@@ -27,7 +27,7 @@ public static class ServiceDefinitionEndpoints
         services.MapPost("/{id:guid}", UpdateAsync);
         services.MapPost("/{id:guid}/status", StatusAsync);
     }
-    private static ServiceResponse Response(ServiceDefinition item) => new(item.Id, item.Name, item.DurationMinutes,
+    internal static ServiceResponse Response(ServiceDefinition item) => new(item.Id, item.Name, item.DurationMinutes,
         item.Price.ToString("0.00", CultureInfo.InvariantCulture), item.Currency, item.IsActive, item.Version);
     private static IResult Conflict() => Results.Problem(statusCode: 409, title: "Hizmet kaydı değişti. Güncel kaydı yükleyin.");
     private static CancellationTokenSource Timeout(HttpContext context)

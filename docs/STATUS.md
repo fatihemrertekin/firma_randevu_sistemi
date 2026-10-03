@@ -33,7 +33,7 @@ Program.cs bakımı `done`: başlangıç 265 satırdan 69 satıra indi; önce/so
 
 ## Sıradaki iş
 
-P02-18 yerel kabulü ve ana yerel teslimi tamamlandı; GitHub kapanışı son PR kontrollerinden doğrulanır. Sonraki öneri personel-hizmet yetkinlik eşleştirmesidir: hangi personelin hangi hizmeti verebildiğini belirleme. Henüz onaylanmadı; yeni iş, mesai veya P03 başlamaz. Doğrudan main push yoktur.
+P02-18 [PR #22](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/22), `3d1457e` birleşmesi ve [main CI](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/37082117661) ile tamamlandı. Ürün sahibi 03.10.2026 [P02-19 personel-hizmet eşleştirmesini](plans/P02.md#p02-19--personel-hizmet-eşleştirmesi) onayladı; durum `in_progress`. Yalnız bu iş ve yedekli ana yerel/PR teslimi bitirilip durulacak; mesai veya P03 başlamaz. Doğrudan main push yoktur.
 
 ## Gelecek plan kaydı — destek ve işletim ekranı (02.10.2026)
 

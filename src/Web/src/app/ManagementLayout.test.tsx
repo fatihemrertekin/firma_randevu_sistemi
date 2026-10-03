@@ -49,6 +49,31 @@ async function submit(label: string) {
 }
 
 describe('Yönetim gezinmesi', () => {
+  it('personel hizmet taslağında gezinme/çıkışı korur; bekleyen kayıt sırasında ikisini de kapatır', async () => {
+    const member = { id: 'member-1', name: 'Deneme Personel', isActive: true, version: 'member-version' }
+    const service = { id: 'service-1', name: 'Kesim', durationMinutes: 30, price: '350.00', currency: 'TRY', isActive: true, version: 'service-version' }
+    let finish: ((response: Response) => void) | undefined
+    const original = vi.mocked(fetch).getMockImplementation()
+    vi.mocked(fetch).mockImplementation(async (input, options) => {
+      if (String(input).startsWith('/api/staff-members/') && String(input).includes('/services')) {
+        if (options?.method === 'POST') return new Promise<Response>(resolve => { finish = resolve })
+        return Response.json({ member, selected: [], items: [service], page: 1, hasMore: false })
+      }
+      if (String(input).startsWith('/api/staff-members/')) return Response.json({ items: [member], page: 1, hasMore: false })
+      if (!original) throw new Error('Test isteği yok')
+      return original(input, options)
+    })
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false)
+    await render(); await click('Personel'); await click('Hizmetleri seç')
+    await act(async () => container.querySelector<HTMLInputElement>('[aria-label="Kesim hizmetini seç"]')?.click())
+    await click('Hizmetler'); await click('Çıkış yap'); expect(confirm).toHaveBeenCalledTimes(2)
+    expect(container.querySelector<HTMLInputElement>('[aria-label="Kesim hizmetini seç"]')?.checked).toBe(true)
+    await submit('Personelin hizmet seçimleri')
+    expect(Array.from(container.querySelectorAll('button')).find(button => button.textContent === 'Hizmetler')?.disabled).toBe(true)
+    expect(Array.from(container.querySelectorAll('button')).find(button => button.textContent === 'Çıkış yap')?.disabled).toBe(true)
+    await act(async () => finish?.(Response.json({ member: { ...member, version: 'new-version' }, selected: [{ id: service.id, version: service.version }] })))
+    expect(container.textContent).toContain('Personelin hizmet seçimleri kaydedildi.')
+  })
   it('hizmet taslağında gezinme/çıkışı onaylatır ve bekleyen kayıt sırasında ikisini de kapatır', async () => {
     const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false)
     await render(); await click('Hizmetler'); await click('Yeni hizmet'); await fill('service-name', 'Taslak Hizmet')

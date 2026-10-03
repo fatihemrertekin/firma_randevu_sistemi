@@ -212,6 +212,8 @@ aşamada ilgili satırlar eklenerek güncellenir; kodda olmayan endpoint için s
 | Personel ekle | /api/staff-members/ | POST | MFA | Hayır | Hayır | 400/401/403/409/429 | CSRF; aynı istek ID'si çift kayıt yaratmaz; audit atomik |
 | Personel adını düzenle | /api/staff-members/{id} | POST | MFA | Hayır | Hayır | 400/401/403/404/409/429 | CSRF/sürüm; ad alanı hatası; kaydedilmemiş değişiklik koruması |
 | Personel aktif/pasif | /api/staff-members/{id}/status | POST | MFA | Hayır | Hayır | 400/401/403/404/409/429 | CSRF/sürüm/onay; silme ve giriş hesabı değişikliği yok; audit atomik |
+| Personelin hizmet seçimleri | /api/staff-members/{id}/services | GET | MFA | Hayır | Hayır | 400/401/403/404/429 | Tutarlı snapshot; sayfalı katalog, tam seçili ID/hizmet sürümleri/personel sürümü |
+| Personelin hizmetlerini kaydet | /api/staff-members/{id}/services | POST | MFA | Hayır | Hayır | 400/401/403/404/409/429 | CSRF; tam küme/aktiflik/sürümler; seçim+audit atomik, güncel aynı küme no-op; taslak/sayfa/odak korunur |
 | Hizmet listesi | /api/services/ | GET | MFA | Hayır | Hayır | 400/401/403/429 | Ad, dakika, iki basamaklı TRY fiyatı, aktiflik; sunucu sayfalama |
 | Güncel hizmet | /api/services/{id} | GET | MFA | Hayır | Hayır | 401/403/404/429 | Çakışmada formu koru; güncel ad/süre/fiyat/sürümü yükle |
 | Hizmet ekle | /api/services/ | POST | MFA | Hayır | Hayır | 400/401/403/409/429 | CSRF; ID ile çift kayıt engeli; ondalık fiyat metni, atomik audit |

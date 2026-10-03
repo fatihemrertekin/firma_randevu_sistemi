@@ -14,7 +14,7 @@ export function serviceFailure(status: number) {
   if (status === 429) return 'Çok sık denendi. Bir süre bekleyip yeniden deneyin.'
   return 'Sonuç doğrulanamadı. Güncel kaydı veya listeyi yükleyerek kontrol edin.'
 }
-function isService(value: unknown): value is Service {
+export function isService(value: unknown): value is Service {
   return typeof value === 'object' && value !== null && 'id' in value && typeof value.id === 'string' &&
     'name' in value && typeof value.name === 'string' && 'durationMinutes' in value && typeof value.durationMinutes === 'number' &&
     Number.isInteger(value.durationMinutes) && value.durationMinutes >= 1 && value.durationMinutes <= 1440 &&

@@ -14,7 +14,7 @@ export function memberFailure(status: number) {
   if (status === 429) return 'Çok sık denendi. Bir süre bekleyip yeniden deneyin.'
   return 'Sonuç doğrulanamadı. Güncel kaydı veya listeyi yükleyerek kontrol edin.'
 }
-function isMember(value: unknown): value is StaffMember {
+export function isMember(value: unknown): value is StaffMember {
   return typeof value === 'object' && value !== null &&
     'id' in value && typeof value.id === 'string' && 'name' in value && typeof value.name === 'string' &&
     'isActive' in value && typeof value.isActive === 'boolean' && 'version' in value && typeof value.version === 'string'
