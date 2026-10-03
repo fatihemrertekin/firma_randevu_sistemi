@@ -8,12 +8,12 @@ Güncelleme: 2026-10-03. Güncel özet burada; kapsam ve kanıt bağlantıları 
 | --- | --- | --- |
 | P00 — İş ve ürün tanımı | `done` | [P00 planı](plans/P00.md) ve [ürün kararları](PRODUCT.md#2-ürün-kararları); işletme görüşmeleri ve gerçek pilot yapılmış sayılmaz. |
 | P01 — Temel ve CI | `done` | [P01 kanıtı](plans/P01.md#kanıt); PR #1 birleşme commit'i `10527c1`. |
-| P02 — Kimlik ve tanımlar | `in_progress` | P02-01–P02-19 onaylanan yerel kapsamları tamamlandı. Logo/mesai ve diğer kalan işler ayrı onay ister; [aktif plan](plans/P02.md). |
+| P02 — Kimlik ve tanımlar | `in_progress` | P02-01–P02-20 onaylanan yerel kapsamları tamamlandı. Logo/mesai ve diğer kalan işler ayrı onay ister; [aktif plan](plans/P02.md). |
 | P03–P17 | `planned` | Yalnız [ROADMAP](ROADMAP.md) düzeyinde; yeni uygulama yetkisi veya kabul kanıtı yok. |
 
 ## Son doğrulanan teslim ve sınırlar
 
-- P02-20 geliştirme kabulü `done`: haftalık işletme saatleri/kapalı günler, MFA Owner ve atomik sürüm/audit; sunucu 114/114, web 171/171 ve dört genişlikte gerçek API/Chrome kabulü geçti. [Kapsam/kabul](plans/P02.md#p02-20--haftalık-işletme-saatleri). GitHub ve yedekli ana yerel güncelleme sürüyor; bunlar henüz tamamlanmış sayılmaz.
+- P02-20 geliştirme ve ana yerel teslimi `done`: haftalık işletme saatleri/kapalı günler, MFA Owner ve atomik sürüm/audit; sunucu 114/114, web 171/171 ve dört genişlikte gerçek API/Chrome kabulü geçti. [PR #24](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/24) `d776daf` ile birleşti; aynı commit'in [main CI](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/37091965805) sonucu başarılı. Şifreli yedek ve kontrollü migration sonrası mevcut veri/MFA/anahtar/SMTP korundu; sağlık/restart geçti. [Kapsam/kabul](plans/P02.md#p02-20--haftalık-işletme-saatleri), [yerel teslim ve geri dönüş](plans/P02.md#p02-20-ana-yerel-teslim--03102026).
 
 - P02-19 yerel kabulü ve ana yerel teslimi `done`: personelin hizmetlerini seç/kaldır, tam küme/sürüm/aktiflik ve atomik audit; sunucu 107/107, web 157/157, kalite kapıları ve UI-UX.md doğrultusunda dört genişlikte gerçek API/Chrome kabulü geçti. Yedekli ana güncellemede mevcut hesap/MFA/SMTP/personel/hizmet/işletme korundu; sağlık/restart geçti. [Kabul](plans/P02.md#p02-19-geliştirme-kabulü--03102026), [yerel teslim](plans/P02.md#p02-19-ana-yerel-teslim--03102026); GitHub sonucu [PR #23](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/23) son commit kontrollerinden doğrulanır.
 - P02-18 yerel kabulü ve ana yerel teslimi `done`: hizmet adı/süre/TL fiyatı/aktiflik ve atomik audit; sunucu 99/99, web 142/142, kalite kapıları ve UI-UX.md doğrultusunda dört genişlikte gerçek API/Chrome kabulü geçti. Yedekli ana güncellemede mevcut hesap/MFA/SMTP/personel/işletme korundu; sağlık/restart geçti. [Kabul](plans/P02.md#p02-18-geliştirme-kabulü--03102026), [yerel teslim](plans/P02.md#p02-18-ana-yerel-teslim--03102026); GitHub sonucu [PR #22](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/22) son commit kontrollerinden doğrulanır.
@@ -36,7 +36,7 @@ Program.cs bakımı `done`: başlangıç 265 satırdan 69 satıra indi; önce/so
 
 ## Sıradaki iş
 
-Onaylanan P02-20'nin PR/son commit CI/merge ve yedekli ana yerel teslimini tamamla. Sonuçları doğrulayarak kaydet, sonraki öneriyi bildir ve dur. Personel mesaisi/randevu/P03 başlamaz; doğrudan main push yoktur.
+Öneri: personelin haftalık çalışma saatleri için ayrı küçük P02 kapsamı hazırlamak. Uygulama başlamadı; yeni onay gerekir. P02-20 sonrası durulur; randevu/P03 başlamaz, doğrudan main push yoktur.
 
 ## Gelecek plan kaydı — destek ve işletim ekranı (02.10.2026)
 
