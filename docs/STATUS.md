@@ -8,10 +8,12 @@ Güncelleme: 2026-10-03. Güncel özet burada; kapsam ve kanıt bağlantıları 
 | --- | --- | --- |
 | P00 — İş ve ürün tanımı | `done` | [P00 planı](plans/P00.md) ve [ürün kararları](PRODUCT.md#2-ürün-kararları); işletme görüşmeleri ve gerçek pilot yapılmış sayılmaz. |
 | P01 — Temel ve CI | `done` | [P01 kanıtı](plans/P01.md#kanıt); PR #1 birleşme commit'i `10527c1`. |
-| P02 — Kimlik ve tanımlar | `in_progress` | P02-01–P02-21 onaylanan yerel kapsamları tamamlandı. P02-22 logo geliştirme kabulü geçti; GitHub/ana yerel teslim bekliyor. Diğer kalan işler ayrı onay ister; [aktif plan](plans/P02.md). |
+| P02 — Kimlik ve tanımlar | `in_progress` | P02-01–P02-22 onaylanan yerel kapsamları tamamlandı. Genel değişiklik kayıtlarını görüntüleme ve diğer kalan işler ayrı onay ister; [aktif plan](plans/P02.md). |
 | P03–P17 | `planned` | Yalnız [ROADMAP](ROADMAP.md) düzeyinde; yeni uygulama yetkisi veya kabul kanıtı yok. |
 
 ## Son doğrulanan teslim ve sınırlar
+
+- P02-22 geliştirme ve ana yerel teslimi `done`: PNG/JPEG logo seç/önizle/kaydet/değiştir ve giriş/yönetimde göster; MFA Owner/sürüm/atomik audit. Sunucu 133/133, web 191/191 ve dört genişlikte gerçek API/Chrome kabulü geçti. [PR #28](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/28) `259dff6` ile birleşti; aynı commit'in [main CI](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/37147489023) sonucu başarılı. Şifreli yedek/manual migration sonrası 29 mevcut tablonun verisi, hesap/MFA, anahtar/SMTP korundu; sağlık/restart geçti. Ana logo boş bırakıldı. [Kapsam/kabul](plans/P02.md#p02-22--işletme-logosu), [yerel teslim/geri dönüş ve yedek sınırı](plans/P02.md#p02-22-ana-yerel-teslim--03102026).
 
 - P02-21 geliştirme ve ana yerel teslimi `done`: personelin haftalık çalışma saatleri/çalışılmayan günler, MFA Owner ve atomik personel sürümü/audit; sunucu 123/123, web 180/180 ve dört genişlikte gerçek API/Chrome kabulü geçti. [PR #26](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/26) `6f41455` ile birleşti; aynı commit'in [main CI](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/37142528790) sonucu başarılı. Şifreli yedek/manual migration sonrası mevcut veri, hesap/MFA, işletme saatleri, anahtar/SMTP korundu; sağlık/restart geçti. [Kapsam/kabul](plans/P02.md#p02-21--personelin-haftalık-çalışma-saatleri), [yerel teslim/geri dönüş](plans/P02.md#p02-21-ana-yerel-teslim--03102026).
 
@@ -38,7 +40,7 @@ Program.cs bakımı `done`: başlangıç 265 satırdan 69 satıra indi; önce/so
 
 ## Sıradaki iş
 
-Onaylanan [P02-22 işletme logosunun](plans/P02.md#p02-22--işletme-logosu) geliştirme kabulü geçti: 133 sunucu/191 web testi ve dört genişlikte gerçek API/Chrome. PR/CI/merge sonrasında yedekli ana yerel güncellemeyi doğrula. Sonraki öneriyi bildir ve dur; mola/izin/randevu/P03 başlamaz, doğrudan main push yoktur.
+Öneri: işletmede yapılan değişikliklerin kim/zaman/işlem kayıtlarını Owner'ın tek ekranda görüntülemesi. Bu yalnız sonraki küçük iş önerisidir; ayrı onay olmadan başlanmaz. P02-22 teslimi tamamlandı; burada dur. Mola/izin/randevu/P03 başlamaz, doğrudan main push yoktur.
 
 ## Gelecek plan kaydı — destek ve işletim ekranı (02.10.2026)
 
