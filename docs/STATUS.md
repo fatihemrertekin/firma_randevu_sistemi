@@ -32,7 +32,7 @@ Program.cs bakımı `done`: başlangıç 265 satırdan 69 satıra indi; önce/so
 
 ## Sıradaki iş
 
-P02-17 yerel kabulü ve ana yerel teslimi tamamlandı; GitHub teslimi PR #21 son commit kontrollerinden izlenir. Sonraki geliştirme önerisi temel hizmet tanımlarıdır (ad, süre, fiyat, aktif/pasif); yalnız öneridir, uygulama için ürün sahibi onayı gerekir. Hesap eşleştirme, mesai/yetkinlik veya P03 başlamaz; doğrudan main push yoktur.
+P02-17 teslimi tamamlandı. 03.10.2026 ürün sahibi [P02-18 temel hizmet tanımlarını](plans/P02.md#p02-18--temel-hizmet-tanımları) onayladı; durum `in_progress`. Yalnız hizmet adı/süre/fiyat/aktiflik/audit, kabul ve yedekli ana yerel teslim tamamlanıp durulacak. Personel-hizmet eşleştirmesi, mesai/yetkinlik veya P03 başlamaz; doğrudan main push yoktur.
 
 ## Gelecek plan kaydı — destek ve işletim ekranı (02.10.2026)
 

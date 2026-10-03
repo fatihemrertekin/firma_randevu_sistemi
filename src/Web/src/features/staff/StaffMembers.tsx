@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import ErrorMessage from '../../components/ErrorMessage'
 import StaffMemberEditor from './StaffMemberEditor'
 import { MemberRequestError, memberFailure, readMember, readMemberPage, type StaffMember, type StaffMemberPage, type StaffPost } from './staffMembersApi'
-import styles from './StaffMembers.module.css'
+import styles from '../../components/DefinitionManagement.module.css'
 
 type Props = { post: StaffPost; onDirtyChange: (dirty: boolean) => void; onBusyChange: (busy: boolean) => void }
 export default function StaffMembers({ post, onDirtyChange, onBusyChange }: Props) {

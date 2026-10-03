@@ -8,15 +8,17 @@ import StaffInvitations from '../features/staff/StaffInvitations'
 import StaffPasswordReset from '../features/staff/StaffPasswordReset'
 import StaffAccounts from '../features/staff/StaffAccounts'
 import StaffMembers from '../features/staff/StaffMembers'
+import Services from '../features/services/Services'
 import styles from './ManagementLayout.module.css'
 import ErrorMessage from '../components/ErrorMessage'
 import OwnerRecoveryEmail from '../features/auth/OwnerRecoveryEmail'
 import MfaRecoveryCodes from '../features/auth/MfaRecoveryCodes'
 
-type Section = 'business' | 'security' | 'access' | 'personnel'
+type Section = 'business' | 'security' | 'access' | 'personnel' | 'services'
 const sections = [
   { id: 'business', title: 'İşletme bilgileri', description: 'İşletmenizin adını ve iletişim bilgilerini yönetin.' },
   { id: 'personnel', title: 'Personel', description: 'İşletmede hizmet veren kişilerin adını ve aktiflik durumunu yönetin.' },
+  { id: 'services', title: 'Hizmetler', description: 'Hizmetlerin adını, süresini ve fiyatını yönetin.' },
   { id: 'security', title: 'Hesap ve güvenlik', description: 'Hesabınızı koruyun ve parolanızı değiştirin.' },
   { id: 'access', title: 'Çalışan erişimleri', description: 'Çalışan hesaplarını, davetleri ve parola sıfırlama işlemlerini yönetin.' },
 ] as const
@@ -27,10 +29,10 @@ export default function ManagementLayout({ auth, account }: Props) {
   const owner = account.mfaEnabled && account.ownerAccess && !account.staffAccess
   const [section, setSection] = useState<Section>(owner ? 'business' : 'security')
   const [pendingRequests, setPendingRequests] = useState(0)
-  const [personnelDirty, setPersonnelDirty] = useState(false)
-  const [personnelBusy, setPersonnelBusy] = useState(false)
+  const [definitionDirty, setDefinitionDirty] = useState(false)
+  const [definitionBusy, setDefinitionBusy] = useState(false)
   const heading = useRef<HTMLHeadingElement>(null)
-  const blocked = auth.busy || pendingRequests > 0 || personnelBusy
+  const blocked = auth.busy || pendingRequests > 0 || definitionBusy
   const current = sections.find(item => item.id === section) ?? sections[0]
   const post = useCallback(async (path: string, body: object, signal?: AbortSignal) => {
     setPendingRequests(current => current + 1)
@@ -40,8 +42,8 @@ export default function ManagementLayout({ auth, account }: Props) {
 
   function navigate(next: Section) {
     if (blocked || section === next) return
-    if (personnelDirty && !window.confirm('Kaydedilmemiş personel değişiklikleri silinsin mi?')) return
-    setPersonnelDirty(false)
+    if (definitionDirty && !window.confirm('Kaydedilmemiş değişiklikler silinsin mi?')) return
+    setDefinitionDirty(false)
     auth.clearPasswordFields()
     auth.setError('')
     auth.setNotice('')
@@ -54,8 +56,8 @@ export default function ManagementLayout({ auth, account }: Props) {
       <div><span className={styles.brand}>Randevu</span><span className={styles.subtitle}>Yönetim</span></div>
       <div className={styles.account}><span>{account.email}</span>
         <button type="button" disabled={blocked} onClick={() => {
-          if (personnelDirty && !window.confirm('Kaydedilmemiş personel değişiklikleri silinsin ve çıkış yapılsın mı?')) return
-          setPersonnelDirty(false); void auth.handleLogout()
+          if (definitionDirty && !window.confirm('Kaydedilmemiş değişiklikler silinsin ve çıkış yapılsın mı?')) return
+          setDefinitionDirty(false); void auth.handleLogout()
         }}>Çıkış yap</button>
       </div>
     </header>
@@ -75,7 +77,10 @@ export default function ManagementLayout({ auth, account }: Props) {
           <BusinessProfile post={post} />
         </div>}
         {owner && section === 'personnel' && <div className={styles.panel}>
-          <StaffMembers post={post} onDirtyChange={setPersonnelDirty} onBusyChange={setPersonnelBusy} />
+          <StaffMembers post={post} onDirtyChange={setDefinitionDirty} onBusyChange={setDefinitionBusy} />
+        </div>}
+        {owner && section === 'services' && <div className={styles.panel}>
+          <Services post={post} onDirtyChange={setDefinitionDirty} onBusyChange={setDefinitionBusy} />
         </div>}
         {owner && section === 'security' && <div className={styles.panel}>
           <OwnerRecoveryEmail post={post} disabled={blocked} />
