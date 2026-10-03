@@ -30,6 +30,10 @@ REVOKE UPDATE, DELETE, TRUNCATE ON TABLE "StaffPasswordResetAudits" FROM app_use
 GRANT SELECT, INSERT ON TABLE "StaffDeactivationAudits" TO app_user;
 REVOKE UPDATE, DELETE, TRUNCATE ON TABLE "StaffDeactivationAudits" FROM app_user;
 GRANT SELECT, INSERT, UPDATE ON TABLE "StaffMembers" TO app_user;
+GRANT SELECT, INSERT, DELETE ON TABLE "StaffServiceAssignments" TO app_user;
+REVOKE UPDATE, TRUNCATE ON TABLE "StaffServiceAssignments" FROM app_user;
+GRANT SELECT, INSERT ON TABLE "StaffServiceAssignmentAudits" TO app_user;
+REVOKE UPDATE, DELETE, TRUNCATE ON TABLE "StaffServiceAssignmentAudits" FROM app_user;
 GRANT SELECT, INSERT, UPDATE ON TABLE "ServiceDefinitions" TO app_user;
 REVOKE DELETE, TRUNCATE ON TABLE "ServiceDefinitions" FROM app_user;
 GRANT SELECT, INSERT ON TABLE "ServiceDefinitionAudits" TO app_user;

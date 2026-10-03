@@ -36,6 +36,17 @@ async function render(post = vi.fn<StaffPost>(async () => Response.json(member))
 }
 
 describe('Personel yönetimi', () => {
+  it('hizmet seçiminden vazgeçince açan düğmeye odak döndürür', async () => {
+    const original = vi.mocked(fetch).getMockImplementation()
+    vi.mocked(fetch).mockImplementation(async input => {
+      if (String(input).includes('/services')) return Response.json({ member, selected: [], items: [], page: 1, hasMore: false })
+      if (!original) throw new Error('Test isteği yok')
+      return original(input)
+    })
+    await render(); const opener = Array.from(container.querySelectorAll('button')).find(button => button.textContent === 'Hizmetleri seç')
+    await click('Hizmetleri seç'); expect(container.querySelector('form')).not.toBeNull()
+    await click('Vazgeç'); expect(container.querySelector('form')).toBeNull(); expect(document.activeElement).toBe(opener)
+  })
   it('çift eklemeyi engeller ve belirsiz sonuçta aynı kimlikle tekrar gönderir', async () => {
     let finish: ((response: Response) => void) | undefined
     const post = vi.fn<StaffPost>(() => new Promise<Response>(resolve => { finish = resolve }))

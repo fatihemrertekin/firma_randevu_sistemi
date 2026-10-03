@@ -37,11 +37,24 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<StaffMemberAudit> StaffMemberAudits => Set<StaffMemberAudit>();
     public DbSet<ServiceDefinition> ServiceDefinitions => Set<ServiceDefinition>();
     public DbSet<ServiceDefinitionAudit> ServiceDefinitionAudits => Set<ServiceDefinitionAudit>();
+    public DbSet<StaffServiceAssignment> StaffServiceAssignments => Set<StaffServiceAssignment>();
+    public DbSet<StaffServiceAssignmentAudit> StaffServiceAssignmentAudits => Set<StaffServiceAssignmentAudit>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
         builder.Entity<AppUser>().Property(user => user.IsActive).HasDefaultValue(true);
+        var assignment = builder.Entity<StaffServiceAssignment>();
+        assignment.HasKey(entry => new { entry.StaffMemberId, entry.ServiceDefinitionId });
+        assignment.HasOne<StaffMember>().WithMany().HasForeignKey(entry => entry.StaffMemberId).OnDelete(DeleteBehavior.Restrict);
+        assignment.HasOne<ServiceDefinition>().WithMany().HasForeignKey(entry => entry.ServiceDefinitionId).OnDelete(DeleteBehavior.Restrict);
+        var assignmentAudit = builder.Entity<StaffServiceAssignmentAudit>();
+        assignmentAudit.Property(entry => entry.Kind).HasMaxLength(16);
+        assignmentAudit.ToTable(table => table.HasCheckConstraint("CK_StaffServiceAssignmentAudits_Kind", "\"Kind\" IN ('Assigned','Unassigned')"));
+        assignmentAudit.HasIndex(entry => new { entry.StaffMemberId, entry.ServiceDefinitionId, entry.MemberVersion }).IsUnique();
+        assignmentAudit.HasOne<StaffMember>().WithMany().HasForeignKey(entry => entry.StaffMemberId).OnDelete(DeleteBehavior.Restrict);
+        assignmentAudit.HasOne<ServiceDefinition>().WithMany().HasForeignKey(entry => entry.ServiceDefinitionId).OnDelete(DeleteBehavior.Restrict);
+        assignmentAudit.HasOne<AppUser>().WithMany().HasForeignKey(entry => entry.ActorId).OnDelete(DeleteBehavior.Restrict);
         var service = builder.Entity<ServiceDefinition>();
         service.Property(entry => entry.Name).HasMaxLength(100);
         service.Property(entry => entry.Currency).HasMaxLength(3);
