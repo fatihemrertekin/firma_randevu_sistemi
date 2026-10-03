@@ -39,11 +39,30 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<ServiceDefinitionAudit> ServiceDefinitionAudits => Set<ServiceDefinitionAudit>();
     public DbSet<StaffServiceAssignment> StaffServiceAssignments => Set<StaffServiceAssignment>();
     public DbSet<StaffServiceAssignmentAudit> StaffServiceAssignmentAudits => Set<StaffServiceAssignmentAudit>();
+    public DbSet<BusinessHoursSchedule> BusinessHoursSchedules => Set<BusinessHoursSchedule>();
+    public DbSet<BusinessOpeningDay> BusinessOpeningDays => Set<BusinessOpeningDay>();
+    public DbSet<BusinessHoursAudit> BusinessHoursAudits => Set<BusinessHoursAudit>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
         builder.Entity<AppUser>().Property(user => user.IsActive).HasDefaultValue(true);
+        var hours = builder.Entity<BusinessHoursSchedule>();
+        hours.Property(entry => entry.Id).ValueGeneratedNever();
+        hours.Property(entry => entry.Version).IsConcurrencyToken();
+        hours.ToTable(table => table.HasCheckConstraint("CK_BusinessHoursSchedules_Singleton", "\"Id\" = 1"));
+        hours.HasData(new BusinessHoursSchedule { Id = 1, Version = Guid.Parse("d317d899-8208-41f1-9b8e-c6fbde437cde") });
+        var openingDay = builder.Entity<BusinessOpeningDay>();
+        openingDay.HasKey(entry => new { entry.ScheduleId, entry.Day });
+        openingDay.HasOne<BusinessHoursSchedule>().WithMany().HasForeignKey(entry => entry.ScheduleId).OnDelete(DeleteBehavior.Restrict);
+        openingDay.ToTable(table =>
+        {
+            table.HasCheckConstraint("CK_BusinessOpeningDays_Day", "\"Day\" BETWEEN 0 AND 6");
+            table.HasCheckConstraint("CK_BusinessOpeningDays_Hours", "(\"IsClosed\" AND \"OpensAtMinute\" IS NULL AND \"ClosesAtMinute\" IS NULL) OR (NOT \"IsClosed\" AND \"OpensAtMinute\" IS NOT NULL AND \"ClosesAtMinute\" IS NOT NULL AND \"OpensAtMinute\" BETWEEN 0 AND 1439 AND \"ClosesAtMinute\" BETWEEN 0 AND 1439 AND \"OpensAtMinute\" < \"ClosesAtMinute\")");
+        });
+        var hoursAudit = builder.Entity<BusinessHoursAudit>();
+        hoursAudit.HasIndex(entry => entry.ScheduleVersion).IsUnique();
+        hoursAudit.HasOne<AppUser>().WithMany().HasForeignKey(entry => entry.ActorId).OnDelete(DeleteBehavior.Restrict);
         var assignment = builder.Entity<StaffServiceAssignment>();
         assignment.HasKey(entry => new { entry.StaffMemberId, entry.ServiceDefinitionId });
         assignment.HasOne<StaffMember>().WithMany().HasForeignKey(entry => entry.StaffMemberId).OnDelete(DeleteBehavior.Restrict);

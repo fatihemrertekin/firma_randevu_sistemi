@@ -34,6 +34,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapAuthEndpoints();
 app.MapBusinessProfileEndpoints();
+app.MapBusinessHoursEndpoints();
 app.MapStaffMemberEndpoints();
 app.MapServiceDefinitionEndpoints();
 

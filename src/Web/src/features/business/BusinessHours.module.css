@@ -1,0 +1,12 @@
+.form.form { max-width: calc(var(--space-2) * 70); }
+.form button[type='submit'] { background: var(--primary); color: var(--background); border-color: var(--primary); }
+.legend { padding: 0; margin-block: calc(var(--space-2) * 2); font-weight: 700; }
+.legend:focus { outline: calc(var(--space-2) / 4) solid var(--focus); outline-offset: calc(var(--space-2) / 2); }
+.day { border-bottom: calc(var(--space-2) / 8) solid var(--border); padding-block: calc(var(--space-2) * 2); }
+.dayHeading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2); }
+.closed { display: flex; align-items: center; gap: var(--space-2); min-height: var(--target-min); }
+.closed input { width: var(--target-min); height: var(--target-min); min-width: var(--target-min); margin: 0; accent-color: var(--primary); }
+.times { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, calc(var(--space-2) * 23)), 1fr)); gap: calc(var(--space-2) * 2); margin-block: var(--space-2); }
+.times > div { min-width: 0; }
+.times label { display: block; margin-bottom: var(--space-2); }
+.times input { display: block; width: 100%; min-width: 0; min-height: var(--target-min); }
