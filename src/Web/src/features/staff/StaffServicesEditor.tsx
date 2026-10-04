@@ -3,16 +3,18 @@ import ErrorMessage from '../../components/ErrorMessage'
 import useUnsavedChanges from '../../app/useUnsavedChanges'
 import { formatTryPrice } from '../../app/money'
 import type { Service } from '../services/servicesApi'
-import type { StaffPost } from './staffMembersApi'
+import type { StaffMember, StaffPost } from './staffMembersApi'
 import { SelectionError, readSelection, readSelectionPage, type Selection, type SelectionPage, type ServiceReference } from './staffServicesApi'
 import styles from '../../components/DefinitionManagement.module.css'
 import choices from './StaffServicesEditor.module.css'
+import personnel from './StaffMembers.module.css'
 
-type Props = { memberId: string; post: StaffPost; onSaved: () => void; onCancel: () => void; onDirtyChange: (dirty: boolean) => void; onBusyChange: (busy: boolean) => void }
+type Props = { memberId: string; post: StaffPost; onSaved: () => void; onCancel: () => void; onDirtyChange: (dirty: boolean) => void; onBusyChange: (busy: boolean) => void;
+  embedded?: boolean; onMemberRead?: (member: StaffMember) => void }
 function sameReferences(left: ServiceReference[], right: ServiceReference[]) {
   return left.length === right.length && left.every(item => right.some(other => item.id === other.id && item.version === other.version))
 }
-export default function StaffServicesEditor({ memberId, post, onSaved, onCancel, onDirtyChange, onBusyChange }: Props) {
+export default function StaffServicesEditor({ memberId, post, onSaved, onCancel, onDirtyChange, onBusyChange, embedded, onMemberRead }: Props) {
   const [snapshot, setSnapshot] = useState<Selection | null>(null)
   const [selected, setSelected] = useState(new Map<string, ServiceReference>())
   const [data, setData] = useState<SelectionPage | null>(null)
@@ -23,6 +25,7 @@ export default function StaffServicesEditor({ memberId, post, onSaved, onCancel,
   const fields = useRef<HTMLFieldSetElement>(null)
   const dirty = snapshot !== null && (selected.size !== snapshot.selected.length || snapshot.selected.some(item => !selected.has(item.id)))
   useUnsavedChanges(dirty, onDirtyChange)
+  useEffect(() => { onBusyChange(loading || busy); return () => onBusyChange(false) }, [loading, busy, onBusyChange])
   useEffect(() => {
     const controller = new AbortController()
     void fetch(`/api/staff-members/${memberId}/services?page=${page}&pageSize=10`, { cache: 'no-store', signal: AbortSignal.any([controller.signal, AbortSignal.timeout(15000)]) })
@@ -30,6 +33,7 @@ export default function StaffServicesEditor({ memberId, post, onSaved, onCancel,
         if (controller.signal.aborted) return
         if (!baseline.current || reset.current) {
           baseline.current = current; reset.current = false; setSnapshot(current)
+          onMemberRead?.(current.member)
           const next = new Map(current.selected.map(item => [item.id, item])); chosen.current = next; setSelected(next)
         } else if (baseline.current.member.version !== current.member.version || !sameReferences(baseline.current.selected, current.selected) ||
           current.items.some(item => chosen.current.has(item.id) && chosen.current.get(item.id)?.version !== item.version)) {
@@ -40,7 +44,7 @@ export default function StaffServicesEditor({ memberId, post, onSaved, onCancel,
         if (!controller.signal.aborted) { setError(problem instanceof SelectionError ? problem.message : new SelectionError(500).message); setLocked(true) }
       }).finally(() => { if (!controller.signal.aborted) setLoading(false) })
     return () => controller.abort()
-  }, [memberId, page, revision])
+  }, [memberId, page, revision, onMemberRead])
   useEffect(() => {
     if (loading || busy) return
     if (fieldError || focusAfterLoad.current) {
@@ -63,13 +67,14 @@ export default function StaffServicesEditor({ memberId, post, onSaved, onCancel,
     reset.current = true; setLoading(true); setError(''); setFieldError(''); setPage(1); setRevision(value => value + 1)
   }
   function cancel() {
+    if (sending.current || loading) return
     if (dirty && !window.confirm('Kaydedilmemiş hizmet seçimleri silinsin mi?')) return
     onDirtyChange(false); onCancel()
   }
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!snapshot || sending.current || loading || locked || !dirty) return
-    sending.current = true; setBusy(true); onBusyChange(true); setError(''); setFieldError('')
+    sending.current = true; setBusy(true); setError(''); setFieldError('')
     try {
       const response = await post(`/api/staff-members/${memberId}/services`,
         { version: snapshot.member.version, services: Array.from(selected.values()) }, AbortSignal.timeout(15000))
@@ -79,11 +84,11 @@ export default function StaffServicesEditor({ memberId, post, onSaved, onCancel,
       await readSelection(response); onDirtyChange(false); onSaved()
     } catch (problem: unknown) {
       setError(problem instanceof SelectionError ? problem.message : new SelectionError(500).message); setLocked(true)
-    } finally { sending.current = false; setBusy(false); onBusyChange(false) }
+    } finally { sending.current = false; setBusy(false) }
   }
   const blocked = loading || busy || locked
-  return <form className={`${styles.editor} ${choices.editor}`} aria-label="Personelin hizmet seçimleri" aria-busy={loading || busy} onSubmit={event => { void save(event) }}>
-    <h3 className={styles.identity}>{snapshot?.member.name ?? 'Personel'} — Hizmet seçimi</h3>
+  return <form className={`${styles.editor} ${choices.editor} ${personnel.taskForm}`} aria-label="Personelin hizmet seçimleri" aria-busy={loading || busy} onSubmit={event => { void save(event) }}>
+    {!embedded && <h3 className={styles.identity}>{snapshot?.member.name ?? 'Personel'} — Hizmet seçimi</h3>}
     <p id="assignment-info">Seçili: {selected.size} hizmet (tüm sayfalarda). Seçimleri kaydettiğinde personelin verebildiği hizmetler güncellenir.</p>
     {snapshot && !snapshot.member.isActive && <p>Personel pasif. Mevcut eşleşmeleri koruyabilir veya kaldırabilirsin; yeni eşleşme için personeli aktifleştir.</p>}
     <p>Pasif hizmetlere yeni eşleşme eklenmez. Mevcut eşleşmeyi kaldırmak personeli veya hizmeti silmez.</p>
@@ -102,9 +107,10 @@ export default function StaffServicesEditor({ memberId, post, onSaved, onCancel,
       </label>)}
     </fieldset>
     {fieldError && <p id="assignment-error" className={styles.fieldError}>{fieldError}</p>}
-    <div className={styles.actions}>
+    {dirty && <p className={personnel.draft} role="status">Değişiklikler henüz kaydedilmedi.</p>}
+    <div className={personnel.actions}>
       <button type="submit" className={styles.primary} disabled={blocked || !dirty}>{busy ? 'İşlem sürüyor…' : 'Seçimleri kaydet'}</button>
-      <button type="button" disabled={busy} onClick={cancel}>Vazgeç</button>
+      <button type="button" disabled={busy || loading} onClick={cancel}>Vazgeç</button>
       <button type="button" disabled={busy || loading} onClick={reload}>Güncel seçimleri yükle</button>
     </div>
     <div className={styles.actions}>

@@ -3,12 +3,14 @@ import ErrorMessage from '../../components/ErrorMessage'
 import useUnsavedChanges from '../../app/useUnsavedChanges'
 import { MemberRequestError, memberFailure, readMember, type StaffMember, type StaffPost } from './staffMembersApi'
 import styles from '../../components/DefinitionManagement.module.css'
+import personnel from './StaffMembers.module.css'
 
 type Props = {
-  member: StaffMember | null; post: StaffPost; onSaved: () => void; onCancel: () => void
+  member: StaffMember | null; post: StaffPost; onSaved: (member: StaffMember) => void; onCancel: () => void
+  embedded?: boolean; onMemberRead?: (member: StaffMember) => void
   onDirtyChange: (dirty: boolean) => void; onBusyChange: (busy: boolean) => void
 }
-export default function StaffMemberEditor({ member, post, onSaved, onCancel, onDirtyChange, onBusyChange }: Props) {
+export default function StaffMemberEditor({ member, post, onSaved, onCancel, onDirtyChange, onBusyChange, embedded, onMemberRead }: Props) {
   const [original, setOriginal] = useState(member)
   const [id] = useState(() => member?.id ?? crypto.randomUUID())
   const [name, setName] = useState(member?.name ?? '')
@@ -20,8 +22,9 @@ export default function StaffMemberEditor({ member, post, onSaved, onCancel, onD
   const sending = useRef(false)
   const dirty = name !== (original?.name ?? '')
   useEffect(() => { input.current?.focus() }, [])
+  useEffect(() => { onBusyChange(busy); return () => onBusyChange(false) }, [busy, onBusyChange])
   useUnsavedChanges(dirty, onDirtyChange)
-  function pending(value: boolean) { sending.current = value; setBusy(value); onBusyChange(value) }
+  function pending(value: boolean) { sending.current = value; setBusy(value) }
   function cancel() {
     if (dirty && !window.confirm('Kaydedilmemiş personel değişiklikleri silinsin mi?')) return
     onDirtyChange(false); onCancel()
@@ -38,8 +41,8 @@ export default function StaffMemberEditor({ member, post, onSaved, onCancel, onD
       const response = await post(original ? `/api/staff-members/${id}` : '/api/staff-members/',
         original ? { name: trimmed, version: original.version } : { id, name: trimmed }, AbortSignal.timeout(15000))
       if (response.status === 400) { setFieldError(memberFailure(400)); input.current?.focus(); return }
-      await readMember(response)
-      onDirtyChange(false); onSaved()
+      const saved = await readMember(response)
+      onDirtyChange(false); onSaved(saved)
     } catch (problem: unknown) {
       const status = problem instanceof MemberRequestError ? problem.status : 500
       setError(problem instanceof MemberRequestError ? problem.message : memberFailure(500))
@@ -53,20 +56,22 @@ export default function StaffMemberEditor({ member, post, onSaved, onCancel, onD
     try {
       const current = await readMember(await fetch(`/api/staff-members/${id}`, { cache: 'no-store', signal: AbortSignal.timeout(15000) }))
       setOriginal(current); setName(current.name); setReloadRequired(false); onDirtyChange(false)
+      onMemberRead?.(current)
       input.current?.focus()
     } catch (problem: unknown) { setError(problem instanceof MemberRequestError ? problem.message : memberFailure(500)) }
     finally { pending(false) }
   }
-  return <form className={styles.editor} aria-label={original ? 'Personel adını düzenle' : 'Personel ekle'} aria-busy={busy} onSubmit={event => { void save(event) }} noValidate>
-    <h3>{original ? 'Personel adını düzenle' : 'Yeni personel'}</h3>
+  return <form className={`${styles.editor} ${personnel.taskForm}`} aria-label={original ? 'Personel adını düzenle' : 'Personel ekle'} aria-busy={busy} onSubmit={event => { void save(event) }} noValidate>
+    {!embedded && <h3>{original ? 'Personel adını düzenle' : 'Yeni personel'}</h3>}
     <label htmlFor="member-name">Ad soyad (zorunlu)</label>
     <input id="member-name" ref={input} value={name} required maxLength={100} autoComplete="off" disabled={busy || reloadRequired}
       aria-invalid={!!fieldError || undefined} aria-describedby={fieldError ? 'member-field-error' : undefined}
       onChange={event => { setName(event.target.value); setFieldError('') }} />
     {fieldError && <p id="member-field-error" className={styles.fieldError}>{fieldError}</p>}
     <ErrorMessage message={error} />
-    <div className={styles.actions}>
-      <button type="submit" className={styles.primary} disabled={busy || reloadRequired || (!dirty && original !== null)}>{busy ? 'İşlem sürüyor…' : 'Kaydet'}</button>
+    {dirty && <p className={personnel.draft} role="status">Değişiklikler henüz kaydedilmedi.</p>}
+    <div className={personnel.actions}>
+      <button type="submit" className={styles.primary} disabled={busy || reloadRequired || (!dirty && original !== null)}>{busy ? 'İşlem sürüyor…' : original ? 'Adı kaydet' : 'Personeli ekle'}</button>
       <button type="button" disabled={busy} onClick={cancel}>Vazgeç</button>
       {(reloadRequired || error) && <button type="button" disabled={busy} onClick={() => { void reload() }}>Güncel kaydı yükle</button>}
     </div>

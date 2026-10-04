@@ -101,4 +101,8 @@
   --management-photo-mobile: 7rem;
   --management-rail-selected: color-mix(in srgb, var(--auth-petrol) 75%, var(--auth-ink));
   --hours-editor-max: 64rem;
+  --personnel-form-max: 48rem;
+  --personnel-action-width: 10rem;
+  --personnel-status-width: 10rem;
+  --personnel-identity-size: 1.5rem;
 }

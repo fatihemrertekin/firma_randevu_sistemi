@@ -51,7 +51,7 @@ Program.cs bakımı `done`: başlangıç 265 satırdan 69 satıra indi; önce/so
 
 ## Sıradaki iş
 
-T02 saat tasarımı geliştirme/GitHub/ana yerel teslim `done`; sonraki tek aday T03 personel listesi/ayrıntı taslağıdır. T03 kodu ayrı görsel/kapsam onayından sonra başlar; otomatik başlamaz. T03–T08, P03 ve dark mode tamamlanmış değildir. Kullanıcının isteğiyle ek görsel/native onay turları yapılmaz; native finish açık kalır.
+T03 personel liste/ayrıntı yerel geliştirme/kabul `done`: [onay ve gerçek API kanıtı](plans/P02.md#t03-geliştirme-kabulü--04102026); 203 web testi ve dört genişlik geçti. GitHub/ana yerel teslim `in_progress`; aynı-head CI ve yedekli veri koruma kabulü olmadan teslim done değildir. T04–T08, P03 ve dark mode başlamaz. Ek görsel/native onay turu yapılmadı; native finish açık kalır.
 
 ## Gelecek plan kaydı — destek ve işletim ekranı (02.10.2026)
 
