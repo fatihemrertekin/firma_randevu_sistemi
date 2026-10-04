@@ -94,6 +94,8 @@ Sektöre uygun fotoğraf ve arka plan görselleri üretilebilir; bunlar ürünü
 
 Her küçük adımın sonunda sonuç ve sonraki kapsam sunulur; ürün sahibinin ayrı onayı beklenir. Init adımının izni yalnız bağlamın hazırlanmasını kapsıyordu; ardından giriş ekranı taslağının hazırlanması ayrıca onaylandı. Taslak hazırlığı ekran kodu veya P03 yetkisi değildir. Kalıcı çalışma yöntemi `.impeccable/config.json` içinde tutulur; burada ikinci kopyası oluşturulmaz.
 
+04.10.2026 devam kararı: ürün sahibi mevcut frontend'in tamamını, özellikle giriş sonrası eski düzende kalan ekranları, onaylı giriş sayfasının görsel diliyle Impeccable aşamalarından geçirerek yenilemeyi istedi. Görünümle birlikte işlem adımları ve gezinme de düzenlenecek. Yönetimde form/listeler öncelikli; salon fotoğrafı yalnız küçük bir marka alanında kullanılacak. Bu kapsamın aşama ve kabul planı [P02 yönetim tasarımı](plans/P02.md#yönetim-yüzeyleri--impeccable-tasarım-planı-04102026) bölümündedir. Girişteki büyük fotoğraf düzeni yönetim formlarına taşınmaz. Ürün sahibi 2. ve 3. seçeneklerin birleşik masaüstü/mobil taslağını ve T01 kod kapsamını onayladı; dar grup menüsü, kapanabilir alt menü, form ve taslak özeti uygulanır. Son fotoğraf kabul edildi; ek görsel/motor onay turlarıyla vakit kaybedilmemesi istendi. Sonraki ekranların ayrıntılı taslak/onay sınırı korunur.
+
 ### Renk paleti ve minimalizm tarifi (04.10.2026)
 
 Ürün sahibi paleti `#001524`, `#15616D`, `#FFECD1`, `#FF7D00`, `#78290F` olarak belirledi. Açık temada arka planın baskın rengi `#FFECD1` olur. İleride koyu tema geliştirilirse baskın arka plan `#001524` olur; bu tercih koyu temanın şimdiden geliştirildiği anlamına gelmez.

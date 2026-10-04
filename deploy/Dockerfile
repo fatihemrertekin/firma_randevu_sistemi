@@ -4,6 +4,7 @@ COPY src/Web/package.json src/Web/package-lock.json ./
 RUN npm ci --ignore-scripts
 COPY src/Web/ ./
 COPY assets/plates/salon-background.png /workspace/assets/plates/salon-background.png
+COPY assets/plates/salon-photo.png /workspace/assets/plates/salon-photo.png
 RUN npm run build
 
 FROM mcr.microsoft.com/dotnet/sdk:10.0.401 AS server-build
