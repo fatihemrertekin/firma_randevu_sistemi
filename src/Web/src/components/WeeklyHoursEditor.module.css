@@ -1,12 +1,34 @@
-.form.form { max-width: calc(var(--space-2) * 70); }
-.form button[type='submit'] { background: var(--primary); color: var(--background); border-color: var(--primary); }
-.legend { padding: 0; margin-block: calc(var(--space-2) * 2); font-weight: 700; }
-.legend:focus { outline: calc(var(--space-2) / 4) solid var(--focus); outline-offset: calc(var(--space-2) / 2); }
-.day { border-bottom: calc(var(--space-2) / 8) solid var(--border); padding-block: calc(var(--space-2) * 2); }
-.dayHeading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2); }
-.closed { display: flex; align-items: center; gap: var(--space-2); min-height: var(--target-min); }
-.closed input { width: var(--target-min); height: var(--target-min); min-width: var(--target-min); margin: 0; accent-color: var(--primary); }
-.times { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, calc(var(--space-2) * 23)), 1fr)); gap: calc(var(--space-2) * 2); margin-block: var(--space-2); }
+.editor { container: weekly-hours / inline-size; max-width: var(--hours-editor-max); min-width: 0; }
+.heading { margin-bottom: var(--auth-space-2); }
+.identity { min-width: 0; overflow-wrap: anywhere; }
+.description { margin-block: 0 var(--auth-space-5); color: var(--auth-petrol); }
+.form.form { max-width: none; }
+.fields { border: 0; padding: 0; margin: 0; min-width: 0; }
+.legend { padding: 0; margin-block: var(--auth-space-4); font-weight: 700; }
+.legend:focus { outline: var(--auth-focus-width) solid var(--focus); outline-offset: var(--auth-focus-offset); }
+.columns { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--auth-space-4); font-weight: 700; padding-block: var(--auth-space-3); border-bottom: var(--auth-rule) solid var(--border); }
+.day { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--auth-space-4); border-bottom: var(--auth-rule) solid var(--border); padding-block: var(--auth-space-3); }
+.dayHeading { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: center; gap: var(--auth-space-4); }
+.closed { display: flex; align-items: center; justify-self: start; gap: var(--auth-space-2); min-height: var(--auth-control-height); min-width: var(--target-min); cursor: pointer; }
+.editor .closed input { width: var(--auth-space-5); height: var(--auth-space-5); min-width: var(--auth-space-5); min-height: var(--auth-space-5); padding: 0; margin: 0; accent-color: var(--auth-petrol); }
+.times { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--auth-space-4); }
 .times > div { min-width: 0; }
-.times label { display: block; margin-bottom: var(--space-2); }
-.times input { display: block; width: 100%; min-width: 0; min-height: var(--target-min); }
+.times label { position: absolute; width: var(--auth-rule); height: var(--auth-rule); overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.times input { display: block; width: 100%; min-width: 0; min-height: var(--auth-control-height); font-variant-numeric: tabular-nums; }
+.closedDay { margin: 0; align-self: center; color: var(--auth-petrol); }
+.fieldError, .dayError { color: var(--error); margin-block: var(--auth-space-2) 0; overflow-wrap: anywhere; }
+.dayError { grid-column: 1 / -1; }
+.draft { color: var(--auth-brown); margin-top: var(--auth-space-5); }
+.notice { padding: var(--auth-space-3) var(--auth-space-4); color: var(--auth-petrol); border: var(--auth-rule) solid var(--border); border-radius: var(--auth-radius); }
+.actions { display: flex; flex-wrap: wrap; gap: var(--auth-space-4); margin-top: var(--auth-space-5); }
+.actions button { flex: 1; min-width: 0; }
+.editor .actions button[type='submit'] { background: var(--auth-orange); color: var(--auth-ink); border-color: var(--auth-orange); }
+.screenReaderOnly { position: absolute; width: var(--auth-rule); height: var(--auth-rule); padding: 0; margin: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.screenReaderOnly:focus { position: static; width: auto; height: auto; overflow: visible; clip-path: none; white-space: normal; }
+@container weekly-hours (max-width: 42rem) {
+  .columns { display: none; }
+  .day { grid-template-columns: minmax(0, 1fr); gap: var(--auth-space-2); padding-block: var(--auth-space-4); }
+  .dayHeading { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--auth-space-2); }
+  .times label { position: static; width: auto; height: auto; overflow: visible; clip-path: none; white-space: normal; display: block; margin-bottom: var(--auth-space-2); }
+  .actions { flex-direction: column; }
+}

@@ -100,4 +100,5 @@
   --management-photo-ratio: 410 / 224;
   --management-photo-mobile: 7rem;
   --management-rail-selected: color-mix(in srgb, var(--auth-petrol) 75%, var(--auth-ink));
+  --hours-editor-max: 64rem;
 }
