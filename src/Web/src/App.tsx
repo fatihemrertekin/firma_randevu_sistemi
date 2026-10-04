@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react'
 import OwnerEmailConfirmation from './features/auth/OwnerEmailConfirmation'
 import PasswordResetForm from './features/auth/PasswordResetForm'
 import { postWithCsrf } from './app/api'
-import styles from './features/auth/AuthenticationScreens.module.css'
+import AuthenticationLayout from './features/auth/AuthenticationLayout'
 
 export default function App() {
   const auth = useAuthentication()
@@ -34,9 +34,7 @@ export default function App() {
     window.addEventListener('hashchange', capture)
     return () => window.removeEventListener('hashchange', capture)
   }, [])
-  if (resetToken !== null) return <main className={`${styles.page} ${styles.confirmationPage}`}>
-    <section className={`${styles.card} ${styles.confirmationCard}`} aria-labelledby="page-title">
-      <span className={styles.eyebrow}>Randevu · İşletme paneli</span>
+  if (resetToken !== null) return <AuthenticationLayout>
       <PasswordResetForm key={resetToken} linkToken={resetToken} onRequest={body => postWithCsrf('/api/auth/reset-password', body,
         AbortSignal.timeout(15000))} onCancel={() => setResetToken(null)} onDone={() => {
         setResetToken(null); auth.setAccount(null); auth.setMfaRequired(false)
@@ -45,8 +43,7 @@ export default function App() {
         auth.setPassword(''); auth.setCode(''); auth.clearPasswordFields()
         auth.setNotice('Parolanız sıfırlandı. Yeni parolanız ve ikinci adımla yeniden giriş yapın.')
       }} />
-    </section>
-  </main>
+  </AuthenticationLayout>
   if (verificationToken !== null) return <OwnerEmailConfirmation key={verificationToken} token={verificationToken}
     onClose={() => setVerificationToken(null)} />
   const account = auth.account

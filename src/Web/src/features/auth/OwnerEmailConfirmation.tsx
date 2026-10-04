@@ -2,6 +2,7 @@ import { useRef, useState, type FormEvent } from 'react'
 import { postWithCsrf } from '../../app/api'
 import ErrorMessage from '../../components/ErrorMessage'
 import styles from './AuthenticationScreens.module.css'
+import AuthenticationLayout from './AuthenticationLayout'
 
 export default function OwnerEmailConfirmation({ token, onClose }: { token: string; onClose: () => void }) {
   const [busy, setBusy] = useState(false)
@@ -25,9 +26,7 @@ export default function OwnerEmailConfirmation({ token, onClose }: { token: stri
     } catch { setError('Sonuç doğrulanamadı. Hesabınızdan doğrulama durumunu kontrol edin.') }
     finally { clearTimeout(timer); setBusy(false); pending.current = false }
   }
-  return <main className={`${styles.page} ${styles.confirmationPage}`}>
-    <section className={`${styles.card} ${styles.confirmationCard}`} aria-labelledby="page-title">
-      <span className={styles.eyebrow}>Randevu · İşletme paneli</span>
+  return <AuthenticationLayout>
       <h1 id="page-title">Hesap e-postasını doğrula</h1>
       {confirmed ? <p role="status">Hesap e-postanız doğrulandı. Hesabınıza dönebilirsiniz.</p> : <>
         <p>Bağlantıyı onaylayarak hesap e-postanıza erişebildiğinizi doğrulayın. Parolanız ve iki aşamalı girişiniz değişmez.</p>
@@ -41,6 +40,5 @@ export default function OwnerEmailConfirmation({ token, onClose }: { token: stri
         <button type="button" disabled={busy} onClick={onClose}>Hesaba dön</button>
       </div>
       <ErrorMessage message={error} />
-    </section>
-  </main>
+  </AuthenticationLayout>
 }

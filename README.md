@@ -4,6 +4,8 @@ Türkiye'deki tek şubeli hizmet işletmeleri için planlanan markalı randevu u
 
 Frontend `src/Web/src/features/auth`, `features/business` ve `features/staff` altında mevcut özelliklere göre düzenlenir. `app` oturum API yardımcısını ve yönetim yerleşimini, `components` ortak bileşenleri, `styles` ortak renk/form kurallarını barındırır. Testler ilgili özelliğin yanındadır. Yönetim ekranında işletme bilgileri, hesap ve güvenlik, çalışan erişimleri ayrı bölümlerdir; çalışan hesabında yalnız hesap ve güvenlik görünür.
 
+Giriş ve kimlik formlarının görsel sistemi [DESIGN](DESIGN.md) içinde tutulur. Projeye kurulu [Impeccable](.agents/skills/impeccable/SKILL.md) yeni ekranlarda önce taslak/onay akışını kullanır. Seçilen salon fotoğrafı `assets/plates/` altında üretim kaydıyla saklanır; Docker derlemesine dahildir. Yerel Unna Bold fontu SIL Open Font License 1.1 ile kullanılır; [lisansı](src/Web/src/assets/fonts/Unna-OFL.txt) imajda `/app/Unna-OFL.txt` olarak da bulunur. Yerel motor, önbellek ve inceleme çıktıları sürümlenmez; Windows başlatıcısı motoru ilk kullanımda doğrulayarak indirir.
+
 ## Gerekenler
 
 - .NET SDK 10.0.401 (`global.json`)

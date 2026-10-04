@@ -1,12 +1,57 @@
 # PRODUCT — İş modeli, satış, ödeme ve maliyet
 
+<!-- impeccable:product-schema 1 -->
+
 Hazırlanma: 2026-09-29. Bu dosya iş kararlarını ve varsayımlarını tutar; teknik kurallar AGENTS.md'dedir, aşamalar ROADMAP.md'dedir. Şirket henüz kurulmadığı için buradaki hukuki/vergisel notlar uzman doğrulaması gerektirir.
 
-## 1. Ürün özeti
+## Platform
+
+web
+
+## Users
+
+İlk hedef Türkiye'deki tek şubeli berber/kuaför işletmeleridir. Owner işletme tanımlarını ve yetkili yönetim işlemlerini yürütür; Staff yalnız izinli işlemleri kullanır. Sonraki hedef güzellik salonları ve benzer randevulu hizmet işletmeleridir. Ürünün planlanan misafir rezervasyon akışını salon müşterileri kullanacaktır; bu akış henüz teslim edilmiş değildir.
+
+## Product Purpose
+
+### 1. Ürün özeti
 
 Türkiye'deki küçük hizmet işletmelerine markalı randevu/yönetim yazılımı, aylık peşin abonelikle. İlk hedef tek şubeli berber/kuaför; sonraki hedef güzellik salonları. Amaç telefon yükünü ve çakışmaları azaltmak, günlük işi kolaylaştırmaktır.
 
 Ticari politikalar: Modelimiz aylık ücretli ve reklamsızdır; kota/maliyet şartları sözleşmede açıktır. Rakibin ücretsiz veya sınırsız mesaj vaadini maliyet hesabımıza aktarma. Deneme sentetik demo ile başlar; kaynak tüketen ücretsiz canlı kurulum iş kararı ister. Ücretli özel domain ve destek seviyesi ayrıca tanımlanır.
+
+## Positioning
+
+Her firmaya ayrı kurulumla sunulan, firmanın markasına uyarlanabilen ortak bir randevu ürünüdür; tenant filtresine dayalı ortak veri izolasyonu kullanılmaz. Değer önerisi aşağıdaki ürün hipotezidir; rakip üstünlüğü, ölçülmüş tasarruf veya doğrulanmış pazar talebi iddiası değildir.
+
+## Operating Context
+
+Yönetim, işletme sahibi ve yetkili personelin günlük işi için Türkçe responsive web üzerinden kullanılır. Mevcut giriş, MFA ve yönetim akışları aynı origin'deki API ile çalışır; masaüstü ve mobil kullanım birlikte ele alınır. İşletme zamanı varsayılan `Europe/Istanbul`dur. Misafir rezervasyonunun planlanan hizmet → çalışan → zaman → iletişim → onay akışı, ilgili aşamada gerçek backend desteğiyle kurulacaktır.
+
+## Capabilities and Constraints
+
+Mevcut teslim kimlik/giriş/MFA/kurtarma, çalışan erişimleri, işletme bilgileri/logosu/saatleri, personel/hizmet tanımları ve değişiklik kayıtlarını kapsar. Owner yönetimi ile Staff yetkileri ayrıdır. Güncel kabul ve ortam sınırlarının kaynağı [STATUS](STATUS.md), ayrıntılı kanıtın kaynağı [P02](plans/P02.md)dir.
+
+Randevu motoru ve müşteri rezervasyonu sonraki aşamalardır; tasarımda uygulanmış gibi sunulmaz. MVP tek şube ve randevu başına tek hizmet/çalışandır. Firma izolasyonu, mevcut teknoloji, backend doğrulaması, cookie/CSRF/MFA ve mahremiyet sözleşmeleri tasarım yenilenirken korunur; teknik kurallar [AGENTS](../AGENTS.md)dedir. AI, WhatsApp ve salon adına kart tahsilatı ilk sürümün dışındadır. Ürün sahibinin görsel üretim izni, ürüne AI özelliği ekleme izni değildir.
+
+## Evidence on Hand
+
+- Mevcut uygulama ve kabul kayıtları: [STATUS](STATUS.md), [P02](plans/P02.md), [çalışan kurulum/kontrol komutları](../README.md).
+- Mevcut giriş görseli [salon-login.jpg](../src/Web/src/assets/salon-login.jpg), geliştirmede üretilmiş dekoratif kuaför fotoğrafıdır; gerçek işletme/müşteri referansı değildir. Üretim kaydı P02-10 içindedir.
+- İşletme logosu firma ayarıdır; örnek veya üretilmiş görsel gerçek bir firmanın kimliği gibi sunulmaz.
+- İşletme görüşmeleri, gerçek pilot ve ölçülmüş ticari sonuçlar henüz yoktur. Müşteri yorumu, kullanım sayısı, başarı oranı veya hizmet/fiyat verisi uydurulmaz.
+
+## Product Principles
+
+1. Günlük işi kolaylaştır; telefon yükü ve çakışmayı azaltma hedefini ölçülecek ürün hipotezi olarak koru.
+2. Yalnız mevcut yetkili işlemleri göster; fiyat, süre, yetki ve kayıt doğruluğunda sunucu son karardır.
+3. Firma izolasyonunu ve asgari kişisel veri ilkesini koru; sır veya gerçek kişi verisi tasarım girdisi olmaz.
+4. Kullanıcıyı hatadan kurtar; yükleme, boş, hata ve başarı durumlarını açıkça ayır.
+5. Ortak ürünü ve tekrar kullanılan kuralları sürdür; firma başına kod dalı veya gereksiz gelecek altyapısı üretme.
+
+## Accessibility & Inclusion
+
+Türkçe, görünür alan etiketleri, klavye kullanımı ve görünür odak gereklidir. WCAG 2.2 AA, en az 44×44 px dokunma hedefi, 320 px'te temel akışın kullanılabilirliği ve hareket azaltma tercihi proje kabul sınırlarıdır. Durum yalnız renkle anlatılmaz; sürükle-bırakın form/klavye alternatifi bulunur. Bunlar her ekran için doğrulanacak hedeflerdir; init bütün uygulamanın erişilebilirliğini kanıtlamaz.
 
 ## 2. Ürün kararları
 
@@ -39,10 +84,20 @@ Durum `planned`: yalnız geleceğe yönelik plan kaydı onaylandı, ekranın gel
 - Tarihli gözlem (bayatlayabilir, uygulama zamanında yeniden doğrula): 29.09.2026'da Hetzner CX23/CX33 stok yok görünüyordu; en ucuz planı bulunur varsayma.
 
 
-## 4. Görsel tasarım yönü (01.10.2026 onayı)
+## Brand Commitments
 
-Ürün sahibi koyu zeminli, görselli giriş ekranını örnek gösterdi ve sonraki ekranların da bu dili taşımasını istedi. Petrol/lacivert zemin, açık okunur metin ve turkuaz vurgu ortak renk değişkenleriyle uygulanır. Masaüstü girişte sade form ve sektöre uygun dekoratif görsel yan yana; mobilde form önceliklidir. Yönetimde aynı palet, belirgin bölüm gezinmesi, ana/yardımcı işlem ayrımı ve görünür klavye odağı kullanılır.
+### 4. Görsel tasarım yetkisi (04.10.2026)
 
-Son form tercihi: dış kart çerçevesi kaldırılır; tek belirgin ana giriş düğmesi kullanılır. Parola yardımı parola etiketinin yanında, çalışan parola yardımı ve davet seçenekleri aynı satırda metin eylemleridir. Dar ekranda da yardımcı işlemler alt alta büyük düğmeler olarak sunulmaz; gerekirse metin kendi sütununda satır kırar.
+Ürün sahibi mevcut tasarımı beğenmediğini belirterek Impeccable ile yeniden tasarıma yetki verdi. Tercih minimalist, tutarlı ve sürdürülebilir arayüzlerdir; görsel kararların seçimi agent'a bırakılmıştır. Önceki koyu palet, font ve yerleşim tercihleri yeni tasarımı bağlayan kurallar değildir. Kullanıcı `docs/UI-UX.md`yi kaldırdı; bu belge artık tasarım kaynağı değildir.
 
-Örnek ekranın logo, satış, iletişim, hukuki onay veya henüz uygulanmamış özellikleri ürüne taşınmaz. Mevcut işlevler esas alınır; tasarım tercihi yeni özellik veya aşama yetkisi vermez. İlk görsel, yerleşik imagegen ile üretilmiş kişisiz/yazısız kuaför fotoğrafıdır; harici resim/font isteği yoktur. Görselin üretim kaydı [P02-10](plans/P02.md#p02-10--frontend-düzeni-ve-tasarım) içindedir.
+Sektöre uygun fotoğraf ve arka plan görselleri üretilebilir; bunlar ürünün gerçek müşteri/işletme kanıtı gibi sunulmaz. Firma markasına uyarlanabilirlik, Türkçe anlatım, mevcut işlevler, erişilebilirlik ve güvenlik korunur. Init adımında görsel kararlar seçilmedi; ürün sahibinin sonraki renk ve yapı tarifi aşağıda kaydedildi.
+
+Her küçük adımın sonunda sonuç ve sonraki kapsam sunulur; ürün sahibinin ayrı onayı beklenir. Init adımının izni yalnız bağlamın hazırlanmasını kapsıyordu; ardından giriş ekranı taslağının hazırlanması ayrıca onaylandı. Taslak hazırlığı ekran kodu veya P03 yetkisi değildir. Kalıcı çalışma yöntemi `.impeccable/config.json` içinde tutulur; burada ikinci kopyası oluşturulmaz.
+
+### Renk paleti ve minimalizm tarifi (04.10.2026)
+
+Ürün sahibi paleti `#001524`, `#15616D`, `#FFECD1`, `#FF7D00`, `#78290F` olarak belirledi. Açık temada arka planın baskın rengi `#FFECD1` olur. İleride koyu tema geliştirilirse baskın arka plan `#001524` olur; bu tercih koyu temanın şimdiden geliştirildiği anlamına gelmez.
+
+Minimalizm; buton, form alanı, checkbox/checklist ve benzeri arayüz elemanlarının sadeliğidir. Giriş ekranının genel yapısı ilk fotoğraflı giriş ekranına yakın kalır: solda giriş formu, sağda geniş salon fotoğrafı/arka plan ve karşılama metni. İlk önerideki küçük çerçeveli fotoğraf ve fotoğrafsız alternatifler bu yeni yönün kaynağı değildir. Mobilde aynı palet ve sade kontroller korunur; fotoğraf formun kullanılabilirliğini bozmayacak kısa bir üst alan olarak taslaklanır.
+
+Bu paletin rol önerisi: `#001524` ana yazı, `#15616D` bağlantı/ikincil vurgu, `#FFECD1` geniş zemin, `#FF7D00` ana eylem, `#78290F` ölçülü sıcak vurgu. Turuncu düğmede koyu yazı kullanılır; bütün renk/durum eşleşmeleri uygulama kabulünde kontrast ve erişilebilirlikle doğrulanır. Renkler sabittir; somut taslak ve uygulama onayı ayrı beklenir.

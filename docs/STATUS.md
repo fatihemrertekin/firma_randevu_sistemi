@@ -32,6 +32,12 @@ Güncelleme: 2026-10-04. Güncel özet burada; kapsam ve kanıt bağlantıları 
 
 ## Bakım durumu
 
+Impeccable proje kurulumu yerelde `done` (04.10.2026): `.agents/skills/impeccable` becerisi, Windows motoru ve `.codex/hooks.json` kuruldu; lisans/bildirimler korundu, motorun resmî SHA256 değeri ve ürün bağlamını okuması doğrulandı. [Yerel sürüm/dosya kaydı](../.local/impeccable-install-2026-10-04.json). Hook güven onayının Codex arayüzünde verildiği doğrulanmadı; tasarım, `init`, yeni görsel ve uygulama değişikliği yapılmadı. Kullanıcı mevcut tasarımın minimalist, tutarlı ve sürdürülebilir bir dille yenilenmesini istedi; uygulama her küçük adım için ayrı onayla ilerleyecek. GitHub teslimi yapılmadı.
+
+Impeccable `init` yerelde `done` (04.10.2026): mevcut [PRODUCT](PRODUCT.md) tek ürün kaynağı olarak Impeccable şemasıyla tamamlandı; mevcut/planlanan kabiliyetler ayrıldı, eski görsel yönün yerini kullanıcının minimalist yeniden tasarım yetkisi aldı. Kullanıcının “önce görsel taslak” yanıtı [.impeccable/config.json](../.impeccable/config.json) içinde `buildPath=comp` olarak kaydedildi. [Yerel kabul kaydı](../.local/impeccable-init-2026-10-04.json). Bu bağlam adımında `DESIGN.md`, görsel, ekran kodu ve P03 üretilmedi. Live/HMR kurulumu uygulama ihtiyacına bırakıldı; hook güven onayı henüz doğrulanmadı. GitHub teslimi yapılmadı.
+
+Giriş/kimlik tasarımı `in_progress` (04.10.2026): `codex/minimalist-auth-interface` dalında onaylı krem/fotoğraf düzeni ortak yerleşim ve tokenlarla uygulandı; [DESIGN](../DESIGN.md) ve Impeccable yan kaydı hazır. Fotoğraf/plan makbuzu onaylı; 1254×1254 çözünürlük ve piksel uyumu istisnası ürün sahibinin açık izniyle motor kaydında tutuldu. Küçük kalan yazılar kullanıcı geri bildirimiyle büyütüldü. Web typecheck/lint/201 test/build, sekiz genişlikte görüntü ve ayrı sentetik sunucuda gerçek giriş/MFA/çıkış kabulü geçti. Yazı ve aralıkları düzeltilmiş birleşmiş görünüm ürün sahibinin onaylıyorum sohbet yanıtıyla kabul edildi. Native ilk görünüm makbuzu da doğrulandı. Son geniş ekran/tablet marka-form hizalama hatası düzeltildi; 320–1920 px kontrolleri geçti. Tüm kimlik formları ortak sıkı ölçülere alındı; masaüstünde 1366×768 dahil düşey taşma giderildi, hesap e-postası alanı yazılabilir. Son gerçek API kabulü 10 durum/yedi genişlikte geçti; diğer dokuz durum sentetik görsel kanıtla kontrol edildi. Motorun otomatik mobil yakalaması viewport/scroll kararsızlığı nedeniyle responsive fazında açık; dark mode, ana yerel güncelleme ve GitHub teslimi yapılmadı. [Kapsam, kontrol ve sınırlar](plans/P02.md#girişkimlik-yüzeyleri--impeccable-yeniden-tasarımı-04102026).
+
 Belge sadeleştirmesi `done`: [PR #15](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/15), birleşme `94e9298` ve [main CI](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/37040331937) başarılı. Bekleyen destek ekranı planı yeni belge düzenine uyarlandı ve `1e06cab` ile commit'lendi; yalnız gelecekteki plan kaydıdır.
 
 Test düzenlemesi `done`: 12 bağımsız özellik sınıfı ve altı ortak destek dosyası; önce/sonra sunucu 74/74, 0 atlama ve kalite kapıları başarılı. Test/veri/assertion ve yardımcı uygulamaları korundu; [test düzeni ve kanıt](plans/P02.md#test-düzeni-ve-bakım-kabulü). [PR #16](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/16) `ee0bfa8` ile birleşti; [main CI](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/37044579643) başarılı.
@@ -42,7 +48,7 @@ Program.cs bakımı `done`: başlangıç 265 satırdan 69 satıra indi; önce/so
 
 ## Sıradaki iş
 
-Öneri yalnız P03 başlangıç planını ve ilk küçük randevu motoru işinin kapsam/kabulünü hazırlamaktır; zaman bloğu modeli kararı bu aşamada değerlendirilir. Bu yeni iş için ürün sahibinin ayrı onayı beklenir. P03 planı, ADR veya randevu kodu bu kapanışta oluşturulmadı.
+Ürün sahibinin 04.10.2026 teslim onayıyla PR/CI/birleşme, yedekli 8080 güncellemesi ve geçici 8091 temizliği yürütülüyor. Native responsive yakalama kısıtı açık kalır; gerçek tarayıcı kanıtı motor kabulü yerine sunulmaz. İlk görünüm onayı tekrar istenmez. P03 ve diğer yönetim ekranları ayrı kapsam/onay gerektirir.
 
 ## Gelecek plan kaydı — destek ve işletim ekranı (02.10.2026)
 

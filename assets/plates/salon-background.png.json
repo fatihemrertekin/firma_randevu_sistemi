@@ -1,0 +1,24 @@
+{
+  "prompt": "Use the provided crop as the approved visual reference and recreate it as a clean production asset at the target aspect ratio. This is a photographic or illustrated image region. Output the same subject, same framing, same lighting. Preserve silhouette, composition, perspective, palette (#f7e7d4, #d7ba9a, #ba916d), lighting, material, and texture exactly. Remove every piece of UI text, label, caption, button, and interface chrome that is not part of the artwork itself. Remove letterboxing, borders, card corners, drop shadows, and any layout background that the page will draw in code. Do not add objects. Do not change the concept. Do not restyle. The artwork fills the whole frame edge to edge at the same scale as the reference; no margins, no border, no background band. Region: Tam yüksekliğe yayılan gün ışıklı salon fotoğrafı, petrol koltuklar ve ahşap; solda açık krem yumuşama, bütün metinler ayrı semantik katmandır.\nUse case: precise-object-edit. Asset type: production photographic login background, square aspect. Output at high resolution 2048x2048 pixels, at least 1536x1536. Input image 1 is the cropped original approved screen's photo region, with rectangular masks where UI words were removed. Those FLAT RECTANGLES ARE ONLY REFERENCE MASKS, not part of the artwork: remove their hard edges completely and fill their spaces with the continuous softly cream-washed salon interior. Preserve the empty daylight salon, petrol leather chair and chrome base on far right, wood workstations, orange towel, large windows and light cream stone floor. Keep the existing depth and framing. The left half has a natural warm cream wash that smoothly blends with #FFECD1 page ground and keeps room for semantic UI text later. Natural photographic detail remains on the right. All opaque, no alpha. Absolutely NO words, pseudoletters, captions, watermarks, buttons, interface, mask rectangles, banded patches, or artwork invented to fill the masks. Only the photographic background region. No people.",
+  "tool": "image_gen.imagegen",
+  "useCase": "photorealistic-natural",
+  "role": "production-photo-candidate",
+  "referenceImage": ".impeccable/build/crops/salon-background.png",
+  "width": 1254,
+  "height": 1254,
+  "approved": true,
+  "reviewSession": "578db688d418fa0a18cfaed46db2c2d39c70edd12226e48ecabacbb1aee5fc06",
+  "limitation": "Native image tool produced 1254 square pixels twice. The 1536 minimum did not pass. The user explicitly allowed 1254 pixels and downgraded pixel-perfect comp authority; native asset/plan receipt is approved. Assembled page review is separate.",
+  "resolutionWaiver": {
+    "source": "human structured answer",
+    "text": "1254 fotoğrafla ilerle; taslağa birebir piksel uyumu şart değil.",
+    "date": "2026-10-04",
+    "scope": "1254 photo and non-pixel-perfect comp; retain approved layout and palette"
+  },
+  "approval": {
+    "session": "578db688d418fa0a18cfaed46db2c2d39c70edd12226e48ecabacbb1aee5fc06",
+    "date": "2026-10-04",
+    "text": "krem bölüm için Code is fine, fotoğraf için Looks good seçtim ve onaylıyoruum",
+    "source": "human local-browser receipt and chat confirmation"
+  }
+}
