@@ -17,6 +17,8 @@ Görsel değerlendirme: beyaza yakın zemin ve beyaz alan ayrımı belirgin; mav
 
 ## Hafif pastel ve fotoğraf uyumu — 05.10.2026
 
+Devam yönlendirmesi: kullanıcı dikey boşluk için görsel örnek verdi; 16 px işlem/alan grubu aralığı merkezi `--action-row-gap` tokenıyla uygulanır. Etiket-alan yakınlığı 8 px kalır; mobilde alt alta gelen butonlar 16 px ayrılır.
+
 Kullanıcı mevcut renk ailelerinin tamamını çok hafif pastel hale getirmeyi ve sağdaki krem etkiyi gidermeyi istedi; krem olmayan benzer fotoğraf üretimini ayrıca yetkilendirdi. Kapsam mevcut giriş/MFA/kimlik ve yönetim paletidir; yerleşim/API/oturum/CSRF değişmez. Önceki kabul yukarıda tarihsel kayıt olarak korunur; bu devamın yerel geliştirme kabulü `done`, GitHub/ana yerel teslimi `in_progress`.
 
 Mavi, lacivert, koyu metin, nötr zemin ve hata kırmızısı birlikte yumuşatılır; beyaz alanlar/dolu butonlar ve en az 4.5:1 aktif metin kontrastı korunur. Tek imagegen üretimi `assets/plates/salon-background-neutral.png` kullanılır; doğal yeşil detaylar hafif kalır, sarı/amber/kremsi ışık yoktur. Masaüstü ve mobilde örtü fotoğrafı zeminle birleştirir; profil fotoğrafı mevcut küçük alan/oranda kalır. Yeni ekran, layout, backend, migration, bağımlılık veya T04 yok.

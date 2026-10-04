@@ -69,8 +69,9 @@
   color: var(--error);
 }
 .card p[role='status'] { margin-top: var(--auth-space-4); }
-.loginForm input:first-of-type { margin-bottom: var(--auth-space-2); }
-.loginForm button[type='submit'] { margin-top: var(--auth-space-2); }
+.card form > :is(input, textarea) + :is(label, button, .passwordHeading, .confirmationActions) { margin-top: calc(var(--action-row-gap) - var(--auth-space-2)); }
+.card form > button + button { margin-top: calc(var(--action-row-gap) - var(--auth-space-2)); }
+.card .formContent form ~ button { margin-top: var(--action-row-gap); }
 .passwordHeading { display: flex; align-items: center; justify-content: space-between; gap: var(--auth-space-2); }
 .card .textAction {
   margin: 0;
@@ -84,8 +85,8 @@
   text-underline-offset: var(--auth-space-1);
 }
 .card .textAction:hover:enabled, .card .textAction:active:enabled { background: var(--button-navigation-selected-bg); color: var(--auth-petrol); text-decoration: underline; }
-.loginOptions { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--auth-space-2) var(--auth-space-4); margin-top: var(--auth-space-5); padding-top: var(--auth-space-4); border-top: var(--auth-rule) solid var(--border); }
-.confirmationActions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--auth-space-2); }
+.loginOptions { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--action-row-gap) var(--auth-space-4); margin-top: var(--auth-space-5); padding-top: var(--auth-space-4); border-top: var(--auth-rule) solid var(--border); }
+.confirmationActions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--action-row-gap) var(--auth-space-2); }
 .confirmationActions form { min-width: 0; }
 .confirmationActions button { width: 100%; margin: 0; }
 .secret { overflow-wrap: anywhere; padding: var(--auth-space-3); background: var(--auth-input); border-radius: var(--auth-radius); }
@@ -119,7 +120,7 @@
   .heroContent :is(.audience, .description, .highlights) { display: none; }
   .card { grid-row: 2; width: 100%; max-width: var(--auth-form-width); margin-inline: auto; padding: var(--auth-space-6) var(--auth-space-5); align-self: start; }
   .branding { position: absolute; top: var(--auth-mobile-brand-top); left: max(var(--auth-space-5), calc((100% - var(--auth-form-width)) / 2 + var(--auth-space-5))); margin: 0; z-index: 1; }
-  .loginOptions { display: grid; justify-content: stretch; gap: var(--auth-space-1); }
+  .loginOptions { display: grid; justify-content: stretch; gap: var(--action-row-gap); }
   .confirmationActions { grid-template-columns: minmax(0, 1fr); }
 }
 @media (prefers-reduced-motion: reduce) {

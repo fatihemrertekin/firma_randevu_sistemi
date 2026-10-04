@@ -31,6 +31,7 @@
   --feedback-bg: color-mix(in srgb, var(--color-surface) 92%, var(--color-error));
   --target-min: 44px;
   --space-2: .5rem;
+  --action-row-gap: 1rem;
 }
 
 /* Shared palette roles also cover identity and management surfaces. */

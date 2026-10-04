@@ -69,6 +69,8 @@ Bu kayıt, uygulanmış giriş, MFA, parola yenileme, davet kabulü, e-posta do�
 
 05.10.2026 devam kararıyla bütün renk aileleri çok hafif pastel hale getirildi: ana mavi/lacivert, koyu metin, nötr zemin ve hata kırmızısı birlikte yumuşatıldı. Beyaz alanlar ve dolu butonlar korunur.
 
+Kullanıcının dikey boşluk örneği 16 px işlem aralığına çevrildi; `--action-row-gap` merkezi kaynaktır. Kimlikte alan grupları/alan sonrası işlem ve form sonrası ayrı butonlar bu aralığı kullanır; etiket-alan bağı 8 px kalır. Mobil giriş seçenekleri ve satıra taşan işlem grupları da 16 px dikey aralık taşır.
+
 05.10.2026 onayıyla giriş, MFA, diğer kimlik işlemleri ve mevcut yönetim ekranlarının tamamı beyaz/açık gri ve mavi/lacivert palete geçti. Önceki krem/turuncu taslaklar yerleşim kararının tarihsel kanıtıdır; güncel renk kaynağı değildir.
 
 Açık palet `auth-theme` ve `management-theme` kapsamında ortaktır; kompozisyonları ayrıdır. Yönetimde ortak gezinme, profil, işletme/personel haftalık saatleri ve personel liste/ayrıntısı uygulanmıştır; diğer bölümlerin ayrıntılı düzeni T04–T08 kapsamındadır. Uygulamanın renk ve ölçü kaynağı `src/Web/src/styles/tokens.css` dosyasıdır; bu belge onun gözden geçirilmiş tarifidir.
