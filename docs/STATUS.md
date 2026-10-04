@@ -1,6 +1,6 @@
 # STATUS — Güncel durum ve sıradaki iş
 
-Güncelleme: 2026-10-04. Güncel özet burada; kapsam ve kanıt bağlantıları [P02 planında](plans/P02.md), önceki oturum kayıtları [arşivde](archive/2026-10-02/STATUS.md). Arşivdeki eski durum ve onay bekleme ifadeleri güncel yönlendirme değildir.
+Güncelleme: 2026-10-05. Güncel özet burada; kapsam ve kanıt bağlantıları [P02 planında](plans/P02.md), önceki oturum kayıtları [arşivde](archive/2026-10-02/STATUS.md). Arşivdeki eski durum ve onay bekleme ifadeleri güncel yönlendirme değildir.
 
 ## Aşamalar
 
@@ -32,6 +32,8 @@ Güncelleme: 2026-10-04. Güncel özet burada; kapsam ve kanıt bağlantıları 
 
 ## Bakım durumu
 
+Personel listesi/ayrıntı (T03) geliştirme/ana yerel teslimi `done` (05.10.2026): [PR #43](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/43) `1d06773` ile birleşti; aynı commit [main CI](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/37234959142) başarılı. 203 web testi, gerçek API kayıt/sürüm/çatışma/yetki/pasif kurallar ve dört genişlik geçti. Yedekli 8080 tesliminde 30 tablo/hesap/MFA/anahtar/SMTP korundu; sağlık/restart geçti. [Kabul ve geri dönüş sınırı](plans/P02.md#t03-github-ve-ana-yerel-teslim--05102026).
+
 İşletme/personel haftalık saatleri (T02) geliştirme/ana yerel teslimi `done` (04.10.2026): [PR #41](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/41) `4ce18cd` ile birleşti; aynı commit [main CI](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/37229063495) başarılı. 196 web testi, gerçek API başarı/çatışma/yetki ve dört genişlik geçti. Yedekli 8080 güncellemesinde 30 tablo/hesap/MFA/anahtar/SMTP korundu; sağlık/restart geçti. [Kabul ve geri dönüş sınırı](plans/P02.md#t02-github-ve-ana-yerel-teslim--04102026).
 
 Yönetim ortak alanı ve işletme profili (T01) geliştirme/ana yerel teslimi `done` (04.10.2026): [PR #39](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/39) `2595843` ile birleşti; aynı commit [main CI](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/37220894498) başarılı. 196 web testi, gerçek Owner/Staff API ve dört genişlik kabulü geçti. Yedekli 8080 güncellemesinde 30 tablo/hesap/MFA/anahtar/SMTP korundu; sağlık/restart geçti. [Kabul ve geri dönüş sınırı](plans/P02.md#t01-github-ve-ana-yerel-teslim--04102026). Diğer bölümlerin ayrıntılı tasarımı ve native finish tamamlanmış sayılmaz.
@@ -51,7 +53,7 @@ Program.cs bakımı `done`: başlangıç 265 satırdan 69 satıra indi; önce/so
 
 ## Sıradaki iş
 
-T03 personel liste/ayrıntı yerel geliştirme/kabul `done`: [onay ve gerçek API kanıtı](plans/P02.md#t03-geliştirme-kabulü--04102026); 203 web testi ve dört genişlik geçti. GitHub/ana yerel teslim `in_progress`; aynı-head CI ve yedekli veri koruma kabulü olmadan teslim done değildir. T04–T08, P03 ve dark mode başlamaz. Ek görsel/native onay turu yapılmadı; native finish açık kalır.
+T03 personel listesi/ayrıntı geliştirme/GitHub/ana yerel teslim `done`. Sonraki tek aday T04 hizmet tanımı taslağıdır; ayrı taslak/kod onayıyla başlar, otomatik başlamaz. T04–T08, P03 ve dark mode tamamlanmış değildir. Ek görsel/native onay turu yapılmadı; native finish açık kalır.
 
 ## Gelecek plan kaydı — destek ve işletim ekranı (02.10.2026)
 
