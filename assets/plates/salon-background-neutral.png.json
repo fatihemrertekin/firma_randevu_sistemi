@@ -1,0 +1,10 @@
+{
+  "prompt": "Use case: precise-object-edit and lighting-weather. Asset type: photorealistic salon background for an existing appointment app login hero. Input image: existing salon-background.png is the composition reference and edit target. Preserve the same elegant empty barber/hair salon, camera angle, vertical framing, windows in back, mirrors and aligned chairs on the right, plants, realistic material texture, clear quiet negative space on the left for HTML text. Change its strongly cream/yellow/golden color cast into neutral off-white and very light cool gray. Walls and floor should be clean white/light gray stone; wood should be pale ash gray, not orange/beige. Replace orange towels and warm yellow wall lights with muted blue-gray towels and neutral daylight fixtures. Chairs remain subtly muted dark blue/slate. Light is bright soft neutral daylight, never golden sunset. Existing left haze should be almost white cool gray matching #FAFBFD, never cream. Use natural photography, restrained pastel palette, not monochrome grayscale, retain a little subdued natural green in the plants. No people, no logo, no text, no UI, no frames. No yellow, cream, beige or amber lighting. Produce a single finished image, no variants.",
+  "tool": "image_gen built-in",
+  "source": "assets/plates/salon-background.png",
+  "asset": "assets/plates/salon-background-neutral.png",
+  "userAuthorized": true,
+  "approvalScope": "Existing photo color replacement; user explicitly allowed a similar non-cream salon photo.",
+  "decorative": true,
+  "notes": "Generated salon is illustrative, not a real business reference. Old assets retained as historical originals."
+}

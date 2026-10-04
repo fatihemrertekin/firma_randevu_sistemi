@@ -1,19 +1,19 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-05T02:00:00+03:00",
+  "generatedAt": "2026-10-05T02:36:00+03:00",
   "title": "Randevu — açık kimlik yüzeyleri",
   "extensions": {
     "colorMeta": {
       "action": {
-        "displayName": "Mavi ana işlem",
+        "displayName": "Hafif pastel mavi ana işlem",
         "role": "primary"
       },
       "navy": {
-        "displayName": "Lacivert yardımcı işlem",
+        "displayName": "Yumuşak lacivert yardımcı işlem",
         "role": "secondary"
       },
       "error": {
-        "displayName": "Kırmızı hata ve tehlikeli işlem",
+        "displayName": "Yumuşak kırmızı hata ve tehlikeli işlem",
         "role": "tertiary"
       },
       "canvas": {
@@ -106,7 +106,7 @@
         "body": "Tüm kimlik formlarında marka 48px, başlık 32px, gövde 16px, işlem 18px, alan 48px, form aralığı 8px. Uzun mobil içerik doğal kayar; fotoğraf sütununun ölçeği korunur."
       }
     ],
-    "overview": "Beyaza yakın açık gri zeminde dolu mavi ana işlemler, lacivert yardımcı işlemler ve mevcut salon fotoğrafı. Ortak palet giriş, MFA, diğer kimlik işlemleri ve mevcut yönetim ekranlarının tamamına uygulanır; ekranların ayrıntılı dönüşümü T01–T08 kapsamında ayrı ilerler. Dark mode uygulanmadı.",
+    "overview": "Beyaza yakın açık gri zeminde dolu hafif pastel mavi ana işlemler, lacivert yardımcı işlemler ve krem içermeyen beyaz/açık gri salon fotoğrafı. Ortak palet giriş, MFA, diğer kimlik işlemleri ve mevcut yönetim ekranlarının tamamına uygulanır; ekranların ayrıntılı dönüşümü T01–T08 kapsamında ayrı ilerler. Dark mode uygulanmadı.",
     "keyCharacteristics": [
       "Beyaza yakın zemin ve beyaz alanlar",
       "Sade kontroller",

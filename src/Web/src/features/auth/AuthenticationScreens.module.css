@@ -90,9 +90,10 @@
 .confirmationActions button { width: 100%; margin: 0; }
 .secret { overflow-wrap: anywhere; padding: var(--auth-space-3); background: var(--auth-input); border-radius: var(--auth-radius); }
 .codes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--auth-space-3); padding-left: var(--auth-space-5); }
-.hero { position: relative; min-width: 0; display: flex; align-items: center; padding: var(--auth-space-7) var(--auth-space-6); }
+.hero { position: relative; isolation: isolate; min-width: 0; display: flex; align-items: center; padding: var(--auth-space-7) var(--auth-space-6); }
 .heroPhoto { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center; }
-.heroContent { position: relative; width: 100%; max-width: var(--auth-story-width); }
+.hero::after { content: ''; position: absolute; inset: 0; background: var(--auth-photo-wash); pointer-events: none; }
+.heroContent { position: relative; z-index: var(--auth-photo-content-layer); width: 100%; max-width: var(--auth-story-width); }
 .heroContent .audience { color: var(--auth-petrol); font-size: var(--auth-story-body-size); font-weight: 600; margin-bottom: var(--auth-space-5); }
 .hero h2 { max-width: var(--auth-title-width); font-family: 'Unna', serif; font-weight: 700; font-size: var(--auth-display-size); line-height: var(--auth-heading-line); letter-spacing: var(--auth-heading-tracking); margin: 0 0 var(--auth-space-5); }
 .hero h2 span { display: block; width: max-content; max-width: var(--auth-story-width); font-size: var(--auth-emphasis-size); color: var(--auth-petrol); }
