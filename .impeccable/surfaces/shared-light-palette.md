@@ -1,6 +1,6 @@
 # Ortak açık palet — 05.10.2026
 
-Durum: kullanıcı palet/kapsam onayı ve yerel geliştirme kabulü var; GitHub/ana yerel teslim sürüyor.
+Durum: kullanıcı palet/kapsam onayı, yerel geliştirme ve GitHub/ana yerel teslim `done`. [Teslim kanıtı](../../docs/plans/P02.md#ortak-açık-palet-bakımı--05102026).
 
 Amaç: krem zemini beyaza yaklaştırmak ve butonları belirgin dolguyla ayırmak.
 Kapsam: giriş, MFA, parola yenileme/değiştirme, davet/e-posta işlemleri ve mevcut yönetim ekranlarının tamamı.
