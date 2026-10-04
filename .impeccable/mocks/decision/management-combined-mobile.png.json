@@ -1,0 +1,19 @@
+{
+  "prompt": "Create the MOBILE responsive counterpart of the supplied combined desktop Randevu management UI proposal. This is a narrow 390 CSS-pixel wide, tall full-page mobile web layout, portrait image edge to edge; no phone/device frame, no browser address bar, no surrounding desk. Reference image is the combined desktop design: preserve exact warm cream #FFECD1 background, navy #001524 text, petrol #15616D selection/secondary controls, orange #FF7D00 save with navy text, brown #78290F inline draft notice, modest 6px corners, serif Randevu TEXT wordmark, system sans task labels and readable form. Recompose structurally for a phone, do not shrink the desktop sidebar. ORDER: compact cream top header with Randevu wordmark left and standard outlined Menü button right (navigation closed by default, no persistent rails). Then navy title İşletme bilgileri and brief subtitle İşletmenizin adını ve iletişim bilgilerini düzenleyin. Single-column form: İşletme adı value Örnek Salon; İletişim telefonu (isteğe bağlı) empty; İletişim e-postası (isteğe bağlı) empty; Açık adres (isteğe bağlı) empty textarea. Every label visible, standard fields at least48 CSSpx high, comfortable16px body; no tiny two-column fields, no sideways overflow. Inline brown draft message Değişiklikler henüz kaydedilmedi; full-width orange Profili kaydet; full-width outlined Güncel bilgileri yükle below, clear44px targets. After a quiet divider BELOW the editing actions, show the readback summary in the same single-column reading order: ONE small horizontal salon photo band no taller than100 CSSpx, Taslak özeti, Örnek Salon, Telefon/E-posta/Adres each Eklenmedi, helper Kaydetmeden önce kontrol edin. This is full scrollable page content, may extend below initial viewport; prioritise editing controls ahead of photo/summary. Do not turn summary into dashboard tiles, cards inside cards, floating action overlay or separate public-site preview. No logout orange button, no other orange actions, no hero message, no logo icon, no invented appointments/modules/stats, no real personal data. Navigation is the same desktop groups İşletme, Ekip, Hesap and Değişiklik kayıtları reachable from closed Menü; do NOT draw an open overlay obscuring fields. A clear ordinary task UI and familiar form, NOT a poster, no decorative textures/gradients/shadows. Render exact Turkish text accurately for design review.",
+  "approved": true,
+  "status": "approved",
+  "generator": "built-in image_gen",
+  "date": "2026-10-04",
+  "mode": "operate",
+  "scope": "surface",
+  "seed": "889ffadc",
+  "userSteer": "2. ve 3. tasarımı harmanla öyle bir taslak sun",
+  "references": [
+    "management-combined-desktop.png"
+  ],
+  "approval": {
+    "text": "2. ve 3. tasarımı birleştirdiğin versiyonu onaylıyorum",
+    "date": "2026-10-04",
+    "scope": "T01 common management shell and business profile"
+  }
+}

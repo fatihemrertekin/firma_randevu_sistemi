@@ -1,0 +1,20 @@
+{
+  "prompt": "Create ONE combined high-fidelity desktop 1440x960 Turkish salon-management web UI comp named Randevu, edge-to-edge no browser/device. User explicitly requests blending reference image 1 (Design B: form plus draft readback summary) and reference image 2 (Design C: narrow primary rail plus contextual drawer). Reference 1 contributes the two-column work area, small salon photo atop the plain local draft summary, clear form. Reference 2 contributes the compact cream header with serif TEXT wordmark Randevu, navy İşletme sahibi and outlined Çıkış yap at right, PETROL narrow labeled primary rail and cream contextual drawer. Do not copy both photos: use only ONE small photo above the readback summary; no photo in header. STRUCTURE: top cream header 70px; below a petrol 100px primary group rail with standard clearly labeled İşletme selected, Ekip, Hesap buttons and Değişiklik kayıtları near bottom; immediately next a cream 200px contextual drawer headed İşletme showing ONLY İşletme bilgileri selected, İşletme saatleri, Hizmetler, and Menüyü kapat at bottom; remaining wide cream working surface with ONE heading İşletme bilgileri and subtitle İşletmenizin adını ve iletişim bilgilerini düzenleyin. Main task below divides into comfortably readable 650px FORM and 270px plain SUMMARY at right. Name value Örnek Salon; phone/email empty stacked standard inputs and address textarea, labels İşletme adı, İletişim telefonu (isteğe bağlı), İletişim e-postası (isteğe bağlı), Açık adres (isteğe bağlı). Use blank optional fields, neutral placeholders not real names/contacts. Inline warm-brown notice Değişiklikler henüz kaydedilmedi followed by orange Profili kaydet and outlined Güncel bilgileri yükle, natural widths. Right summary shows only a compact horizontal salon photo 270x130px, Taslak özeti, Örnek Salon, Telefon / E-posta / Adres with Eklenmedi below each, and Kaydetmeden önce kontrol edin. Summary is local unsaved form readback, NOT public-site preview. No shadowed cards, no nested panels, no extra figures, modules, charts, appointments or stats. Fixed palette: dominant cream #FFECD1, navy #001524, petrol #15616D, only primary save orange #FF7D00 with navy text, notice brown #78290F; flat surfaces, thin 1px outlines, modest 6px corners, 48px control height, readable system sans body around16px and headings around32px, Unna serif only wordmark. Keep the compact navigation accessible with BOTH labels and familiar line icons; no unlabeled icon rail. Current group drawer does not show Ekip/Hesap links. Keep the form visually dominant with summary calm, photo small. There is no logo symbol. OPERATE mode, familiar aligned standard UI, no decorative gradients or textures, no marketing hero or huge display type. Full exact Turkish labels. Proposed design with fictional example only.",
+  "approved": true,
+  "status": "approved",
+  "generator": "built-in image_gen",
+  "date": "2026-10-04",
+  "mode": "operate",
+  "scope": "surface",
+  "seed": "889ffadc",
+  "userSteer": "2. ve 3. tasarımı harmanla öyle bir taslak sun",
+  "references": [
+    "management-b.png",
+    "management-c.png"
+  ],
+  "approval": {
+    "text": "2. ve 3. tasarımı birleştirdiğin versiyonu onaylıyorum",
+    "date": "2026-10-04",
+    "scope": "T01 common management shell and business profile"
+  }
+}

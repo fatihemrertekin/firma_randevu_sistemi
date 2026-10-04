@@ -1,6 +1,6 @@
 ---
-name: Randevu — açık kimlik yüzeyleri
-description: Krem zemin, salon fotoğrafı ve sade kontrollerle işletme erişimi.
+name: Randevu — kimlik ve yönetim yüzeyleri
+description: Krem zemin, ölçülü salon fotoğrafı ve sade kontrollerle işletme erişimi ve yönetimi.
 colors:
   action: "#FF7D00"
   petrol: "#15616D"
@@ -63,9 +63,9 @@ components:
 
 **Creative North Star: "Gün ışığında sade işletme erişimi"**
 
-Bu kayıt, uygulanmış giriş, MFA, parola yenileme, davet kabulü ve e-posta doğrulama yüzeylerini tarif eder. Ürün sahibinin seçtiği palet, fotoğraflı yapı ve kontrollerde minimalizm esastır. Görsel kabul, API kabulü ve canlı teslim kanıtları durum/plan kayıtlarında ayrı tutulur; bu belge tasarım sisteminin tarifidir.
+Bu kayıt, uygulanmış giriş, MFA, parola yenileme, davet kabulü, e-posta doğrulama, ortak yönetim alanı ve işletme profilini tarif eder. Ürün sahibinin seçtiği palet, fotoğraflı yapı ve kontrollerde minimalizm esastır. Görsel kabul, API kabulü ve canlı teslim kanıtları durum/plan kayıtlarında ayrı tutulur; bu belge tasarım sisteminin tarifidir.
 
-Yönetim ekranları bu dönüşümde yeniden tasarlanmadı. Açık kimlik teması `auth-theme` kapsamında uygulanır. Uygulamanın renk ve ölçü kaynağı `src/Web/src/styles/tokens.css` dosyasıdır; bu belge onun gözden geçirilmiş tarifidir.
+Açık palet `auth-theme` ve `management-theme` kapsamında ortaktır; kompozisyonları ayrıdır. Yönetimde ortak gezinme ve profil uygulanmıştır; diğer bölümlerin ayrıntılı düzeni T02–T08 kapsamındadır. Uygulamanın renk ve ölçü kaynağı `src/Web/src/styles/tokens.css` dosyasıdır; bu belge onun gözden geçirilmiş tarifidir.
 
 ## Colors
 
@@ -97,6 +97,12 @@ Tüm kimlik formları aynı sıkı ölçüleri kullanır: marka 48 px, görev ba
 
 ## Elevation & Depth
 
+Yönetimde krem başlık, petrol dar grup menüsü ve kapanabilir krem alt menü vardır. İşletme/Ekip/Hesap grupları yalnız mevcut yetkili bölümlere götürür; değişiklik kayıtları ayrı bağlantıdır. Logo simgesi yoktur. Masaüstü marka ve görev başlığı 44 px; mobil başlık 32 px ve kontroller 48 px'tir. Yönetimin bütün ölçüleri merkezi tokenlarla tanımlanır.
+
+Profil formu geniş masaüstünde küçük fotoğraflı bilgi özetiyle yan yanadır. 1280 px ve altında özet formun altına geçer; 900 px ve altında menü kapalı başlar, eylemler tek sütun olur, fotoğraf 112 px yüksekliğe iner. Taslak özeti değişen alanları gösterir; sunucu yüklemesi/kayıt sonrası profil özeti, belirsiz kayıt veya sürüm çatışmasında doğrulanmamış bilgiler olarak etiketlenir. Bölüm değişiminde profil taslağı korunur; yenileme ve çıkışta silme onayı gerekir.
+
+Hata metni ve durum başlığı renkten bağımsızdır. İçeriğe geç bağlantısı, görünür odak, mobil Menü/Escape odak dönüşü ve azaltılmış hareket tercihi uygulanır. Fotoğraf yüklenmese de ana işlemler semantik form ve düğmelerde kalır.
+
 Kimlik kontrollerinde gölge yoktur. Ayrım, boşluk ve ince sınırla sağlanır. Fotoğraf kendi ışığı ve gerçek mekân derinliğiyle görünür; düğmelerde yapay kabartma kullanılmaz.
 
 ## Shapes
@@ -111,7 +117,7 @@ Kontroller mütevazı yuvarlak köşelidir. İşlem hedefi en az 44 × 44 px'tir
 
 Parola yenileme bağlantısı formunda hesap e-postası yazılabilir; e-posta gönderimi kullanılamıyorsa uyarı ve pasif gönderme düğmesi gösterilir. Kullanılabilirlik denetimi sunucuya aittir; e-posta kutusuna yazmak bağlantı gönderildiği anlamına gelmez. İstek sürerken alan ve eylemler kilitlenir.
 
-**Fotoğraf:** onaylı `assets/plates/salon-background.png` gerçek bitmap olarak yüklenir. Mobilde zemine geçiş için krem örtü kullanılır; fotoğraf CSS resmiyle taklit edilmez. Yeni fotoğraf kullanıcı incelemesini yeniden gerektirir.
+**Fotoğraf:** kimlikte onaylı `assets/plates/salon-background.png`, yönetim profilinde `assets/plates/salon-photo.png` gerçek bitmap olarak yüklenir; exact üretim prompt'u ve kullanıcı onayı yan kayıttadır. Dekoratif üretilmiş salonlar gerçek işletme referansı değildir. Kimlikte mobil zemine geçiş için krem örtü kullanılır; yönetimde fotoğraf küçük özet alanına aittir. Fotoğraf CSS resmiyle taklit edilmez.
 
 ## Do's and Don'ts
 

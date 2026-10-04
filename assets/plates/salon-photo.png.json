@@ -1,0 +1,9 @@
+{
+  "prompt": "Create an entirely newly photographed warm barber-salon production image, using this approved UI photo crop as a COMPOSITION reference only, not an edit target. Do not upscale, resample, sharpen or return the existing input RGB pixels. Produce fresh independent photographic pixels at landscape aspect 410:224, approximately1697x927 or larger. Keep the concept and broad framing: sunlit tall windows on left, potted plants, cream floor, warm wooden rear wall with mirrors and cabinets, orange waiting chair near middle-left, two dark petrol barber chairs on right, an orange towel over the foreground chair. Keep those large shapes near the same positions and keep warm cream, petrol and orange colors and golden sunlight. Small natural variations must demonstrate a fresh photograph: subtly different leaf arrangements and towel folds, slightly different reflections and cabinet bottles, a camera shift of roughly3degrees. Do not change the salon's overall layout or invent additional objects or people. This is a modest photograph inside a task UI, not a marketing image. Completely opaque edge-to-edge landscape photograph with no text, logo, UI, card edges, margins, overlays, gradients, device or browser. The approved crop guides subject, broad scale, palette, perspective and light; it must not be reused as output or exact RGB reconstruction.",
+  "generator": "built-in image_gen",
+  "sourceReference": ".impeccable/build/management-photo-reference.png",
+  "origin": "Generated production image from approved combined management comp, not evidence of a real business.",
+  "approved": true,
+  "approval": { "source": "human chat", "text": "görseller için çok çabalama iyi böyle görsel", "scope": "Keep the current production photo and stop further image iterations.", "date": "2026-10-04" },
+  "date": "2026-10-04"
+}

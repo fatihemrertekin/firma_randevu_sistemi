@@ -47,7 +47,7 @@ Program.cs bakımı `done`: başlangıç 265 satırdan 69 satıra indi; önce/so
 
 ## Sıradaki iş
 
-Sıradaki aday yalnız Impeccable native responsive yakalama kısıtını gidermek ve hook güven onayını doğrulamaktır; mevcut 8080 teslimi çalışır durumdadır. İlk görünüm onayı tekrar istenmez. P03, dark mode ve diğer yönetim ekranları ayrı kapsam/onay gerektirir.
+Onaylı birleşik taslakla ortak yönetim alanı ve işletme profili (T01) yerel kabulü `done`: 196 web testi ve gerçek API/Chrome başarı/400/401/403/409, dört genişlik geçti. [Kapsam, onay ve motor sınırı](plans/P02.md#t00t01-kabulü-ve-açık-sınırı). Şimdi yalnız T01 PR/yeşil CI ve yedekli ana yerel teslimi tamamlanır; ardından sıradaki aday işletme/personel saatleri (T02) taslağıdır. T02–T08 ayrı onay sınırındadır; P03 ve dark mode başlamaz. Kullanıcının isteğiyle ek görsel/native onay turları durduruldu; native finish tamamlandı sayılmaz.
 
 ## Gelecek plan kaydı — destek ve işletim ekranı (02.10.2026)
 

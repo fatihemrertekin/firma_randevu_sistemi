@@ -50,6 +50,39 @@ async function submit(label: string) {
 }
 
 describe('Yönetim gezinmesi', () => {
+  it('ana grupları ilgili bölüme bağlar; menüyü kapatıp yeniden açar', async () => {
+    await render()
+    await click('Ekip')
+    expect(container.querySelector('h1')?.textContent).toBe('Personel')
+    expect(container.querySelector('button[aria-pressed="true"]')?.textContent).toBe('Ekip')
+    await click('Çalışan erişimleri')
+    expect(container.querySelector('h1')?.textContent).toBe('Çalışan erişimleri')
+    await click('Menüyü kapat')
+    expect(container.querySelector('#management-context')?.hasAttribute('hidden')).toBe(true)
+    await click('Ekip')
+    expect(container.querySelector('#management-context')?.hasAttribute('hidden')).toBe(false)
+    expect(container.querySelector('h1')?.textContent).toBe('Çalışan erişimleri')
+    await click('Hesap')
+    expect(container.querySelector('h1')?.textContent).toBe('Hesap ve güvenlik')
+  })
+  it('mobil menüyü Escape ile kapatır ve odağı menü düğmesine döndürür', async () => {
+    vi.stubGlobal('innerWidth', 390)
+    await render(); await click('Menü')
+    expect(container.querySelector('[aria-controls="management-navigation"]')?.getAttribute('aria-expanded')).toBe('true')
+    await act(async () => container.querySelector('button')?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })))
+    expect(container.querySelector('[aria-controls="management-navigation"]')?.getAttribute('aria-expanded')).toBe('false')
+    expect(document.activeElement).toBe(container.querySelector('[aria-controls="management-navigation"]'))
+  })
+  it('korunan profil taslağı için çıkışı onaylatır; reddedilince taslağı ve oturumu tutar', async () => {
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false)
+    await render(); await fill('business-name', 'Taslak salon')
+    await click('Hesap'); await click('Çıkış yap')
+    expect(confirm).toHaveBeenCalledOnce()
+    expect(vi.mocked(fetch).mock.calls.some(([path]) => path === '/api/auth/logout')).toBe(false)
+    await click('İşletme')
+    expect(container.querySelector<HTMLInputElement>('#business-name')?.value).toBe('Taslak salon')
+    confirm.mockRestore()
+  })
   it('logo bölümü, görüntüsü ve API isteği içermez', async () => {
     await render()
     expect(container.textContent).not.toContain('İşletme logosu')
@@ -174,9 +207,11 @@ describe('Yönetim gezinmesi', () => {
   })
 
   it('çıkışta yönetim ve taslakları kaldırır; giriş ekranına döner', async () => {
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true)
     await render()
     await fill('business-name', 'Taslak')
     await click('Çıkış yap')
+    expect(confirm).toHaveBeenCalledOnce()
     expect(container.querySelector('nav')).toBeNull()
     expect(container.querySelector('#business-name')).toBeNull()
     expect(container.querySelector('h1')?.textContent).toBe('İşletme girişi')
@@ -212,7 +247,12 @@ describe('Yönetim gezinmesi', () => {
   ])('çalışan görünümünde işletme ve erişim yönetimini açmaz', async account => {
     vi.stubGlobal('fetch', vi.fn(async () => Response.json(account)))
     await render()
-    expect(container.querySelectorAll('nav button')).toHaveLength(1)
+    const navigationText = Array.from(container.querySelectorAll('nav')).map(nav => nav.textContent).join(' ')
+    expect(navigationText).toContain('Hesap')
+    expect(navigationText).toContain('Hesap ve güvenlik')
+    for (const label of ['İşletme', 'Ekip', 'Personel', 'Hizmetler', 'Çalışan erişimleri', 'Değişiklik kayıtları']) {
+      expect(navigationText).not.toContain(label)
+    }
     expect(container.querySelector('#business-name')).toBeNull()
     expect(container.textContent).not.toContain('Davet oluştur')
     expect(container.querySelector('form[aria-label="Parola değiştirme"]')).not.toBeNull()

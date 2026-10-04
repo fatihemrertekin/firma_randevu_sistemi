@@ -38,6 +38,30 @@ async function reload() {
 }
 
 describe('İşletme profili', () => {
+  it('taslak özetini alanlarla günceller; başarıdan sonra yalnız sunucunun döndürdüğü bilgileri gösterir', async () => {
+    const post = vi.fn(async () => Response.json({ ...initial, name: 'Sunucunun adı', phone: '0212 000 00 00', version: 'saved-version' }))
+    await act(async () => root.render(<BusinessProfile post={post} />))
+    await fill('#business-name', 'Taslak salon')
+    await fill('#business-phone', 'Taslak telefon')
+    const summary = container.querySelector('[aria-label="İşletme bilgilerinin özeti"]')
+    expect(summary?.textContent).toContain('Taslak özeti')
+    expect(summary?.textContent).toContain('Taslak salon')
+    expect(summary?.textContent).toContain('Taslak telefon')
+    await submit()
+    expect(summary?.textContent).toContain('Profil özeti')
+    expect(summary?.textContent).toContain('Sunucunun adı')
+    expect(summary?.textContent).not.toContain('Taslak telefon')
+    expect(container.querySelector<HTMLInputElement>('#business-name')?.value).toBe('Sunucunun adı')
+  })
+  it('belirsiz kayıt sonucunda özeti doğrulanmış bilgi olarak sunmaz', async () => {
+    const post = vi.fn(async () => new Response(null, { status: 500 }))
+    await act(async () => root.render(<BusinessProfile post={post} />))
+    await fill('#business-name', 'Taslak salon'); await submit()
+    const summary = container.querySelector('[aria-label="İşletme bilgilerinin özeti"]')
+    expect(summary?.textContent).toContain('Doğrulanmamış bilgiler')
+    expect(summary?.textContent).not.toContain('Sunucudan yüklenen')
+    expect(container.textContent).not.toContain('İşletme profili kaydedildi.')
+  })
   it('boş profili yükler; alanları gönderir, çift kaydı engeller ve sunucu yanıtını gösterir', async () => {
     let finish: ((response: Response) => void) | undefined
     const post = vi.fn<(path: string, body: object, signal?: AbortSignal) => Promise<Response>>(async () => new Promise<Response>(resolve => { finish = resolve }))

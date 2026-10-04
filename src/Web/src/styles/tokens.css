@@ -15,8 +15,8 @@
   --space-2: .5rem;
 }
 
-/* Approved light identity surface. Management keeps its existing theme. */
-.auth-theme {
+/* Shared approved palette; each surface keeps its own layout. */
+.auth-theme, .management-theme {
   color-scheme: light;
   --auth-cream: #FFECD1;
   --auth-ink: #001524;
@@ -81,4 +81,23 @@
   --auth-photo-fade: linear-gradient(180deg, transparent 65%, var(--auth-cream));
   --auth-mobile-copy-width: 18rem;
   --auth-transition: 180ms ease-out;
+}
+
+.management-theme {
+  --primary-soft: color-mix(in srgb, var(--auth-petrol) 12%, var(--auth-cream));
+  --shadow: none;
+  --management-rail: 8rem;
+  --management-drawer: 15.5rem;
+  --management-header: 5rem;
+  --management-inset: 2.5rem;
+  --management-brand: 2.75rem;
+  --management-title: 2.75rem;
+  --management-summary: 22rem;
+  --management-form-min: 24rem;
+  --management-work-max: 90rem;
+  --management-icon: 1.75rem;
+  --management-rail-action: 7rem;
+  --management-photo-ratio: 410 / 224;
+  --management-photo-mobile: 7rem;
+  --management-rail-selected: color-mix(in srgb, var(--auth-petrol) 75%, var(--auth-ink));
 }
