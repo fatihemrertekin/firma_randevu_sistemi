@@ -30,14 +30,12 @@ if (!app.Environment.IsDevelopment())
     app.UseExceptionHandler();
 }
 app.UseRouting();
-app.UseBusinessLogoUploadLimit();
 app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapAuthEndpoints();
 app.MapBusinessProfileEndpoints();
 app.MapBusinessHoursEndpoints();
-app.MapBusinessLogoEndpoints();
 app.MapAuditLogEndpoints();
 app.MapStaffMemberEndpoints();
 app.MapServiceDefinitionEndpoints();
@@ -71,6 +69,8 @@ app.MapGet("/health/ready", async (HttpContext context) =>
 
 app.UseDefaultFiles();
 app.UseStaticFiles();
+// Kaldırılmış/bilinmeyen API uçları SPA sayfasıyla başarılı görünmemeli.
+app.MapFallback("/api/{**path}", () => Results.NotFound());
 app.MapFallbackToFile("index.html");
 
 app.Run();
