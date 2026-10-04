@@ -146,7 +146,7 @@ export default function ManagementLayout({ auth, account }: Props) {
           <BusinessProfile post={post} disabled={auth.busy || pendingRequests > 0 || definitionBusy}
             onDirtyChange={setProfileDirty} onBusyChange={setProfileBusy} />
         </div>}
-        {owner && section === 'personnel' && <div className={styles.panel}>
+        {owner && section === 'personnel' && <div className={styles.profilePanel}>
           <StaffMembers post={post} onDirtyChange={setDefinitionDirty} onBusyChange={setDefinitionBusy} />
         </div>}
         {owner && section === 'hours' && <div className={styles.profilePanel}>

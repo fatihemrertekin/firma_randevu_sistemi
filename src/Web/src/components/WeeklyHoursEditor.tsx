@@ -6,9 +6,9 @@ import styles from './WeeklyHoursEditor.module.css'
 
 export type HoursSnapshot = Schedule & { caption?: string; readOnly?: boolean }
 type Props = { endpoint: string; heading: string; formLabel: string; subject: string; closedLabel: string; startLabel: string; endLabel: string;
-  readSnapshot?: (response: Response) => Promise<HoursSnapshot>; post: HoursPost; onDirtyChange: (dirty: boolean) => void; onBusyChange: (busy: boolean) => void;
+  readSnapshot?: (response: Response) => Promise<HoursSnapshot>; post: HoursPost; onDirtyChange: (dirty: boolean) => void; onBusyChange: (busy: boolean) => void; embedded?: boolean;
   onSaved?: () => void; onCancel?: () => void }
-export default function WeeklyHoursEditor({ endpoint, heading, formLabel, subject, closedLabel, startLabel, endLabel, readSnapshot = readHours, post, onDirtyChange, onBusyChange, onSaved, onCancel }: Props) {
+export default function WeeklyHoursEditor({ endpoint, heading, formLabel, subject, closedLabel, startLabel, endLabel, readSnapshot = readHours, post, onDirtyChange, onBusyChange, onSaved, onCancel, embedded }: Props) {
   const [snapshot, setSnapshot] = useState<HoursSnapshot | null>(null), [days, setDays] = useState<OpeningDay[]>([])
   const [loading, setLoading] = useState(true), [busy, setBusy] = useState(false), [locked, setLocked] = useState(false)
   const [revision, setRevision] = useState(0), [error, setError] = useState(''), [notice, setNotice] = useState('')
@@ -80,13 +80,13 @@ export default function WeeklyHoursEditor({ endpoint, heading, formLabel, subjec
     } finally { sending.current = false; setBusy(false) }
   }
   function cancel() {
-    if (sending.current || (dirty && !window.confirm('Kaydedilmemiş çalışma saatleri silinsin mi?'))) return
+    if (sending.current || loading || (dirty && !window.confirm('Kaydedilmemiş çalışma saatleri silinsin mi?'))) return
     onDirtyChange(false); onCancel?.()
   }
   const Heading = onCancel ? 'h3' : 'h2'
   return <section className={styles.editor} aria-labelledby="hours-title">
-    <Heading id="hours-title" className={onCancel ? styles.heading : styles.screenReaderOnly}>{heading}</Heading>
-    {snapshot?.caption && <p className={styles.identity}><strong>{snapshot.caption}</strong></p>}
+    <Heading id="hours-title" className={onCancel && !embedded ? styles.heading : styles.screenReaderOnly}>{heading}</Heading>
+    {snapshot?.caption && !embedded && <p className={styles.identity}><strong>{snapshot.caption}</strong></p>}
     <p className={styles.description}>Türkiye saati (Europe/Istanbul) · Her gün tek aralık.</p>
     {loading && <p role="status">{subject} yükleniyor…</p>}
     {!loading && !snapshot && <p>Saatler yüklenemedi. Yeniden deneyebilirsiniz.</p>}
@@ -127,7 +127,7 @@ export default function WeeklyHoursEditor({ endpoint, heading, formLabel, subjec
     <div className={styles.actions}>
       {snapshot && !snapshot.readOnly && <button type="submit" form="weekly-hours-form" disabled={busy || loading || locked || retry > 0 || (snapshot.isConfigured && !dirty)}>{busy ? 'Saatler kaydediliyor…' : 'Haftayı kaydet'}</button>}
       <button type="button" disabled={busy || loading || retry > 0} onClick={reload}>Güncel saatleri yükle</button>
-      {onCancel && <button type="button" disabled={busy} onClick={cancel}>Listeye dön</button>}
+      {onCancel && <button type="button" disabled={busy || loading} onClick={cancel}>Listeye dön</button>}
     </div>
   </section>
 }

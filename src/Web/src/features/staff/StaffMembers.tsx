@@ -1,40 +1,27 @@
 import { useEffect, useRef, useState } from 'react'
 import ErrorMessage from '../../components/ErrorMessage'
 import StaffMemberEditor from './StaffMemberEditor'
-import StaffServicesEditor from './StaffServicesEditor'
-import StaffHoursEditor from './StaffHoursEditor'
-import { MemberRequestError, memberFailure, readMember, readMemberPage, type StaffMember, type StaffMemberPage, type StaffPost } from './staffMembersApi'
-import styles from '../../components/DefinitionManagement.module.css'
+import StaffMemberDetail from './StaffMemberDetail'
+import { MemberRequestError, readMemberPage, type StaffMemberPage, type StaffPost } from './staffMembersApi'
+import styles from './StaffMembers.module.css'
 
 type Props = { post: StaffPost; onDirtyChange: (dirty: boolean) => void; onBusyChange: (busy: boolean) => void }
+type View = { kind: 'list' } | { kind: 'create' } | { kind: 'detail'; id: string }
 export default function StaffMembers({ post, onDirtyChange, onBusyChange }: Props) {
-  const [page, setPage] = useState(1)
-  const [revision, setRevision] = useState(0)
+  const [view, setView] = useState<View>({ kind: 'list' })
+  const [page, setPage] = useState(1), [revision, setRevision] = useState(0)
   const [data, setData] = useState<StaffMemberPage | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-  const [notice, setNotice] = useState('')
-  const [editing, setEditing] = useState<{ member: StaffMember | null } | null>(null)
-  const [target, setTarget] = useState<StaffMember | null>(null)
-  const [assignment, setAssignment] = useState<StaffMember | null>(null)
-  const [hours, setHours] = useState<StaffMember | null>(null)
-  const [busy, setBusy] = useState(false)
-  const [stale, setStale] = useState(false)
-  const sending = useRef(false)
-  const heading = useRef<HTMLHeadingElement>(null)
-  const confirm = useRef<HTMLButtonElement>(null)
-  const addButton = useRef<HTMLButtonElement>(null)
-  const opener = useRef<HTMLButtonElement | null>(null)
-  const restoreFocus = useRef(false)
+  const [loading, setLoading] = useState(true), [childBusy, setChildBusy] = useState(false)
+  const [error, setError] = useState(''), [notice, setNotice] = useState('')
+  const addButton = useRef<HTMLButtonElement>(null), surface = useRef<HTMLElement>(null)
+  const opener = useRef<string | null>(null), restoreFocus = useRef(false)
   useEffect(() => {
-    if (target) confirm.current?.focus()
-    else if (!editing && !assignment && !hours && restoreFocus.current) {
-      restoreFocus.current = false
-      if (opener.current?.isConnected) opener.current.focus()
-      else addButton.current?.focus()
-    }
-  }, [target, editing, assignment, hours])
+    onBusyChange((view.kind === 'list' && loading) || childBusy)
+    return () => onBusyChange(false)
+  }, [view.kind, loading, childBusy, onBusyChange])
+  useEffect(() => () => onDirtyChange(false), [onDirtyChange])
   useEffect(() => {
+    if (view.kind !== 'list') return
     const controller = new AbortController()
     void fetch(`/api/staff-members/?page=${page}`, { cache: 'no-store', signal: AbortSignal.any([controller.signal, AbortSignal.timeout(15000)]) })
       .then(readMemberPage).then(value => { if (!controller.signal.aborted) setData(value) })
@@ -42,74 +29,53 @@ export default function StaffMembers({ post, onDirtyChange, onBusyChange }: Prop
         if (!controller.signal.aborted) setError(problem instanceof MemberRequestError ? problem.message : 'Personel listesi alınamadı. Yeniden deneyin.')
       }).finally(() => { if (!controller.signal.aborted) setLoading(false) })
     return () => controller.abort()
-  }, [page, revision])
-  function load(next = page) {
-    setData(null); setLoading(true); setError(''); setTarget(null); setStale(false)
-    setPage(next); setRevision(value => value + 1)
+  }, [page, revision, view.kind])
+  useEffect(() => {
+    if (view.kind !== 'list' || loading || !restoreFocus.current) return
+    restoreFocus.current = false
+    const button = Array.from(surface.current?.querySelectorAll<HTMLButtonElement>('[data-member-id]') ?? [])
+      .find(item => item.dataset.memberId === opener.current)
+    ;(button ?? addButton.current)?.focus()
+  }, [view.kind, loading, data])
+  function load(next = page) { setData(null); setLoading(true); setError(''); setPage(next); setRevision(value => value + 1) }
+  function back() {
+    onDirtyChange(false); setChildBusy(false); restoreFocus.current = true
+    setData(null); setLoading(true); setError(''); setView({ kind: 'list' })
   }
-  function closeEditor() { restoreFocus.current = true; setEditing(null) }
-  async function changeStatus() {
-    if (!target || sending.current || stale) return
-    sending.current = true; setBusy(true); onBusyChange(true); setError(''); setNotice('')
-    try {
-      const updated = await readMember(await post(`/api/staff-members/${target.id}/status`,
-        { isActive: !target.isActive, version: target.version }, AbortSignal.timeout(15000)))
-      setNotice(`${updated.name} ${updated.isActive ? 'aktifleştirildi' : 'pasifleştirildi'}. Giriş hesapları değişmedi.`)
-      load(); heading.current?.focus()
-    } catch (problem: unknown) {
-      setError(problem instanceof MemberRequestError ? problem.message : memberFailure(500))
-      setStale(true)
-    } finally { sending.current = false; setBusy(false); onBusyChange(false) }
-  }
-  const blocked = busy || loading || editing !== null || assignment !== null || hours !== null || target !== null
-  return <section aria-labelledby="staff-members-title">
-    <h2 id="staff-members-title" ref={heading} className={styles.heading} tabIndex={-1}>Personel listesi</h2>
-    <p>İşletmede hizmet veren kişileri tanımlayın. Kendinizi de ekleyebilirsiniz. Bu kayıtlar sisteme giriş hesabı oluşturmaz.</p>
-    <ErrorMessage message={error} />
-    {notice && <p role="status">{notice}</p>}
-    {loading && <p role="status">Personel yükleniyor…</p>}
-    {!loading && data?.items.length === 0 && <p>Bu sayfada personel yok. Yeni personel ekleyerek başlayın.</p>}
-    {!editing && !assignment && !hours && <button type="button" ref={addButton} className={styles.primary} disabled={busy || target !== null} onClick={event => {
-      opener.current = event.currentTarget; setEditing({ member: null }); setError(''); setNotice('')
-    }}>Yeni personel</button>}
-    {editing && <StaffMemberEditor member={editing.member} post={post} onDirtyChange={onDirtyChange} onBusyChange={onBusyChange}
-      onCancel={closeEditor} onSaved={() => { setEditing(null); setNotice('Personel kaydedildi.'); load(1); heading.current?.focus() }} />}
-    {assignment && <StaffServicesEditor memberId={assignment.id} post={post} onDirtyChange={onDirtyChange} onBusyChange={onBusyChange}
-      onCancel={() => { restoreFocus.current = true; setAssignment(null) }}
-      onSaved={() => { setAssignment(null); setNotice('Personelin hizmet seçimleri kaydedildi.'); load(); heading.current?.focus() }} />}
-    {hours && <StaffHoursEditor memberId={hours.id} post={post} onDirtyChange={onDirtyChange} onBusyChange={onBusyChange}
-      onCancel={() => { restoreFocus.current = true; setHours(null) }}
-      onSaved={() => { setHours(null); setNotice('Personelin çalışma saatleri kaydedildi.'); load(); heading.current?.focus() }} />}
-    <div hidden={hours !== null}>
-    {data && <ul className={styles.list}>{data.items.map(member => <li key={member.id} className={styles.row}>
-      <div className={styles.identity}><strong>{member.name}</strong><p><span aria-hidden="true">{member.isActive ? '● ' : '○ '}</span>{member.isActive ? 'Aktif' : 'Pasif'}</p></div>
-      <div className={styles.actions}>
-        <button type="button" disabled={blocked} aria-label={`${member.name} için çalışma saatleri`} onClick={event => {
-          opener.current = event.currentTarget; setHours(member); setError(''); setNotice('')
-        }}>Çalışma saatleri</button>
-        <button type="button" disabled={blocked} aria-label={`${member.name} için hizmetleri seç`} onClick={event => {
-          opener.current = event.currentTarget; setAssignment(member); setError(''); setNotice('')
-        }}>Hizmetleri seç</button>
-        <button type="button" disabled={blocked} aria-label={`${member.name} adını düzenle`} onClick={event => {
-          opener.current = event.currentTarget; setEditing({ member }); setError(''); setNotice('')
-        }}>Adı düzenle</button>
-        <button type="button" disabled={blocked} aria-label={`${member.name} personelini ${member.isActive ? 'pasifleştir' : 'aktifleştir'}`} onClick={event => {
-          opener.current = event.currentTarget; setTarget(member); setStale(false); setError(''); setNotice('')
-        }}>{member.isActive ? 'Pasifleştir' : 'Aktifleştir'}</button>
+  return <section ref={surface} className={styles.surface} aria-label="Personel yönetimi">
+    {view.kind === 'detail' && <StaffMemberDetail memberId={view.id} post={post} initialNotice={notice}
+      onBack={back} onDirtyChange={onDirtyChange} onBusyChange={setChildBusy} />}
+    {view.kind === 'create' && <>
+      <h2>Yeni personel</h2><p>Bu kayıt sisteme giriş hesabı oluşturmaz.</p>
+      <StaffMemberEditor member={null} embedded post={post} onDirtyChange={onDirtyChange} onBusyChange={setChildBusy}
+        onCancel={back} onSaved={member => {
+          onDirtyChange(false); setPage(1); setNotice('Personel kaydedildi.'); setView({ kind: 'detail', id: member.id })
+        }} />
+    </>}
+    {view.kind === 'list' && <>
+      <div className={styles.toolbar}><p>Personel kayıtları giriş hesabı oluşturmaz.</p>
+        <button ref={addButton} className={styles.primary} type="button" disabled={loading || childBusy} onClick={() => {
+          opener.current = null; setError(''); setNotice(''); setView({ kind: 'create' })
+        }}>Yeni personel</button></div>
+      <ErrorMessage message={error} />
+      {notice && <p role="status">{notice}</p>}
+      {loading && <p role="status">Personel yükleniyor…</p>}
+      {!loading && data?.items.length === 0 && <p>Bu sayfada personel yok. Yeni personel ekleyerek başlayın.</p>}
+      {data && <>
+        <div className={styles.columns} aria-hidden="true"><span>Ad soyad</span><span>Durum</span><span /></div>
+        <ul className={styles.list} aria-label="Personel listesi">{data.items.map(member => <li key={member.id} className={styles.row}>
+          <strong className={styles.identity}>{member.name}</strong>
+          <span className={styles.status}><span aria-hidden="true">{member.isActive ? '●' : '○'}</span> {member.isActive ? 'Aktif' : 'Pasif'}</span>
+          <button type="button" data-member-id={member.id} disabled={loading || childBusy} aria-label={`${member.name} için ayrıntılar`} onClick={() => {
+            opener.current = member.id; setNotice(''); setView({ kind: 'detail', id: member.id })
+          }}>Ayrıntılar</button>
+        </li>)}</ul>
+      </>}
+      <div className={styles.pagination}>
+        <button type="button" disabled={loading || childBusy} onClick={() => { setNotice(''); load() }}>Listeyi yenile</button>
+        <div><button type="button" disabled={loading || childBusy || page === 1} onClick={() => { setNotice(''); load(page - 1) }}>Önceki sayfa</button>
+          <span>Sayfa {page}</span><button type="button" disabled={loading || childBusy || !data?.hasMore} onClick={() => { setNotice(''); load(page + 1) }}>Sonraki sayfa</button></div>
       </div>
-    </li>)}</ul>}
-    {target && <fieldset className={styles.confirmation} disabled={busy} aria-label="Personel durum değişikliği onayı">
-      <legend>Personeli {target.isActive ? 'pasifleştir' : 'aktifleştir'}</legend>
-      <p className={styles.identity}><strong>{target.name}</strong> {target.isActive ? 'pasif' : 'aktif'} olarak işaretlenecek. Kayıt silinmez. Giriş hesabı ve açık oturumlar etkilenmez.</p>
-      <button type="button" ref={confirm} disabled={stale} onClick={() => { void changeStatus() }}>{busy ? 'İşlem sürüyor…' : 'Durumu değiştir'}</button>
-      <button type="button" onClick={() => { restoreFocus.current = true; setTarget(null); setError('') }}>Vazgeç</button>
-    </fieldset>}
-    <div className={styles.actions}>
-      <button type="button" disabled={busy || loading || editing !== null || assignment !== null || hours !== null} onClick={() => { setNotice(''); load(); heading.current?.focus() }}>Listeyi yenile</button>
-      <button type="button" disabled={blocked || page === 1} onClick={() => { setNotice(''); load(page - 1) }}>Önceki sayfa</button>
-      <span>Sayfa {page}</span>
-      <button type="button" disabled={blocked || !data?.hasMore} onClick={() => { setNotice(''); load(page + 1) }}>Sonraki sayfa</button>
-    </div>
-    </div>
+    </>}
   </section>
 }

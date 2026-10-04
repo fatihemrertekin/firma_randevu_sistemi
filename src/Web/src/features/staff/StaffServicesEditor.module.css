@@ -1,5 +1,5 @@
 .editor[aria-label] { max-width: calc(var(--space-2) * 70); }
 .choice { display: flex; align-items: center; gap: var(--space-2); min-height: var(--target-min); padding-block: var(--space-2); border-bottom: calc(var(--space-2) / 8) solid var(--border); cursor: pointer; }
-.choice input { width: var(--target-min); min-width: var(--target-min); min-height: var(--target-min); flex-shrink: 0; margin: 0; accent-color: var(--primary); }
+.choice input { width: var(--auth-space-5); height: var(--auth-space-5); min-width: var(--auth-space-5); min-height: var(--auth-space-5); flex-shrink: 0; margin: 0; accent-color: var(--auth-petrol); }
 .text { min-width: 0; overflow-wrap: anywhere; }
 .details { display: block; color: var(--muted); font-weight: normal; }
