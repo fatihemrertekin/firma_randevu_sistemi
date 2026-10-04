@@ -32,6 +32,8 @@ Güncelleme: 2026-10-04. Güncel özet burada; kapsam ve kanıt bağlantıları 
 
 ## Bakım durumu
 
+İşletme/personel haftalık saatleri (T02) geliştirme/ana yerel teslimi `done` (04.10.2026): [PR #41](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/41) `4ce18cd` ile birleşti; aynı commit [main CI](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/37229063495) başarılı. 196 web testi, gerçek API başarı/çatışma/yetki ve dört genişlik geçti. Yedekli 8080 güncellemesinde 30 tablo/hesap/MFA/anahtar/SMTP korundu; sağlık/restart geçti. [Kabul ve geri dönüş sınırı](plans/P02.md#t02-github-ve-ana-yerel-teslim--04102026).
+
 Yönetim ortak alanı ve işletme profili (T01) geliştirme/ana yerel teslimi `done` (04.10.2026): [PR #39](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/39) `2595843` ile birleşti; aynı commit [main CI](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/37220894498) başarılı. 196 web testi, gerçek Owner/Staff API ve dört genişlik kabulü geçti. Yedekli 8080 güncellemesinde 30 tablo/hesap/MFA/anahtar/SMTP korundu; sağlık/restart geçti. [Kabul ve geri dönüş sınırı](plans/P02.md#t01-github-ve-ana-yerel-teslim--04102026). Diğer bölümlerin ayrıntılı tasarımı ve native finish tamamlanmış sayılmaz.
 
 Logo özelliğinin kaldırılması ve ana yerel teslimi `done` (04.10.2026): [PR #37](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/37) `7ab95d0` ile birleşti; aynı commit [main CI](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/37213648701) başarılı. Ekran/gösterim/API/görüntü paketleri ve logo tablosu kaldırıldı; şifreli yedek sonrası kalan 30 tablo, üç geçmiş logo audit'i, hesap/MFA/anahtar/SMTP korundu. Sunucu 131/131, web 191/191, gerçek API/Chrome ve ana sağlık/restart geçti. [Kapsam ve kabul](plans/P02.md#logo-özelliğinin-kaldırılması--04102026).
@@ -49,7 +51,7 @@ Program.cs bakımı `done`: başlangıç 265 satırdan 69 satıra indi; önce/so
 
 ## Sıradaki iş
 
-İşletme/personel saatleri (T02) yerel geliştirme/kabul `done`; onaylı taslak kodlandı, 196 web testi ve gerçek API/dört genişlik geçti. [Kabul ve sınırlar](plans/P02.md#t02-geliştirme-kabulü--04102026). GitHub/ana yerel teslim `in_progress`; sonraki tek aday T03 personel taslağıdır, otomatik başlamaz. T03–T08 ayrı taslak/kod onay sınırındadır; P03 ve dark mode başlamaz. Kullanıcının isteğiyle ek görsel/native onay turları yapılmaz; native finish tamamlandı sayılmaz.
+T02 saat tasarımı geliştirme/GitHub/ana yerel teslim `done`; sonraki tek aday T03 personel listesi/ayrıntı taslağıdır. T03 kodu ayrı görsel/kapsam onayından sonra başlar; otomatik başlamaz. T03–T08, P03 ve dark mode tamamlanmış değildir. Kullanıcının isteğiyle ek görsel/native onay turları yapılmaz; native finish açık kalır.
 
 ## Gelecek plan kaydı — destek ve işletim ekranı (02.10.2026)
 
