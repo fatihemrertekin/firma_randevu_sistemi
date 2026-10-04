@@ -65,7 +65,7 @@ components:
 
 Bu kayıt, uygulanmış giriş, MFA, parola yenileme, davet kabulü, e-posta doğrulama, ortak yönetim alanı ve işletme profilini tarif eder. Ürün sahibinin seçtiği palet, fotoğraflı yapı ve kontrollerde minimalizm esastır. Görsel kabul, API kabulü ve canlı teslim kanıtları durum/plan kayıtlarında ayrı tutulur; bu belge tasarım sisteminin tarifidir.
 
-Açık palet `auth-theme` ve `management-theme` kapsamında ortaktır; kompozisyonları ayrıdır. Yönetimde ortak gezinme ve profil uygulanmıştır; diğer bölümlerin ayrıntılı düzeni T02–T08 kapsamındadır. Uygulamanın renk ve ölçü kaynağı `src/Web/src/styles/tokens.css` dosyasıdır; bu belge onun gözden geçirilmiş tarifidir.
+Açık palet `auth-theme` ve `management-theme` kapsamında ortaktır; kompozisyonları ayrıdır. Yönetimde ortak gezinme, profil ve işletme/personel haftalık saatleri uygulanmıştır; diğer bölümlerin ayrıntılı düzeni T03–T08 kapsamındadır. Uygulamanın renk ve ölçü kaynağı `src/Web/src/styles/tokens.css` dosyasıdır; bu belge onun gözden geçirilmiş tarifidir.
 
 ## Colors
 
@@ -116,6 +116,8 @@ Kontroller mütevazı yuvarlak köşelidir. İşlem hedefi en az 44 × 44 px'tir
 **Alanlar:** görünür etiket, ince petrol sınır, hafif krem iç yüzey ve petrol odak çizgisi kullanılır. Hata mesajı kahverengi metinle ve ince sınırla gösterilir. API/CSRF/oturum kuralları görsel katman tarafından değiştirilmez.
 
 Parola yenileme bağlantısı formunda hesap e-postası yazılabilir; e-posta gönderimi kullanılamıyorsa uyarı ve pasif gönderme düğmesi gösterilir. Kullanılabilirlik denetimi sunucuya aittir; e-posta kutusuna yazmak bağlantı gönderildiği anlamına gelmez. İstek sürerken alan ve eylemler kilitlenir.
+
+**Haftalık saatler:** aynı semantik düzenleyici işletme ve personelde kullanılır. Geniş alanda dört hizalı sütun ve ince gün çizgileri, dar alanda gün/durum üstte iki etiketli saat alanı altta bulunur. Uyarlama ekran yerine düzenleyicinin kendi genişliğine göre yapılır; genişlik sınırı `--hours-editor-max` tokenıdır. Checkbox küçük kalır, etiketinin tıklama alanı 48 px yüksekliğindedir. Kapalı/çalışmayan gün saat alanları yerine yazılı açıklama gösterir. Kaydet/yükle ve personelde Listeye dön hafta sonunda yer alır; kaydedilmemiş değişiklik, hata ve sunucunun başarı mesajı eylemlerden önce görünür. Pasif personel saatleri salt okunur ve ad görünür kalır. Saat ekranında fotoğraf kullanılmaz.
 
 **Fotoğraf:** kimlikte onaylı `assets/plates/salon-background.png`, yönetim profilinde `assets/plates/salon-photo.png` gerçek bitmap olarak yüklenir; exact üretim prompt'u ve kullanıcı onayı yan kayıttadır. Dekoratif üretilmiş salonlar gerçek işletme referansı değildir. Kimlikte mobil zemine geçiş için krem örtü kullanılır; yönetimde fotoğraf küçük özet alanına aittir. Fotoğraf CSS resmiyle taklit edilmez.
 

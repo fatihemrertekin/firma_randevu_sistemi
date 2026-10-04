@@ -2,7 +2,6 @@ import { useEffect, useRef, useState, type FormEvent } from 'react'
 import ErrorMessage from './ErrorMessage'
 import useUnsavedChanges from '../app/useUnsavedChanges'
 import { HoursError, hoursDraft, hoursFailure, hoursFieldErrors, readHours, retrySeconds, validHour, weekDays, type BusinessHours as Schedule, type HoursPost, type OpeningDay } from '../app/weeklyHoursApi'
-import common from './DefinitionManagement.module.css'
 import styles from './WeeklyHoursEditor.module.css'
 
 export type HoursSnapshot = Schedule & { caption?: string; readOnly?: boolean }
@@ -85,18 +84,19 @@ export default function WeeklyHoursEditor({ endpoint, heading, formLabel, subjec
     onDirtyChange(false); onCancel?.()
   }
   const Heading = onCancel ? 'h3' : 'h2'
-  return <section aria-labelledby="hours-title">
-    <Heading id="hours-title">{heading}</Heading>
-    {snapshot?.caption && <p className={common.identity}><strong>{snapshot.caption}</strong></p>}
-    <p>Saatler Türkiye saatine göre kaydedilir (Europe/Istanbul). Her gün tek saat aralığı kullanılır.</p>
+  return <section className={styles.editor} aria-labelledby="hours-title">
+    <Heading id="hours-title" className={onCancel ? styles.heading : styles.screenReaderOnly}>{heading}</Heading>
+    {snapshot?.caption && <p className={styles.identity}><strong>{snapshot.caption}</strong></p>}
+    <p className={styles.description}>Türkiye saati (Europe/Istanbul) · Her gün tek aralık.</p>
     {loading && <p role="status">{subject} yükleniyor…</p>}
     {!loading && !snapshot && <p>Saatler yüklenemedi. Yeniden deneyebilirsiniz.</p>}
-    {snapshot && <form ref={form} className={styles.form} aria-label={formLabel} aria-busy={busy || loading} noValidate onSubmit={event => { void save(event) }}>
+    {snapshot && <form id="weekly-hours-form" ref={form} className={styles.form} aria-label={formLabel} aria-busy={busy || loading} noValidate onSubmit={event => { void save(event) }}>
       {!snapshot.isConfigured && <p>Saatler henüz belirlenmedi. Aşağıdaki seçimler kaydedilmiş saatler değildir; günleri ve saatlerini belirleyip haftayı kaydedin.</p>}
       {snapshot.readOnly && <p>Personel pasif. Kaydedilmiş saatler korunur; düzenlemek için personeli aktifleştirin.</p>}
-      <fieldset className={common.fields} disabled={snapshot.readOnly || busy || loading || locked || retry > 0}>
-        <legend className={styles.legend} tabIndex={-1} data-field="days">Pazartesi–Pazar</legend>
-        {errors.days && <p className={common.fieldError} role="alert">{errors.days}</p>}
+      <fieldset className={styles.fields} disabled={snapshot.readOnly || busy || loading || locked || retry > 0}>
+        <legend className={errors.days ? styles.legend : `${styles.legend} ${styles.screenReaderOnly}`} tabIndex={-1} data-field="days">Pazartesi–Pazar</legend>
+        {errors.days && <p className={styles.fieldError} role="alert">{errors.days}</p>}
+        <div className={styles.columns} aria-hidden="true"><span>Gün</span><span>Durum</span><span>{startLabel}</span><span>{endLabel}</span></div>
         {days.map(day => <div key={day.day} className={styles.day}>
           <div className={styles.dayHeading}><strong>{weekDays[day.day]}</strong>
             <label className={styles.closed}><input type="checkbox" data-field={`day${day.day}Closed`} checked={day.isClosed}
@@ -104,7 +104,8 @@ export default function WeeklyHoursEditor({ endpoint, heading, formLabel, subjec
               aria-describedby={errors[`day${day.day}Closed`] ? `hours-${day.day}-Closed-error` : undefined}
               onChange={event => change(day.day, { isClosed: event.target.checked, opensAt: null, closesAt: null })} />{closedLabel}</label>
           </div>
-          {errors[`day${day.day}Closed`] && <p id={`hours-${day.day}-Closed-error`} className={common.fieldError}>{errors[`day${day.day}Closed`]}</p>}
+          {errors[`day${day.day}Closed`] && <p id={`hours-${day.day}-Closed-error`} className={styles.dayError}>{errors[`day${day.day}Closed`]}</p>}
+          {day.isClosed && <p className={styles.closedDay}>Saat girişi gerekmiyor</p>}
           {!day.isClosed && <div className={styles.times}>
             {(['OpensAt', 'ClosesAt'] as const).map((field, i) => {
               const key = `day${day.day}${field}`, id = `hours-${day.day}-${field}`, value = i === 0 ? day.opensAt : day.closesAt
@@ -112,18 +113,21 @@ export default function WeeklyHoursEditor({ endpoint, heading, formLabel, subjec
                 <input id={id} type="time" required step={60} data-field={key} aria-label={`${weekDays[day.day]} ${(i === 0 ? startLabel : endLabel).toLocaleLowerCase('tr-TR')}`}
                   value={value ?? ''} aria-invalid={!!errors[key] || undefined} aria-describedby={errors[key] ? `${id}-error` : undefined}
                   onChange={event => change(day.day, i === 0 ? { opensAt: event.target.value || null } : { closesAt: event.target.value || null })} />
-                {errors[key] && <p id={`${id}-error`} className={common.fieldError}>{errors[key]}</p>}
+                {errors[key] && <p id={`${id}-error`} className={styles.fieldError}>{errors[key]}</p>}
               </div>
             })}
           </div>}
         </div>)}
       </fieldset>
-      {!snapshot.readOnly && <div className={common.actions}><button type="submit" className={common.primary} disabled={busy || loading || locked || retry > 0 || (snapshot.isConfigured && !dirty)}>{busy ? 'Saatler kaydediliyor…' : 'Haftayı kaydet'}</button></div>}
     </form>}
+    {dirty && !error && <p className={styles.draft} role="status">Değişiklikler henüz kaydedilmedi.</p>}
     <ErrorMessage message={error} />
     {retry > 0 && <p role="status">{retry} saniye sonra tekrar deneyebilirsiniz.</p>}
-    {notice && <p role="status">{notice}</p>}
-    <button type="button" disabled={busy || loading || retry > 0} onClick={reload}>Güncel saatleri yükle</button>
-    {onCancel && <button type="button" disabled={busy} onClick={cancel}>Listeye dön</button>}
+    {notice && <p className={styles.notice} role="status">{notice}</p>}
+    <div className={styles.actions}>
+      {snapshot && !snapshot.readOnly && <button type="submit" form="weekly-hours-form" disabled={busy || loading || locked || retry > 0 || (snapshot.isConfigured && !dirty)}>{busy ? 'Saatler kaydediliyor…' : 'Haftayı kaydet'}</button>}
+      <button type="button" disabled={busy || loading || retry > 0} onClick={reload}>Güncel saatleri yükle</button>
+      {onCancel && <button type="button" disabled={busy} onClick={cancel}>Listeye dön</button>}
+    </div>
   </section>
 }

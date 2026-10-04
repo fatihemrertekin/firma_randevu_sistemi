@@ -49,7 +49,7 @@ Program.cs bakımı `done`: başlangıç 265 satırdan 69 satıra indi; önce/so
 
 ## Sıradaki iş
 
-Sıradaki tek aday işletme/personel saatleri (T02) taslağıdır. Ortak yönetim alanı ve işletme profili (T01) onaylı birleşik taslakla geliştirildi ve ana yerelde teslim edildi. [Kapsam, onay ve motor sınırı](plans/P02.md#t00t01-kabulü-ve-açık-sınırı). T02–T08 ayrı taslak/kod onay sınırındadır; P03 ve dark mode başlamaz. Kullanıcının isteğiyle ek görsel/native onay turları durduruldu; native finish tamamlandı sayılmaz.
+İşletme/personel saatleri (T02) yerel geliştirme/kabul `done`; onaylı taslak kodlandı, 196 web testi ve gerçek API/dört genişlik geçti. [Kabul ve sınırlar](plans/P02.md#t02-geliştirme-kabulü--04102026). GitHub/ana yerel teslim `in_progress`; sonraki tek aday T03 personel taslağıdır, otomatik başlamaz. T03–T08 ayrı taslak/kod onay sınırındadır; P03 ve dark mode başlamaz. Kullanıcının isteğiyle ek görsel/native onay turları yapılmaz; native finish tamamlandı sayılmaz.
 
 ## Gelecek plan kaydı — destek ve işletim ekranı (02.10.2026)
 

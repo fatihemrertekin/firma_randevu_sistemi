@@ -149,7 +149,7 @@ export default function ManagementLayout({ auth, account }: Props) {
         {owner && section === 'personnel' && <div className={styles.panel}>
           <StaffMembers post={post} onDirtyChange={setDefinitionDirty} onBusyChange={setDefinitionBusy} />
         </div>}
-        {owner && section === 'hours' && <div className={styles.panel}>
+        {owner && section === 'hours' && <div className={styles.profilePanel}>
           <BusinessHours post={post} onDirtyChange={setDefinitionDirty} onBusyChange={setDefinitionBusy} />
         </div>}
         {owner && section === 'services' && <div className={styles.panel}>
