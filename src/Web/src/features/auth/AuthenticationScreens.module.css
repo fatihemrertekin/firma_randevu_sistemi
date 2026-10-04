@@ -40,23 +40,23 @@
   min-height: var(--target-min);
   margin: 0;
   padding: var(--auth-space-2) var(--auth-space-4);
-  border: var(--auth-rule) solid var(--border);
+  border: var(--auth-rule) solid var(--button-secondary-bg);
   border-radius: var(--auth-radius);
-  background: var(--surface);
-  color: var(--auth-petrol);
+  background: var(--button-secondary-bg);
+  color: var(--button-secondary-text);
   line-height: var(--auth-line);
   transition: background-color var(--auth-transition), color var(--auth-transition);
 }
 .card button[type='submit'] {
   min-height: var(--auth-control-height);
   font-size: var(--auth-action-size);
-  background: var(--auth-orange);
-  color: var(--text);
-  border-color: var(--auth-orange);
+  background: var(--button-primary-bg);
+  color: var(--button-primary-text);
+  border-color: var(--button-primary-bg);
 }
-.card button:hover:enabled { filter: none; background: var(--auth-input); }
+.card button:hover:enabled { filter: none; background: var(--button-secondary-hover); }
 .card button[type='submit']:hover:enabled { background: var(--auth-action-hover); border-color: var(--auth-action-hover); }
-.card button:active:enabled { background: var(--auth-input); }
+.card button:active:enabled { background: var(--button-secondary-hover); }
 .card button[type='submit']:active:enabled { background: var(--auth-action-hover); }
 .card :is(input, textarea, button, h1):focus-visible { outline: var(--auth-focus-width) solid var(--focus); outline-offset: var(--auth-focus-offset); }
 .card [aria-invalid='true'] { border-color: var(--error); }
@@ -74,16 +74,16 @@
 .passwordHeading { display: flex; align-items: center; justify-content: space-between; gap: var(--auth-space-2); }
 .card .textAction {
   margin: 0;
-  padding: var(--auth-space-2) 0;
+  padding: var(--auth-space-2) var(--auth-space-3);
   border: 0;
-  background: transparent;
+  background: var(--button-navigation-bg);
   color: var(--auth-petrol);
   font-size: var(--auth-small-size);
   font-weight: 500;
   text-align: left;
   text-underline-offset: var(--auth-space-1);
 }
-.card .textAction:hover:enabled { background: transparent; color: var(--auth-brown); text-decoration: underline; }
+.card .textAction:hover:enabled, .card .textAction:active:enabled { background: var(--button-navigation-selected-bg); color: var(--auth-petrol); text-decoration: underline; }
 .loginOptions { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--auth-space-2) var(--auth-space-4); margin-top: var(--auth-space-5); padding-top: var(--auth-space-4); border-top: var(--auth-rule) solid var(--border); }
 .confirmationActions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--auth-space-2); }
 .confirmationActions form { min-width: 0; }
@@ -93,7 +93,7 @@
 .hero { position: relative; min-width: 0; display: flex; align-items: center; padding: var(--auth-space-7) var(--auth-space-6); }
 .heroPhoto { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center; }
 .heroContent { position: relative; width: 100%; max-width: var(--auth-story-width); }
-.heroContent .audience { color: var(--auth-brown); font-size: var(--auth-story-body-size); font-weight: 600; margin-bottom: var(--auth-space-5); }
+.heroContent .audience { color: var(--auth-petrol); font-size: var(--auth-story-body-size); font-weight: 600; margin-bottom: var(--auth-space-5); }
 .hero h2 { max-width: var(--auth-title-width); font-family: 'Unna', serif; font-weight: 700; font-size: var(--auth-display-size); line-height: var(--auth-heading-line); letter-spacing: var(--auth-heading-tracking); margin: 0 0 var(--auth-space-5); }
 .hero h2 span { display: block; width: max-content; max-width: var(--auth-story-width); font-size: var(--auth-emphasis-size); color: var(--auth-petrol); }
 .heroContent .description { max-width: var(--auth-prose-width); font-size: var(--auth-description-size); margin-bottom: 0; color: var(--text); }
