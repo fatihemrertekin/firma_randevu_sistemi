@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react'
-import BusinessMark from '../business/BusinessMark'
 import salonPhoto from '../../../../../assets/plates/salon-background.png'
 import styles from './AuthenticationScreens.module.css'
 
@@ -8,7 +7,6 @@ export default function AuthenticationLayout({ children }: { children: ReactNode
     <main className={`auth-theme ${styles.page}`}>
       <section className={styles.card} aria-labelledby="page-title">
         <div className={styles.branding}>
-          <BusinessMark />
           <div>
             <span className={styles.wordmark}>Randevu</span>
             <span className={styles.brandContext}>İşletme paneli</span>

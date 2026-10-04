@@ -30,7 +30,7 @@ Yönetim, işletme sahibi ve yetkili personelin günlük işi için Türkçe res
 
 ## Capabilities and Constraints
 
-Mevcut teslim kimlik/giriş/MFA/kurtarma, çalışan erişimleri, işletme bilgileri/logosu/saatleri, personel/hizmet tanımları ve değişiklik kayıtlarını kapsar. Owner yönetimi ile Staff yetkileri ayrıdır. Güncel kabul ve ortam sınırlarının kaynağı [STATUS](STATUS.md), ayrıntılı kanıtın kaynağı [P02](plans/P02.md)dir.
+Mevcut teslim kimlik/giriş/MFA/kurtarma, çalışan erişimleri, işletme bilgileri/saatleri, personel/hizmet tanımları ve değişiklik kayıtlarını kapsar. Owner yönetimi ile Staff yetkileri ayrıdır. Güncel kabul ve ortam sınırlarının kaynağı [STATUS](STATUS.md), ayrıntılı kanıtın kaynağı [P02](plans/P02.md)dir.
 
 Randevu motoru ve müşteri rezervasyonu sonraki aşamalardır; tasarımda uygulanmış gibi sunulmaz. MVP tek şube ve randevu başına tek hizmet/çalışandır. Firma izolasyonu, mevcut teknoloji, backend doğrulaması, cookie/CSRF/MFA ve mahremiyet sözleşmeleri tasarım yenilenirken korunur; teknik kurallar [AGENTS](../AGENTS.md)dedir. AI, WhatsApp ve salon adına kart tahsilatı ilk sürümün dışındadır. Ürün sahibinin görsel üretim izni, ürüne AI özelliği ekleme izni değildir.
 
@@ -38,7 +38,7 @@ Randevu motoru ve müşteri rezervasyonu sonraki aşamalardır; tasarımda uygul
 
 - Mevcut uygulama ve kabul kayıtları: [STATUS](STATUS.md), [P02](plans/P02.md), [çalışan kurulum/kontrol komutları](../README.md).
 - Mevcut giriş görseli [salon-login.jpg](../src/Web/src/assets/salon-login.jpg), geliştirmede üretilmiş dekoratif kuaför fotoğrafıdır; gerçek işletme/müşteri referansı değildir. Üretim kaydı P02-10 içindedir.
-- İşletme logosu firma ayarıdır; örnek veya üretilmiş görsel gerçek bir firmanın kimliği gibi sunulmaz.
+- Ürün sahibi 04.10.2026'da işletme logosu özelliğinin tamamen kaldırılmasını istedi. Logo yükleme, ayar ve gösterim ürün kapsamında değildir; geçmiş işlem kayıtları korunur.
 - İşletme görüşmeleri, gerçek pilot ve ölçülmüş ticari sonuçlar henüz yoktur. Müşteri yorumu, kullanım sayısı, başarı oranı veya hizmet/fiyat verisi uydurulmaz.
 
 ## Product Principles

@@ -20,7 +20,7 @@ Türkiye'deki küçük hizmet işletmelerine markalı randevu/yönetim yazılım
 - Tek özel depo ve sürümlenmiş imaj; her firmaya ayrı uygulama, PostgreSQL konteyneri/veritabanı, parola, ağ, dosya, anahtar ve yedek kapsamı.
 - Tenant filtresine dayanan izolasyon ile çalışan bir SaaS modeli yok. Bir kurulum bir firmadır; ileride o firmanın şubelerini barındırabilir.
 - Başlangıçta aynı VPS paylaşılabilir. Konteyner, ayrı VM güvenliği değildir; host/yönetim paneli ihlalinde tüm kurulumlar etkilenebilir. Güçlü izolasyon isteyen firmaya ayrı VPS sun.
-- Firma başına fork/branch yok. Logo, renk, saat, hizmet, domain ve etkin modüller ayarlardır. Özel geliştirmeyi ortak ürüne uygun gereksinime dönüştür; bakım bedelini belirt.
+- Firma başına fork/branch yok. Renk, saat, hizmet, domain ve etkin modüller ayarlardır. İşletme logosu özelliği yoktur. Özel geliştirmeyi ortak ürüne uygun gereksinime dönüştür; bakım bedelini belirt.
 - MVP: responsive web, tek şube, randevu başına tek hizmet/çalışan. İleri özellikler planlıdır; boş altyapılarını bugünden kurma. Üründe AI varsayılan olarak kapalı/kapsam dışıdır; P17 yalnız ayrı değerlendirme kaydıdır.
 - Firmanın bize abonelik ödemesi ile müşterisinden hizmet bedeli alması ayrı süreçlerdir. MVP salon adına kart tahsilatı yapmaz.
 - Başarı: çakışmasız rezervasyon, yetkili erişim, geri yüklenebilir veri, tekrarlanabilir kurulum ve ölçülmüş bakım maliyeti.

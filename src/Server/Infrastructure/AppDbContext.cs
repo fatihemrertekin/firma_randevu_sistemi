@@ -44,7 +44,6 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<BusinessHoursAudit> BusinessHoursAudits => Set<BusinessHoursAudit>();
     public DbSet<StaffWorkingDay> StaffWorkingDays => Set<StaffWorkingDay>();
     public DbSet<StaffHoursAudit> StaffHoursAudits => Set<StaffHoursAudit>();
-    public DbSet<BusinessLogo> BusinessLogos => Set<BusinessLogo>();
     public DbSet<BusinessLogoAudit> BusinessLogoAudits => Set<BusinessLogoAudit>();
 
     protected override void OnModelCreating(ModelBuilder builder)
@@ -63,15 +62,6 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
         builder.Entity<StaffDeactivationAudit>().HasIndex(entry => new { entry.OccurredAt, entry.Id }).IsDescending(true, true);
         builder.Entity<OwnerPasswordResetAudit>().HasIndex(entry => new { entry.OccurredAt, entry.Id }).IsDescending(true, true);
         builder.Entity<OwnerMfaRecoveryAudit>().HasIndex(entry => new { entry.OccurredAt, entry.Id }).IsDescending(true, true);
-        var logo = builder.Entity<BusinessLogo>();
-        logo.Property(entry => entry.Id).ValueGeneratedNever();
-        logo.Property(entry => entry.Version).IsConcurrencyToken();
-        logo.ToTable(table =>
-        {
-            table.HasCheckConstraint("CK_BusinessLogos_Singleton", "\"Id\" = 1");
-            table.HasCheckConstraint("CK_BusinessLogos_Image", "(\"Png\" IS NULL AND \"Width\" IS NULL AND \"Height\" IS NULL) OR (\"Png\" IS NOT NULL AND octet_length(\"Png\") BETWEEN 1 AND 1100000 AND \"Width\" IS NOT NULL AND \"Height\" IS NOT NULL AND \"Width\" BETWEEN 1 AND 512 AND \"Height\" BETWEEN 1 AND 512)");
-        });
-        logo.HasData(new BusinessLogo { Id = 1, Version = Guid.Parse("a4ae913c-2ed5-4ebd-8b86-8ae3d311b348") });
         var logoAudit = builder.Entity<BusinessLogoAudit>();
         logoAudit.HasIndex(entry => entry.LogoVersion).IsUnique();
         logoAudit.HasOne<AppUser>().WithMany().HasForeignKey(entry => entry.ActorId).OnDelete(DeleteBehavior.Restrict);

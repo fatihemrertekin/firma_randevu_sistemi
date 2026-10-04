@@ -32,6 +32,8 @@ Güncelleme: 2026-10-04. Güncel özet burada; kapsam ve kanıt bağlantıları 
 
 ## Bakım durumu
 
+Logo özelliğinin kaldırılması `in_progress` (04.10.2026): ürün sahibinin doğrudan talebiyle ekran, gösterim, API ve görüntü işleme bağımlılıkları kaldırılıyor; geçmiş audit korunuyor. Ana 8080 henüz güncellenmedi. [Kapsam ve kabul](plans/P02.md#logo-özelliğinin-kaldırılması--04102026).
+
 Impeccable kurulum/`init` ve kimlik arayüzünün ana yerel teslimi `done` (04.10.2026): [PR #35](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/35) `d7c3a8b` ile birleşti; aynı commit [main CI](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/37209548984) başarılı. Onaylı krem/fotoğraf, ortak form ölçüleri ve yazılabilir hesap e-postası 8080'de çalışıyor. Şifreli yedek/geri okuma ve eski imaj dönüş provası sonrası 31 tablo, hesap/MFA, anahtar ve SMTP korundu; sağlık/restart geçti. Ana uygulamada yedi form × yedi boyut ve anonim 401 kontrolü geçti; 8091 test projesi/volume kaldırıldı. [Kabul, geri dönüş ve kalan sınırlar](plans/P02.md#impeccable-ana-yerel-teslim--04102026).
 
 Impeccable motorunun tam bitiş kabulü `in_progress`: native responsive yakalama viewport/scroll ve bağlantı kapanması nedeniyle açık, `finish=fix`; gerçek tarayıcı kabulü bu kapının yerine sunulmaz. Hook güven onayının Codex arayüzünde verildiği doğrulanmadı. İnceleme ve belgeleme ek agent yasağı gereği ana agent tarafından uygulandı. [DESIGN](../DESIGN.md), yan kayıt, iki onaylı taslak ve fotoğraf/font lisansları sürümlendi; yeni ekranlarda önce taslak/onay kararı korunur.

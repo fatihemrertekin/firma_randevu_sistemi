@@ -269,11 +269,11 @@ MFA Owner, **Personel → Çalışma saatleri** bölümünde her personelin yedi
 
 `StaffWorkingHours` migration'ı yalnız iki boş saat/audit tablosu ekler. Yukarıdaki kontrollü migration/yedek yöntemi uygulanır; uygulama rolü günlerde SELECT/INSERT/UPDATE, audit'te SELECT/INSERT ile sınırlıdır. Personel sürümü ad/aktiflik/hizmet seçimiyle ortak kullanılır; eski taslak reddedilir. `Down` yeni saat/audit verisini siler; ana ortamda otomatik çalıştırılmaz. Kabul/geri dönüş kanıtı [P02 planındadır](docs/plans/P02.md#p02-21--personelin-haftalık-çalışma-saatleri); test ve kalite komutları yukarıdaki mevcut kapılardır.
 
-## İşletme logosu (P02-22)
+## Logo özelliğinin kaldırılması
 
-MFA Owner, **İşletme logosu** bölümünde PNG/JPEG dosyasını seçip önizleyerek kaydeder. En fazla 1 MiB ve 2048 × 2048 piksel; sunucu dosyayı yeniden PNG oluşturur ve oranı korunarak en fazla 512 × 512 piksele küçültür. SVG/HTML, animasyon, URL veya logo silme yoktur. Logo giriş ve yönetimde herkese görünür; logo API'si hesap/iletişim verisini açmaz. Dosya seçmek kaydetmez; eski sürüm reddedilir ve aynı güncel görüntü ikinci audit yaratmaz.
+İşletme logosu yükleme/ayar/gösterim özelliği kaldırıldı. Eski `/api/business-logo/` ve görüntü adresleri 404 döner. SkiaSharp ve native görüntü işleme paketleri kullanılmaz. Önceki P02-22 kabulü tarihsel kayıttır.
 
-`BusinessLogo` migration'ı ayrı logo/audit tablolarını ve boş logo satırını ekler. Logo DB yedeğine dahildir; dosya volume'u gerekmez. Kontrollü migration ve app_user yetkileri yukarıdaki komutla uygulanır. `Down` logo/audit verisini siler; ana ortamda otomatik yapılmaz. SkiaSharp/native paketleri kilitlenir; [lisans bildirimleri](docs/logo-image-licenses.txt) imaja dahildir. Kabul/geri dönüş [P02 planında](docs/plans/P02.md#p02-22--işletme-logosu); kalite kapıları yukarıdadır.
+`RemoveBusinessLogo` migration'ı yalnız `BusinessLogos` tablosunu ve saklanan görüntüyü kaldırır; geçmiş `BusinessLogoAudits` kayıtları korunur ve uygulama rolü yalnız SELECT alır. Eski migration'lar değiştirilmez. Mevcut kurulumda önce yedek alıp SQL'i inceleyin, sonra yukarıdaki kontrollü migration komutunu çalıştırın. `Down` boş logo tablosunu yeniden oluşturur; eski görüntüyü geri getirmez ve önceki imaj için tablo yetkileri ayrıca gerekir. Görüntülü geri dönüş migration öncesi yedeği gerektirir. [Kapsam ve kanıt](docs/plans/P02.md#logo-özelliğinin-kaldırılması--04102026).
 
 ## Değişiklik kayıtları (P02-23)
 

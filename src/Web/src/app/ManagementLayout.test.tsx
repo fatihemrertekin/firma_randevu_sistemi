@@ -16,7 +16,6 @@ beforeEach(() => {
     if (path === '/api/auth/me') return Response.json(owner)
     if (path === '/api/auth/recovery-email/') return Response.json({ email: owner.email, verifiedAt: null, deliveryAvailable: false })
     if (path === '/api/business-profile/') return Response.json(profile)
-    if (path === '/api/business-logo/') return Response.json({ hasLogo: false, version: 'a4ae913c-2ed5-4ebd-8b86-8ae3d311b348', imageUrl: null, width: null, height: null })
     if (path === '/api/business-hours/') return Response.json({ isConfigured: false, timeZone: 'Europe/Istanbul', version: 'd317d899-8208-41f1-9b8e-c6fbde437cde', days: [] })
     if (path === '/api/staff-invitations/') return Response.json([])
     if (path.startsWith('/api/staff-accounts/')) return Response.json({ items: [], page: 1, hasMore: false })
@@ -51,6 +50,12 @@ async function submit(label: string) {
 }
 
 describe('Yönetim gezinmesi', () => {
+  it('logo bölümü, görüntüsü ve API isteği içermez', async () => {
+    await render()
+    expect(container.textContent).not.toContain('İşletme logosu')
+    expect(container.querySelector('img[alt="İşletme logosu"]')).toBeNull()
+    expect(vi.mocked(fetch).mock.calls.some(([path]) => String(path).startsWith('/api/business-logo'))).toBe(false)
+  })
   it('işletme saatleri taslağında gezinme ve çıkışı korur', async () => {
     const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false)
     await render(); await click('İşletme saatleri')

@@ -51,7 +51,7 @@ Pilot kapsamı [PRODUCT](PRODUCT.md#2-ürün-kararları) ile kararlaştırıldı
 
 ### P02 — Kimlik ve tanımlar (P01)
 
-- İş: Davet/giriş/çıkış/sıfırlama, Owner/Staff, MFA, audit; profil/logo, çalışan/hizmet, fiyat/süre, mesai ve yetkinlik.
+- İş: Davet/giriş/çıkış/sıfırlama, Owner/Staff, MFA, audit; profil, çalışan/hizmet, fiyat/süre, mesai ve yetkinlik. Logo özelliği ürün sahibinin 04.10.2026 kararıyla kapsamdan çıkarıldı.
 - Çıkış: Anonim/yetkisiz API işlemi ve CSRF engellenir; tanımların fiyat/süre/aktiflik ve sürüm kuralları sunucuda uygulanır, silmek yerine pasifleştirme kullanılır. Açık kayıt/varsayılan geliştirme hesabı yoktur; test hesapları ayrı sentetik ortamda kalır. Yerel kapanış ve üretim/pilot sınırları [P02 kabul kaydında](plans/P02.md#p02-kapanış-kontrolü--04102026) ayrıdır.
 
 ### P03 — Randevu motoru (P02)

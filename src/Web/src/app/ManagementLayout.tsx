@@ -14,14 +14,11 @@ import styles from './ManagementLayout.module.css'
 import ErrorMessage from '../components/ErrorMessage'
 import OwnerRecoveryEmail from '../features/auth/OwnerRecoveryEmail'
 import MfaRecoveryCodes from '../features/auth/MfaRecoveryCodes'
-import BusinessLogo from '../features/business/BusinessLogo'
-import BusinessMark from '../features/business/BusinessMark'
 import AuditLog from '../features/audit/AuditLog'
 
-type Section = 'business' | 'logo' | 'hours' | 'security' | 'access' | 'personnel' | 'services' | 'audit'
+type Section = 'business' | 'hours' | 'security' | 'access' | 'personnel' | 'services' | 'audit'
 const sections = [
   { id: 'business', title: 'İşletme bilgileri', description: 'İşletmenizin adını ve iletişim bilgilerini yönetin.' },
-  { id: 'logo', title: 'İşletme logosu', description: 'Giriş ve yönetim ekranlarını işletmenizin logosuyla kişiselleştirin.' },
   { id: 'hours', title: 'İşletme saatleri', description: 'Haftalık açılış, kapanış ve kapalı günleri belirleyin.' },
   { id: 'personnel', title: 'Personel', description: 'İşletmede hizmet veren kişilerin adını ve aktiflik durumunu yönetin.' },
   { id: 'services', title: 'Hizmetler', description: 'Hizmetlerin adını, süresini ve fiyatını yönetin.' },
@@ -38,7 +35,6 @@ export default function ManagementLayout({ auth, account }: Props) {
   const [pendingRequests, setPendingRequests] = useState(0)
   const [definitionDirty, setDefinitionDirty] = useState(false)
   const [definitionBusy, setDefinitionBusy] = useState(false)
-  const [logoRevision, setLogoRevision] = useState(0)
   const heading = useRef<HTMLHeadingElement>(null)
   const blocked = auth.busy || pendingRequests > 0 || definitionBusy
   const current = sections.find(item => item.id === section) ?? sections[0]
@@ -61,7 +57,7 @@ export default function ManagementLayout({ auth, account }: Props) {
 
   return <div className={styles.page}>
     <header className={styles.header}>
-      <div><BusinessMark revision={logoRevision} /><span className={styles.brand}>Randevu</span><span className={styles.subtitle}>Yönetim</span></div>
+      <div><span className={styles.brand}>Randevu</span><span className={styles.subtitle}>Yönetim</span></div>
       <div className={styles.account}><span>{account.email}</span>
         <button type="button" disabled={blocked} onClick={() => {
           if (definitionDirty && !window.confirm('Kaydedilmemiş değişiklikler silinsin ve çıkış yapılsın mı?')) return
@@ -86,9 +82,6 @@ export default function ManagementLayout({ auth, account }: Props) {
         </div>}
         {owner && section === 'personnel' && <div className={styles.panel}>
           <StaffMembers post={post} onDirtyChange={setDefinitionDirty} onBusyChange={setDefinitionBusy} />
-        </div>}
-        {owner && section === 'logo' && <div className={styles.panel}>
-          <BusinessLogo post={post} onDirtyChange={setDefinitionDirty} onBusyChange={setDefinitionBusy} onSaved={() => setLogoRevision(value => value + 1)} />
         </div>}
         {owner && section === 'hours' && <div className={styles.panel}>
           <BusinessHours post={post} onDirtyChange={setDefinitionDirty} onBusyChange={setDefinitionBusy} />
