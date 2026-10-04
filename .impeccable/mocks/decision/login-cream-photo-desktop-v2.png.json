@@ -1,0 +1,26 @@
+{
+  "prompt": "Use case: ui-mockup. Revise a Turkish salon management LOGIN desktop page. Produce one complete high-fidelity WEB page, edge-to-edge landscape 1440x960, no browser or device. Product “Randevu”. OPERATE authentication first, with an atmospheric photographic background similar in STRUCTURE to input image 1.\nInput image 1 is the real original login screenshot, a COMPOSITION and existing copy reference only. Preserve the broad topology: left full-height login zone approximately 36–40% width; right full-height photo-backed welcome zone approximately 60–64% width. Do NOT carry over the dark theme, turquoise palette, old pill, busy feature cards, small link sizes or dark photograph. This is an explicitly requested LIGHT reinterpretation of that original structure, not the previous detached image-card concept.\nPALETTE PINNED BY USER: #001524 ink navy, #15616D petrol, #FFECD1 cream, #FF7D00 orange, #78290F warm brown. Cream #FFECD1 must dominate the visual field, about 60–70% of the perceived page. All UI surfaces are cream and UI text is navy, petrol or brown. Orange used sparingly for the main button with NAVY text (never cream or white text on orange).\nLeft region: solid #FFECD1, no floating card/shadow. Compact wordmark “Randevu” and secondary “İşletme paneli”. Center a comfortable 340px-wide form vertically. Exact content: heading “İşletme girişi”; label “E-posta” above EMPTY input; label “Parola” above EMPTY input, small but readable adjacent link “Parolamı unuttum”; solid flat orange full-width button “Giriş yap” in #001524. Two quiet unboxed secondary links beneath a fine rule: “Çalışan parolamı unuttum” and “Çalışan davetim var”. Standard sans form typography, 16px body, 52px inputs/button, modest 4–6px radius, at least 44px action hit areas. Minimal controls, no icon additions, no large boxed employee buttons.\nRight region: salon photograph is the BACKGROUND of the entire full-height zone, flush to viewport edges, no rounded photo card and no isolated framed picture. Invent a high-end but believable EMPTY barber/hair salon with warm pale plaster, cream stone floor, daylight, warm brown wood #78290F, subtle petrol upholstered chairs, a small warm orange detail, no people/signage/logos. Keep clear composition. A generous #FFECD1 wash over the LEFT half of the photo zone makes headline/background read as cream and leaves the far-right chair/interior clearly photographic. The photograph is broad and atmospheric, not an opaque illustration or tiny decorative inset.\nOn top of the left-middle of the photo zone retain the original real copy: small brown plain text “Berber ve kuaför işletmeleri için” with NO pill; large elegant serif heading “İşletmenize odaklanın.” in navy and a second line “Kontrol sizde olsun.” in petrol. This headline should keep the original page's welcome feeling while remaining subordinate to clear functional login. Below: “İşletme bilgilerinizi ve ekibinizin erişimlerini tek yerden yönetin.” Then two quiet unboxed short supporting blocks: “Güvenli erişim” / “İşletme sahibi hesabında iki aşamalı giriş.” and “Size ait bilgiler” / “İşletme profiliniz ve kontrollü çalışan davetleri.” Keep all text on cream-washed readable areas, NOT on busy furniture; no feature cards.\nAvoid invented claims, appointment/calendar/payment data, signup, social login, remember me, password-eye toggle, extra copy, checklist controls absent from real login. No UI gradient buttons, glass panels, glow, decorative shapes, or additional colors for UI. Natural photo tones allowed. Preserve correct Turkish accents and render the real working login page, not a marketing poster.",
+  "tool": "image_gen.imagegen",
+  "useCase": "ui-mockup",
+  "mode": "operate",
+  "stage": "shape-revision",
+  "optionId": "user-pinned-cream-photo",
+  "approved": true,
+  "userPalette": [
+    "#001524",
+    "#15616D",
+    "#FFECD1",
+    "#FF7D00",
+    "#78290F"
+  ],
+  "referenceImages": [
+    ".local/p02-23-correction-runtime/main-login-1280.png"
+  ],
+  "referenceRole": "original composition and real copy; not old colors",
+  "approval": {
+    "source": "human message",
+    "scope": "revised comp and implementation",
+    "text": "onaylıyorum",
+    "date": "2026-10-04"
+  }
+}

@@ -5,7 +5,7 @@ import StaffInvitationAcceptForm from './StaffInvitationAcceptForm'
 import type useAuthentication from './useAuthentication'
 import { postWithCsrf } from '../../app/api'
 import styles from './AuthenticationScreens.module.css'
-import BusinessMark from '../business/BusinessMark'
+import AuthenticationLayout from './AuthenticationLayout'
 
 export default function AuthenticationScreens({ auth }: { auth: ReturnType<typeof useAuthentication> }) {
   const {
@@ -17,11 +17,7 @@ export default function AuthenticationScreens({ auth }: { auth: ReturnType<typeo
     clearPasswordFields, handleLogin, handleMfaLogin, handleSetup, handleEnable, handleLogout,
   } = auth
   return (
-    <main className={styles.page}>
-      <section className={styles.card} aria-labelledby="page-title">
-        <div className={styles.branding}><BusinessMark />
-          <span className={styles.eyebrow}>Randevu · İşletme paneli</span>
-        </div>
+    <AuthenticationLayout>
         {loading ? (
           <p role="status">Oturum kontrol ediliyor…</p>
         ) : acceptingInvitation ? (
@@ -166,18 +162,6 @@ export default function AuthenticationScreens({ auth }: { auth: ReturnType<typeo
         )}
         <ErrorMessage message={error} />
         {notice && <p role="status">{notice}</p>}
-      </section>
-      <aside className={styles.hero} aria-label="İşletme paneli hakkında">
-        <div className={styles.heroContent}>
-          <span className={styles.badge}>Berber ve kuaför işletmeleri için</span>
-          <h2>İşletmenize odaklanın.<br /><span>Kontrol sizde olsun.</span></h2>
-          <p>İşletme bilgilerinizi ve ekibinizin erişimlerini tek yerden yönetin.</p>
-          <div className={styles.highlights}>
-            <div><strong>Güvenli erişim</strong><p>İşletme sahibi hesabında iki aşamalı giriş.</p></div>
-            <div><strong>Size ait bilgiler</strong><p>İşletme profiliniz ve kontrollü çalışan davetleri.</p></div>
-          </div>
-        </div>
-      </aside>
-    </main>
+    </AuthenticationLayout>
   )
 }

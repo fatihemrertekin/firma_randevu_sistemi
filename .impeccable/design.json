@@ -1,0 +1,116 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-04T04:56:39.2921723+03:00",
+  "title": "Randevu — açık kimlik yüzeyleri",
+  "extensions": {
+    "colorMeta": {
+      "action": {
+        "displayName": "Turuncu işlem",
+        "role": "primary"
+      },
+      "petrol": {
+        "displayName": "Petrol yardımcı eylem",
+        "role": "secondary"
+      },
+      "warm-accent": {
+        "displayName": "Sıcak kahverengi",
+        "role": "tertiary"
+      },
+      "cream": {
+        "displayName": "Krem zemin",
+        "role": "neutral"
+      },
+      "ink": {
+        "displayName": "Lacivert metin",
+        "role": "neutral"
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "purpose": "Yalnız marka/karşılama; yerel Unna"
+      },
+      "title": {
+        "purpose": "Görev ve form başlıkları"
+      }
+    },
+    "shadows": [],
+    "motion": [
+      {
+        "purpose": "Düğme renk geçişi; reduced-motion tercihinde kapanır",
+        "value": "180ms ease-out",
+        "name": "control-color"
+      }
+    ],
+    "breakpoints": [
+      {
+        "value": "900px",
+        "name": "identity-header"
+      },
+      {
+        "value": "1300px",
+        "name": "identity-compact-headline"
+      }
+    ]
+  },
+  "components": [
+    {
+      "description": "Düz turuncu, lacivert metin, belirgin odak",
+      "kind": "button",
+      "css": ".ds-primary{background:#FF7D00;color:#001524;border:1px solid #FF7D00;border-radius:.375rem;padding:.5rem 1rem;min-height:3rem;font:700 1.125rem/1.5 system-ui;cursor:pointer}.ds-primary:hover,.ds-primary:active{background:color-mix(in srgb,#FF7D00 90%,#78290F)}.ds-primary:focus-visible{outline:3px solid #15616D;outline-offset:3px}.ds-primary:disabled{opacity:.65;cursor:not-allowed}",
+      "refersTo": "button-primary",
+      "html": "<button class=\"ds-primary\">Giriş yap</button>",
+      "name": "Ana işlem"
+    },
+    {
+      "description": "Krem yüzeyde petrol metin",
+      "kind": "button",
+      "css": ".ds-secondary{background:#FFECD1;color:#15616D;border:1px solid color-mix(in srgb,#15616D 25%,#FFECD1);border-radius:.375rem;padding:.5rem 1rem;min-height:44px;font:600 1rem/1.5 system-ui;cursor:pointer}.ds-secondary:hover,.ds-secondary:active{background:color-mix(in srgb,#FFECD1 98%,#001524)}.ds-secondary:focus-visible{outline:3px solid #15616D;outline-offset:3px}",
+      "refersTo": "button-secondary",
+      "html": "<button class=\"ds-secondary\">Girişe dön</button>",
+      "name": "Yardımcı eylem"
+    },
+    {
+      "kind": "button",
+      "html": "<button class=\"ds-text\">Parolamı unuttum</button>",
+      "description": "Kutusu olmayan en az 44px hedef",
+      "css": ".ds-text{background:transparent;color:#15616D;border:0;border-radius:.375rem;padding:.5rem 0;min-height:44px;min-width:44px;font:500 1rem/1.5 system-ui;cursor:pointer}.ds-text:hover,.ds-text:active{color:#78290F;text-decoration:underline;text-underline-offset:.25rem}.ds-text:focus-visible{outline:3px solid #15616D;outline-offset:3px}",
+      "name": "Metin eylemi"
+    },
+    {
+      "description": "Görünür etiket ve petrol odak",
+      "kind": "input",
+      "css": ".ds-label{display:grid;gap:.5rem;color:#001524;font:600 1rem/1.5 system-ui}.ds-input{min-height:3rem;padding:.5rem 1rem;border:1px solid color-mix(in srgb,#15616D 75%,#FFECD1);border-radius:.375rem;background:color-mix(in srgb,#FFECD1 98%,#001524);color:#001524;font:1rem system-ui}.ds-input:focus-visible{outline:3px solid #15616D;outline-offset:3px}",
+      "refersTo": "input",
+      "html": "<label class=\"ds-label\">E-posta<input class=\"ds-input\" type=\"email\" /></label>",
+      "name": "Metin alanı"
+    }
+  ],
+  "narrative": {
+    "northStar": "Gün ışığında sade işletme erişimi",
+    "dos": [
+      "Merkezi token ve ortak kimlik yerleşimini kullan"
+    ],
+    "rules": [
+      {
+        "section": "typography",
+        "body": "Serif yalnız marka ve karşılama içindir",
+        "name": "İşlem önce gelir"
+      },
+      {
+        "section": "layout",
+        "name": "Ortak kimlik formu ölçüleri",
+        "body": "Tüm kimlik formlarında marka 48px, başlık 32px, gövde 16px, işlem 18px, alan 48px, form aralığı 8px. Uzun mobil içerik doğal kayar; fotoğraf sütununun ölçeği korunur."
+      }
+    ],
+    "overview": "Krem zeminde sade kontroller ve gerçek salon fotoğrafı. İlk kapsam kimlik yüzeyleri; yönetim dönüşümü ve dark mode uygulanmadı.",
+    "keyCharacteristics": [
+      "Krem baskın",
+      "Sade kontroller",
+      "Gerçek fotoğraf",
+      "İşlem odaklı sans"
+    ],
+    "donts": [
+      "Planlanan modülü veya sunucu başarısını uydurma"
+    ]
+  }
+}

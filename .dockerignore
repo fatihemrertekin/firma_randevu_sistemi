@@ -1,6 +1,9 @@
 .git
 .local
 .github
+.agents
+.codex
+.impeccable
 .npm-cache
 .nuget
 .docker-config

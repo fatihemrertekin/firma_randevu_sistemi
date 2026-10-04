@@ -3,6 +3,7 @@ WORKDIR /workspace/src/Web
 COPY src/Web/package.json src/Web/package-lock.json ./
 RUN npm ci --ignore-scripts
 COPY src/Web/ ./
+COPY assets/plates/salon-background.png /workspace/assets/plates/salon-background.png
 RUN npm run build
 
 FROM mcr.microsoft.com/dotnet/sdk:10.0.401 AS server-build
@@ -19,6 +20,7 @@ WORKDIR /app
 COPY --from=server-build /out ./
 COPY docs/identity-email-licenses.txt /app/identity-email-licenses.txt
 COPY docs/logo-image-licenses.txt /app/logo-image-licenses.txt
+COPY src/Web/src/assets/fonts/Unna-OFL.txt /app/Unna-OFL.txt
 RUN mkdir /app/keys && chown $APP_UID:$APP_UID /app/keys
 ENV ASPNETCORE_HTTP_PORTS=8080
 USER $APP_UID

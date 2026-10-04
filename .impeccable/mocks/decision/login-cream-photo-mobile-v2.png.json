@@ -1,0 +1,26 @@
+{
+  "prompt": "Use case: ui-mockup. Generate a high-fidelity MOBILE WEB login page for “Randevu”, portrait at 390:844 aspect (780x1688 or similar high resolution), page edge to edge, no phone hardware, status bar, browser chrome or surrounding canvas. Visitor mode OPERATE.\nInput image 1 is the approved-by-brief desktop STYLE and PHOTO reference for the latest cream/photo direction, not a desktop layout to shrink. Retain its exact palette roles, welcoming natural salon photography, clean minimalist form controls, and type voice. Use the same salon visual character and matching petrol chair/warm wood/daylight; do not introduce a different business or real people. This is a mobile layout adaptation, not a new direction. The actual mockup is still awaiting user approval.\nUser-pinned palette: #FFECD1 dominant page background over 75% of screen, #001524 primary text, #15616D petrol links and secondary accents, #FF7D00 orange main action with #001524 ink text, #78290F small warm accents. No other UI colors.\nStructure: top 150–170px at actual 390px viewport is a wide, edge-to-edge shallow crop of the desktop salon PHOTO as a BACKGROUND with a cream wash at its lower edge flowing into the cream page. Identity “Randevu” in a modest 24px elegant serif and “İşletme paneli” in 14px sans occupies the left of this top photo band on a readable cream-washed area. Right side of band shows recognisable salon chair/mirror, never a separate rounded image card. No giant welcome headline on mobile; prioritise the real form.\nBelow the short photo band on solid cream, 24px side gutters: “İşletme girişi” at 28px clean bold sans. Then visible “E-posta” label above an EMPTY 52px-high cream-filled standard web input with thin petrol border. Next visible “Parola” label above an EMPTY 52px-high input. The quiet link “Parolamı unuttum” gets its own right aligned 44px touch row underneath, to avoid label collision on 320px. Then flat orange 52px main button “Giriş yap” with navy text and modest 4px corners. Beneath a fine rule, two spacious UNBOXED text-action rows, not outlined cards: “Çalışan parolamı unuttum” and “Çalışan davetim var”, each at least 44px high. Body and link text 16px actual. Keep all content within comfortable screen height; no large blank gaps.\nDo not include desktop welcome headline, feature cards, marketing paragraphs, signup, remember me, social login, password-eye icon, checklist absent from login, fake appointment data, extra claims or decorations. No UI gradients/shadows/glass/pills; natural photograph may have a cream wash. Form must be immediately legible and dominate the screen. Correct Turkish characters, crisp working WEB controls, faithful palette and structural mobile design.",
+  "tool": "image_gen.imagegen",
+  "useCase": "ui-mockup",
+  "mode": "operate",
+  "stage": "shape-revision-responsive-preview",
+  "optionId": "user-pinned-cream-photo",
+  "approved": true,
+  "userPalette": [
+    "#001524",
+    "#15616D",
+    "#FFECD1",
+    "#FF7D00",
+    "#78290F"
+  ],
+  "referenceImages": [
+    ".impeccable/mocks/decision/login-cream-photo-desktop-v2.png"
+  ],
+  "referenceRole": "latest palette, photo and control family; responsive layout adapts",
+  "approval": {
+    "source": "human message",
+    "scope": "revised comp and implementation",
+    "text": "onaylıyorum",
+    "date": "2026-10-04"
+  }
+}

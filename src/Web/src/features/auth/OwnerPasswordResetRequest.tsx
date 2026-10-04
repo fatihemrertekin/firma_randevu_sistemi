@@ -52,7 +52,7 @@ export default function OwnerPasswordResetRequest({ onCancel, onDone }: { onCanc
     <form onSubmit={request} aria-label="Parola sıfırlama bağlantısı iste" aria-busy={busy}>
       <label htmlFor="reset-email">Hesap e-postası</label>
       <input id="reset-email" type="email" autoComplete="email" required maxLength={254}
-        disabled={busy || loading || !available} value={email} onChange={event => setEmail(event.target.value)} />
+        disabled={busy} value={email} onChange={event => setEmail(event.target.value)} />
       <div className={styles.confirmationActions}>
         <button type="submit" disabled={busy || loading || !available}>{busy ? 'İsteniyor…' : 'Bağlantı iste'}</button>
         <button type="button" disabled={busy} onClick={onCancel}>Girişe dön</button>

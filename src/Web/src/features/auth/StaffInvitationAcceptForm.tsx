@@ -1,5 +1,6 @@
 import ErrorMessage from '../../components/ErrorMessage'
 import { useRef, useState, type FormEvent } from 'react'
+import styles from './AuthenticationScreens.module.css'
 
 type Body = { email: string; token: string; password: string; confirmPassword: string }
 type Props = { post: (body: Body) => Promise<Response>; onDone: () => void; onCancel: () => void }
@@ -51,9 +52,11 @@ export default function StaffInvitationAcceptForm({ post, onDone, onCancel }: Pr
       <label htmlFor="accept-confirm">Parola tekrarı</label>
       <input id="accept-confirm" type="password" autoComplete="new-password" required maxLength={1024} disabled={busy}
         value={confirmPassword} onChange={event => setConfirmPassword(event.target.value)} />
-      <button type="submit" disabled={busy}>{busy ? 'Hesap açılıyor…' : 'Hesabımı aç'}</button>
+      <div className={styles.confirmationActions}>
+        <button type="submit" disabled={busy}>{busy ? 'Hesap açılıyor…' : 'Hesabımı aç'}</button>
+        <button type="button" disabled={busy} onClick={onCancel}>Girişe dön</button>
+      </div>
     </form>
-    <button type="button" disabled={busy} onClick={onCancel}>Girişe dön</button>
     <ErrorMessage message={error} />
   </>
 }
