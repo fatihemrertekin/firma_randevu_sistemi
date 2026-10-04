@@ -32,6 +32,8 @@ Güncelleme: 2026-10-04. Güncel özet burada; kapsam ve kanıt bağlantıları 
 
 ## Bakım durumu
 
+Yönetim ortak alanı ve işletme profili (T01) geliştirme/ana yerel teslimi `done` (04.10.2026): [PR #39](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/39) `2595843` ile birleşti; aynı commit [main CI](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/37220894498) başarılı. 196 web testi, gerçek Owner/Staff API ve dört genişlik kabulü geçti. Yedekli 8080 güncellemesinde 30 tablo/hesap/MFA/anahtar/SMTP korundu; sağlık/restart geçti. [Kabul ve geri dönüş sınırı](plans/P02.md#t01-github-ve-ana-yerel-teslim--04102026). Diğer bölümlerin ayrıntılı tasarımı ve native finish tamamlanmış sayılmaz.
+
 Logo özelliğinin kaldırılması ve ana yerel teslimi `done` (04.10.2026): [PR #37](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/37) `7ab95d0` ile birleşti; aynı commit [main CI](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/37213648701) başarılı. Ekran/gösterim/API/görüntü paketleri ve logo tablosu kaldırıldı; şifreli yedek sonrası kalan 30 tablo, üç geçmiş logo audit'i, hesap/MFA/anahtar/SMTP korundu. Sunucu 131/131, web 191/191, gerçek API/Chrome ve ana sağlık/restart geçti. [Kapsam ve kabul](plans/P02.md#logo-özelliğinin-kaldırılması--04102026).
 
 Impeccable kurulum/`init` ve kimlik arayüzünün ana yerel teslimi `done` (04.10.2026): [PR #35](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/35) `d7c3a8b` ile birleşti; aynı commit [main CI](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/37209548984) başarılı. Onaylı krem/fotoğraf, ortak form ölçüleri ve yazılabilir hesap e-postası 8080'de çalışıyor. Şifreli yedek/geri okuma ve eski imaj dönüş provası sonrası 31 tablo, hesap/MFA, anahtar ve SMTP korundu; sağlık/restart geçti. Ana uygulamada yedi form × yedi boyut ve anonim 401 kontrolü geçti; 8091 test projesi/volume kaldırıldı. [Kabul, geri dönüş ve kalan sınırlar](plans/P02.md#impeccable-ana-yerel-teslim--04102026).
@@ -47,7 +49,7 @@ Program.cs bakımı `done`: başlangıç 265 satırdan 69 satıra indi; önce/so
 
 ## Sıradaki iş
 
-Onaylı birleşik taslakla ortak yönetim alanı ve işletme profili (T01) yerel kabulü `done`: 196 web testi ve gerçek API/Chrome başarı/400/401/403/409, dört genişlik geçti. [Kapsam, onay ve motor sınırı](plans/P02.md#t00t01-kabulü-ve-açık-sınırı). Şimdi yalnız T01 PR/yeşil CI ve yedekli ana yerel teslimi tamamlanır; ardından sıradaki aday işletme/personel saatleri (T02) taslağıdır. T02–T08 ayrı onay sınırındadır; P03 ve dark mode başlamaz. Kullanıcının isteğiyle ek görsel/native onay turları durduruldu; native finish tamamlandı sayılmaz.
+Sıradaki tek aday işletme/personel saatleri (T02) taslağıdır. Ortak yönetim alanı ve işletme profili (T01) onaylı birleşik taslakla geliştirildi ve ana yerelde teslim edildi. [Kapsam, onay ve motor sınırı](plans/P02.md#t00t01-kabulü-ve-açık-sınırı). T02–T08 ayrı taslak/kod onay sınırındadır; P03 ve dark mode başlamaz. Kullanıcının isteğiyle ek görsel/native onay turları durduruldu; native finish tamamlandı sayılmaz.
 
 ## Gelecek plan kaydı — destek ve işletim ekranı (02.10.2026)
 
