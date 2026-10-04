@@ -1,41 +1,60 @@
 :root {
-  color-scheme: dark;
-  --background: #080e15;
-  --surface: #101923;
-  --text: #edf3f5;
-  --muted: #a9b8c6;
-  --primary: #65dbc9;
-  --primary-soft: #143c3e;
-  --border: #2c4756;
-  --control-border: #597584;
-  --error: #ffb4b4;
-  --focus: #65dbc9;
-  --shadow: 0 16px 50px rgb(0 0 0 / 20%);
+  color-scheme: light;
+  --color-canvas: #F8FAFC;
+  --color-surface: #FFFFFF;
+  --color-ink: #0F172A;
+  --color-blue: #2563EB;
+  --color-navy: #1E3A5F;
+  --color-error: #B42318;
+  --background: var(--color-canvas);
+  --surface: var(--color-surface);
+  --text: var(--color-ink);
+  --muted: var(--color-navy);
+  --primary: var(--color-blue);
+  --primary-soft: color-mix(in srgb, var(--color-blue) 12%, var(--color-surface));
+  --border: color-mix(in srgb, var(--color-navy) 25%, var(--color-surface));
+  --control-border: color-mix(in srgb, var(--color-navy) 75%, var(--color-surface));
+  --error: var(--color-error);
+  --focus: var(--color-blue);
+  --shadow: none;
+  --button-primary-bg: var(--color-blue);
+  --button-primary-text: var(--color-surface);
+  --button-primary-hover: color-mix(in srgb, var(--color-blue) 85%, var(--color-ink));
+  --button-secondary-bg: var(--color-navy);
+  --button-secondary-text: var(--color-surface);
+  --button-secondary-hover: color-mix(in srgb, var(--color-navy) 85%, var(--color-ink));
+  --button-navigation-bg: color-mix(in srgb, var(--color-navy) 6%, var(--color-surface));
+  --button-navigation-selected-bg: var(--primary-soft);
+  --button-danger-bg: var(--color-error);
+  --button-danger-text: var(--color-surface);
+  --button-danger-hover: color-mix(in srgb, var(--color-error) 85%, var(--color-ink));
+  --feedback-bg: color-mix(in srgb, var(--color-surface) 92%, var(--color-error));
   --target-min: 44px;
   --space-2: .5rem;
 }
 
-/* Shared approved palette; each surface keeps its own layout. */
+/* Shared palette roles also cover identity and management surfaces. */
 .auth-theme, .management-theme {
   color-scheme: light;
-  --auth-cream: #FFECD1;
-  --auth-ink: #001524;
-  --auth-petrol: #15616D;
-  --auth-orange: #FF7D00;
-  --auth-brown: #78290F;
+  /* Existing surface names remain aliases; new colors are edited above. */
+  --auth-cream: var(--color-canvas);
+  --auth-ink: var(--color-ink);
+  --auth-petrol: var(--color-navy);
+  --auth-orange: var(--color-blue);
+  --auth-brown: var(--color-error);
   --background: var(--auth-cream);
-  --surface: var(--auth-cream);
+  --surface: var(--color-surface);
   --text: var(--auth-ink);
   --muted: var(--auth-petrol);
   --primary: var(--auth-orange);
   --border: color-mix(in srgb, var(--auth-petrol) 25%, var(--auth-cream));
   --control-border: color-mix(in srgb, var(--auth-petrol) 75%, var(--auth-cream));
   --error: var(--auth-brown);
-  --focus: var(--auth-petrol);
-  --auth-input: color-mix(in srgb, var(--auth-cream) 98%, var(--auth-ink));
-  --auth-feedback: color-mix(in srgb, var(--auth-cream) 92%, var(--auth-brown));
+  --focus: var(--color-blue);
+  --auth-input: var(--color-surface);
+  --auth-feedback: var(--feedback-bg);
   --auth-selection: color-mix(in srgb, var(--auth-cream) 65%, var(--auth-orange));
-  --auth-action-hover: color-mix(in srgb, var(--auth-orange) 90%, var(--auth-brown));
+  --auth-action-hover: var(--button-primary-hover);
   --auth-space-1: .25rem;
   --auth-space-2: .5rem;
   --auth-space-3: .75rem;
@@ -84,7 +103,6 @@
 }
 
 .management-theme {
-  --primary-soft: color-mix(in srgb, var(--auth-petrol) 12%, var(--auth-cream));
   --shadow: none;
   --management-rail: 8rem;
   --management-drawer: 15.5rem;
@@ -100,6 +118,8 @@
   --management-photo-ratio: 410 / 224;
   --management-photo-mobile: 7rem;
   --management-rail-selected: color-mix(in srgb, var(--auth-petrol) 75%, var(--auth-ink));
+  --management-rail-bg: var(--color-ink);
+  --management-rail-action-bg: var(--color-navy);
   --hours-editor-max: 64rem;
   --personnel-form-max: 48rem;
   --personnel-action-width: 10rem;

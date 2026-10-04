@@ -5,14 +5,15 @@
 .identity { min-width: 0; overflow-wrap: anywhere; }
 .identity p { margin-block: var(--space-2); color: var(--muted); }
 .actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin-block: calc(var(--space-2) * 2); }
-.primary, .editor button.primary { background: var(--primary); color: var(--background); border-color: var(--primary); font-weight: 700; }
+:global(.management-theme) button.primary { background: var(--button-primary-bg); color: var(--button-primary-text); border-color: var(--button-primary-bg); font-weight: 700; }
+:global(.management-theme) button.primary:hover:enabled { background: var(--button-primary-hover); }
 .editor { display: grid; gap: var(--space-2); margin-block: calc(var(--space-2) * 2); }
 .editor input { width: 100%; min-width: 0; }
 .confirmation { min-width: 0; margin-block: calc(var(--space-2) * 2); border: calc(var(--space-2) / 8) solid var(--control-border); padding: calc(var(--space-2) * 2); }
 .confirmation button { margin: var(--space-2); }
 .fieldError { color: var(--error); }
-.danger { color: var(--error); border-color: var(--error); }
-.confirmation button.confirm { background: var(--error); color: var(--background); border-color: var(--error); font-weight: 700; }
+:global(.management-theme) button.danger, :global(.management-theme) button.confirm { color: var(--button-danger-text); background: var(--button-danger-bg); border-color: var(--button-danger-bg); }
+:global(.management-theme) button.danger:hover:enabled, :global(.management-theme) button.confirm:hover:enabled { background: var(--button-danger-hover); }
 .skeleton { min-height: calc(var(--space-2) * 6); margin-block: calc(var(--space-2) * 2); background: var(--border); }
 
 .fields { display: grid; gap: var(--space-2); border: 0; padding: 0; min-width: 0; margin: 0; }

@@ -1,8 +1,8 @@
 .page { min-height: 100svh; background: var(--background); color: var(--text); font-size: var(--auth-body-size); }
 .page ::selection { background: var(--auth-selection); color: var(--text); }
-.page button { margin: 0; min-height: var(--auth-control-height); border-radius: var(--auth-radius); border: var(--auth-rule) solid var(--control-border); background: var(--surface); color: var(--auth-petrol); padding: var(--auth-space-3) var(--auth-space-4); transition: background-color var(--auth-transition); }
-.page button:hover:enabled { filter: none; background: var(--primary-soft); }
-.page button[type='submit'] { background: var(--auth-orange); border-color: var(--auth-orange); color: var(--text); }
+.page button { margin: 0; min-height: var(--auth-control-height); border-radius: var(--auth-radius); border: var(--auth-rule) solid var(--button-secondary-bg); background: var(--button-secondary-bg); color: var(--button-secondary-text); padding: var(--auth-space-3) var(--auth-space-4); transition: background-color var(--auth-transition); }
+.page button:hover:enabled { filter: none; background: var(--button-secondary-hover); }
+.page button[type='submit'] { background: var(--button-primary-bg); border-color: var(--button-primary-bg); color: var(--button-primary-text); }
 .page button[type='submit']:hover:enabled { background: var(--auth-action-hover); }
 .page button:disabled { cursor: not-allowed; }
 .page input, .page textarea { min-height: var(--auth-control-height); border-radius: var(--auth-radius); border: var(--auth-rule) solid var(--control-border); background: var(--auth-input); color: var(--text); padding: var(--auth-space-3) var(--auth-space-4); caret-color: var(--auth-petrol); }
@@ -19,8 +19,8 @@
 .layout { display: grid; grid-template-columns: var(--management-rail) var(--management-drawer) minmax(0, 1fr); min-height: calc(100svh - var(--management-header)); }
 .layout[data-drawer-open='false'] { grid-template-columns: var(--management-rail) minmax(0, 1fr); }
 .navigation { display: contents; }
-.rail { padding: var(--auth-space-5) var(--auth-space-2); display: flex; flex-direction: column; gap: var(--auth-space-4); background: var(--auth-petrol); }
-.rail button { width: 100%; min-height: var(--management-rail-action); display: flex; flex-direction: column; justify-content: center; align-items: center; gap: var(--auth-space-2); color: var(--auth-cream); background: transparent; border-color: transparent; text-align: center; font-size: var(--auth-body-size); }
+.rail { padding: var(--auth-space-5) var(--auth-space-2); display: flex; flex-direction: column; gap: var(--auth-space-4); background: var(--management-rail-bg); }
+.rail button { width: 100%; min-height: var(--management-rail-action); display: flex; flex-direction: column; justify-content: center; align-items: center; gap: var(--auth-space-2); color: var(--color-surface); background: var(--management-rail-action-bg); border-color: var(--management-rail-action-bg); text-align: center; font-size: var(--auth-body-size); }
 .rail button[aria-pressed='true'], .rail button[aria-current='page'], .rail button:hover:enabled { background: var(--management-rail-selected); color: var(--auth-cream); }
 .rail button:focus-visible { outline-color: var(--auth-cream); }
 .rail svg { width: var(--management-icon); height: var(--management-icon); flex-shrink: 0; }
@@ -29,8 +29,8 @@
 .drawer nav { min-height: 100%; display: flex; flex-direction: column; }
 .drawer h2 { margin: 0 0 var(--auth-space-4); padding-inline: var(--auth-space-3); font-size: var(--auth-title-size); }
 .drawer nav > div:not([hidden]) { display: grid; gap: var(--auth-space-2); }
-.drawer button { width: 100%; text-align: left; border-color: transparent; background: transparent; color: var(--text); }
-.drawer button[aria-current='page'] { background: var(--primary-soft); color: var(--auth-petrol); }
+.drawer button { width: 100%; text-align: left; border-color: var(--button-navigation-bg); background: var(--button-navigation-bg); color: var(--text); }
+.drawer button[aria-current='page'], .drawer button:hover:enabled { background: var(--button-navigation-selected-bg); color: var(--auth-petrol); }
 .drawer .closeMenu { margin-top: auto; padding-top: var(--auth-space-5); }
 .content { min-width: 0; padding: var(--management-inset); }
 .content > h1 { margin: 0 0 var(--auth-space-2); font-size: var(--management-title); line-height: 1.2; overflow-wrap: anywhere; }

@@ -1,27 +1,31 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-04T04:56:39.2921723+03:00",
+  "generatedAt": "2026-10-05T02:00:00+03:00",
   "title": "Randevu — açık kimlik yüzeyleri",
   "extensions": {
     "colorMeta": {
       "action": {
-        "displayName": "Turuncu işlem",
+        "displayName": "Mavi ana işlem",
         "role": "primary"
       },
-      "petrol": {
-        "displayName": "Petrol yardımcı eylem",
+      "navy": {
+        "displayName": "Lacivert yardımcı işlem",
         "role": "secondary"
       },
-      "warm-accent": {
-        "displayName": "Sıcak kahverengi",
+      "error": {
+        "displayName": "Kırmızı hata ve tehlikeli işlem",
         "role": "tertiary"
       },
-      "cream": {
-        "displayName": "Krem zemin",
+      "canvas": {
+        "displayName": "Beyaza yakın açık gri zemin",
+        "role": "neutral"
+      },
+      "surface": {
+        "displayName": "Beyaz alan yüzeyi",
         "role": "neutral"
       },
       "ink": {
-        "displayName": "Lacivert metin",
+        "displayName": "Koyu lacivert metin",
         "role": "neutral"
       }
     },
@@ -54,17 +58,17 @@
   },
   "components": [
     {
-      "description": "Düz turuncu, lacivert metin, belirgin odak",
+      "description": "Dolu mavi, beyaz metin ve görünür mavi odak",
       "kind": "button",
-      "css": ".ds-primary{background:#FF7D00;color:#001524;border:1px solid #FF7D00;border-radius:.375rem;padding:.5rem 1rem;min-height:3rem;font:700 1.125rem/1.5 system-ui;cursor:pointer}.ds-primary:hover,.ds-primary:active{background:color-mix(in srgb,#FF7D00 90%,#78290F)}.ds-primary:focus-visible{outline:3px solid #15616D;outline-offset:3px}.ds-primary:disabled{opacity:.65;cursor:not-allowed}",
+      "css": ".ds-primary{background:var(--color-blue);color:var(--button-primary-text);border:1px solid var(--color-blue);border-radius:.375rem;padding:.5rem 1rem;min-height:3rem;font:700 1.125rem/1.5 system-ui;cursor:pointer}.ds-primary:hover,.ds-primary:active{background:var(--button-primary-hover)}.ds-primary:focus-visible{outline:3px solid var(--color-blue);outline-offset:3px}.ds-primary:disabled{opacity:.65;cursor:not-allowed}",
       "refersTo": "button-primary",
       "html": "<button class=\"ds-primary\">Giriş yap</button>",
       "name": "Ana işlem"
     },
     {
-      "description": "Krem yüzeyde petrol metin",
+      "description": "Dolu lacivert ve beyaz metin",
       "kind": "button",
-      "css": ".ds-secondary{background:#FFECD1;color:#15616D;border:1px solid color-mix(in srgb,#15616D 25%,#FFECD1);border-radius:.375rem;padding:.5rem 1rem;min-height:44px;font:600 1rem/1.5 system-ui;cursor:pointer}.ds-secondary:hover,.ds-secondary:active{background:color-mix(in srgb,#FFECD1 98%,#001524)}.ds-secondary:focus-visible{outline:3px solid #15616D;outline-offset:3px}",
+      "css": ".ds-secondary{background:var(--button-secondary-bg);color:var(--button-secondary-text);border:1px solid var(--button-secondary-bg);border-radius:.375rem;padding:.5rem 1rem;min-height:44px;font:600 1rem/1.5 system-ui;cursor:pointer}.ds-secondary:hover,.ds-secondary:active{background:var(--button-secondary-hover)}.ds-secondary:focus-visible{outline:3px solid var(--color-blue);outline-offset:3px}",
       "refersTo": "button-secondary",
       "html": "<button class=\"ds-secondary\">Girişe dön</button>",
       "name": "Yardımcı eylem"
@@ -72,14 +76,14 @@
     {
       "kind": "button",
       "html": "<button class=\"ds-text\">Parolamı unuttum</button>",
-      "description": "Kutusu olmayan en az 44px hedef",
-      "css": ".ds-text{background:transparent;color:#15616D;border:0;border-radius:.375rem;padding:.5rem 0;min-height:44px;min-width:44px;font:500 1rem/1.5 system-ui;cursor:pointer}.ds-text:hover,.ds-text:active{color:#78290F;text-decoration:underline;text-underline-offset:.25rem}.ds-text:focus-visible{outline:3px solid #15616D;outline-offset:3px}",
+      "description": "Hafif dolgu, lacivert metin ve en az 44px hedef",
+      "css": ".ds-text{background:var(--button-navigation-bg);color:var(--color-navy);border:0;border-radius:.375rem;padding:.5rem .75rem;min-height:44px;min-width:44px;font:500 1rem/1.5 system-ui;cursor:pointer}.ds-text:hover,.ds-text:active{background:var(--button-navigation-selected-bg);color:var(--color-navy);text-decoration:underline;text-underline-offset:.25rem}.ds-text:focus-visible{outline:3px solid var(--color-blue);outline-offset:3px}",
       "name": "Metin eylemi"
     },
     {
-      "description": "Görünür etiket ve petrol odak",
+      "description": "Beyaz alan, görünür etiket ve mavi odak",
       "kind": "input",
-      "css": ".ds-label{display:grid;gap:.5rem;color:#001524;font:600 1rem/1.5 system-ui}.ds-input{min-height:3rem;padding:.5rem 1rem;border:1px solid color-mix(in srgb,#15616D 75%,#FFECD1);border-radius:.375rem;background:color-mix(in srgb,#FFECD1 98%,#001524);color:#001524;font:1rem system-ui}.ds-input:focus-visible{outline:3px solid #15616D;outline-offset:3px}",
+      "css": ".ds-label{display:grid;gap:.5rem;color:var(--color-ink);font:600 1rem/1.5 system-ui}.ds-input{min-height:3rem;padding:.5rem 1rem;border:1px solid color-mix(in srgb,var(--color-navy) 75%,var(--color-canvas));border-radius:.375rem;background:var(--color-surface);color:var(--color-ink);font:1rem system-ui}.ds-input:focus-visible{outline:3px solid var(--color-blue);outline-offset:3px}",
       "refersTo": "input",
       "html": "<label class=\"ds-label\">E-posta<input class=\"ds-input\" type=\"email\" /></label>",
       "name": "Metin alanı"
@@ -102,9 +106,9 @@
         "body": "Tüm kimlik formlarında marka 48px, başlık 32px, gövde 16px, işlem 18px, alan 48px, form aralığı 8px. Uzun mobil içerik doğal kayar; fotoğraf sütununun ölçeği korunur."
       }
     ],
-    "overview": "Krem zeminde sade kontroller ve gerçek salon fotoğrafı. İlk kapsam kimlik yüzeyleri; yönetim dönüşümü ve dark mode uygulanmadı.",
+    "overview": "Beyaza yakın açık gri zeminde dolu mavi ana işlemler, lacivert yardımcı işlemler ve mevcut salon fotoğrafı. Ortak palet giriş, MFA, diğer kimlik işlemleri ve mevcut yönetim ekranlarının tamamına uygulanır; ekranların ayrıntılı dönüşümü T01–T08 kapsamında ayrı ilerler. Dark mode uygulanmadı.",
     "keyCharacteristics": [
-      "Krem baskın",
+      "Beyaza yakın zemin ve beyaz alanlar",
       "Sade kontroller",
       "Gerçek fotoğraf",
       "İşlem odaklı sans"
