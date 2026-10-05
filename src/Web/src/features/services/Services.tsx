@@ -85,9 +85,9 @@ export default function Services({ post, onDirtyChange, onBusyChange }: Props) {
     {target && <fieldset className={styles.confirmation} disabled={busy} aria-label="Hizmet durum değişikliği onayı">
       <legend>Hizmeti {target.isActive ? 'pasifleştir' : 'aktifleştir'}</legend>
       <p className={styles.identity}><strong>{target.name}</strong> {target.isActive ? 'pasif' : 'aktif'} olarak işaretlenecek. Kayıt silinmez; hizmetin adı, süresi ve fiyatı korunur.</p>
-      <button type="button" className={target.isActive ? styles.confirm : styles.primary} ref={confirm} disabled={stale}
+      <div className={styles.actions}><button type="button" className={target.isActive ? styles.confirm : styles.primary} ref={confirm} disabled={stale}
         onClick={() => { void changeStatus() }}>{busy ? 'İşlem sürüyor…' : 'Durumu değiştir'}</button>
-      <button type="button" onClick={() => { restoreFocus.current = true; setTarget(null); setError('') }}>Vazgeç</button>
+      <button type="button" onClick={() => { restoreFocus.current = true; setTarget(null); setError('') }}>Vazgeç</button></div>
     </fieldset>}
     <div className={styles.actions}>
       <button type="button" disabled={busy || loading || editing !== null} onClick={() => { setNotice(''); load(); heading.current?.focus() }}>Listeyi yenile</button>

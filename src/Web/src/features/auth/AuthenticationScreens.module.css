@@ -70,8 +70,9 @@
 }
 .card p[role='status'] { margin-top: var(--auth-space-4); }
 .card form > :is(input, textarea) + :is(label, button, .passwordHeading, .confirmationActions) { margin-top: calc(var(--action-row-gap) - var(--auth-space-2)); }
+.card form > :is(label, p) + :is(button, .confirmationActions) { margin-top: calc(var(--action-row-gap) - var(--auth-space-2)); }
 .card form > button + button { margin-top: calc(var(--action-row-gap) - var(--auth-space-2)); }
-.card .formContent form ~ button { margin-top: var(--action-row-gap); }
+.card .formContent > form ~ button { margin-top: var(--action-row-gap); }
 .passwordHeading { display: flex; align-items: center; justify-content: space-between; gap: var(--auth-space-2); }
 .card .textAction {
   margin: 0;

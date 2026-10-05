@@ -10,7 +10,7 @@
 .editor { display: grid; gap: var(--space-2); margin-block: calc(var(--space-2) * 2); }
 .editor input { width: 100%; min-width: 0; }
 .confirmation { min-width: 0; margin-block: calc(var(--space-2) * 2); border: calc(var(--space-2) / 8) solid var(--control-border); padding: calc(var(--space-2) * 2); }
-.confirmation button { margin: var(--space-2); }
+.confirmation .actions button { margin: 0; }
 .fieldError { color: var(--error); }
 :global(.management-theme) button.danger, :global(.management-theme) button.confirm { color: var(--button-danger-text); background: var(--button-danger-bg); border-color: var(--button-danger-bg); }
 :global(.management-theme) button.danger:hover:enabled, :global(.management-theme) button.confirm:hover:enabled { background: var(--button-danger-hover); }
