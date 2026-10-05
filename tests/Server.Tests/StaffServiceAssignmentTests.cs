@@ -219,7 +219,9 @@ public sealed class StaffServiceAssignmentTests
         var duplicate = await Assert.ThrowsAsync<PostgresException>(() => db.Database.ExecuteSqlInterpolatedAsync($"INSERT INTO \"StaffServiceAssignments\" VALUES ({member.Id}, {service.Id})", Token)); Assert.Equal("23505", duplicate.SqlState);
         var orphan = await Assert.ThrowsAsync<PostgresException>(() => db.Database.ExecuteSqlInterpolatedAsync($"INSERT INTO \"StaffServiceAssignments\" VALUES ({member.Id}, {Guid.NewGuid()})", Token)); Assert.Equal("23503", orphan.SqlState);
         var deletion = await Assert.ThrowsAsync<PostgresException>(() => db.Database.ExecuteSqlInterpolatedAsync($"DELETE FROM \"ServiceDefinitions\" WHERE \"Id\" = {service.Id}", Token)); Assert.Equal("23001", deletion.SqlState);
-        var migrator = db.GetService<IMigrator>(); await migrator.MigrateAsync("20261002234539_ServiceDefinitions", Token);
+        var migrator = db.GetService<IMigrator>();
+        var down = migrator.GenerateScript("20261003004248_StaffServiceAssignments", "20261002234539_ServiceDefinitions");
+        await db.Database.ExecuteSqlRawAsync(down, Token);
         Assert.Equal(saved.Member.Version, (await db.StaffMembers.AsNoTracking().SingleAsync(Token)).Version);
         var retained = await db.ServiceDefinitions.AsNoTracking().SingleAsync(Token); Assert.Equal(service.Version, retained.Version); Assert.Equal(0.29m, retained.Price);
         await AssertOriginalStateAsync(app, seed); await migrator.MigrateAsync(cancellationToken: Token);

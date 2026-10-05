@@ -57,7 +57,7 @@ Program.cs bakımı `done`: başlangıç 265 satırdan 69 satıra indi; önce/so
 
 ## Sıradaki iş
 
-Hafif pastel/fotoğraf/dikey boşluk bakımı teslim edildi. Sonraki tek aday T04 hizmet tanımı taslağıdır; ayrı taslak/kod onayıyla başlar, otomatik başlamaz. T04–T08, P03 ve dark mode tamamlanmış değildir. Ek görsel/native onay turu yapılmadı; native finish açık kalır.
+Kullanıcının istediği çalışan hesabını yeniden etkinleştirme ve personel/hizmet Sil işlemleri `in_progress`; [kapsam ve kabul](plans/P02.md#tanım-silme-ve-çalışan-hesabını-etkinleştirme--05102026). Çalışan giriş hesabı silme kapsam dışıdır. Önce bu bakımın test/CI/ana yerel teslimi kapatılır. T04–T08, P03 ve dark mode başlamış sayılmaz; native finish açık kalır.
 
 ## Gelecek plan kaydı — destek ve işletim ekranı (02.10.2026)
 

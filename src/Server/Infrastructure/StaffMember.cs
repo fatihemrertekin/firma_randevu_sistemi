@@ -6,6 +6,7 @@ public sealed class StaffMember
     public Guid Id { get; set; }
     public required string Name { get; set; }
     public bool IsActive { get; set; } = true;
+    public bool IsDeleted { get; set; }
     public Guid Version { get; set; }
 }
 

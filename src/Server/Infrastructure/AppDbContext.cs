@@ -33,6 +33,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<OwnerSelfServiceReset> OwnerSelfServiceResets => Set<OwnerSelfServiceReset>();
     public DbSet<IdentityEmailQuota> IdentityEmailQuotas => Set<IdentityEmailQuota>();
     public DbSet<StaffDeactivationAudit> StaffDeactivationAudits => Set<StaffDeactivationAudit>();
+    public DbSet<StaffActivationAudit> StaffActivationAudits => Set<StaffActivationAudit>();
     public DbSet<StaffMember> StaffMembers => Set<StaffMember>();
     public DbSet<StaffMemberAudit> StaffMemberAudits => Set<StaffMemberAudit>();
     public DbSet<ServiceDefinition> ServiceDefinitions => Set<ServiceDefinition>();
@@ -60,6 +61,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
         builder.Entity<StaffInvitationAudit>().HasIndex(entry => new { entry.OccurredAt, entry.Id }).IsDescending(true, true);
         builder.Entity<StaffPasswordResetAudit>().HasIndex(entry => new { entry.OccurredAt, entry.Id }).IsDescending(true, true);
         builder.Entity<StaffDeactivationAudit>().HasIndex(entry => new { entry.OccurredAt, entry.Id }).IsDescending(true, true);
+        builder.Entity<StaffActivationAudit>().HasIndex(entry => new { entry.OccurredAt, entry.Id }).IsDescending(true, true);
         builder.Entity<OwnerPasswordResetAudit>().HasIndex(entry => new { entry.OccurredAt, entry.Id }).IsDescending(true, true);
         builder.Entity<OwnerMfaRecoveryAudit>().HasIndex(entry => new { entry.OccurredAt, entry.Id }).IsDescending(true, true);
         var logoAudit = builder.Entity<BusinessLogoAudit>();
@@ -110,6 +112,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
         service.Property(entry => entry.Currency).HasMaxLength(3);
         service.Property(entry => entry.Price).HasPrecision(8, 2);
         service.Property(entry => entry.Version).IsConcurrencyToken();
+        service.Property(entry => entry.IsDeleted).HasDefaultValue(false);
         service.HasIndex(entry => new { entry.Name, entry.Id });
         service.ToTable(table =>
         {
@@ -117,28 +120,37 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
             table.HasCheckConstraint("CK_ServiceDefinitions_Duration", "\"DurationMinutes\" BETWEEN 1 AND 1440");
             table.HasCheckConstraint("CK_ServiceDefinitions_Price", "\"Price\" BETWEEN 0 AND 999999.99");
             table.HasCheckConstraint("CK_ServiceDefinitions_Currency", "\"Currency\" = 'TRY'");
+            table.HasCheckConstraint("CK_ServiceDefinitions_DeletedInactive", "NOT \"IsDeleted\" OR NOT \"IsActive\"");
         });
         var serviceAudit = builder.Entity<ServiceDefinitionAudit>();
         serviceAudit.Property(entry => entry.Kind).HasMaxLength(16);
-        serviceAudit.ToTable(table => table.HasCheckConstraint("CK_ServiceDefinitionAudits_Kind", "\"Kind\" IN ('Created','Updated','Activated','Deactivated')"));
+        serviceAudit.ToTable(table => table.HasCheckConstraint("CK_ServiceDefinitionAudits_Kind", "\"Kind\" IN ('Created','Updated','Activated','Deactivated','Deleted')"));
         serviceAudit.HasIndex(entry => new { entry.ServiceDefinitionId, entry.ServiceVersion }).IsUnique();
         serviceAudit.HasOne<ServiceDefinition>().WithMany().HasForeignKey(entry => entry.ServiceDefinitionId).OnDelete(DeleteBehavior.Restrict);
         serviceAudit.HasOne<AppUser>().WithMany().HasForeignKey(entry => entry.ActorId).OnDelete(DeleteBehavior.Restrict);
         var member = builder.Entity<StaffMember>();
         member.Property(entry => entry.Name).HasMaxLength(100);
         member.Property(entry => entry.Version).IsConcurrencyToken();
-        member.ToTable(table => table.HasCheckConstraint("CK_StaffMembers_Name", "length(btrim(\"Name\")) > 0"));
+        member.Property(entry => entry.IsDeleted).HasDefaultValue(false);
+        member.ToTable(table =>
+        {
+            table.HasCheckConstraint("CK_StaffMembers_Name", "length(btrim(\"Name\")) > 0");
+            table.HasCheckConstraint("CK_StaffMembers_DeletedInactive", "NOT \"IsDeleted\" OR NOT \"IsActive\"");
+        });
         member.HasIndex(entry => new { entry.Name, entry.Id });
         var memberAudit = builder.Entity<StaffMemberAudit>();
         memberAudit.Property(entry => entry.Kind).HasMaxLength(16);
         memberAudit.ToTable(table => table.HasCheckConstraint("CK_StaffMemberAudits_Kind",
-            "\"Kind\" IN ('Created','Renamed','Activated','Deactivated')"));
+            "\"Kind\" IN ('Created','Renamed','Activated','Deactivated','Deleted')"));
         memberAudit.HasIndex(entry => new { entry.StaffMemberId, entry.MemberVersion }).IsUnique();
         memberAudit.HasOne<StaffMember>().WithMany().HasForeignKey(entry => entry.StaffMemberId).OnDelete(DeleteBehavior.Restrict);
         memberAudit.HasOne<AppUser>().WithMany().HasForeignKey(entry => entry.ActorId).OnDelete(DeleteBehavior.Restrict);
         var deactivation = builder.Entity<StaffDeactivationAudit>();
         deactivation.HasOne<AppUser>().WithMany().HasForeignKey(entry => entry.StaffId).OnDelete(DeleteBehavior.Restrict);
         deactivation.HasOne<AppUser>().WithMany().HasForeignKey(entry => entry.ActorId).OnDelete(DeleteBehavior.Restrict);
+        var activation = builder.Entity<StaffActivationAudit>();
+        activation.HasOne<AppUser>().WithMany().HasForeignKey(entry => entry.StaffId).OnDelete(DeleteBehavior.Restrict);
+        activation.HasOne<AppUser>().WithMany().HasForeignKey(entry => entry.ActorId).OnDelete(DeleteBehavior.Restrict);
         builder.Entity<IdentityEmailQuota>().HasKey(entry => entry.Day);
         var reset = builder.Entity<OwnerSelfServiceReset>();
         reset.HasKey(entry => entry.OwnerId);

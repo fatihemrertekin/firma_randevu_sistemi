@@ -44,7 +44,7 @@ export default function StaffMembers({ post, onDirtyChange, onBusyChange }: Prop
   }
   return <section ref={surface} className={styles.surface} aria-label="Personel yönetimi">
     {view.kind === 'detail' && <StaffMemberDetail memberId={view.id} post={post} initialNotice={notice}
-      onBack={back} onDirtyChange={onDirtyChange} onBusyChange={setChildBusy} />}
+      onBack={back} onDeleted={name => { setNotice(`${name} personel listesinden silindi.`); setPage(1); back() }} onDirtyChange={onDirtyChange} onBusyChange={setChildBusy} />}
     {view.kind === 'create' && <>
       <h2>Yeni personel</h2><p>Bu kayıt sisteme giriş hesabı oluşturmaz.</p>
       <StaffMemberEditor member={null} embedded post={post} onDirtyChange={onDirtyChange} onBusyChange={setChildBusy}

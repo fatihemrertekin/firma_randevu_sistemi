@@ -212,7 +212,7 @@ public sealed class StaffMemberTests
         Assert.True((await scope.ServiceProvider.GetRequiredService<UserManager<AppUser>>().UpdateSecurityStampAsync(locked)).Succeeded);
         await transaction.CommitAsync(Token);
         using var result = await waiting; Assert.Equal(HttpStatusCode.Unauthorized, result.StatusCode);
-        Assert.Empty(await db.StaffMembers.ToArrayAsync(Token)); Assert.Empty(await db.StaffMemberAudits.ToArrayAsync(Token));
+        Assert.False(await db.StaffMembers.AnyAsync(Token)); Assert.Empty(await db.StaffMemberAudits.ToArrayAsync(Token));
     }
 
     [Fact]
@@ -229,7 +229,8 @@ public sealed class StaffMemberTests
             """, Token);
         await migrator.MigrateAsync(migrations[index], Token);
         var user = await db.Users.AsNoTracking().SingleAsync(Token); Assert.True(user.IsActive); Assert.True(user.TwoFactorEnabled); Assert.Equal("synthetic-stamp", user.SecurityStamp);
-        Assert.Empty(await db.StaffMembers.ToArrayAsync(Token)); Assert.Empty(await db.StaffMemberAudits.ToArrayAsync(Token));
+        // Tarihsel şemada daha sonra eklenen IsDeleted sütunu henüz yoktur.
+        Assert.False(await db.StaffMembers.AnyAsync(Token)); Assert.Empty(await db.StaffMemberAudits.ToArrayAsync(Token));
         await migrator.MigrateAsync(migrations[index - 1], Token); await migrator.MigrateAsync(migrations[index], Token);
         Assert.Equal(user.SecurityStamp, (await db.Users.AsNoTracking().SingleAsync(Token)).SecurityStamp);
         Assert.Single(await db.BusinessProfiles.ToArrayAsync(Token));

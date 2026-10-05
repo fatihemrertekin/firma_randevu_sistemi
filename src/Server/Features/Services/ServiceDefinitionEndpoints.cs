@@ -16,6 +16,7 @@ public static class ServiceDefinitionEndpoints
     public sealed record CreateRequest(Guid Id, string Name, int DurationMinutes, string Price);
     public sealed record UpdateRequest(string Name, int DurationMinutes, string Price, Guid Version);
     public sealed record StatusRequest(bool? IsActive, Guid Version);
+    public sealed record DeleteRequest(Guid Version);
     private sealed record Definition(string Name, int DurationMinutes, decimal Price);
 
     public static void MapServiceDefinitionEndpoints(this IEndpointRouteBuilder app)
@@ -26,6 +27,7 @@ public static class ServiceDefinitionEndpoints
         services.MapPost("/", CreateAsync);
         services.MapPost("/{id:guid}", UpdateAsync);
         services.MapPost("/{id:guid}/status", StatusAsync);
+        services.MapPost("/{id:guid}/delete", DeleteAsync);
     }
     internal static ServiceResponse Response(ServiceDefinition item) => new(item.Id, item.Name, item.DurationMinutes,
         item.Price.ToString("0.00", CultureInfo.InvariantCulture), item.Currency, item.IsActive, item.Version);
@@ -55,14 +57,14 @@ public static class ServiceDefinitionEndpoints
         using var timeout = Timeout(context);
         if (page is < 1 or > 10000 || pageSize is < 1 or > 50)
             return Results.Problem(statusCode: 400, title: "Geçerli sayfa ve 1–50 arası sayfa boyutu gerekli.");
-        var rows = await db.ServiceDefinitions.AsNoTracking().OrderBy(item => item.Name).ThenBy(item => item.Id)
+        var rows = await db.ServiceDefinitions.AsNoTracking().Where(item => !item.IsDeleted).OrderBy(item => item.Name).ThenBy(item => item.Id)
             .Skip((page - 1) * pageSize).Take(pageSize + 1).ToArrayAsync(timeout.Token);
         return Results.Ok(new ServicePage(rows.Take(pageSize).Select(Response).ToArray(), page, rows.Length > pageSize));
     }
     private static async Task<IResult> ReadAsync(Guid id, HttpContext context, AppDbContext db)
     {
         using var timeout = Timeout(context);
-        var item = await db.ServiceDefinitions.AsNoTracking().SingleOrDefaultAsync(item => item.Id == id, timeout.Token);
+        var item = await db.ServiceDefinitions.AsNoTracking().SingleOrDefaultAsync(item => item.Id == id && !item.IsDeleted, timeout.Token);
         return item is null ? Results.NotFound() : Results.Ok(Response(item));
     }
     private static void Audit(AppDbContext db, ServiceDefinition item, Guid actorId, string kind, TimeProvider clock) =>
@@ -90,7 +92,7 @@ public static class ServiceDefinitionEndpoints
         var added = await db.Database.ExecuteSqlInterpolatedAsync(
             $"INSERT INTO \"ServiceDefinitions\" (\"Id\", \"Name\", \"DurationMinutes\", \"Price\", \"Currency\", \"IsActive\", \"Version\") VALUES ({request.Id}, {definition.Name}, {definition.DurationMinutes}, {definition.Price}, 'TRY', TRUE, {version}) ON CONFLICT (\"Id\") DO NOTHING", timeout.Token);
         var item = await db.ServiceDefinitions.SingleAsync(item => item.Id == request.Id, timeout.Token);
-        if (added == 0) return Matches(item, definition) ? Results.Ok(Response(item)) : Conflict();
+        if (added == 0) return !item.IsDeleted && Matches(item, definition) ? Results.Ok(Response(item)) : Conflict();
         Audit(db, item, owner.Id, "Created", clock);
         await db.SaveChangesAsync(timeout.Token); await transaction.CommitAsync(timeout.Token);
         return Results.Created($"/api/services/{item.Id}", Response(item));
@@ -103,8 +105,12 @@ public static class ServiceDefinitionEndpoints
     private static Task<IResult> StatusAsync(Guid id, StatusRequest request, HttpContext context, IAntiforgery antiforgery,
         AppDbContext db, UserManager<AppUser> users, TimeProvider clock) =>
         ChangeAsync(id, null, request.IsActive, request.Version, context, antiforgery, db, users, clock);
+    private static Task<IResult> DeleteAsync(Guid id, DeleteRequest request, HttpContext context, IAntiforgery antiforgery,
+        AppDbContext db, UserManager<AppUser> users, TimeProvider clock) =>
+        ChangeAsync(id, null, null, request.Version, context, antiforgery, db, users, clock, deleting: true);
+
     private static async Task<IResult> ChangeAsync(Guid id, UpdateRequest? request, bool? active, Guid version, HttpContext context,
-        IAntiforgery antiforgery, AppDbContext db, UserManager<AppUser> users, TimeProvider clock)
+        IAntiforgery antiforgery, AppDbContext db, UserManager<AppUser> users, TimeProvider clock, bool deleting = false)
     {
         using var timeout = Timeout(context);
         if (!await AuthEndpoints.HasValidCsrfAsync(antiforgery, context)) return Results.Problem(statusCode: 400, title: "Geçersiz istek doğrulaması.");
@@ -114,20 +120,22 @@ public static class ServiceDefinitionEndpoints
             definition = Validate(request.Name, request.DurationMinutes, request.Price, out var errors);
             if (definition is null) return Results.ValidationProblem(errors);
         }
-        else if (active is null) return Results.Problem(statusCode: 400, title: "Aktif/pasif durumu gerekli.");
+        else if (!deleting && active is null) return Results.Problem(statusCode: 400, title: "Aktif/pasif durumu gerekli.");
         if (version == Guid.Empty) return Results.Problem(statusCode: 400, title: "Hizmet sürümü gerekli.");
         await using var transaction = await db.Database.BeginTransactionAsync(timeout.Token);
         var owner = await OwnerMutationAuthorization.LockAsync(context, db, users, timeout.Token);
         if (owner is null) return Results.Unauthorized();
         var item = await db.ServiceDefinitions.FromSqlInterpolated($"SELECT * FROM \"ServiceDefinitions\" WHERE \"Id\" = {id} FOR UPDATE").SingleOrDefaultAsync(timeout.Token);
         if (item is null) return Results.NotFound();
+        if (item.IsDeleted) return deleting ? Results.NoContent() : Results.NotFound();
         if (item.Version != version) return Conflict();
-        if (definition is not null ? Matches(item, definition) : item.IsActive == active) return Results.Ok(Response(item));
-        if (definition is not null) { item.Name = definition.Name; item.DurationMinutes = definition.DurationMinutes; item.Price = definition.Price; }
+        if (!deleting && (definition is not null ? Matches(item, definition) : item.IsActive == active)) return Results.Ok(Response(item));
+        if (deleting) { item.IsDeleted = true; item.IsActive = false; }
+        else if (definition is not null) { item.Name = definition.Name; item.DurationMinutes = definition.DurationMinutes; item.Price = definition.Price; }
         else item.IsActive = active!.Value;
         item.Version = Guid.NewGuid();
-        Audit(db, item, owner.Id, definition is not null ? "Updated" : item.IsActive ? "Activated" : "Deactivated", clock);
+        Audit(db, item, owner.Id, deleting ? "Deleted" : definition is not null ? "Updated" : item.IsActive ? "Activated" : "Deactivated", clock);
         await db.SaveChangesAsync(timeout.Token); await transaction.CommitAsync(timeout.Token);
-        return Results.Ok(Response(item));
+        return deleting ? Results.NoContent() : Results.Ok(Response(item));
     }
 }

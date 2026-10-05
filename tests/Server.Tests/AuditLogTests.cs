@@ -58,13 +58,13 @@ public sealed class AuditLogTests
         foreach (var entry in json.GetProperty("items").EnumerateArray())
             Assert.Equal(new[] { "action", "actor", "id", "module", "occurredAt", "target" }, entry.EnumerateObject().Select(property => property.Name).Order().ToArray());
         Assert.DoesNotContain("SECRET", json.GetRawText());
-        var page = await Read(owner); Assert.Equal(12, page.Items.Length); Assert.Null(page.NextCursor); Assert.Equal("Europe/Istanbul", page.TimeZone);
+        var page = await Read(owner); Assert.Equal(13, page.Items.Length); Assert.Null(page.NextCursor); Assert.Equal("Europe/Istanbul", page.TimeZone);
         Assert.Equal(12, page.Items.Select(item => item.Module).Distinct().Count());
         Assert.Equal(2, page.Items.Count(item => item.Actor == "Yerel bakım"));
         Assert.Contains(page.Items, item => item.Target == "Güncel personel · Güncel hizmet");
         Assert.Contains(page.Items, item => item.Target == "invite@example.test");
         Assert.Equal(7, (await Read(owner, "?category=definitions")).Items.Length);
-        Assert.Equal(5, (await Read(owner, "?category=security")).Items.Length);
+        Assert.Equal(6, (await Read(owner, "?category=security")).Items.Length);
         Assert.Equal(before, await FingerprintAsync(db));
         var users = scope.ServiceProvider.GetRequiredService<UserManager<AppUser>>(); var user = await users.FindByIdAsync(seed.OwnerId.ToString()); Assert.NotNull(user);
         Assert.Equal(seed.Stamp, user.SecurityStamp); Assert.Equal(seed.Key, await users.GetAuthenticatorKeyAsync(user));
@@ -82,10 +82,10 @@ public sealed class AuditLogTests
         db.BusinessProfileAudits.Add(new() { Id = Guid.NewGuid(), ActorId = seed.OwnerId, ProfileVersion = Guid.NewGuid(), OccurredAt = DateTimeOffset.UtcNow }); await db.SaveChangesAsync(Token);
         while (next is not null)
         { var page = await Read(owner, "?pageSize=3&cursor=" + next); entries.AddRange(page.Items); next = page.NextCursor; }
-        Assert.Equal(12, entries.Count); Assert.Equal(12, entries.Select(item => item.Id).Distinct().Count());
-        Assert.Equal(Enumerable.Range(1, 12).Reverse(), entries.Select(item => int.Parse(item.Id.Split(':')[0])));
+        Assert.Equal(13, entries.Count); Assert.Equal(13, entries.Select(item => item.Id).Distinct().Count());
+        Assert.Equal(Enumerable.Range(1, 13).Reverse(), entries.Select(item => int.Parse(item.Id.Split(':')[0])));
         Assert.Equal(first.Items, (await Read(owner, "?pageSize=3&cursor=" + first.Cursor)).Items);
-        Assert.Equal(13, (await Read(owner)).Items.Length);
+        Assert.Equal(14, (await Read(owner)).Items.Length);
     }
 
     [Fact]
@@ -95,7 +95,7 @@ public sealed class AuditLogTests
         var seed = await CreateRecoveryAppAsync(database.GetConnectionString()); await using var app = seed.App;
         using var owner = await InviteOwnerAsync(seed);
         var current = await Read(owner);
-        var partial = WebEncoders.Base64UrlEncode(JsonSerializer.SerializeToUtf8Bytes(new { Category = "all", AsOf = DateTimeOffset.UtcNow, BeforeAt = DateTimeOffset.UtcNow, Source = 13, Id = Guid.NewGuid() }));
+        var partial = WebEncoders.Base64UrlEncode(JsonSerializer.SerializeToUtf8Bytes(new { Category = "all", AsOf = DateTimeOffset.UtcNow, BeforeAt = DateTimeOffset.UtcNow, Source = 14, Id = Guid.NewGuid() }));
         foreach (var query in new[] { "?category=other", "?pageSize=0", "?pageSize=51", "?cursor=invalid", "?cursor=" + new string('a', 513), "?cursor=" + partial, "?category=security&cursor=" + current.Cursor })
         { using var result = await owner.GetAsync(Path + query, Token); Assert.Equal(HttpStatusCode.BadRequest, result.StatusCode); }
         Assert.Empty((await Read(owner)).Items);
@@ -108,11 +108,14 @@ public sealed class AuditLogTests
         var seed = await CreateRecoveryAppAsync(database.GetConnectionString()); await using var app = seed.App;
         using var owner = await InviteOwnerAsync(seed); using var scope = app.Services.CreateScope(); var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         await SeedAsync(db, seed.OwnerId, seed.OtherUserId); var before = await FingerprintAsync(db);
-        var migrator = db.GetService<IMigrator>(); await migrator.MigrateAsync("20261003184120_BusinessLogo", Token);
-        Assert.Equal(before, await FingerprintAsync(db)); Assert.Equal(12, (await Read(owner)).Items.Length);
+        var migrator = db.GetService<IMigrator>();
+        // Yalnız indeks migration'ını geri al; sonradan eklenen audit tablolarını düşürme.
+        var down = migrator.GenerateScript("20261003200924_AuditLogIndexes", "20261003184120_BusinessLogo");
+        await db.Database.ExecuteSqlRawAsync(down, Token);
+        Assert.Equal(before, await FingerprintAsync(db)); Assert.Equal(13, (await Read(owner)).Items.Length);
         await migrator.MigrateAsync(cancellationToken: Token); await migrator.MigrateAsync(cancellationToken: Token);
         Assert.Equal(before, await FingerprintAsync(db));
-        Assert.Equal(12, await db.Database.SqlQueryRaw<int>("SELECT count(*)::int AS \"Value\" FROM pg_indexes WHERE schemaname='public' AND indexname LIKE '%Audits_OccurredAt_Id'").SingleAsync(Token));
+        Assert.Equal(13, await db.Database.SqlQueryRaw<int>("SELECT count(*)::int AS \"Value\" FROM pg_indexes WHERE schemaname='public' AND indexname LIKE '%Audits_OccurredAt_Id'").SingleAsync(Token));
     }
 
     [Fact]
@@ -158,6 +161,7 @@ public sealed class AuditLogTests
             new StaffInvitationAudit { Id = id, ActorId = owner, InvitationId = invitation.Id, Kind = "Issued", OccurredAt = at },
             new StaffPasswordResetAudit { Id = id, ActorId = owner, StaffId = other, GrantId = Guid.NewGuid(), InstanceId = "SECRET-instance", Kind = "Issued", OccurredAt = at, ExpiresAt = at.AddHours(1) },
             new StaffDeactivationAudit { Id = id, ActorId = owner, StaffId = other, OccurredAt = at },
+            new StaffActivationAudit { Id = id, ActorId = owner, StaffId = other, OccurredAt = at },
             new OwnerPasswordResetAudit { Id = id, OwnerId = owner, GrantId = Guid.NewGuid(), InstanceId = "SECRET-instance", OperatorReference = "SECRET-operator", RequestReference = "SECRET-request", Kind = "Issued", OccurredAt = at, ExpiresAt = at.AddHours(1) },
             new OwnerMfaRecoveryAudit { Id = id, OwnerId = owner, InstanceId = "SECRET-instance", OperatorReference = "SECRET-operator", RequestReference = "SECRET-request", OccurredAt = at });
         await db.SaveChangesAsync(Token);
