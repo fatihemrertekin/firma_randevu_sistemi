@@ -32,6 +32,8 @@ Güncelleme: 2026-10-05. Güncel özet burada; kapsam ve kanıt bağlantıları 
 
 ## Bakım durumu
 
+URL ile ekran gezinmesi geliştirme/ayrı sentetik kabulü `done` (05.10.2026): 226 web/140 sunucu testi, 28 durum × dört genişlik ve gerçek API kabulü geçti. [PR #51](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/51) açıldı; uygulama commit `cb1ca5e` push/PR CI başarılı, son belge/test commit kontrolleri PR son head üzerinden takip edilir. Ana 8080 güncellenmedi; [kabul paketi, güvenli dönüş ve teslim sınırı](plans/P02.md#url-ile-ekran-gezinmesi--05102026).
+
 Çalışan hesabını yeniden etkinleştirme ve personel/hizmet Sil bakımı geliştirme/ana yerel teslimi `done` (05.10.2026): [PR #49](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/49), `1d945802` ve başarılı main CI sonrası yedekli 8080 teslimi tamamlandı. [Kabul ve geri dönüş sınırı](plans/P02.md#tanım-silme-ve-çalışan-hesabını-etkinleştirme--05102026). Çalışan giriş hesabı silme kapsam dışıdır.
 
 Hafif pastel/fotoğraf/dikey boşluk bakımı (05.10.2026) geliştirme/GitHub/ana yerel teslim `done`: [PR #47](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/47) `ce8cd91` ile birleşti; aynı commit [main CI](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/37246715420) başarılı. Bütün renk aileleri hafif yumuşatıldı, tek nötr fotoğraf kullanıldı; tüm frontend buton grupları için 16 px dikey aralık tamamlandı. 203 test/19 durum × dört genişlik/gerçek API/kontrast ve ölçüm kabulü geçti; yedekli 8080 tesliminde 30 tablo/hesap/MFA/anahtar/SMTP korundu. [Kabul ve geri dönüş sınırı](plans/P02.md#hafif-pastel-ve-fotoğraf-uyumu--05102026).
@@ -59,7 +61,7 @@ Program.cs bakımı `done`: başlangıç 265 satırdan 69 satıra indi; önce/so
 
 ## Sıradaki iş
 
-URL ile ekran gezinmesi `in_progress`: kullanıcı 05.10.2026 planı ve uygulamayı onayladı; `codex/url-navigation` dalında merkezi adresler ve form/oturum korumasının yerel kabulü tamamlandı (225 web/140 sunucu testi, 28 durum × dört genişlik); PR/CI teslimi sürüyor. [Kapsam ve kabul](plans/P02.md#url-ile-ekran-gezinmesi--05102026). Ana yerel güncelleme ayrıca sunulacak; P03/T04 başlamaz.
+Sıradaki tek iş, kabul edilmiş URL gezinme paketini ayrı onayla ana 8080 uygulamasına yedekli teslim etmektir. [PR #51](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/51) son head kontrolleri yeşilken birleşme ve güncelleme yapılır; mevcut eski imajla sentetik geri dönüş provası hazırdır. Ana uygulama bu işte değiştirilmedi. T04/P03/dark mode için yetki verilmiş sayılmaz.
 
 ## Gelecek plan kaydı — destek ve işletim ekranı (02.10.2026)
 

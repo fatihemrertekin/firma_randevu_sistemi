@@ -132,6 +132,12 @@ describe('Ekran URL ve geçmiş kabulü', () => {
     expect(window.location.pathname).toBe(sectionPaths.services)
     expect(container.querySelector('h1')?.textContent).toBe('Hizmetler')
   })
+  it('oturum okunamazsa giriş yönlendirmesinde yükleme hatasını korur', async () => {
+    vi.mocked(fetch).mockResolvedValue(new Response(null, { status: 503 }))
+    await render(sectionPaths.services)
+    expect(window.location.pathname).toBe(authPaths.login)
+    expect(container.textContent).toContain('Oturum durumu alınamadı. Sayfayı yenileyin.')
+  })
   it('Staff doğrudan Owner adresinde veri istemez; çıkıştan sonra geri yetki kazandırmaz', async () => {
     account = staff; await render(sectionPaths.services)
     expect(container.querySelector('h1')?.textContent).toBe('Erişim izni yok')
