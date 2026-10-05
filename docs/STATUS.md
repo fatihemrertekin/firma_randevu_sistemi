@@ -32,7 +32,7 @@ Güncelleme: 2026-10-05. Güncel özet burada; kapsam ve kanıt bağlantıları 
 
 ## Bakım durumu
 
-Hafif pastel ve fotoğraf uyumu (05.10.2026) `in_progress`: mevcut bütün renk aileleri yumuşatılıyor; sağdaki krem etki için tek nötr salon fotoğrafı yetkilendirildi. [Kapsam/kabul](plans/P02.md#hafif-pastel-ve-fotoğraf-uyumu--05102026).
+Hafif pastel/fotoğraf/dikey boşluk bakımı (05.10.2026) geliştirme/GitHub/ana yerel teslim `done`: [PR #47](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/47) `ce8cd91` ile birleşti; aynı commit [main CI](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/37246715420) başarılı. Bütün renk aileleri hafif yumuşatıldı, tek nötr fotoğraf kullanıldı; tüm frontend buton grupları için 16 px dikey aralık tamamlandı. 203 test/19 durum × dört genişlik/gerçek API/kontrast ve ölçüm kabulü geçti; yedekli 8080 tesliminde 30 tablo/hesap/MFA/anahtar/SMTP korundu. [Kabul ve geri dönüş sınırı](plans/P02.md#hafif-pastel-ve-fotoğraf-uyumu--05102026).
 
 Ortak açık palet bakımı (05.10.2026) geliştirme/GitHub/ana yerel teslim `done`: [PR #45](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/45) `7aa6cfd` ile birleşti; aynı commit [main CI](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/37242678219) başarılı. Giriş/MFA dahil bütün frontend beyaza yakın zemin ve dolu mavi/lacivert butonlara geçti. 203 test, 16 durum × dört genişlik, gerçek API ve kontrast kontrolleri geçti; yedekli 8080 tesliminde 30 tablo/hesap/MFA/anahtar/SMTP korundu. [Kabul ve geri dönüş sınırı](plans/P02.md#ortak-açık-palet-bakımı--05102026).
 
@@ -57,7 +57,7 @@ Program.cs bakımı `done`: başlangıç 265 satırdan 69 satıra indi; önce/so
 
 ## Sıradaki iş
 
-Onaylı hafif pastel/fotoğraf bakımının kabul ve yerel teslimini tamamla. Ardından sonraki tek aday T04 hizmet tanımı taslağıdır; ayrı taslak/kod onayıyla başlar, otomatik başlamaz. T04–T08, P03 ve dark mode tamamlanmış değildir. Ek görsel/native onay turu yapılmadı; native finish açık kalır.
+Hafif pastel/fotoğraf/dikey boşluk bakımı teslim edildi. Sonraki tek aday T04 hizmet tanımı taslağıdır; ayrı taslak/kod onayıyla başlar, otomatik başlamaz. T04–T08, P03 ve dark mode tamamlanmış değildir. Ek görsel/native onay turu yapılmadı; native finish açık kalır.
 
 ## Gelecek plan kaydı — destek ve işletim ekranı (02.10.2026)
 
