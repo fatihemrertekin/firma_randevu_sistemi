@@ -61,7 +61,7 @@ Program.cs bakımı `done`: başlangıç 265 satırdan 69 satıra indi; önce/so
 
 ## Sıradaki iş
 
-Sıradaki tek aday, T04 hizmet listesi/ekle/düzenle yüzeyi için görsel taslak ve kapsam hazırlamaktır; yeni iş için ayrı onay beklenir. URL gezinmesi ana yerel teslimi tamamlandı. T04/P03/dark mode için uygulama yetkisi verilmiş sayılmaz.
+T04 hizmet listesi/ekle/düzenle ve ortak minimalist buton önerisi taslak hazırlığı `done`; görsel/kod onayı bekleniyor. Kullanıcı taslak hazırlığını ve daha sade butonları onayladı; masaüstü/mobil taslak, durum/API kapsamı ve geri dönüş kuralları [T04 brief'inde](../.impeccable/surfaces/services-tsx.md). Sıradaki tek iş bu taslak ve buton önerisini onaylamak/seçmektir. Uygulama kodu/8080 değişmedi; P03/dark mode için yetki verilmiş sayılmaz.
 
 ## Gelecek plan kaydı — destek ve işletim ekranı (02.10.2026)
 
