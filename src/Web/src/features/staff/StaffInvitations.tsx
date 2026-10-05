@@ -98,12 +98,12 @@ export default function StaffInvitations({ post }: Props) {
         <button type="button" disabled={busy} onClick={() => revoke(item.id)} aria-label={`${item.email} davetini iptal et`}>Daveti iptal et</button>
       </li>)}
     </ul>}
-    <button type="button" disabled={busy || loading} onClick={async () => {
+    {(error || list.length > 0) && <button type="button" disabled={busy || loading} onClick={async () => {
       setLoading(true)
       setError('')
       try { await load() } catch (failure) { setError(failure instanceof Error ? failure.message : 'Davet listesi alınamadı.') }
       finally { setLoading(false) }
-    }}>Davetleri yenile</button>
+    }}>Davetleri yenile</button>}
     <ErrorMessage message={error} />{notice && <p role="status">{notice}</p>}
   </section>
 }

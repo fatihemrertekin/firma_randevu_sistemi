@@ -1,6 +1,6 @@
 .surface { container: services / inline-size; min-width: 0; }
 .surface h1 { margin: 0 0 var(--auth-space-3); font-size: var(--management-title); line-height: var(--auth-heading-line); overflow-wrap: anywhere; }
-.surface h1:focus-visible { outline: var(--auth-focus-width) solid var(--focus); outline-offset: var(--auth-focus-offset); }
+.surface h1:focus-visible { outline: none; }
 .titleRow { display: flex; justify-content: space-between; align-items: center; gap: var(--auth-space-4); flex-wrap: wrap; margin-bottom: var(--auth-space-6); }
 .titleRow p { margin: 0; }
 .columnLabels, .row { display: grid; grid-template-columns: minmax(0, 1fr) var(--service-duration-column) var(--service-price-column) var(--service-status-column) var(--service-action-column); gap: var(--auth-space-4); align-items: center; }

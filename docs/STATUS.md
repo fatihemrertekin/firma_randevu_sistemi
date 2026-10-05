@@ -1,6 +1,6 @@
 # STATUS — Güncel durum ve sıradaki iş
 
-Güncelleme: 2026-10-05. Güncel özet burada; kapsam ve kanıt bağlantıları [P02 planında](plans/P02.md), önceki oturum kayıtları [arşivde](archive/2026-10-02/STATUS.md). Arşivdeki eski durum ve onay bekleme ifadeleri güncel yönlendirme değildir.
+Güncelleme: 2026-10-06. Güncel özet burada; kapsam ve kanıt bağlantıları [P02 planında](plans/P02.md), önceki oturum kayıtları [arşivde](archive/2026-10-02/STATUS.md). Arşivdeki eski durum ve onay bekleme ifadeleri güncel yönlendirme değildir.
 
 ## Aşamalar
 
@@ -31,6 +31,8 @@ Güncelleme: 2026-10-05. Güncel özet burada; kapsam ve kanıt bağlantıları 
 - Eski Türkçe karakter/libgssapi uyarıları ve DB host portu için kullanılan yerel override geçmiş kayıtlarda açık kalmıştır. Kalıcı düzeltme kanıtı olmadan çözülmüş sayılmaz; pilot tarihi ve destek iletişim bilgileri de ayrıca netleşecektir.
 
 ## Bakım durumu
+
+Mevcut yüzey düzeltmeleri `in_progress` (06.10.2026): yalnız ilk giriş butonlarının önceki ölçüsü, grup menüsü aç/kapat ve ilk tıklama düzeltmesi, personel geri bağlantısı, gereksiz yenileme/otomatik alan odağı, kayıtların geniş ekran düzeni, onaylı işletme adı ve otomatik e-posta doğrulama kontrolü. [Kapsam ve kabul](plans/P02.md#mevcut-yüzey-düzeltmeleri--06102026). Ortak kompakt butonların bütünü için geri alma isteği kullanıcı tarafından iptal edildi; T04 Hizmetler/URL yapısı korunur.
 
 T04 hizmet listesi/ayrı form ve ortak minimalist buton stili geliştirme/GitHub/ana yerel teslimi `done` (05.10.2026): [PR #53](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/53) `575b9a2` ile birleşti, aynı commit'in [main CI](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/37324323785) sonucu başarılı. Ayrı onayla yeni şifreli yedek sonrası 8080'de kabul imajı kuruldu; 32 tablo/hesap/MFA/anahtar/SMTP ayarları, sağlık/restart ve anonim tarayıcı/paket hashleri doğrulandı. [Kabul ve geri dönüş sınırı](plans/P02.md#t04-ana-yerel-teslim--05102026).
 

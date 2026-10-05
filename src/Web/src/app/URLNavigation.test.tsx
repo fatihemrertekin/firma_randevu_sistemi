@@ -74,7 +74,7 @@ describe('Ekran URL ve geçmiş kabulü', () => {
     await click('Ayrıntılar')
     expect(window.location.pathname).toBe(sectionPaths.personnel + '/member-1')
     expect(window.location.search).toBe('?sayfa=2')
-    await click('Personel listesine dön')
+    await click('Personel listesi')
     expect(window.location.search).toBe('?sayfa=2')
     expect(container.textContent).toContain('Sayfa 2')
     expect(document.activeElement?.textContent).toBe('Ayrıntılar')

@@ -13,7 +13,7 @@ export default function WeeklyHoursEditor({ endpoint, heading, formLabel, subjec
   const [loading, setLoading] = useState(true), [busy, setBusy] = useState(false), [locked, setLocked] = useState(false)
   const [revision, setRevision] = useState(0), [error, setError] = useState(''), [notice, setNotice] = useState('')
   const [errors, setErrors] = useState<Record<string, string>>({}), [retry, setRetry] = useState(0)
-  const form = useRef<HTMLFormElement>(null), sending = useRef(false), focusAfterLoad = useRef(!!onCancel)
+  const form = useRef<HTMLFormElement>(null), sending = useRef(false), focusAfterLoad = useRef(false)
   const dirty = snapshot !== null && JSON.stringify(days) !== JSON.stringify(hoursDraft(snapshot))
   useUnsavedChanges(dirty, onDirtyChange)
   useEffect(() => { onBusyChange(busy || loading); return () => onBusyChange(false) }, [busy, loading, onBusyChange])
@@ -126,7 +126,7 @@ export default function WeeklyHoursEditor({ endpoint, heading, formLabel, subjec
     {notice && <p className={styles.notice} role="status">{notice}</p>}
     <div className={styles.actions}>
       {snapshot && !snapshot.readOnly && <button type="submit" form="weekly-hours-form" disabled={busy || loading || locked || retry > 0 || (snapshot.isConfigured && !dirty)}>{busy ? 'Saatler kaydediliyor…' : 'Haftayı kaydet'}</button>}
-      <button type="button" disabled={busy || loading || retry > 0} onClick={reload}>Güncel saatleri yükle</button>
+      {(error || locked) && <button type="button" disabled={busy || loading || retry > 0} onClick={reload}>Güncel saatleri yükle</button>}
       {onCancel && <button type="button" disabled={busy || loading} onClick={cancel}>Listeye dön</button>}
     </div>
   </section>

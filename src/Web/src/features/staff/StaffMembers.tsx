@@ -88,7 +88,7 @@ export default function StaffMembers({ post, onDirtyChange, onBusyChange }: Prop
         </li>)}</ul>
       </>}
       <div className={styles.pagination}>
-        <button type="button" disabled={loading || childBusy} onClick={() => { setNotice(''); load() }}>Listeyi yenile</button>
+        {(error || (data?.items.length ?? 0) > 0) && <button type="button" disabled={loading || childBusy} onClick={() => { setNotice(''); load() }}>Listeyi yenile</button>}
         <div><button type="button" disabled={loading || childBusy || page === 1} onClick={() => { setNotice(''); load(page - 1) }}>Önceki sayfa</button>
           <span>Sayfa {page}</span><button type="button" disabled={loading || childBusy || !data?.hasMore} onClick={() => { setNotice(''); load(page + 1) }}>Sonraki sayfa</button></div>
       </div>

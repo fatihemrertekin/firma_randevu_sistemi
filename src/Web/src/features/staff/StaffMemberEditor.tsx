@@ -21,7 +21,6 @@ export default function StaffMemberEditor({ member, post, onSaved, onCancel, onD
   const input = useRef<HTMLInputElement>(null)
   const sending = useRef(false)
   const dirty = name !== (original?.name ?? '')
-  useEffect(() => { input.current?.focus() }, [])
   useEffect(() => { onBusyChange(busy); return () => onBusyChange(false) }, [busy, onBusyChange])
   useUnsavedChanges(dirty, onDirtyChange)
   function pending(value: boolean) { sending.current = value; setBusy(value) }

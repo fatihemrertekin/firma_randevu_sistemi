@@ -62,6 +62,7 @@ export default function ManagementLayout({ auth, account }: Props) {
   const [pendingRequests, setPendingRequests] = useState(0)
   const [definitionBusy, setDefinitionBusy] = useState(false)
   const [profileBusy, setProfileBusy] = useState(false)
+  const [businessName, setBusinessName] = useState('')
   const guard = useRef({ dirty: false, profileDirty: false, busy: false })
   const setDefinitionDirty = useCallback((value: boolean) => { guard.current.dirty = value }, [])
   const setProfileDirty = useCallback((value: boolean) => { guard.current.profileDirty = value }, [])
@@ -81,12 +82,13 @@ export default function ManagementLayout({ auth, account }: Props) {
     finally { setPendingRequests(current => current - 1) }
   }, [])
 
-  useNavigationChange(() => {
+  useNavigationChange(next => {
     auth.clearPasswordFields()
     auth.setError('')
     auth.setNotice('')
     setMobileMenuOpen(false)
-    setDrawerOpen(section !== 'audit')
+    const nextRoute = resolveRoute(next.pathname)
+    setDrawerOpen(nextRoute.kind === 'management' && nextRoute.section !== 'audit')
   })
   const focus = useEffectEvent(() => {
     heading.current?.focus()
@@ -120,7 +122,9 @@ export default function ManagementLayout({ auth, account }: Props) {
         aria-expanded={mobileMenuOpen} disabled={blocked} onClick={() => {
           setMobileMenuOpen(value => !value); setDrawerOpen(true)
         }}>Menü</button>
-      <div className={styles.account}><div><span>{owner ? 'İşletme sahibi' : 'Çalışan'}</span><span className={styles.email}>{account.email}</span></div>
+      <div className={styles.account}><div>
+        <div className={styles.accountIdentity}>{owner && businessName && <><span className={styles.businessName}>{businessName}</span><span aria-hidden="true">●</span></>}
+          <span>{owner ? 'İşletme Sahibi' : 'Çalışan'}</span></div><span className={styles.email}>{account.email}</span></div>
         <button type="button" disabled={blocked} onClick={logout}>Çıkış yap</button>
       </div>
     </header>
@@ -129,8 +133,9 @@ export default function ManagementLayout({ auth, account }: Props) {
         <nav className={styles.rail} aria-label="Yönetim grupları">
           {groups.filter(group => owner || group.id === 'account').map(group => <NavigationLink key={group.id}
             to={sectionPaths[group.initial]} ref={group.id === currentGroup ? groupButton : undefined} disabled={blocked}
-            data-group-active={group.id === currentGroup} aria-controls="management-context" onClick={event => {
-              if (group.id === currentGroup && !event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey) { event.preventDefault(); setDrawerOpen(true) }
+            data-group-active={group.id === currentGroup} aria-controls="management-context"
+            aria-expanded={group.id === currentGroup && drawerOpen} onClick={event => {
+              if (group.id === currentGroup && !event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey) { event.preventDefault(); setDrawerOpen(value => !value) }
             }}><NavigationIcon kind={group.id} /><span>{group.title}</span></NavigationLink>)}
           {owner && <NavigationLink className={styles.auditLink} to={sectionPaths.audit} disabled={blocked}
             aria-current={section === 'audit' ? 'page' : undefined}>
@@ -140,15 +145,21 @@ export default function ManagementLayout({ auth, account }: Props) {
         <aside id="management-context" className={styles.drawer} hidden={!drawerOpen || currentGroup === null}>
           <nav aria-label="Yönetim bölümleri">
             {groups.filter(group => owner || group.id === 'account').map(group => <div key={group.id} hidden={group.id !== currentGroup}>
-              <h2>{group.title}</h2>
+              <div className={styles.drawerHeading}>
+                <h2>{group.title}</h2>
+                <button className={styles.closeMenu} type="button" aria-label="Yan menüyü kapat" title="Yan menüyü kapat" disabled={blocked} onClick={closeMenu}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M19 12H5m7-7-7 7 7 7" /></svg>
+                </button>
+              </div>
               {sections.filter(item => item.id !== 'audit' && sectionGroups[item.id] === group.id && (owner || item.id === 'security')).map(item =>
                 <NavigationLink key={item.id} to={sectionPaths[item.id]} aria-current={section === item.id ? 'page' : undefined}
                   disabled={blocked} onClick={() => { if (section === item.id) { setMobileMenuOpen(false); heading.current?.focus() } }}>{item.title}</NavigationLink>)}
             </div>)}
-            <button className={styles.closeMenu} type="button" disabled={blocked} onClick={closeMenu}>Menüyü kapat</button>
           </nav>
         </aside>
-        <div className={styles.mobileAccount}><p>{account.email}</p><button type="button" disabled={blocked} onClick={logout}>Çıkış yap</button></div>
+        <div className={styles.mobileAccount}><div>
+          <div className={styles.accountIdentity}>{owner && businessName && <><span className={styles.businessName}>{businessName}</span><span aria-hidden="true">●</span></>}
+            <span>{owner ? 'İşletme Sahibi' : 'Çalışan'}</span></div><p>{account.email}</p></div><button type="button" disabled={blocked} onClick={logout}>Çıkış yap</button></div>
       </div>
       <main id="management-main" className={styles.content}>
         {!(owner && section === 'services') && <>
@@ -158,7 +169,7 @@ export default function ManagementLayout({ auth, account }: Props) {
         {!current && <NavigationLink to={owner ? sectionPaths.business : sectionPaths.security}>Yetkili ekrana dön</NavigationLink>}
         {owner && <div hidden={section !== 'business'} className={styles.profilePanel}>
           <BusinessProfile post={post} disabled={auth.busy || pendingRequests > 0 || definitionBusy}
-            onDirtyChange={setProfileDirty} onBusyChange={setProfileBusy} />
+            onDirtyChange={setProfileDirty} onBusyChange={setProfileBusy} onConfirmedNameChange={setBusinessName} />
         </div>}
         {owner && section === 'personnel' && <div className={styles.profilePanel}>
           <StaffMembers post={post} onDirtyChange={setDefinitionDirty} onBusyChange={setDefinitionBusy} />

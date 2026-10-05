@@ -25,7 +25,6 @@ export default function ServiceEditor({ service, post, onSaved, onCancel, onDirt
   const dirty = name !== (original?.name ?? '') || duration !== (original ? String(original.durationMinutes) : '') || price !== (original?.price.replace('.', ',') ?? '')
   const mustReload = reloadRequired || requiresReload
   useUnsavedChanges(dirty, onDirtyChange)
-  useEffect(() => { form.current?.querySelector<HTMLInputElement>('input')?.focus() }, [])
   useEffect(() => {
     if (busy) return
     const first = ['name', 'durationMinutes', 'price'].find(field => fieldErrors[field])
@@ -110,6 +109,6 @@ export default function ServiceEditor({ service, post, onSaved, onCancel, onDirt
       <button type="submit" className={styles.primary} disabled={busy || mustReload || disabled || (!dirty && original !== null)}>{busy ? 'İşlem sürüyor…' : 'Kaydet'}</button>
       <button type="button" disabled={busy || disabled} onClick={cancel}>Vazgeç</button>
     </div>
-    {(original || error) && <button type="button" className={styles.reload} disabled={busy || disabled} onClick={() => { void reload() }}>Güncel kaydı yükle</button>}
+    {(mustReload || error) && <button type="button" className={styles.reload} disabled={busy || disabled} onClick={() => { void reload() }}>Güncel kaydı yükle</button>}
   </form>
 }

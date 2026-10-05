@@ -23,9 +23,9 @@ async function render(post = vi.fn<StaffPost>(async () => Response.json(saved)))
 function checkbox() { const input = container.querySelector<HTMLInputElement>('input[data-field=day0Closed]'); if (!input) throw new Error('Gün bulunamadı'); return input }
 async function submit() { await act(async () => container.querySelector('form')?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))) }
 async function back() { await act(async () => Array.from(container.querySelectorAll('button')).find(item => item.textContent === 'Listeye dön')?.click()) }
-it('personeli ve yedi günü yükler, odağı ilk güne taşır ve doğru uçta kaydeder', async () => {
+it('personeli ve yedi günü otomatik odak vermeden yükler ve doğru uçta kaydeder', async () => {
   const { post, onSaved, dirty } = await render(); expect(container.textContent).toContain(member.name)
-  expect(container.querySelectorAll('input[type=checkbox]')).toHaveLength(7); expect(document.activeElement).toBe(checkbox())
+  expect(container.querySelectorAll('input[type=checkbox]')).toHaveLength(7); expect(document.activeElement).not.toBe(checkbox())
   expect(fetch).toHaveBeenCalledWith(`/api/staff-members/${member.id}/hours`, expect.any(Object))
   await submit(); expect(post).toHaveBeenCalledWith(`/api/staff-members/${member.id}/hours`, { version: member.version, days: saved.days }, expect.any(AbortSignal))
   expect(onSaved).toHaveBeenCalledOnce(); expect(dirty).toHaveBeenLastCalledWith(false)

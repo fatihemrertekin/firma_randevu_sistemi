@@ -86,7 +86,7 @@ describe('Personel yönetimi', () => {
     const { dirty } = await render(); await click('Ayrıntılar'); await fill('Kaydedilmemiş Ad')
     const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false)
     const calls = vi.mocked(fetch).mock.calls.length
-    await click('Hizmetler'); await click('Personel listesine dön'); await click('Pasifleştir')
+    await click('Hizmetler'); await click('Personel listesi'); await click('Pasifleştir')
     expect(confirm).toHaveBeenCalledTimes(3)
     expect(vi.mocked(fetch).mock.calls).toHaveLength(calls)
     expect(container.querySelector<HTMLInputElement>('#member-name')?.value).toBe('Kaydedilmemiş Ad')
@@ -122,7 +122,7 @@ describe('Personel yönetimi', () => {
   it('ikinci sayfadaki ayrıntıdan aynı sayfaya ve açan düğmeye döner', async () => {
     vi.mocked(fetch).mockImplementation(async input => String(input).includes('?')
       ? Response.json({ items: [member], page: String(input).endsWith('2') ? 2 : 1, hasMore: !String(input).endsWith('2') }) : Response.json(member))
-    await render(); await click('Sonraki sayfa'); await click('Ayrıntılar'); await click('Personel listesine dön')
+    await render(); await click('Sonraki sayfa'); await click('Ayrıntılar'); await click('Personel listesi')
     expect(vi.mocked(fetch).mock.calls.at(-1)?.[0]).toBe('/api/staff-members/?page=2')
     expect(document.activeElement).toBe(container.querySelector('[data-member-id="member-1"]'))
   })
@@ -149,7 +149,7 @@ describe('Personel yönetimi', () => {
     const { busy } = await render(); await click('Ayrıntılar'); await click(label)
     expect(busy).toHaveBeenLastCalledWith(true)
     expect(Array.from(container.querySelectorAll('nav button, nav a[data-navigation]')).every(control => control.matches(':disabled, [aria-disabled="true"]'))).toBe(true)
-    expect(Array.from(container.querySelectorAll('a')).find(button => button.textContent === 'Personel listesine dön')?.getAttribute('aria-disabled') === 'true').toBe(true)
+    expect(Array.from(container.querySelectorAll('a')).find(button => button.textContent === 'Personel listesi')?.getAttribute('aria-disabled') === 'true').toBe(true)
     const cancel = label === 'Hizmetler' ? 'Vazgeç' : 'Listeye dön'
     expect(Array.from(container.querySelectorAll<HTMLButtonElement>('button, a[data-navigation]')).find(button => button.textContent === cancel)?.disabled).toBe(true)
     await act(async () => finish?.(Response.json(label === 'Hizmetler'
@@ -168,7 +168,7 @@ describe('Personel yönetimi', () => {
     await render(); await click('Ayrıntılar'); await click('Hizmetler'); expect(container.querySelector('form')).not.toBeNull()
     await click('Vazgeç'); expect(container.querySelector('nav [aria-current="page"]')?.textContent).toBe('Hizmetler')
     expect(container.querySelector('h2')?.textContent).toBe(member.name)
-    await click('Personel listesine dön'); expect(container.querySelector('form')).toBeNull()
+    await click('Personel listesi'); expect(container.querySelector('form')).toBeNull()
     expect(document.activeElement).toBe(container.querySelector('[data-member-id="member-1"]'))
   })
   it('çift eklemeyi engeller ve belirsiz sonuçta aynı kimlikle tekrar gönderir', async () => {

@@ -92,6 +92,9 @@
 }
 .card .textAction:hover:not(:disabled):not([aria-disabled='true']), .card .textAction:active:not(:disabled):not([aria-disabled='true']) { background: var(--button-navigation-selected-bg); color: var(--auth-petrol); text-decoration: underline; }
 .loginOptions { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--action-row-gap) var(--auth-space-4); margin-top: var(--auth-space-5); padding-top: var(--auth-space-4); border-top: var(--auth-rule) solid var(--border); }
+.card .login :is(button, a[data-navigation]) { padding: var(--auth-space-2) var(--auth-space-4); width: auto; justify-self: stretch; font-size: var(--auth-body-size); font-weight: 600; line-height: var(--auth-line); }
+.card .login button[type='submit'] { min-height: var(--auth-control-height); font-size: var(--auth-login-action-size); font-weight: 700; }
+.card .login .textAction { padding: var(--auth-space-2) var(--auth-space-3); font-size: var(--auth-small-size); font-weight: 500; }
 .confirmationActions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--action-row-gap) var(--auth-space-2); }
 .confirmationActions form { min-width: 0; }
 .confirmationActions :is(button, a[data-navigation]) { width: fit-content; margin: 0; }
@@ -127,6 +130,7 @@
   .card { grid-row: 2; width: 100%; max-width: var(--auth-form-width); margin-inline: auto; padding: var(--auth-space-6) var(--auth-space-5); align-self: start; }
   .branding { position: absolute; top: var(--auth-mobile-brand-top); left: max(var(--auth-space-5), calc((100% - var(--auth-form-width)) / 2 + var(--auth-space-5))); margin: 0; z-index: 1; }
   .loginOptions { display: grid; justify-items: start; gap: var(--action-row-gap); }
+  .login .loginOptions { justify-items: stretch; }
   .confirmationActions { grid-template-columns: minmax(0, 1fr); }
 }
 @media (prefers-reduced-motion: reduce) {

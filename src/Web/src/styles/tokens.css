@@ -84,6 +84,9 @@
   --auth-emphasis-size: 4.75rem;
   --auth-description-size: 1.375rem;
   --auth-action-size: var(--button-font-size);
+  --auth-login-action-size: 1.125rem;
+  --audit-filter-max: 22rem;
+  --audit-time-column: 10rem;
   --auth-mobile-brand-size: 3rem;
   --auth-mobile-title-size: 2rem;
   --auth-mobile-body-size: 1rem;

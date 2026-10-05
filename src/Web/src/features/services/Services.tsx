@@ -67,7 +67,7 @@ export default function Services({ post, onDirtyChange, onBusyChange, headingRef
       </li>)}</ul>
     </>}
     <div className={styles.footer}>
-      <button type="button" disabled={loading} onClick={() => load()}>Listeyi yenile</button>
+      {(error || (data?.items.length ?? 0) > 0) && <button type="button" disabled={loading} onClick={() => load()}>Listeyi yenile</button>}
       <div className={styles.pagination}>
         <button type="button" disabled={loading || page === 1} onClick={() => load(page - 1)} aria-label="Önceki sayfa">Önceki</button>
         <span>Sayfa {data?.page ?? page}</span>
