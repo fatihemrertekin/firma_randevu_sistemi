@@ -30,6 +30,13 @@
   --button-danger-hover: color-mix(in srgb, var(--color-error) 85%, var(--color-ink));
   --feedback-bg: color-mix(in srgb, var(--color-surface) 92%, var(--color-error));
   --target-min: 44px;
+  --button-font-size: .875rem;
+  --button-font-weight: 600;
+  --button-line-height: 1.4;
+  --button-padding-block: .375rem;
+  --button-padding-inline: .75rem;
+  --button-radius: .375rem;
+  --button-rule: 1px;
   --space-2: .5rem;
   --action-row-gap: 1rem;
 }
@@ -76,11 +83,11 @@
   --auth-display-size: 5rem;
   --auth-emphasis-size: 4.75rem;
   --auth-description-size: 1.375rem;
-  --auth-action-size: 1.125rem;
+  --auth-action-size: var(--button-font-size);
   --auth-mobile-brand-size: 3rem;
   --auth-mobile-title-size: 2rem;
   --auth-mobile-body-size: 1rem;
-  --auth-mobile-action-size: 1.125rem;
+  --auth-mobile-action-size: var(--button-font-size);
   --auth-display-compact: 3.5rem;
   --auth-display-mobile: 2rem;
   --auth-line: 1.5;
@@ -117,7 +124,7 @@
   --management-form-min: 24rem;
   --management-work-max: 90rem;
   --management-icon: 1.75rem;
-  --management-rail-action: 7rem;
+  --management-rail-action: 4.5rem;
   --management-photo-ratio: 410 / 224;
   --management-photo-mobile: 7rem;
   --management-rail-selected: color-mix(in srgb, var(--auth-petrol) 75%, var(--auth-ink));
@@ -125,7 +132,13 @@
   --management-rail-action-bg: var(--color-navy);
   --hours-editor-max: 64rem;
   --personnel-form-max: 48rem;
-  --personnel-action-width: 10rem;
+  --personnel-action-width: 6.5rem;
   --personnel-status-width: 10rem;
   --personnel-identity-size: 1.5rem;
+  --service-duration-column: 4rem;
+  --service-price-column: 6rem;
+  --service-status-column: 4rem;
+  --service-action-column: 5rem;
+  --service-form-max: 35rem;
+  --service-section-size: 1.25rem;
 }

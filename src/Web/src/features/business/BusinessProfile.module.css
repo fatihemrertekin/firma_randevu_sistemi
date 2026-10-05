@@ -6,7 +6,7 @@
 .required { color: var(--error); }
 .field textarea { min-height: var(--management-rail); }
 .actions { display: flex; flex-wrap: wrap; gap: var(--auth-space-4); margin-top: var(--auth-space-5); }
-.actions button { flex: 1; min-width: 0; }
+.actions button { flex: 0 1 auto; min-width: var(--target-min); }
 .editor .draft { margin: var(--auth-space-5) 0 0; padding: var(--auth-space-3) var(--auth-space-4); color: var(--auth-brown); background: var(--auth-feedback); border-radius: var(--auth-radius); }
 .editor .notice { padding: var(--auth-space-3) var(--auth-space-4); color: var(--auth-petrol); border: var(--auth-rule) solid var(--border); border-radius: var(--auth-radius); }
 .confirm { margin-top: var(--auth-space-5); padding-block: var(--auth-space-4); border-top: var(--auth-rule) solid var(--border); }
@@ -26,7 +26,7 @@
   .summary img { max-width: var(--management-summary); }
 }
 @media (max-width: 900px) {
-  .actions { flex-direction: column; }
+  .actions { align-items: flex-start; }
   .summary img { max-width: none; height: var(--management-photo-mobile); }
   .summary h2 { font-size: var(--auth-story-body-size); }
   .summary dl { gap: var(--auth-space-4); }

@@ -8,7 +8,7 @@ const origin = process.env.NAVIGATION_TEST_ORIGIN || 'http://127.0.0.1:8092'
 if (origin !== 'http://127.0.0.1:8092' && !(process.env.CI === 'true' && origin === 'http://127.0.0.1:8080')) {
   throw new Error('Yalnız ayrı yerel sentetik ortam veya geçici CI ortamı kabul edilir.')
 }
-const out = path.resolve(__dirname, '../../.local/url-navigation/browser')
+const out = path.resolve(__dirname, process.env.T04_TEST === 'true' ? '../../.local/t04/browser' : '../../.local/url-navigation/browser')
 fs.mkdirSync(out, { recursive: true })
 const widths = [320, 390, 768, 1280], states = [], errors = [], assets = {}, failedAssets = []
 function totp(secret) {
@@ -39,9 +39,10 @@ async function check(page, state) {
         return .2126 * values[0] + .7152 * values[1] + .0722 * values[2]
       }
       const ls = [luminance(css.color), luminance(css.backgroundColor)].sort((a, b) => b - a)
-      return { target: rect.width >= 44 && rect.height >= 44, contrast: (ls[0] + .05) / (ls[1] + .05), disabled: item.matches(':disabled,[aria-disabled="true"]') }
+      return { target: rect.width >= 44 && rect.height >= 44, contrast: (ls[0] + .05) / (ls[1] + .05), disabled: item.matches(':disabled,[aria-disabled="true"]'), compact: css.fontSize === '14px' && css.fontWeight === '600' }
     }))
     assert.deepEqual(controls.filter(item => !item.target || (!item.disabled && item.contrast < 4.5)), [], `${state} targets/contrast ${width}`)
+    if (process.env.T04_TEST === 'true') assert.deepEqual(controls.filter(item => !item.compact), [], `${state} compact buttons ${width}`)
     await page.screenshot({ path: path.join(out, `${state}-${width}.png`), fullPage: true })
   }
   await page.setViewportSize({ width: 1280, height: 1000 }); states.push(state)
@@ -63,7 +64,7 @@ async function main() {
     page.on('pageerror', error => errors.push(error.message))
     page.on('response', response => {
       if (response.url().includes('/assets/')) {
-        if (response.status() !== 200) failedAssets.push(response.url())
+        if (![200, 304].includes(response.status())) failedAssets.push({ url: response.url(), status: response.status() })
         assets[new URL(response.url()).pathname] = true
       }
     })
@@ -101,7 +102,7 @@ async function main() {
       ['/yonetim/isletme', 'İşletme bilgileri', 'business'], ['/yonetim/isletme/saatler', 'İşletme saatleri', 'business-hours'],
       ['/yonetim/personel/yeni', 'Personel', 'personnel-create'], [`/yonetim/personel/${member.id}`, 'Personel', 'personnel-detail'],
       [`/yonetim/personel/${member.id}/hizmetler`, 'Personel', 'personnel-services'], [`/yonetim/personel/${member.id}/saatler`, 'Personel', 'personnel-hours'],
-      ['/yonetim/hizmetler/yeni', 'Hizmetler', 'service-create'], [`/yonetim/hizmetler/${service.id}/duzenle`, 'Hizmetler', 'service-edit'],
+      ['/yonetim/hizmetler/yeni', 'Yeni hizmet', 'service-create'], [`/yonetim/hizmetler/${service.id}/duzenle`, 'Sentetik hizmet', 'service-edit'],
       ['/yonetim/calisan-erisimleri', 'Çalışan erişimleri', 'access'], ['/yonetim/hesap', 'Hesap ve güvenlik', 'account'],
       ['/yonetim/degisiklik-kayitlari', 'Değişiklik kayıtları', 'audit'], ['/yonetim/olmayan', 'Sayfa bulunamadı', 'missing'],
     ]) {
@@ -138,6 +139,31 @@ async function main() {
     await page.getByRole('button', { name: 'Güncel kaydı yükle', exact: true }).waitFor(); assert.equal(await page.getByLabel('Hizmet adı (zorunlu)').inputValue(), 'Korunan taslak')
     await check(page, 'conflict-preserved'); page.once('dialog', dialog => dialog.accept()); await page.getByRole('button', { name: 'Güncel kaydı yükle', exact: true }).click()
     await page.waitForFunction(() => document.querySelector('#service-name')?.value === 'Güncel sentetik hizmet')
+    if (process.env.T04_TEST === 'true') {
+      assert.equal(await page.locator('main ul').count(), 0)
+      await page.getByLabel('Fiyat (TL, zorunlu)').fill('400')
+      assert.equal(await page.getByRole('button', { name: 'Sil', exact: true }).isDisabled(), true)
+      assert.equal(await page.getByRole('button', { name: 'Pasifleştir', exact: true }).isDisabled(), true)
+      await check(page, 'service-dirty')
+      await page.getByRole('button', { name: 'Kaydet', exact: true }).click(); await heading(page, 'Hizmetler'); await ready(page)
+      await page.goto(origin + `/yonetim/hizmetler/${service.id}/duzenle`); await heading(page, 'Güncel sentetik hizmet'); await ready(page)
+      await page.getByRole('button', { name: 'Pasifleştir', exact: true }).click(); await check(page, 'service-status-confirm')
+      await page.getByRole('group', { name: 'Hizmet durum değişikliği onayı' }).getByRole('button', { name: 'Vazgeç', exact: true }).click()
+      assert.equal(await page.getByRole('button', { name: 'Pasifleştir', exact: true }).evaluate(node => node === document.activeElement), true)
+      await page.getByRole('button', { name: 'Pasifleştir', exact: true }).click(); await page.getByRole('button', { name: 'Durumu değiştir', exact: true }).click()
+      await page.getByText('Güncel sentetik hizmet pasifleştirildi.', { exact: true }).waitFor(); await check(page, 'service-status-saved')
+      const canonical = await (await seed.request.get(origin + `/api/services/${service.id}`)).json()
+      let sentVersion
+      page.on('request', request => { if (request.method() === 'POST' && request.url() === origin + `/api/services/${service.id}`) sentVersion = request.postDataJSON().version })
+      await page.getByLabel('Fiyat (TL, zorunlu)').fill('401'); await page.getByRole('button', { name: 'Kaydet', exact: true }).click(); await heading(page, 'Hizmetler'); await ready(page)
+      assert.equal(sentVersion, canonical.version)
+      await page.goto(origin + `/yonetim/hizmetler/${service.id}/duzenle`); await heading(page, 'Güncel sentetik hizmet'); await ready(page)
+      await page.getByRole('button', { name: 'Sil', exact: true }).click(); await check(page, 'service-delete-confirm')
+      const deletion = page.waitForResponse(response => response.url().endsWith(`/api/services/${service.id}/delete`))
+      await page.getByRole('button', { name: 'Hizmeti sil', exact: true }).click(); assert.equal((await deletion).status(), 204)
+      await heading(page, 'Hizmetler'); await ready(page); await check(page, 'service-deleted')
+      assert.equal((await seed.request.get(origin + `/api/services/${service.id}`)).status(), 404)
+    }
     assert.equal((await post(seed, '/api/services/', { id: crypto.randomUUID(), name: '', durationMinutes: 0, price: '-1.00' })).status(), 400)
     const tab = await ctx.newPage(); await tab.goto(origin + `/yonetim/personel/${member.id}/hizmetler`); await heading(tab, 'Personel'); await tab.getByRole('link', { name: 'Hizmetler', exact: true }).last().waitFor(); await tab.close()
     await page.getByRole('button', { name: 'Çıkış yap', exact: true }).first().click(); await heading(page, 'İşletme girişi'); await page.goBack(); await heading(page, 'İşletme girişi')
@@ -161,6 +187,9 @@ async function main() {
     assert.equal((await ctx.request.get(origin + '/health/ready')).status(), 200)
     const html = await (await ctx.request.get(origin + '/yonetim/hizmetler/yeni')).text()
     assert.match(html, /src="\/assets\//); assert.match(html, /href="\/assets\//)
+    if (process.env.T04_TEST === 'true') {
+      for (const asset of Object.keys(assets)) assert.equal((await ctx.request.get(origin + asset)).status(), 200, asset)
+    }
     let limited = false
     for (let attempt = 0; attempt < 11; attempt++) {
       const response = await post(ctx, '/api/auth/login', { email: `missing-${attempt}@example.test`, password: 'Synthetic!Invalid123' })
