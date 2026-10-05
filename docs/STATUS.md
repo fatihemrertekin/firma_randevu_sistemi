@@ -32,6 +32,8 @@ Güncelleme: 2026-10-05. Güncel özet burada; kapsam ve kanıt bağlantıları 
 
 ## Bakım durumu
 
+T04 hizmet listesi/ayrı form ve ortak minimalist buton stili geliştirme/GitHub/ana yerel teslimi `done` (05.10.2026): [PR #53](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/53) `575b9a2` ile birleşti, aynı commit'in [main CI](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/37324323785) sonucu başarılı. Ayrı onayla yeni şifreli yedek sonrası 8080'de kabul imajı kuruldu; 32 tablo/hesap/MFA/anahtar/SMTP ayarları, sağlık/restart ve anonim tarayıcı/paket hashleri doğrulandı. [Kabul ve geri dönüş sınırı](plans/P02.md#t04-ana-yerel-teslim--05102026).
+
 URL ile ekran gezinmesi geliştirme/GitHub/ana yerel teslimi `done` (05.10.2026): [PR #51](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/51) `a0cef55` ile birleşti; aynı commit [main CI](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/37303555024) başarılı. 226 web/140 sunucu testi ve sentetik 28 durum × dört genişlik kabulü geçti. Ayrı onayla yedekli 8080 tesliminde 32 tablo, hesap/MFA, anahtar ve SMTP korundu; sağlık/restart ve anonim doğrudan adres/F5/geri/ileri/yeni sekme kabulü geçti. [Kabul paketi ve geri dönüş sınırı](plans/P02.md#url-ile-ekran-gezinmesi--05102026).
 
 Çalışan hesabını yeniden etkinleştirme ve personel/hizmet Sil bakımı geliştirme/ana yerel teslimi `done` (05.10.2026): [PR #49](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/49), `1d945802` ve başarılı main CI sonrası yedekli 8080 teslimi tamamlandı. [Kabul ve geri dönüş sınırı](plans/P02.md#tanım-silme-ve-çalışan-hesabını-etkinleştirme--05102026). Çalışan giriş hesabı silme kapsam dışıdır.
@@ -61,7 +63,7 @@ Program.cs bakımı `done`: başlangıç 265 satırdan 69 satıra indi; önce/so
 
 ## Sıradaki iş
 
-T04 hizmet listesi/ayrı form ve ortak minimalist buton stili geliştirme/yerel kabulü `done`: kullanıcı masaüstü/mobil taslağı ve kod kapsamını ayrıca onayladı; 230 web testi, gerçek API ve 33 durum × dört genişlik geçti. [PR #53 ve güncel CI kontrolleri](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/53), [kabul paketi ve teslim sınırı](plans/P02.md#t04-geliştirme-kabulü--05102026). Sıradaki tek iş, PR'ın güncel CI kapıları sonrası ayrı onayla yedekli ana 8080 teslimidir; mevcut ana uygulama değişmedi. T05–T08/P03/dark mode ilerletilmez.
+Sıradaki tek aday T05 Hesap ve güvenlik yüzeyinin mevcut API'lerle bağlı masaüstü/mobil taslağı ve kapsamıdır. Yalnız öneridir; taslak hazırlığı ve ardından ekran kodu ayrı kullanıcı onayı ister. T05–T08/P03/dark mode/native finish başlatılmadı.
 
 ## Gelecek plan kaydı — destek ve işletim ekranı (02.10.2026)
 
