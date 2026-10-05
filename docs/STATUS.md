@@ -61,7 +61,7 @@ Program.cs bakımı `done`: başlangıç 265 satırdan 69 satıra indi; önce/so
 
 ## Sıradaki iş
 
-T04 hizmet listesi/ekle/düzenle ve ortak minimalist buton önerisi taslak hazırlığı `done`; görsel/kod onayı bekleniyor. Kullanıcı taslak hazırlığını ve daha sade butonları onayladı; masaüstü/mobil taslak, durum/API kapsamı ve geri dönüş kuralları [T04 brief'inde](../.impeccable/surfaces/services-tsx.md). Sıradaki tek iş bu taslak ve buton önerisini onaylamak/seçmektir. Uygulama kodu/8080 değişmedi; P03/dark mode için yetki verilmiş sayılmaz.
+T04 hizmet listesi/ayrı form ve ortak minimalist buton stili geliştirme/yerel kabulü `done`: kullanıcı masaüstü/mobil taslağı ve kod kapsamını ayrıca onayladı; 230 web testi, gerçek API ve 33 durum × dört genişlik geçti. [Kabul paketi ve teslim sınırı](plans/P02.md#t04-geliştirme-kabulü--05102026). Sıradaki tek iş, PR'ın güncel CI kapıları sonrası ayrı onayla yedekli ana 8080 teslimidir; mevcut ana uygulama değişmedi. T05–T08/P03/dark mode ilerletilmez.
 
 ## Gelecek plan kaydı — destek ve işletim ekranı (02.10.2026)
 

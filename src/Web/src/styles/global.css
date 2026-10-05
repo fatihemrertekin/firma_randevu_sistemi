@@ -25,8 +25,8 @@ label { font-weight: 600; line-height: 1.5; }
 input, textarea { min-width: 0; width: 100%; padding: .8rem; border: 1px solid var(--control-border); border-radius: .5rem; background: var(--surface); color: var(--text); font: inherit; }
 input[type='checkbox'] { width: auto; margin-right: .5rem; }
 textarea { resize: vertical; }
-button { min-height: 44px; margin: .5rem .5rem .5rem 0; padding: .75rem 1rem; border: 1px solid var(--button-secondary-bg); border-radius: .5rem; background: var(--button-secondary-bg); color: var(--button-secondary-text); font: inherit; font-weight: 600; cursor: pointer; }
-button[type='submit'] { background: var(--button-primary-bg); border-color: var(--button-primary-bg); color: var(--button-primary-text); font-weight: 700; }
+button { min-width: var(--target-min); min-height: var(--target-min); max-width: 100%; width: fit-content; margin: var(--space-2) var(--space-2) var(--space-2) 0; padding: var(--button-padding-block) var(--button-padding-inline); border: var(--button-rule) solid var(--button-secondary-bg); border-radius: var(--button-radius); background: var(--button-secondary-bg); color: var(--button-secondary-text); font: inherit; font-size: var(--button-font-size); font-weight: var(--button-font-weight); line-height: var(--button-line-height); cursor: pointer; }
+button[type='submit'] { background: var(--button-primary-bg); border-color: var(--button-primary-bg); color: var(--button-primary-text); font-weight: var(--button-font-weight); }
 button:hover:enabled { background: var(--button-secondary-hover); filter: none; }
 button[type='submit']:hover:enabled { background: var(--button-primary-hover); }
 button:disabled { opacity: .65; cursor: not-allowed; }
@@ -40,10 +40,10 @@ li { overflow-wrap: anywhere; line-height: 1.6; }
 /* Screen links share the existing control tokens; actions remain buttons. */
 a[data-navigation] {
   display: inline-flex; align-items: center; justify-content: center; gap: var(--auth-space-2);
-  min-height: var(--target-min); padding: var(--auth-space-3) var(--auth-space-4);
+  min-width: var(--target-min); min-height: var(--target-min); max-width: 100%; width: fit-content; padding: var(--button-padding-block) var(--button-padding-inline);
   border: var(--auth-rule) solid var(--button-secondary-bg); border-radius: var(--auth-radius);
   background: var(--button-secondary-bg); color: var(--button-secondary-text);
-  font: inherit; font-weight: 600; text-decoration: none;
+  font: inherit; font-size: var(--button-font-size); font-weight: var(--button-font-weight); line-height: var(--button-line-height); text-decoration: none;
 }
 a[data-navigation]:hover:not([aria-disabled='true']) { background: var(--button-secondary-hover); }
 a[data-navigation][aria-disabled='true'] { opacity: .65; cursor: not-allowed; }

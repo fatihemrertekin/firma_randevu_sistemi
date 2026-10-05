@@ -1,0 +1,49 @@
+.surface { container: services / inline-size; min-width: 0; }
+.surface h1 { margin: 0 0 var(--auth-space-3); font-size: var(--management-title); line-height: var(--auth-heading-line); overflow-wrap: anywhere; }
+.surface h1:focus-visible { outline: var(--auth-focus-width) solid var(--focus); outline-offset: var(--auth-focus-offset); }
+.titleRow { display: flex; justify-content: space-between; align-items: center; gap: var(--auth-space-4); flex-wrap: wrap; margin-bottom: var(--auth-space-6); }
+.titleRow p { margin: 0; }
+.columnLabels, .row { display: grid; grid-template-columns: minmax(0, 1fr) var(--service-duration-column) var(--service-price-column) var(--service-status-column) var(--service-action-column); gap: var(--auth-space-4); align-items: center; }
+.columnLabels { color: var(--muted); font-size: var(--button-font-size); font-weight: var(--button-font-weight); padding-block: var(--auth-space-4); border-bottom: var(--auth-rule) solid var(--border); }
+.list { list-style: none; padding: 0; margin: 0; }
+.row { padding-block: var(--auth-space-5); border-bottom: var(--auth-rule) solid var(--border); }
+.row strong { min-width: 0; overflow-wrap: anywhere; }
+.row a { justify-self: end; }
+.metrics { display: contents; }
+.metrics span { font-variant-numeric: tabular-nums; }
+.status { color: var(--muted); }
+.footer, .pagination, .actions { display: flex; align-items: center; flex-wrap: wrap; gap: var(--action-row-gap) var(--auth-space-3); }
+.footer { margin-top: var(--auth-space-6); }
+.pagination span { font-size: var(--button-font-size); }
+:global(.management-theme) a[data-navigation].back { margin-bottom: var(--auth-space-5); background: var(--button-navigation-bg); color: var(--muted); border-color: var(--button-navigation-bg); }
+:global(.management-theme) a[data-navigation].back:hover { background: var(--button-navigation-selected-bg); }
+.editor { max-width: var(--service-form-max); margin-top: var(--auth-space-5); display: grid; gap: var(--auth-space-2); }
+.fields { padding: 0; margin: 0; border: 0; min-width: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--auth-space-4); }
+.field { display: grid; align-content: start; min-width: 0; gap: var(--auth-space-2); }
+.nameField { grid-column: 1 / -1; }
+.field p { margin: 0; }
+.fieldError { color: var(--error); }
+.editor .actions { margin-top: var(--auth-space-2); }
+:global(.management-theme) .editor .reload { justify-self: start; margin-top: var(--auth-space-2); }
+.definitionActions { margin-top: var(--auth-space-6); padding-top: var(--auth-space-5); border-top: var(--auth-rule) solid var(--border); }
+.definitionActions h2 { font-size: var(--service-section-size); margin: 0 0 var(--auth-space-3); }
+.definitionActions p { max-width: var(--service-form-max); }
+.confirmation { margin: 0; padding: var(--auth-space-4); border: var(--auth-rule) solid var(--control-border); min-width: 0; }
+.confirmation p { overflow-wrap: anywhere; }
+:global(.management-theme) :is(button, a[data-navigation]).primary { background: var(--button-primary-bg); color: var(--button-primary-text); border-color: var(--button-primary-bg); }
+:global(.management-theme) :is(button, a[data-navigation]).primary:hover:not(:disabled):not([aria-disabled='true']) { background: var(--button-primary-hover); }
+:global(.management-theme) :is(button, a[data-navigation]).danger { background: var(--button-danger-bg); color: var(--button-danger-text); border-color: var(--button-danger-bg); }
+:global(.management-theme) :is(button, a[data-navigation]).danger:hover:enabled { background: var(--button-danger-hover); }
+.skeleton { min-height: var(--management-rail-action); background: var(--border); }
+@container services (max-width: 40rem) {
+  .columnLabels { display: none; }
+  .row { grid-template-columns: minmax(0, 1fr) max-content; gap: var(--auth-space-2) var(--auth-space-3); }
+  .row strong { grid-column: 1; }
+  .metrics { display: flex; flex-wrap: wrap; gap: var(--auth-space-2); grid-column: 1; }
+  .price::before { content: '· '; }
+  .status { grid-column: 1; }
+  .row a { grid-column: 2; grid-row: 1 / span 3; }
+  .footer { align-items: flex-start; flex-direction: column; }
+  .fields { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 900px) { .surface h1 { font-size: var(--auth-mobile-title-size); } }

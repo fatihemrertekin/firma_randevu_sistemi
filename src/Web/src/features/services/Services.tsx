@@ -1,50 +1,32 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type RefObject } from 'react'
+import { useLocation, useNavigate } from 'react-router'
 import ErrorMessage from '../../components/ErrorMessage'
 import { formatTryPrice } from '../../app/money'
-import ServiceRouteEditor from './ServiceRouteEditor'
-import { ServiceRequestError, readService, readServicePage, serviceFailure, type Service, type ServicePage, type ServicePost } from './servicesApi'
-import styles from '../../components/DefinitionManagement.module.css'
-import { useLocation, useNavigate } from 'react-router'
 import { pageSearch, readPage, resolveRoute, sectionPaths } from '../../app/routes'
 import NavigationLink from '../../app/NavigationLink'
 import { useCompletedNavigation } from '../../app/CompletedNavigation'
 import { useNavigationChange } from '../../app/NavigationEvents'
+import ServiceRouteEditor from './ServiceRouteEditor'
+import { ServiceRequestError, readServicePage, type ServicePage, type ServicePost } from './servicesApi'
+import styles from './Services.module.css'
 
-type Props = { post: ServicePost; onDirtyChange: (dirty: boolean) => void; onBusyChange: (busy: boolean) => void }
-export default function Services({ post, onDirtyChange, onBusyChange }: Props) {
+type Props = { post: ServicePost; onDirtyChange: (dirty: boolean) => void; onBusyChange: (busy: boolean) => void;
+  headingRef?: RefObject<HTMLHeadingElement | null> }
+export default function Services({ post, onDirtyChange, onBusyChange, headingRef }: Props) {
   const location = useLocation(), navigate = useNavigate(), completed = useCompletedNavigation()
-  const route = resolveRoute(location.pathname)
-  const page = readPage(location.search)
+  const route = resolveRoute(location.pathname), page = readPage(location.search)
   const editing = route.kind === 'management' && route.section === 'services' && (route.create || !!route.id)
-  const editingId = route.kind === 'management' ? route.id : undefined
-  const [revision, setRevision] = useState(0)
-  const [data, setData] = useState<ServicePage | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-  const [notice, setNotice] = useState('')
-  const [target, setTarget] = useState<Service | null>(null)
-  const [deleting, setDeleting] = useState(false)
-  const [busy, setBusy] = useState(false)
-  const [stale, setStale] = useState(false)
-  const sending = useRef(false)
-  const heading = useRef<HTMLHeadingElement>(null)
-  const confirm = useRef<HTMLButtonElement>(null)
-  const addButton = useRef<HTMLAnchorElement>(null)
-  const opener = useRef<HTMLElement | null>(null)
-  const restoreFocus = useRef(false)
+  const id = route.kind === 'management' ? route.id : undefined
+  const [revision, setRevision] = useState(0), [data, setData] = useState<ServicePage | null>(null)
+  const [loading, setLoading] = useState(true), [error, setError] = useState(''), [notice, setNotice] = useState('')
+  const ownHeading = useRef<HTMLHeadingElement>(null), heading = headingRef ?? ownHeading
   useNavigationChange(next => {
-    setTarget(null); setError('')
-    if (next.search !== location.search || next.pathname === sectionPaths.services) { setLoading(true); setRevision(value => value + 1) }
+    setError('')
+    if (next.pathname === sectionPaths.services) { setLoading(true); setRevision(value => value + 1) }
+    else setNotice('')
   })
   useEffect(() => {
-    if (target) confirm.current?.focus()
-    else if (!editing && restoreFocus.current) {
-      restoreFocus.current = false
-      if (opener.current?.isConnected) opener.current.focus()
-      else addButton.current?.focus()
-    }
-  }, [target, editing])
-  useEffect(() => {
+    if (editing) return
     const controller = new AbortController()
     void fetch(`/api/services/?page=${page}`, { cache: 'no-store', signal: AbortSignal.any([controller.signal, AbortSignal.timeout(15000)]) })
       .then(readServicePage).then(value => { if (!controller.signal.aborted) setData(value) })
@@ -52,71 +34,45 @@ export default function Services({ post, onDirtyChange, onBusyChange }: Props) {
         if (!controller.signal.aborted) { setData(null); setError(problem instanceof ServiceRequestError ? problem.message : 'Hizmet listesi alınamadı. Yeniden dene.') }
       }).finally(() => { if (!controller.signal.aborted) setLoading(false) })
     return () => controller.abort()
-  }, [page, revision])
+  }, [page, revision, editing])
   function load(next = page) {
-    setLoading(true); setError(''); setTarget(null); setStale(false)
-    setRevision(value => value + 1)
+    setLoading(true); setError(''); setNotice(''); setRevision(value => value + 1)
     if (next !== page) void navigate(sectionPaths.services + pageSearch(next))
   }
-  function closeEditor() { restoreFocus.current = true; void navigate(sectionPaths.services + pageSearch(page)) }
-  async function changeStatus() {
-    if (!target || sending.current || stale) return
-    sending.current = true; setBusy(true); onBusyChange(true); setError(''); setNotice('')
-    try {
-      if (deleting) {
-        const response = await post(`/api/services/${target.id}/delete`, { version: target.version }, AbortSignal.timeout(15000))
-        if (response.status !== 204) throw new ServiceRequestError(response.ok ? 500 : response.status)
-        setNotice(`${target.name} hizmet listesinden silindi.`); load(1); heading.current?.focus(); return
-      }
-      const updated = await readService(await post(`/api/services/${target.id}/status`,
-        { isActive: !target.isActive, version: target.version }, AbortSignal.timeout(15000)))
-      setNotice(`${updated.name} ${updated.isActive ? 'aktifleştirildi' : 'pasifleştirildi'}.`)
-      load(); heading.current?.focus()
-    } catch (problem: unknown) { setError(problem instanceof ServiceRequestError ? problem.message : serviceFailure(500)); setStale(true) }
-    finally { sending.current = false; setBusy(false); onBusyChange(false) }
+  function finish(message: string, next = page) {
+    setNotice(message); setLoading(true)
+    completed(sectionPaths.services + pageSearch(next), { replace: true })
   }
-  const blocked = busy || loading || !!editing || target !== null
-  return <section aria-labelledby="services-title" aria-busy={loading || busy}>
-    <h2 id="services-title" ref={heading} className={styles.heading} tabIndex={-1}>Hizmet listesi</h2>
-    <p>İşletmenin sunduğu hizmetlerin adını, süresini ve fiyatını düzenleyin. Pasifleştirme kaydı korur; silme listeden kaldırır ve değişiklik geçmişini korur.</p>
+  if (editing) return <ServiceRouteEditor key={id ?? 'new'} id={id} post={post} headingRef={heading}
+    onDirtyChange={onDirtyChange} onBusyChange={onBusyChange}
+    onCancel={() => { void navigate(sectionPaths.services + pageSearch(page)) }}
+    onSaved={() => finish('Hizmet kaydedildi.', id ? page : 1)} onDeleted={message => finish(message, 1)} />
+  return <section className={styles.surface} aria-labelledby="services-title" aria-busy={loading}>
+    <div className={styles.titleRow}>
+      <div><h1 id="services-title" ref={heading} tabIndex={-1}>Hizmetler</h1><p>Hizmetlerin adını, süresini ve fiyatını yönetin.</p></div>
+      <NavigationLink to={sectionPaths.services + '/yeni' + pageSearch(page)} className={styles.primary} disabled={loading}>Yeni hizmet</NavigationLink>
+    </div>
     <ErrorMessage message={error} />
     {notice && <p role="status">{notice}</p>}
     {loading && <><p role="status">Hizmetler yükleniyor…</p>{!data && <div aria-hidden="true" className={styles.skeleton} />}</>}
     {!loading && data?.items.length === 0 && <p>Bu sayfada hizmet yok. Yeni hizmet ekleyerek başlayabilirsin.</p>}
-    {!editing && !target && <NavigationLink to={sectionPaths.services + '/yeni' + pageSearch(page)} ref={addButton} className={styles.primary} disabled={busy || loading} onClick={event => {
-      opener.current = event.currentTarget; setError(''); setNotice('')
-    }}>Yeni hizmet</NavigationLink>}
-    {editing && <ServiceRouteEditor key={editingId ?? 'new'} id={editingId} post={post} onDirtyChange={onDirtyChange} onBusyChange={onBusyChange}
-      onCancel={closeEditor} onSaved={() => { setNotice('Hizmet kaydedildi.'); setLoading(true); setTarget(null); setRevision(value => value + 1); completed(sectionPaths.services, { replace: true }); heading.current?.focus() }} />}
-    {data && <ul className={styles.list}>{data.items.map(service => <li key={service.id} className={styles.row}>
-      <div className={styles.identity}><strong>{service.name}</strong><p>{service.durationMinutes} dk · {formatTryPrice(service.price)}</p>
-        <p><span aria-hidden="true">{service.isActive ? '● ' : '○ '}</span>{service.isActive ? 'Aktif' : 'Pasif'}</p></div>
-      <div className={styles.actions}>
-        <NavigationLink to={`${sectionPaths.services}/${encodeURIComponent(service.id)}/duzenle${pageSearch(page)}`} disabled={blocked} aria-label={`${service.name} hizmetini düzenle`} onClick={event => {
-          opener.current = event.currentTarget; setError(''); setNotice('')
-        }}>Düzenle</NavigationLink>
-        <button type="button" className={service.isActive ? styles.danger : undefined} disabled={blocked}
-          aria-label={`${service.name} hizmetini ${service.isActive ? 'pasifleştir' : 'aktifleştir'}`} onClick={event => {
-            opener.current = event.currentTarget; setDeleting(false); setTarget(service); setStale(false); setError(''); setNotice('')
-          }}>{service.isActive ? 'Pasifleştir' : 'Aktifleştir'}</button>
-        <button type="button" className={styles.danger} disabled={blocked} aria-label={`${service.name} hizmetini sil`} onClick={event => {
-          opener.current = event.currentTarget; setDeleting(true); setTarget(service); setStale(false); setError(''); setNotice('')
-        }}>Sil</button>
+    {data && data.items.length > 0 && <>
+      <div className={styles.columnLabels} aria-hidden="true"><span>Hizmet</span><span>Süre</span><span>Fiyat</span><span>Durum</span></div>
+      <ul className={styles.list}>{data.items.map(service => <li key={service.id} className={styles.row}>
+        <strong>{service.name}</strong>
+        <div className={styles.metrics}><span>{service.durationMinutes} dk</span><span className={styles.price}>{formatTryPrice(service.price)}</span></div>
+        <span className={styles.status}>{service.isActive ? 'Aktif' : 'Pasif'}</span>
+        <NavigationLink to={`${sectionPaths.services}/${encodeURIComponent(service.id)}/duzenle${pageSearch(page)}`}
+          disabled={loading} aria-label={`${service.name} hizmetini düzenle`}>Düzenle</NavigationLink>
+      </li>)}</ul>
+    </>}
+    <div className={styles.footer}>
+      <button type="button" disabled={loading} onClick={() => load()}>Listeyi yenile</button>
+      <div className={styles.pagination}>
+        <button type="button" disabled={loading || page === 1} onClick={() => load(page - 1)} aria-label="Önceki sayfa">Önceki</button>
+        <span>Sayfa {data?.page ?? page}</span>
+        <button type="button" disabled={loading || !data?.hasMore} onClick={() => load(page + 1)} aria-label="Sonraki sayfa">Sonraki</button>
       </div>
-    </li>)}</ul>}
-    {target && <fieldset className={styles.confirmation} disabled={busy} aria-label={deleting ? 'Hizmet silme onayı' : 'Hizmet durum değişikliği onayı'}>
-      <legend>Hizmeti {deleting ? 'sil' : target.isActive ? 'pasifleştir' : 'aktifleştir'}</legend>
-      {deleting ? <p className={styles.identity}><strong>{target.name}</strong> hizmet listesinden ve personelin hizmet seçimlerinden kaldırılacak; yeniden kullanılamayacak. Önceki bağlantılar ve değişiklik geçmişi korunur.</p>
-        : <p className={styles.identity}><strong>{target.name}</strong> {target.isActive ? 'pasif' : 'aktif'} olarak işaretlenecek. Kayıt silinmez; hizmetin adı, süresi ve fiyatı korunur.</p>}
-      <div className={styles.actions}><button type="button" className={deleting || target.isActive ? styles.confirm : styles.primary} ref={confirm} disabled={stale}
-        onClick={() => { void changeStatus() }}>{busy ? 'İşlem sürüyor…' : deleting ? 'Hizmeti sil' : 'Durumu değiştir'}</button>
-      <button type="button" onClick={() => { restoreFocus.current = true; setTarget(null); setError('') }}>Vazgeç</button></div>
-    </fieldset>}
-    <div className={styles.actions}>
-      <button type="button" disabled={busy || loading || !!editing} onClick={() => { setNotice(''); load(); heading.current?.focus() }}>Listeyi yenile</button>
-      <button type="button" disabled={blocked || page === 1} onClick={() => { setNotice(''); load(page - 1) }}>Önceki sayfa</button>
-      <span>Sayfa {data?.page ?? page}</span>
-      <button type="button" disabled={blocked || !data?.hasMore} onClick={() => { setNotice(''); load(page + 1) }}>Sonraki sayfa</button>
     </div>
   </section>
 }

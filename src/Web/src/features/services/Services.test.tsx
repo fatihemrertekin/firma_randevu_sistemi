@@ -18,7 +18,8 @@ beforeEach(() => {
 })
 afterEach(async () => { await act(async () => root.unmount()); container.remove(); vi.unstubAllGlobals(); vi.restoreAllMocks() })
 async function click(text: string) {
-  const button = Array.from(container.querySelectorAll<HTMLButtonElement>('button, a[data-navigation]')).find(item => item.textContent === text)
+  const matches = Array.from(container.querySelectorAll<HTMLElement>('button, a[data-navigation]')).filter(item => item.textContent === text || item.getAttribute('aria-label') === text)
+  const button = matches.find(item => !item.matches(':disabled') && item.getAttribute('aria-disabled') !== 'true') ?? matches[0]
   if (!button) throw new Error('Düğme yok: ' + text)
   await act(async () => button.click())
 }
@@ -36,15 +37,57 @@ async function submit() {
 async function render(post = vi.fn<ServicePost>(async () => Response.json(service)), dirty = vi.fn(), busy = vi.fn()) {
   const router = createMemoryRouter([{ path: '*', element: <Services post={post} onDirtyChange={dirty} onBusyChange={busy} /> }], { initialEntries: ['/yonetim/hizmetler'] })
   await act(async () => root.render(<NavigationEvents value={listener => router.subscribe(state => listener(state.location))}><RouterProvider router={router} /></NavigationEvents>))
-  return { post, dirty, busy }
+  return { post, dirty, busy, router }
 }
 async function newService() { await click('Yeni hizmet'); await fill('name', 'Yeni Hizmet'); await fill('duration', '45'); await fill('price', '0,29') }
 
 describe('Hizmet yönetimi', () => {
+  it('liste yalnız düzenleme bağlantısı sunar; seçili kayıt ayrı formda yüklenir', async () => {
+    await render()
+    expect(container.querySelector('form')).toBeNull()
+    expect(container.querySelector('h1')?.textContent).toBe('Hizmetler')
+    expect(container.textContent).not.toContain('Pasifleştir')
+    vi.mocked(fetch).mockClear()
+    await click('Düzenle')
+    expect(container.querySelector('h1')?.textContent).toBe(service.name)
+    expect(container.querySelector('ul')).toBeNull()
+    expect(vi.mocked(fetch).mock.calls.map(call => call[0])).toEqual(['/api/services/service-1'])
+  })
+  it('taslak ve bekleyen form isteği durum/silme işlemlerini kapatır', async () => {
+    let finish: ((response: Response) => void) | undefined
+    const { post } = await render(vi.fn<ServicePost>(() => new Promise(resolve => { finish = resolve })))
+    await click('Düzenle'); await fill('price', '400')
+    for (const text of ['Sil', 'Pasifleştir']) {
+      expect(Array.from(container.querySelectorAll('button')).find(button => button.textContent === text)?.disabled).toBe(true)
+    }
+    await click('Sil'); expect(post).not.toHaveBeenCalled()
+    await submit(); expect(post).toHaveBeenCalledTimes(1)
+    expect(container.querySelector('fieldset')?.disabled).toBe(true)
+    await act(async () => finish?.(new Response(null, { status: 500 })))
+  })
+  it('durum işleminden sonra GET ile alınan güncel sürümle form kaydeder', async () => {
+    const post = vi.fn<ServicePost>(async () => Response.json({ ...service, isActive: false, version: 'version-2' }))
+    await render(post); await click('Düzenle')
+    vi.mocked(fetch).mockResolvedValueOnce(Response.json({ ...service, name: 'Güncel ad', isActive: false, version: 'version-3' }))
+    await click('Pasifleştir'); await click('Durumu değiştir')
+    expect(container.querySelector('h1')?.textContent).toBe('Güncel ad')
+    await fill('price', '400'); await submit()
+    expect(post.mock.calls[1]?.slice(0, 2)).toEqual(['/api/services/service-1', { name: 'Güncel ad', durationMinutes: 30, price: '400.00', version: 'version-3' }])
+  })
+  it('ikinci sayfadan düzenleme, vazgeçme ve kaydetme aynı sayfaya döner', async () => {
+    const { router } = await render()
+    vi.mocked(fetch).mockResolvedValueOnce(Response.json({ items: [service], page: 2, hasMore: false }))
+    await act(async () => { await router.navigate('/yonetim/hizmetler?sayfa=2') })
+    await click('Düzenle'); expect(router.state.location.search).toBe('?sayfa=2')
+    await click('Vazgeç'); expect(router.state.location.search).toBe('?sayfa=2')
+    await click('Düzenle'); await fill('price', '400'); await submit()
+    expect(router.state.location.pathname).toBe('/yonetim/hizmetler')
+    expect(router.state.location.search).toBe('?sayfa=2')
+  })
   it('silme onayı iptal edilebilir; başarı yalnız 204 sonrası görünür ve çift gönderim engellenir', async () => {
     let finish: ((response: Response) => void) | undefined
     const { post } = await render(vi.fn<ServicePost>(() => new Promise(resolve => { finish = resolve })))
-    await click('Sil'); expect(post).not.toHaveBeenCalled()
+    await click('Düzenle'); await click('Sil'); expect(post).not.toHaveBeenCalled()
     expect(document.activeElement?.textContent).toBe('Hizmeti sil')
     await click('Vazgeç'); expect(document.activeElement?.textContent).toBe('Sil')
     await click('Sil'); await click('Hizmeti sil'); await click('İşlem sürüyor…')
@@ -55,15 +98,17 @@ describe('Hizmet yönetimi', () => {
     await act(async () => finish?.(new Response(null, { status: 204 })))
     expect(container.textContent).toContain('Saç kesimi hizmet listesinden silindi.')
     expect(container.querySelector('fieldset')).toBeNull()
-    expect(container.querySelector('ul')?.textContent).not.toContain('Saç kesimi')
+    expect(container.querySelector('ul')).toBeNull()
+    expect(container.textContent).toContain('Bu sayfada hizmet yok.')
   })
   it('eski sürümle silme reddedilince kayıt görünür kalır ve tekrar göndermek için yenileme gerekir', async () => {
     const { post } = await render(vi.fn<ServicePost>(async () => new Response(null, { status: 409 })))
-    await click('Sil'); await click('Hizmeti sil')
+    await click('Düzenle'); await click('Sil'); await click('Hizmeti sil')
     expect(container.textContent).toContain('Hizmet kaydı değişti.')
     expect(container.textContent).not.toContain('hizmet listesinden silindi.')
-    await click('Hizmeti sil'); expect(post).toHaveBeenCalledTimes(1)
-    await click('Listeyi yenile'); expect(container.querySelector('fieldset')).toBeNull()
+    expect(container.querySelector('button[type="submit"]')?.matches(':disabled')).toBe(true)
+    await click('Sil'); expect(post).toHaveBeenCalledTimes(1)
+    await click('Güncel kaydı yükle'); expect(container.querySelector('[aria-label="Hizmet silme onayı"]')).toBeNull()
   })
   it('tutarı ondalık metin olarak gönderir; çift ve belirsiz eklemede aynı kimliği korur', async () => {
     let finish: ((response: Response) => void) | undefined
@@ -110,22 +155,23 @@ describe('Hizmet yönetimi', () => {
   })
   it('durum onayını ve klavye odağını korur; aktif/pasif başarıyı sunucudan sonra gösterir', async () => {
     const post = vi.fn<ServicePost>(async () => Response.json({ ...service, isActive: false, version: 'version-2' }))
-    await render(post); expect(container.textContent).toContain('30 dk · 350,00 ₺')
+    await render(post); expect(container.textContent).toContain('30 dk'); expect(container.textContent).toContain('350,00 ₺')
+    await click('Düzenle')
     await click('Pasifleştir'); expect(post).not.toHaveBeenCalled()
-    expect(container.querySelector('fieldset')?.textContent).toContain('Kayıt silinmez; hizmetin adı, süresi ve fiyatı korunur.')
+    expect(container.querySelector('[aria-label="Hizmet durum değişikliği onayı"]')?.textContent).toContain('Kayıt silinmez; hizmetin adı, süresi ve fiyatı korunur.')
     expect(document.activeElement?.textContent).toBe('Durumu değiştir')
     await click('Vazgeç'); expect(document.activeElement?.textContent).toBe('Pasifleştir')
     await click('Pasifleştir')
-    vi.mocked(fetch).mockResolvedValue(Response.json({ items: [{ ...service, isActive: false }], page: 1, hasMore: false }))
+    vi.mocked(fetch).mockResolvedValue(Response.json({ ...service, isActive: false, version: 'version-2' }))
     await click('Durumu değiştir')
     expect(post.mock.calls[0]?.[1]).toEqual({ isActive: false, version: 'version-1' })
     expect(container.textContent).toContain('Saç kesimi pasifleştirildi.'); expect(container.textContent).toContain('Aktifleştir')
   })
-  it.each([[401, 'Oturumunuz sona erdi.'], [403, 'yetkiniz yok.'], [409, 'kaydı değişti.'], [429, 'Çok sık denendi.'], [500, 'Sonuç doğrulanamadı.']])('%s hatasında başarı üretmez; listeyi yenileme sunar', async (status, text) => {
-    await render(vi.fn<ServicePost>(async () => new Response(null, { status }))); await click('Pasifleştir'); await click('Durumu değiştir')
+  it.each([[401, 'Oturumunuz sona erdi.'], [403, 'yetkiniz yok.'], [409, 'kaydı değişti.'], [429, 'Çok sık denendi.'], [500, 'Sonuç doğrulanamadı.']])('%s hatasında başarı üretmez; güncel kaydı yükleme sunar', async (status, text) => {
+    await render(vi.fn<ServicePost>(async () => new Response(null, { status }))); await click('Düzenle'); await click('Pasifleştir'); await click('Durumu değiştir')
     expect(container.querySelector('[role="alert"]')?.textContent).toContain(text)
     expect(container.textContent).not.toContain('pasifleştirildi.')
-    await click('Listeyi yenile'); expect(container.querySelector('fieldset')).toBeNull()
+    await click('Güncel kaydı yükle'); expect(container.querySelector('[aria-label="Hizmet durum değişikliği onayı"]')).toBeNull()
   })
   it('yükleme/boş/sayfalama ve bozuk para yanıtını ayırır', async () => {
     let finish: ((response: Response) => void) | undefined

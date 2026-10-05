@@ -31,5 +31,5 @@
   .day { grid-template-columns: minmax(0, 1fr); gap: var(--auth-space-2); padding-block: var(--auth-space-4); }
   .dayHeading { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--auth-space-2); }
   .times label { position: static; width: auto; height: auto; overflow: visible; clip-path: none; white-space: normal; display: block; margin-bottom: var(--auth-space-2); }
-  .actions { flex-direction: column; }
+  .actions { align-items: flex-start; }
 }

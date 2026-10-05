@@ -1,6 +1,6 @@
 .page { min-height: 100svh; background: var(--background); color: var(--text); font-size: var(--auth-body-size); }
 .page ::selection { background: var(--auth-selection); color: var(--text); }
-.page :is(button, a[data-navigation]) { margin: 0; min-height: var(--auth-control-height); border-radius: var(--auth-radius); border: var(--auth-rule) solid var(--button-secondary-bg); background: var(--button-secondary-bg); color: var(--button-secondary-text); padding: var(--auth-space-3) var(--auth-space-4); transition: background-color var(--auth-transition); }
+.page :is(button, a[data-navigation]) { margin: 0; min-width: var(--target-min); min-height: var(--target-min); border-radius: var(--button-radius); border: var(--button-rule) solid var(--button-secondary-bg); background: var(--button-secondary-bg); color: var(--button-secondary-text); padding: var(--button-padding-block) var(--button-padding-inline); font-size: var(--button-font-size); font-weight: var(--button-font-weight); line-height: var(--button-line-height); transition: background-color var(--auth-transition); }
 .page :is(button, a[data-navigation]):hover:not(:disabled):not([aria-disabled='true']) { filter: none; background: var(--button-secondary-hover); }
 .page :is(button, a[data-navigation])[type='submit'] { background: var(--button-primary-bg); border-color: var(--button-primary-bg); color: var(--button-primary-text); }
 .page :is(button, a[data-navigation])[type='submit']:hover:not(:disabled):not([aria-disabled='true']) { background: var(--auth-action-hover); }
@@ -20,7 +20,7 @@
 .layout[data-drawer-open='false'] { grid-template-columns: var(--management-rail) minmax(0, 1fr); }
 .navigation { display: contents; }
 .rail { padding: var(--auth-space-5) var(--auth-space-2); display: flex; flex-direction: column; gap: var(--auth-space-4); background: var(--management-rail-bg); }
-.rail :is(button, a[data-navigation]) { width: 100%; min-height: var(--management-rail-action); display: flex; flex-direction: column; justify-content: center; align-items: center; gap: var(--auth-space-2); color: var(--color-surface); background: var(--management-rail-action-bg); border-color: var(--management-rail-action-bg); text-align: center; font-size: var(--auth-body-size); }
+.rail :is(button, a[data-navigation]) { width: 100%; min-height: var(--management-rail-action); display: flex; flex-direction: column; justify-content: center; align-items: center; gap: var(--auth-space-2); color: var(--color-surface); background: var(--management-rail-action-bg); border-color: var(--management-rail-action-bg); text-align: center; font-size: var(--button-font-size); }
 .rail :is(button, a[data-navigation])[data-group-active='true'], .rail :is(button, a[data-navigation])[aria-current='page'], .rail :is(button, a[data-navigation]):hover:not(:disabled):not([aria-disabled='true']) { background: var(--management-rail-selected); color: var(--auth-cream); }
 .rail :is(button, a[data-navigation]):focus-visible { outline-color: var(--auth-cream); }
 .rail svg { width: var(--management-icon); height: var(--management-icon); flex-shrink: 0; }

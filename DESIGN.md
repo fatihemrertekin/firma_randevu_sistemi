@@ -101,7 +101,7 @@ Kimlik yüzeylerinin ortak yerleşimi `AuthenticationLayout` içindedir. Masaüs
 
 900 px ve altında fotoğraf kısa üst alana dönüşür; marka bu alanda, form altta beyaza yakın zeminde gösterilir. 320 px'te yardımcı eylemler ve onay düğmeleri alt alta gelir. Bu iki sütunlu kompozisyon diğer yönetim ekranlarına genel şablon olarak dayatılmaz.
 
-Tüm kimlik formları aynı sıkı ölçüleri kullanır: marka 48 px, görev başlığı 32 px, gövde/etiket 16 px, ana işlem 18 px, alan yüksekliği 48 px ve form aralığı 8 px. Ölçüler merkezi tokenlardan gelir; ayrı form çeşitleri veya kopyalanmış stiller yoktur. Fotoğraf sütununun ölçeği korunur. Davet formundaki ana işlem ve geri dönüş masaüstünde aynı sırada, mobilde alt alta durur. Kısa mobil ekranda içerik gerektiğinde dikey kayar; alanlar veya hata mesajları kesilmez.
+Tüm kimlik formları aynı sıkı ölçüleri kullanır: marka 48 px, görev başlığı 32 px, gövde/etiket 16 px, buton metni 14 px/600, alan yüksekliği 48 px ve form aralığı 8 px. Buton hedefi en az 44 px, genişliği içeriğe göredir; ayrı işlem satırlarında 16 px dikey boşluk korunur. Ölçüler merkezi tokenlardan gelir; ayrı form çeşitleri veya kopyalanmış stiller yoktur. Fotoğraf sütununun ölçeği korunur. Davet formundaki ana işlem ve geri dönüş masaüstünde aynı sırada, mobilde alt alta durur. Kısa mobil ekranda içerik gerektiğinde dikey kayar; alanlar veya hata mesajları kesilmez.
 
 ## Elevation & Depth
 
@@ -119,7 +119,9 @@ Kontroller mütevazı yuvarlak köşelidir. İşlem hedefi en az 44 × 44 px'tir
 
 ## Components
 
-**Düğmeler:** tek ana işlem belirgindir. Yardımcı işlemler dolu lacivert, gezinme ve metin eylemleri hafif dolguludur; buton zemini transparan değildir. Hover, active, disabled ve loading davranışı ortak yerleşim içinde tutarlıdır; 180 ms renk geçişleri azaltılmış hareket tercihinde kapanır.
+**Düğmeler:** tek ana işlem belirgindir. Ortak metin 14 px/600, yatay iç boşluk 12 px, köşe 6 px, asgari hedef 44×44 px'tir. Genişlik metne göre belirlenir; gereksiz tam genişlik yardımcı işlemler kaldırılır. Grup menüsünün çok satırlı etiketi daha yüksek kalabilir. Yardımcı işlemler dolu lacivert, gezinme ve metin eylemleri hafif dolguludur; buton zemini transparan değildir. Hover, active, disabled ve loading davranışı ortak yerleşim içinde tutarlıdır; 180 ms renk geçişleri azaltılmış hareket tercihinde kapanır.
+
+**Hizmetler:** tek başlık altında ad/dakika/TL fiyatı/yazılı durum sütunları ve satır başına tek Düzenle bağlantısı bulunur. Ekleme ve düzenleme ayrı URL/formdadır; form altında liste yoktur. Ad tam genişlik, süre/fiyat geniş alanda iki sütun, dar alanda tek sütundur. Kaydet/Vazgeç ve Güncel kaydı yükle form işlemleridir. Durum ve silme ayrı bölümde ve ayrı onayla yapılır; kirli formda veya bekleyen istekte kapalıdır. Durum işlemi sonrası GET ile güncel sürüm yüklenir, silme 204 sonrası listeye döner. Onaylı masaüstü/mobil öneri ve kapsam [T04 brief'inde](.impeccable/surfaces/services-tsx.md); buton stili mevcut diğer yüzeylerin görev düzenini değiştirmez.
 
 **Alanlar:** görünür etiket, ince lacivert sınır, beyaz iç yüzey ve mavi odak çizgisi kullanılır. Hata mesajı kırmızı metinle ve ince sınırla gösterilir. API/CSRF/oturum kuralları görsel katman tarafından değiştirilmez.
 

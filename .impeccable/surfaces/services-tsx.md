@@ -3,12 +3,12 @@ version: 1
 slug: services-tsx
 primary_target: src/Web/src/features/services/Services.tsx
 related_targets: [src/Web/src/features/services/ServiceRouteEditor.tsx,src/Web/src/features/services/ServiceEditor.tsx,src/Web/src/styles/tokens.css,src/Web/src/styles/global.css]
-status: proposed
+status: done
 ---
 
 # T04 — Hizmetler ve minimalist buton önerisi
 
-Mode: operate. Taslak hazırlığı kullanıcı tarafından 05.10.2026'da onaylandı; görsel seçim ve ekran kodu henüz onaylanmadı. Kullanıcı ayrıca bazı butonların büyük göründüğünü belirterek daha minimalist tasarım istedi.
+Mode: operate. Masaüstü/mobil taslak ve ortak minimalist buton önerisi kullanıcı tarafından 05.10.2026'da onaylandı; aynı taslağın ekran koduna uygulanması ayrıca onaylandı. Geliştirme ve yerel kabul tamamlandı; GitHub/ana yerel teslim ayrı izlenir. Kullanıcı ayrıca bazı butonların büyük göründüğünü belirterek daha minimalist tasarım istedi.
 
 - Amaç: MFA Owner hizmetleri ad/süre/TL fiyatı/durumuyla kolayca tarar ve seçtiği hizmeti tek formda düzenler. Ana işlem listede Yeni hizmet, formda Kaydet.
 - Bilgi sırası: listede tek Hizmetler başlığı/açıklama → ince satırlı liste → yenile/sayfalama; ayrı ekle/düzenle sayfasında Listeye dön → seçili ad/durum veya Yeni hizmet → alanlar → geri bildirim/kaydet/vazgeç → ayrı durum/silme bölümü. Formun altında liste bulunmaz.
@@ -24,9 +24,9 @@ Yeni hizmet aynı üç alanı kullanır: Hizmet adı, Süre (dakika), Fiyat (TL)
 
 ## Ortak minimalist buton önerisi
 
-Bu bölüm henüz uygulanmış tasarım sistemi değil, kullanıcı isteğiyle hazırlanmış ortak stil önerisidir. Kod onayında T04 ile birlikte mevcut frontend'in gerçek buton/ekran bağlantılarında tutarlı uygulanması değerlendirilir; diğer ekranların görev düzeni bu kapsamla yeniden tasarlanmaz.
+Bu ortak stil T04 ile birlikte mevcut frontend'in gerçek buton/ekran bağlantılarında uygulandı; diğer ekranların görev düzeni değiştirilmedi.
 
-- Hedef ölçü: çoğu işlemde 48 px yerine 44 px asgari yükseklik; okunur 14 px/600 metin, yaklaşık 12 px yatay iç boşluk, 6 px köşe. Bunlar onay sonrası merkezi tokenlara taşınacak önerilerdir, rasterdan ölçülmüş CSS kabulü değildir.
+- Hedef ölçü: çoğu işlemde 48 px yerine 44 px asgari yükseklik; okunur 14 px/600 metin, yaklaşık 12 px yatay iç boşluk, 6 px köşe. Ölçüler merkezi tokenlarla uygulanıp gerçek tarayıcıda doğrulandı; raster ölçümü kabul kanıtı olarak kullanılmadı.
 - Genişlik içeriğe göre; gereksiz sabit minimum ve tam genişlik yardımcı işlem dolguları kaldırılır. 44×44 px tıklama alanı ve ayrı işlem satırları arasındaki mevcut 16 px dikey aralık korunur. Çok satırlı menü etiketi gerektiğinde daha yüksek kalır.
 - Ana işlem dolu mavi; yardımcı işlem dolu lacivert; gezinme mevcut açık dolgu; tehlikeli işlem ayrı bölümde dolu kırmızı. Şeffaf yüzey, yeni renk ailesi, gölge, kabartma veya dekoratif ikon önerilmez.
 - Aynı ekranda tek ana işlem belirgindir. Listeye dön/yenile/sayfalama ve Vazgeç aynı görsel ağırlıkta ana işlem gibi yarışmaz. Klavye odağı, hover/disabled/loading ve erişilebilir ad korunur.
@@ -44,8 +44,8 @@ Bu bölüm henüz uygulanmış tasarım sistemi değil, kullanıcı isteğiyle h
 
 - Masaüstü liste/düzenleme: `.impeccable/mocks/decision/services-t04-desktop.png`.
 - Mobil liste/düzenleme: `.impeccable/mocks/decision/services-t04-mobile.png`.
-- Her PNG'nin `.png.json` yan kaydında exact prompt, `approved:false` ve üretim kaynağı vardır; aynı exact prompt PNG içine gömülüp geri okunarak doğrulandı. Üretim built-in image_gen ile yapıldı.
+- Her PNG'nin `.png.json` yan kaydında exact prompt, `approved:true` ve üretim kaynağı vardır; aynı exact prompt PNG içine gömülüp geri okunarak doğrulandı. Üretim built-in image_gen ile yapıldı.
 
 Öz eleştiri: listede işlem kalabalığı azalıyor; sütunlar ve mobil satır ayrımı okunur. Form ve durum/silme ayrılmış, ana işlem belirgin, yardımcı butonlar gereksiz genişliğe yayılmıyor. Rasterdaki hafif gölge/ton geçişleri ve dış sunum sınırı üretimde literal uygulanmayacak; kodda düz token renkleri ve semantik alanlar kullanılacak. Raster pikseli 44 px hedef, kontrast veya responsive çalışma kanıtı değildir. Görseller tek önerinin masaüstü/mobil gösterimidir; ek alternatif ve motor bitiş turu yapılmadı.
 
-Uygulama kodu, DESIGN.md, ana 8080, gerçek firma verisi ve DB/migration değişmedi. Bu hazırlıkta frontend/gerçek API kabulü çalıştırılmadı. Kod onayı sonrası ilgili kalite kapıları, gerçek API başarı/yetkisizlik/hata ve 320/390/768/1280 görüntü kabulü gerekir. Şu anki tek sonraki iş bu taslak ile ortak buton önerisinin kullanıcı tarafından seçilmesi/onaylanmasıdır.
+Onaylanan kapsam uygulandı: typecheck/lint/build ve 230 test geçti; ayrı sentetik gerçek API/Chrome kabulünde 33 durum × 320/390/768/1280 px doğrulandı. Görünür işlem hedefleri ≥44 px, etkin metin kontrastı ≥4.5, ortak buton metni 14 px/600 ve sıfır yatay taşma/sayfa hatası ölçüldü. Liste/form, onay, odak ve kırmızı Sil dolgusu görüntülerden ayrıca incelendi. Kabul paketi ve teslim sınırı docs/plans/P02.md içindedir. Ana 8080 ve DB/migration bu geliştirme kabulünün kapsamı dışında kalır; ana yerel teslim somut kabul paketi ve geri dönüş hazırlığından sonra ayrı onaylanır.

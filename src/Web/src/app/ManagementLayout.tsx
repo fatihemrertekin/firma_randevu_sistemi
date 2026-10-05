@@ -151,8 +151,10 @@ export default function ManagementLayout({ auth, account }: Props) {
         <div className={styles.mobileAccount}><p>{account.email}</p><button type="button" disabled={blocked} onClick={logout}>Çıkış yap</button></div>
       </div>
       <main id="management-main" className={styles.content}>
-        <h1 ref={heading} tabIndex={-1}>{current?.title ?? (forbidden ? 'Erişim izni yok' : 'Sayfa bulunamadı')}</h1>
-        <p>{current?.description ?? (forbidden ? 'Hesabınızın bu bölüme erişim izni yok.' : 'Bu adres uygulamada bulunmuyor.')}</p>
+        {!(owner && section === 'services') && <>
+          <h1 ref={heading} tabIndex={-1}>{current?.title ?? (forbidden ? 'Erişim izni yok' : 'Sayfa bulunamadı')}</h1>
+          <p>{current?.description ?? (forbidden ? 'Hesabınızın bu bölüme erişim izni yok.' : 'Bu adres uygulamada bulunmuyor.')}</p>
+        </>}
         {!current && <NavigationLink to={owner ? sectionPaths.business : sectionPaths.security}>Yetkili ekrana dön</NavigationLink>}
         {owner && <div hidden={section !== 'business'} className={styles.profilePanel}>
           <BusinessProfile post={post} disabled={auth.busy || pendingRequests > 0 || definitionBusy}
@@ -164,8 +166,8 @@ export default function ManagementLayout({ auth, account }: Props) {
         {owner && section === 'hours' && <div className={styles.profilePanel}>
           <BusinessHours post={post} onDirtyChange={setDefinitionDirty} onBusyChange={setDefinitionBusy} />
         </div>}
-        {owner && section === 'services' && <div className={styles.panel}>
-          <Services post={post} onDirtyChange={setDefinitionDirty} onBusyChange={setDefinitionBusy} />
+        {owner && section === 'services' && <div className={styles.profilePanel}>
+          <Services post={post} onDirtyChange={setDefinitionDirty} onBusyChange={setDefinitionBusy} headingRef={heading} />
         </div>}
         {owner && section === 'audit' && <div className={styles.panel}><AuditLog /></div>}
         {owner && section === 'security' && <div className={styles.panel}>
