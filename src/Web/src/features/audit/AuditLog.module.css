@@ -3,7 +3,8 @@
 .filters > div { flex: 1 1 calc(var(--space-2) * 28); max-width: var(--audit-filter-max); min-width: 0; }
 .filters label { display: block; margin-bottom: var(--space-2); }
 .select { width: 100%; min-width: var(--target-min); min-height: var(--target-min); padding: var(--space-2); border: calc(var(--space-2) / 8) solid var(--control-border); border-radius: var(--space-2); background: var(--surface); color: var(--text); font: inherit; }
-.select:focus-visible, .heading:focus-visible { outline: calc(var(--space-2) / 4) solid var(--focus); outline-offset: calc(var(--space-2) / 4); }
+.select:focus-visible { outline: calc(var(--space-2) / 4) solid var(--focus); outline-offset: calc(var(--space-2) / 4); }
+.heading:focus-visible { outline: none; }
 :global(.management-theme) button.primary { background: var(--button-primary-bg); color: var(--button-primary-text); border-color: var(--button-primary-bg); }
 :global(.management-theme) button.primary:hover:enabled { background: var(--button-primary-hover); }
 .list { list-style: none; padding: 0; margin: 0; }

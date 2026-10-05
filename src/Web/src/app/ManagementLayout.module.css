@@ -10,7 +10,7 @@
 .page input[type='checkbox'] { min-height: initial; accent-color: var(--auth-petrol); }
 .page [aria-invalid='true'] { border-color: var(--error); }
 .page p[role='alert'] { border: var(--auth-rule) solid var(--error); border-radius: var(--auth-radius); background: var(--auth-feedback); }
-.page :is(:is(button, a[data-navigation]), input, textarea, a, h1):focus-visible { outline: var(--auth-focus-width) solid var(--focus); outline-offset: var(--auth-focus-offset); }
+.page :is(:is(button, a[data-navigation]), input, textarea, a):focus-visible { outline: var(--auth-focus-width) solid var(--focus); outline-offset: var(--auth-focus-offset); }
 .header { min-height: var(--management-header); display: flex; align-items: center; justify-content: space-between; gap: var(--auth-space-5); padding: var(--auth-space-3) var(--auth-space-6); border-bottom: var(--auth-rule) solid var(--border); }
 .brand { font-family: 'Unna', serif; font-size: var(--management-brand); line-height: var(--auth-heading-line); font-weight: 700; }
 .account { display: flex; align-items: center; gap: var(--auth-space-5); min-width: 0; }
@@ -38,6 +38,7 @@
 .closeMenu svg { width: var(--management-icon); height: var(--management-icon); }
 .content { min-width: 0; padding: var(--management-inset); }
 .content > h1 { margin: 0 0 var(--auth-space-2); font-size: var(--management-title); line-height: 1.2; overflow-wrap: anywhere; }
+.content h1:focus-visible { outline: none; }
 .content > p { font-size: var(--auth-story-body-size); margin-bottom: var(--auth-space-6); color: var(--text); }
 .profilePanel { max-width: var(--management-work-max); }
 .panel { margin-top: var(--auth-space-5); padding: var(--auth-space-5); border: var(--auth-rule) solid var(--border); border-radius: var(--auth-radius); }

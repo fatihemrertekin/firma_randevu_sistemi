@@ -157,3 +157,5 @@ Boş ve hatasız listelerde yenileme görünmez; dolu listelerde dış değişik
 Normal form açılışında personel adı, hizmet alanı ve hizmet seçimlerine otomatik odak verilmez. Alan hatası, onay/geri dönüş ve klavye gezinmesindeki gerekli odak görünürlüğü korunur. Profil/hizmet/saat/seçim formlarında güncel yükleme yalnız hata veya gerekli yeniden yükleme durumunda görünür; normal açılış ve başarılı kayıtta sunucu yanıtı kullanılır.
 
 Kurtarma e-postası doğrulanmamışken, görünür ve boşta olan hesap ekranında 15 saniyede bir ve sekmeye dönüşte yalnız mevcut GET ile kontrol edilir. Doğrulandıktan sonra veya hata/oturum/bekleyen işlem durumunda otomatik kontrol durur. Durumu yenile yalnız hata toparlama işlemidir; otomatik ileti gönderilmez.
+
+Ekran ve kayıt sayfası değişiminde başlığa erişilebilirlik odağı taşınır; etkileşimli olmayan bu başlıkların etrafında gereksiz mavi çerçeve çizilmez. Düğme, bağlantı, alan ve seçimlerin klavye odak çerçeveleri aynen korunur.
