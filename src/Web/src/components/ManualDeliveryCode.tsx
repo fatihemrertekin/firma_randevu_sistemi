@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import styles from './DefinitionManagement.module.css'
 
 type Props = {
   inputId: string
@@ -16,8 +17,10 @@ export default function ManualDeliveryCode(props: Props) {
     <input id={props.inputId} type={showCode ? 'text' : 'password'} autoComplete="off" readOnly value={props.token}
       onFocus={event => { if (showCode) event.currentTarget.select() }} />
     <p>Son kullanım: {new Date(props.expiresAt).toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul' })} (İstanbul)</p>
-    <button type="button" disabled={props.busy} onClick={() => setShowCode(!showCode)}>{showCode ? 'Kodu gizle' : 'Kodu göster'}</button>
+    <div className={styles.actions}>
+      <button type="button" disabled={props.busy} onClick={() => setShowCode(!showCode)}>{showCode ? 'Kodu gizle' : 'Kodu göster'}</button>
+      <button type="button" disabled={props.busy} onClick={props.onClear}>Kodu teslim ettim, temizle</button>
+    </div>
     {showCode && <p>Kod alanına tıklayın; seçili kodu bilgisayarda Ctrl+C ile, telefonda kopyalama menüsüyle kopyalayın. Yalnız doğrulanmış çalışana teslim edin, ardından kodu temizleyin.</p>}
-    <button type="button" disabled={props.busy} onClick={props.onClear}>Kodu teslim ettim, temizle</button>
   </div>
 }

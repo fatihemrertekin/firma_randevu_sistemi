@@ -104,8 +104,10 @@ export default function StaffAccounts({ post }: Props) {
     {target && <fieldset className={styles.confirmation} aria-label="Hesabı pasifleştirme onayı" disabled={busy}>
       <legend>Hesabı pasifleştir</legend>
       <p className={styles.account}><strong>{target.email}</strong> hesabı sisteme giriş yapamayacak. Açık oturumları ve mevcut parola sıfırlama kodları geçersiz olacak. Hesap silinmez.</p>
-      <button type="button" className={styles.confirm} ref={confirm} onClick={() => { void deactivate() }}>{busy ? 'Pasifleştiriliyor…' : 'Hesabı pasifleştir'}</button>
-      <button type="button" onClick={cancel}>Vazgeç</button>
+      <div className={styles.actions}>
+        <button type="button" className={styles.confirm} ref={confirm} onClick={() => { void deactivate() }}>{busy ? 'Pasifleştiriliyor…' : 'Hesabı pasifleştir'}</button>
+        <button type="button" onClick={cancel}>Vazgeç</button>
+      </div>
     </fieldset>}
     <div className={styles.actions}>
       <button type="button" disabled={busy || loading} onClick={reload}>Listeyi yenile</button>

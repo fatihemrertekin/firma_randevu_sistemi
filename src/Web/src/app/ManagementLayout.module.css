@@ -28,7 +28,7 @@
 .drawer { padding: var(--auth-space-5) var(--auth-space-4); border-right: var(--auth-rule) solid var(--border); }
 .drawer nav { min-height: 100%; display: flex; flex-direction: column; }
 .drawer h2 { margin: 0 0 var(--auth-space-4); padding-inline: var(--auth-space-3); font-size: var(--auth-title-size); }
-.drawer nav > div:not([hidden]) { display: grid; gap: var(--auth-space-2); }
+.drawer nav > div:not([hidden]) { display: grid; gap: var(--action-row-gap); }
 .drawer button { width: 100%; text-align: left; border-color: var(--button-navigation-bg); background: var(--button-navigation-bg); color: var(--text); }
 .drawer button[aria-current='page'], .drawer button:hover:enabled { background: var(--button-navigation-selected-bg); color: var(--auth-petrol); }
 .drawer .closeMenu { margin-top: auto; padding-top: var(--auth-space-5); }
@@ -39,6 +39,7 @@
 .panel { margin-top: var(--auth-space-5); padding: var(--auth-space-5); border: var(--auth-rule) solid var(--border); border-radius: var(--auth-radius); }
 .panel > :first-child, .panel section > :first-child { margin-top: 0; }
 .panel form { max-width: var(--auth-story-width); }
+.panel form > :is(input, textarea, label, p) + button { margin-top: calc(var(--action-row-gap) - var(--auth-space-3)); }
 .mobileToggle, .mobileAccount { display: none; }
 .skipLink { position: absolute; inset-inline-start: var(--auth-space-4); top: var(--auth-space-4); z-index: 2; transform: translateY(-200%); padding: var(--auth-space-3); background: var(--auth-cream); color: var(--auth-ink); }
 .skipLink:focus { transform: none; }
@@ -53,7 +54,7 @@
   .layout, .layout[data-drawer-open='false'] { display: block; }
   .navigation { display: none; }
   .layout[data-mobile-open='true'] .navigation { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); border-bottom: var(--auth-rule) solid var(--border); }
-  .rail { min-width: 0; padding: var(--auth-space-3) var(--auth-space-2); gap: var(--auth-space-2); }
+  .rail { min-width: 0; padding: var(--auth-space-3) var(--auth-space-2); gap: var(--action-row-gap) var(--auth-space-2); }
   .rail button { min-height: var(--auth-space-8); padding: var(--auth-space-2); overflow-wrap: anywhere; }
   .drawer { min-width: 0; border-right: 0; padding: var(--auth-space-4) var(--auth-space-2); }
   .drawer h2 { font-size: var(--auth-story-body-size); }

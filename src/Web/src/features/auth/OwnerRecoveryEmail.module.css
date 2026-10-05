@@ -1,6 +1,6 @@
 .row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .75rem; margin-bottom: 1rem; }
 .address { overflow-wrap: anywhere; min-width: 0; }
 .state { color: var(--primary); font-size: .875rem; }
-.actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem; }
+.actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--action-row-gap) var(--space-2); }
 .actions form { min-width: 0; }
 .actions button { margin: 0; }

@@ -1,11 +1,11 @@
 :root {
   color-scheme: light;
-  --color-canvas: #F8FAFC;
+  --color-canvas: #FAFBFD;
   --color-surface: #FFFFFF;
-  --color-ink: #0F172A;
-  --color-blue: #2563EB;
-  --color-navy: #1E3A5F;
-  --color-error: #B42318;
+  --color-ink: #253044;
+  --color-blue: #4C72AD;
+  --color-navy: #405775;
+  --color-error: #A44D45;
   --background: var(--color-canvas);
   --surface: var(--color-surface);
   --text: var(--color-ink);
@@ -31,6 +31,7 @@
   --feedback-bg: color-mix(in srgb, var(--color-surface) 92%, var(--color-error));
   --target-min: 44px;
   --space-2: .5rem;
+  --action-row-gap: 1rem;
 }
 
 /* Shared palette roles also cover identity and management surfaces. */
@@ -97,6 +98,8 @@
   --auth-prose-width: 33rem;
   --auth-mobile-photo-height: 16rem;
   --auth-mobile-brand-top: 9rem;
+  --auth-photo-content-layer: 1;
+  --auth-photo-wash: linear-gradient(90deg, color-mix(in srgb, var(--color-canvas) 92%, transparent), color-mix(in srgb, var(--color-canvas) 88%, transparent) calc(var(--auth-story-width) + var(--auth-space-6)), transparent);
   --auth-photo-fade: linear-gradient(180deg, transparent 65%, var(--auth-cream));
   --auth-mobile-copy-width: 18rem;
   --auth-transition: 180ms ease-out;

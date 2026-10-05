@@ -2,12 +2,12 @@
 name: Randevu — kimlik ve yönetim yüzeyleri
 description: Beyaza yakın zemin, dolu mavi/lacivert işlemler ve ölçülü salon fotoğrafıyla işletme erişimi ve yönetimi.
 colors:
-  action: "#2563EB"
-  navy: "#1E3A5F"
-  error: "#B42318"
-  canvas: "#F8FAFC"
+  action: "#4C72AD"
+  navy: "#405775"
+  error: "#A44D45"
+  canvas: "#FAFBFD"
   surface: "#FFFFFF"
-  ink: "#0F172A"
+  ink: "#253044"
 typography:
   display:
     fontFamily: "Unna, serif"
@@ -67,6 +67,10 @@ components:
 
 Bu kayıt, uygulanmış giriş, MFA, parola yenileme, davet kabulü, e-posta doğrulama, ortak yönetim alanı ve işletme profilini tarif eder. Ürün sahibinin seçtiği palet, fotoğraflı yapı ve kontrollerde minimalizm esastır. Görsel kabul, API kabulü ve canlı teslim kanıtları durum/plan kayıtlarında ayrı tutulur; bu belge tasarım sisteminin tarifidir.
 
+05.10.2026 devam kararıyla bütün renk aileleri çok hafif pastel hale getirildi: ana mavi/lacivert, koyu metin, nötr zemin ve hata kırmızısı birlikte yumuşatıldı. Beyaz alanlar ve dolu butonlar korunur.
+
+Kullanıcının dikey boşluk örneği 16 px işlem aralığına çevrildi; `--action-row-gap` merkezi kaynaktır. Kimlikte alan grupları/alan sonrası işlem ve form sonrası ayrı butonlar bu aralığı kullanır; etiket-alan bağı 8 px kalır. Mobil giriş seçenekleri ve satıra taşan işlem grupları da 16 px dikey aralık taşır.
+
 05.10.2026 onayıyla giriş, MFA, diğer kimlik işlemleri ve mevcut yönetim ekranlarının tamamı beyaz/açık gri ve mavi/lacivert palete geçti. Önceki krem/turuncu taslaklar yerleşim kararının tarihsel kanıtıdır; güncel renk kaynağı değildir.
 
 Açık palet `auth-theme` ve `management-theme` kapsamında ortaktır; kompozisyonları ayrıdır. Yönetimde ortak gezinme, profil, işletme/personel haftalık saatleri ve personel liste/ayrıntısı uygulanmıştır; diğer bölümlerin ayrıntılı düzeni T04–T08 kapsamındadır. Uygulamanın renk ve ölçü kaynağı `src/Web/src/styles/tokens.css` dosyasıdır; bu belge onun gözden geçirilmiş tarifidir.
@@ -75,11 +79,11 @@ Açık palet `auth-theme` ve `management-theme` kapsamında ortaktır; kompozisy
 
 ### Primary
 
-Mavi ana işlem yüzeyidir; üzerindeki metin beyazdır. Normal, hover ve active durumları ortak buton tokenlarından gelir.
+Hafif pastel mavi ana işlem yüzeyidir; üzerindeki metin beyazdır. Normal, hover ve active durumları ortak buton tokenlarından gelir.
 
 ### Secondary
 
-Lacivert yardımcı işlemlerin dolu yüzeyidir; üzerindeki metin beyazdır. Hafif dolgulu gezinme/metin eylemlerinde lacivert yazı, odakta mavi çizgi kullanılır. Hata metni ve tehlikeli işlem kırmızıdır; durum mesajı yalnız renkle anlatılmaz.
+Hafif yumuşatılmış lacivert yardımcı işlemlerin dolu yüzeyidir; üzerindeki metin beyazdır. Hafif dolgulu gezinme/metin eylemlerinde lacivert yazı, odakta mavi çizgi kullanılır. Hata metni ve tehlikeli işlem kırmızıdır; durum mesajı yalnız renkle anlatılmaz.
 
 ### Neutral
 
@@ -123,7 +127,7 @@ Parola yenileme bağlantısı formunda hesap e-postası yazılabilir; e-posta g�
 
 **Haftalık saatler:** aynı semantik düzenleyici işletme ve personelde kullanılır. Geniş alanda dört hizalı sütun ve ince gün çizgileri, dar alanda gün/durum üstte iki etiketli saat alanı altta bulunur. Uyarlama ekran yerine düzenleyicinin kendi genişliğine göre yapılır; genişlik sınırı `--hours-editor-max` tokenıdır. Checkbox küçük kalır, etiketinin tıklama alanı 48 px yüksekliğindedir. Kapalı/çalışmayan gün saat alanları yerine yazılı açıklama gösterir. Kaydet/yükle ve personelde Listeye dön hafta sonunda yer alır; kaydedilmemiş değişiklik, hata ve sunucunun başarı mesajı eylemlerden önce görünür. Pasif personel saatleri salt okunur ve ad görünür kalır. Saat ekranında fotoğraf kullanılmaz.
 
-**Fotoğraf:** kimlikte onaylı `assets/plates/salon-background.png`, yönetim profilinde `assets/plates/salon-photo.png` gerçek bitmap olarak yüklenir; exact üretim prompt'u ve kullanıcı onayı yan kayıttadır. Dekoratif üretilmiş salonlar gerçek işletme referansı değildir. Kimlikte mobil zemine geçiş için beyaza yakın örtü kullanılır; yönetimde fotoğraf küçük özet alanına aittir. Fotoğraf CSS resmiyle taklit edilmez.
+**Fotoğraf:** kimlikte ve yönetim profilinde `assets/plates/salon-background-neutral.png` gerçek bitmap olarak yüklenir. Kullanıcı krem olmayan benzer salon fotoğrafı üretimine yetki verdi; tek görselde kompozisyon korunup beyaz/açık gri yüzeyler, nötr gün ışığı ve soluk mavi detaylar uygulandı. Exact prompt ve kaynak yan JSON kaydındadır; önceki fotoğraflar tarihsel özgünler olarak korunur. Dekoratif üretilmiş salon gerçek işletme referansı değildir. Kimlikte yazı bölgesinin okunurluğu güçlü beyaza yakın örtüyle, sağdaki fotoğraf görünürlüğü kademeli geçişle, mobil geçiş alttan zemine karışımla sağlanır; yönetimde mevcut küçük özet alanı ve fotoğraf oranı korunur. Fotoğraf CSS resmiyle taklit edilmez.
 
 **Personel:** liste ad/durum/tek Ayrıntılar eylemini ince satır çizgileriyle ayırır; Yeni personel ana işlemdir. Seçili kişinin adı ve yazılı Aktif/Pasif durumu ortak başlıkta kalır. Bilgiler/Hizmetler/Saatler semantik görev gezinmesidir; seçili görev açık mavi dolgu, lacivert alt çizgiyle ve basılı düğme durumu ile belirtilir. Bir form açıktır; kayıt sonrası aynı kişi/görev korunur, güncel sürüm sunucudan yüklenir. Ad kaydı ve durum onayı ayrıdır; giriş hesaplarının değişmediği açıklanır. Hizmet checkbox'ı küçük, tıklanabilir etiketi en az 44 px'tir. Mobilde satır eylemi/form düğmeleri alt alta; uzun ad satıra kırılır. Personel yüzeyinde fotoğraf/avatar/logo/uydurulmuş özet bulunmaz.
 

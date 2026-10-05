@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import salonPhoto from '../../../../../assets/plates/salon-background.png'
+import salonPhoto from '../../../../../assets/plates/salon-background-neutral.png'
 import styles from './AuthenticationScreens.module.css'
 
 export default function AuthenticationLayout({ children }: { children: ReactNode }) {

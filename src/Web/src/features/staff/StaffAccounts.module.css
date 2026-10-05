@@ -1,8 +1,11 @@
-.list { list-style: none; padding: 0; display: grid; gap: var(--space-2); }
-.row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: var(--space-2); }
+.list { list-style: none; padding: 0; display: grid; gap: var(--action-row-gap); }
+.row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: var(--action-row-gap) var(--space-2); }
 .account { min-width: 0; overflow-wrap: anywhere; }
-.actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--action-row-gap) var(--space-2); }
 :global(.management-theme) button.danger, :global(.management-theme) button.confirm { border-color: var(--button-danger-bg); background: var(--button-danger-bg); color: var(--button-danger-text); }
 :global(.management-theme) button.danger:hover:enabled, :global(.management-theme) button.confirm:hover:enabled { background: var(--button-danger-hover); }
 .confirmation { min-width: 0; margin: 0; border-color: var(--error); }
+.confirmation + .actions { margin-top: var(--action-row-gap); }
 .heading:focus-visible { outline: solid var(--focus); }
+.invitationList { display: grid; gap: var(--action-row-gap); }
+.invitationRow { display: flex; flex-wrap: wrap; align-items: center; gap: var(--action-row-gap) var(--space-2); }

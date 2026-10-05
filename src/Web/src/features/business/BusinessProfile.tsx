@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import ErrorMessage from '../../components/ErrorMessage'
-import salonPhoto from '../../../../../assets/plates/salon-photo.png'
+import salonPhoto from '../../../../../assets/plates/salon-background-neutral.png'
 import styles from './BusinessProfile.module.css'
 
 type Profile = { name: string; phone: string | null; email: string | null; address: string | null; version: string }
@@ -169,7 +169,7 @@ export default function BusinessProfile({ post, disabled = false, onDirtyChange,
     </div>}
     </div>
     {profile && !loading && <aside className={styles.summary} aria-label="İşletme bilgilerinin özeti">
-      <img src={salonPhoto} width={1696} height={927} alt="" decoding="async" />
+      <img src={salonPhoto} width={1254} height={1254} alt="" decoding="async" />
       <h2>{reloadRequired ? 'Doğrulanmamış bilgiler' : dirty ? 'Taslak özeti' : 'Profil özeti'}</h2>
       <p className={styles.name}>{profile.name.trim() || 'İşletme adı eklenmedi'}</p>
       <dl>
