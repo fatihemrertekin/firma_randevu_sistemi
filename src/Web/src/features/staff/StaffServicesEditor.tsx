@@ -21,7 +21,7 @@ export default function StaffServicesEditor({ memberId, post, onSaved, onCancel,
   const [page, setPage] = useState(1), [revision, setRevision] = useState(0)
   const [loading, setLoading] = useState(true), [busy, setBusy] = useState(false), [locked, setLocked] = useState(false)
   const [error, setError] = useState(''), [fieldError, setFieldError] = useState('')
-  const baseline = useRef<Selection | null>(null), chosen = useRef(selected), reset = useRef(false), focusAfterLoad = useRef(false), sending = useRef(false)
+  const baseline = useRef<Selection | null>(null), chosen = useRef(selected), reset = useRef(false), sending = useRef(false)
   const fields = useRef<HTMLFieldSetElement>(null)
   const dirty = snapshot !== null && (selected.size !== snapshot.selected.length || snapshot.selected.some(item => !selected.has(item.id)))
   useUnsavedChanges(dirty, onDirtyChange)
@@ -39,7 +39,7 @@ export default function StaffServicesEditor({ memberId, post, onSaved, onCancel,
           current.items.some(item => chosen.current.has(item.id) && chosen.current.get(item.id)?.version !== item.version)) {
           setLocked(true); setError(new SelectionError(409).message); return
         }
-        setData(current); setLocked(false); focusAfterLoad.current = true
+        setData(current); setLocked(false)
       }).catch((problem: unknown) => {
         if (!controller.signal.aborted) { setError(problem instanceof SelectionError ? problem.message : new SelectionError(500).message); setLocked(true) }
       }).finally(() => { if (!controller.signal.aborted) setLoading(false) })
@@ -47,8 +47,7 @@ export default function StaffServicesEditor({ memberId, post, onSaved, onCancel,
   }, [memberId, page, revision, onMemberRead])
   useEffect(() => {
     if (loading || busy) return
-    if (fieldError || focusAfterLoad.current) {
-      focusAfterLoad.current = false
+    if (fieldError) {
       const first = fields.current?.querySelector<HTMLInputElement>('input:not(:disabled)')
       if (first) first.focus(); else fields.current?.focus()
     }
@@ -111,7 +110,7 @@ export default function StaffServicesEditor({ memberId, post, onSaved, onCancel,
     <div className={personnel.actions}>
       <button type="submit" className={styles.primary} disabled={blocked || !dirty}>{busy ? 'İşlem sürüyor…' : 'Seçimleri kaydet'}</button>
       <button type="button" disabled={busy || loading} onClick={cancel}>Vazgeç</button>
-      <button type="button" disabled={busy || loading} onClick={reload}>Güncel seçimleri yükle</button>
+      {(error || fieldError || locked) && <button type="button" disabled={busy || loading} onClick={reload}>Güncel seçimleri yükle</button>}
     </div>
     <div className={styles.actions}>
       <button type="button" disabled={blocked || page === 1} onClick={() => turnPage(page - 1)}>Önceki hizmet sayfası</button>

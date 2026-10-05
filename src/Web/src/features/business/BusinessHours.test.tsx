@@ -77,7 +77,7 @@ describe('Haftalık işletme saatleri', () => {
     await reload(); expect(container.textContent).toContain('Saatler henüz belirlenmedi.')
   })
   it('taslak varken sekme kapanışını uyarır; başarısız yeniden yüklemede taslağı ezmez', async () => {
-    await render(); await monday(); const event = new Event('beforeunload', { cancelable: true }); window.dispatchEvent(event); expect(event.defaultPrevented).toBe(true)
+    await render(vi.fn<HoursPost>(async () => new Response(null, { status: 409 }))); await monday(); await submit(); const event = new Event('beforeunload', { cancelable: true }); window.dispatchEvent(event); expect(event.defaultPrevented).toBe(true)
     vi.spyOn(window, 'confirm').mockReturnValue(true); vi.mocked(fetch).mockRejectedValueOnce(new Error('ağ')); await reload(); expect(field('day0OpensAt').value).toBe('09:00')
   })
   it('eksik/çift gün ve bozuk saat yanıtlarını başarı saymaz', async () => {

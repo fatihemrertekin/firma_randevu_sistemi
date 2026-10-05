@@ -143,3 +143,17 @@ Mevcut tanımlarda Sil, pasifleştirmeden ayrı ve tehlikeli işlem dolgusu ile 
 - Don't: Minimalizmi fotoğrafı kaldırmak veya tüm sayfayı boşaltmak olarak yorumlama.
 - Don't: Gelecekteki modülü, istatistiği veya başarı mesajını uydurma.
 - Don't: Bu değişikliği yönetim ekranlarının ya da dark mode'un tamamlandığı şeklinde gösterme.
+
+## Mevcut yüzey düzeltmeleri — 06.10.2026
+
+Kullanıcının son kararı: ortak 14 px/600 kompakt buton stili korunur. Yalnız ilk giriş formu önceki düzenine döner: ana işlem 18 px/700 ve en az 48 px yüksekliğinde, form genişliğine yayılır; kurtarma/davet bağlantıları 16 px/500, mobilde kendi satırına yayılır. MFA ve diğer kimlik/yönetim ekranları kompakt kalır.
+
+İşletme/Ekip/Hesap seçili grubuna tekrar basmak alt menüyü açar/kapatır; üst sağdaki sola ok aynı menüyü kapatır. Metinli kapanış satırı kaldırılır, ikonun erişilebilir adı ve odak dönüşü korunur. Personel ayrıntısında listeye dönüş dolu işlem butonu yerine sola oklu, altı çizili Personel listesi bağlantısıdır.
+
+Boş ve hatasız listelerde yenileme görünmez; dolu listelerde dış değişiklikleri almak ve hata durumunda yeniden denemek için korunur. Doğrulanmış kurtarma e-postasında yenileme gizlenir. Taslak/sürüm çatışması ve belirsiz kayıt sonucunda gereken form yükleme işlemleri kalır. Değişiklik kayıtları geniş alanda tarih/işlem/yapan hesap/ilgili kayıt sütunlarına yayılır; dar alanda mevcut dikey sıralama sürer. Kategori alanı sınırlı genişliktedir. Yeni veri, API, grafik veya yetki yoktur.
+
+İşletme sahibi üst başlığı mevcut profil GET/kayıt yanıtındaki onaylı işletme adını “İşletme adı ● İşletme Sahibi” sırasıyla gösterir. Kaydedilmemiş taslak veya başarısız kayıt başlığı değiştirmez; ad yoksa yalnız rol görünür. Ek API isteği yoktur. Grup alt menüsünün gezinme sonrası durumu önceki ekran yerine hedef URL’den hesaplanır; kayıtlardan ilk tıklamada açılır.
+
+Normal form açılışında personel adı, hizmet alanı ve hizmet seçimlerine otomatik odak verilmez. Alan hatası, onay/geri dönüş ve klavye gezinmesindeki gerekli odak görünürlüğü korunur. Profil/hizmet/saat/seçim formlarında güncel yükleme yalnız hata veya gerekli yeniden yükleme durumunda görünür; normal açılış ve başarılı kayıtta sunucu yanıtı kullanılır.
+
+Kurtarma e-postası doğrulanmamışken, görünür ve boşta olan hesap ekranında 15 saniyede bir ve sekmeye dönüşte yalnız mevcut GET ile kontrol edilir. Doğrulandıktan sonra veya hata/oturum/bekleyen işlem durumunda otomatik kontrol durur. Durumu yenile yalnız hata toparlama işlemidir; otomatik ileti gönderilmez.

@@ -8,7 +8,7 @@ const origin = process.env.NAVIGATION_TEST_ORIGIN || 'http://127.0.0.1:8092'
 if (origin !== 'http://127.0.0.1:8092' && !(process.env.CI === 'true' && origin === 'http://127.0.0.1:8080')) {
   throw new Error('Yalnız ayrı yerel sentetik ortam veya geçici CI ortamı kabul edilir.')
 }
-const out = path.resolve(__dirname, process.env.T04_TEST === 'true' ? '../../.local/t04/browser' : '../../.local/url-navigation/browser')
+const out = path.resolve(__dirname, process.env.MENU_TEST === 'true' ? '../../.local/menu-login/browser' : process.env.T04_TEST === 'true' ? '../../.local/t04/browser' : '../../.local/url-navigation/browser')
 fs.mkdirSync(out, { recursive: true })
 const widths = [320, 390, 768, 1280], states = [], errors = [], assets = {}, failedAssets = []
 function totp(secret) {
@@ -39,7 +39,7 @@ async function check(page, state) {
         return .2126 * values[0] + .7152 * values[1] + .0722 * values[2]
       }
       const ls = [luminance(css.color), luminance(css.backgroundColor)].sort((a, b) => b - a)
-      return { target: rect.width >= 44 && rect.height >= 44, contrast: (ls[0] + .05) / (ls[1] + .05), disabled: item.matches(':disabled,[aria-disabled="true"]'), compact: css.fontSize === '14px' && css.fontWeight === '600' }
+      return { target: rect.width >= 44 && rect.height >= 44, contrast: (ls[0] + .05) / (ls[1] + .05), disabled: item.matches(':disabled,[aria-disabled="true"]'), compact: !!item.closest('[data-login-buttons]') || (css.fontSize === '14px' && css.fontWeight === '600') }
     }))
     assert.deepEqual(controls.filter(item => !item.target || (!item.disabled && item.contrast < 4.5)), [], `${state} targets/contrast ${width}`)
     if (process.env.T04_TEST === 'true') assert.deepEqual(controls.filter(item => !item.compact), [], `${state} compact buttons ${width}`)
@@ -109,9 +109,55 @@ async function main() {
       await page.goto(origin + url); await heading(page, title)
       await ready(page)
       if (state === 'service-edit') await page.getByLabel('Hizmet adı (zorunlu)').waitFor()
-      await page.reload(); await heading(page, title); await ready(page); await check(page, state)
+      await page.reload(); await heading(page, title); await ready(page)
+      if (process.env.MENU_TEST === 'true') {
+        if (state === 'personnel-detail') assert.equal(await page.locator('#member-name').evaluate(node => node === document.activeElement), false)
+        if (['business', 'service-edit', 'business-hours', 'personnel-services', 'personnel-hours'].includes(state)) assert.equal(await page.getByRole('button', { name: /^Güncel .* yükle$/ }).count(), 0)
+        if (state === 'access') assert.equal(await page.getByRole('button', { name: 'Davetleri yenile', exact: true }).count(), 0)
+        if (state === 'account') {
+          assert.equal(await page.getByRole('button', { name: 'Durumu yenile', exact: true }).count(), 0)
+          const emailRead = page.waitForResponse(response => response.url().endsWith('/api/auth/recovery-email/') && response.request().method() === 'GET')
+          await page.evaluate(() => window.dispatchEvent(new Event('focus')))
+          assert.equal((await emailRead).status(), 200)
+        }
+      }
+      await check(page, state)
     }
     await page.goto(origin + '/yonetim/isletme'); await heading(page, 'İşletme bilgileri'); await ready(page)
+    if (process.env.MENU_TEST === 'true') {
+      await page.locator('#business-name').fill('Sentetik Berber')
+      const profileSaved = page.waitForResponse(response => response.url().endsWith('/api/business-profile/') && response.request().method() === 'POST')
+      await page.getByRole('button', { name: 'Profili kaydet', exact: true }).click(); assert.equal((await profileSaved).status(), 200)
+      await ready(page)
+      assert.match(await page.locator('header').innerText(), /Sentetik Berber.*●.*İşletme Sahibi/s)
+      await check(page, 'business-saved-header')
+      for (const label of ['İşletme', 'Ekip', 'Hesap']) {
+        await page.getByRole('link', { name: 'Değişiklik kayıtları', exact: true }).click(); await heading(page, 'Değişiklik kayıtları'); await ready(page)
+        assert.equal(await page.locator('#management-context').isVisible(), false)
+        await page.getByRole('link', { name: label, exact: true }).click(); await ready(page)
+        assert.equal(await page.locator('#management-context').isVisible(), true, label + ' first click after audit')
+      }
+      await page.goto(origin + '/yonetim/isletme'); await heading(page, 'İşletme bilgileri'); await ready(page)
+      const group = page.getByRole('link', { name: 'İşletme', exact: true })
+      await group.click(); assert.equal(await group.getAttribute('aria-expanded'), 'false')
+      assert.equal(await page.locator('#management-context').isVisible(), false)
+      await group.focus(); await group.press('Enter'); assert.equal(await group.getAttribute('aria-expanded'), 'true')
+      await check(page, 'menu-open')
+      await page.getByRole('button', { name: 'Yan menüyü kapat', exact: true }).click()
+      assert.equal(await page.locator('#management-context').isVisible(), false)
+      assert.equal(await group.evaluate(node => node === document.activeElement), true)
+      await check(page, 'menu-closed')
+      await group.click()
+      await page.setViewportSize({ width: 390, height: 1000 })
+      const mobile = page.getByRole('button', { name: 'Menü', exact: true })
+      await mobile.click()
+      await group.click(); assert.equal(await group.getAttribute('aria-expanded'), 'false')
+      await group.click(); assert.equal(await group.getAttribute('aria-expanded'), 'true')
+      await page.getByRole('button', { name: 'Yan menüyü kapat', exact: true }).click()
+      assert.equal(await mobile.getAttribute('aria-expanded'), 'false')
+      assert.equal(await mobile.evaluate(node => node === document.activeElement), true)
+      await page.setViewportSize({ width: 1280, height: 1000 }); await group.click()
+    }
     await page.locator('#business-name').fill('Korunan işletme taslağı'); await page.getByRole('link', { name: 'Ekip', exact: true }).click(); await heading(page, 'Personel'); await ready(page)
     await page.getByRole('link', { name: 'İşletme', exact: true }).click(); await heading(page, 'İşletme bilgileri'); await ready(page)
     assert.equal(await page.locator('#business-name').inputValue(), 'Korunan işletme taslağı'); await check(page, 'profile-draft-preserved'); await page.locator('#business-name').fill('')

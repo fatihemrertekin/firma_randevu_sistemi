@@ -16,7 +16,7 @@ beforeEach(() => {
   root = createRoot(container)
 })
 afterEach(async () => {
-  await act(async () => root.unmount()); container.remove(); vi.unstubAllGlobals()
+  await act(async () => root.unmount()); container.remove(); vi.useRealTimers(); vi.unstubAllGlobals(); vi.restoreAllMocks()
   window.history.replaceState(null, '', '/')
 })
 async function submit(label: string) {
@@ -30,6 +30,32 @@ async function render(post = vi.fn(async () => Response.json({ expiresAt: 'synth
 }
 
 describe('İşletme sahibi kurtarma e-postası', () => {
+  it('sekme dönüşünde durumu GET ile günceller ve doğrulandıktan sonra kontrolü durdurur', async () => {
+    vi.useFakeTimers()
+    vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('visible')
+    const post = await render()
+    expect(container.textContent).not.toContain('Durumu yenile')
+    vi.mocked(fetch).mockResolvedValueOnce(Response.json({ ...status, verifiedAt: '2026-10-06T00:00:00Z' }))
+    await act(async () => window.dispatchEvent(new Event('focus')))
+    expect(container.textContent).toContain('Doğrulandı')
+    expect(container.querySelector('form')).toBeNull()
+    await act(async () => { await vi.advanceTimersByTimeAsync(45000); window.dispatchEvent(new Event('focus')) })
+    expect(fetch).toHaveBeenCalledTimes(2)
+    expect(post).not.toHaveBeenCalled()
+  })
+  it('görünmeyen sekmede kontrol yapmaz; görünürken aralıkla kontrol eder ve hata sonrası tekrar döngüsünü durdurur', async () => {
+    vi.useFakeTimers()
+    const visibility = vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('hidden')
+    await render()
+    await act(async () => { await vi.advanceTimersByTimeAsync(30000) })
+    expect(fetch).toHaveBeenCalledOnce()
+    visibility.mockReturnValue('visible')
+    vi.mocked(fetch).mockResolvedValueOnce(new Response(null, { status: 503 }))
+    await act(async () => { await vi.advanceTimersByTimeAsync(15000) })
+    expect(container.textContent).toContain('Durumu yenile')
+    await act(async () => { await vi.advanceTimersByTimeAsync(30000) })
+    expect(fetch).toHaveBeenCalledTimes(2)
+  })
   it('gönderim beklerken çift isteği engeller ve onay gelene kadar doğrulanmış göstermez', async () => {
     let finish: ((response: Response) => void) | undefined
     const promise = new Promise<Response>(resolve => { finish = resolve })
@@ -60,8 +86,7 @@ describe('İşletme sahibi kurtarma e-postası', () => {
     expect(post).not.toHaveBeenCalled()
     expect(container.textContent).toContain('şu anda kullanılamıyor')
     vi.stubGlobal('fetch', vi.fn(async () => Response.json({ ...status, verifiedAt: '2026-10-01T18:00:00Z' })))
-    const reload = Array.from(container.querySelectorAll<HTMLButtonElement>('button, a[data-navigation]')).find(button => button.textContent === 'Durumu yenile')
-    await act(async () => reload?.click())
+    await act(async () => window.dispatchEvent(new Event('focus')))
     expect(container.textContent).toContain('Doğrulandı')
     expect(container.querySelector('form')).toBeNull()
   })

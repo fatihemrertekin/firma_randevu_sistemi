@@ -71,7 +71,10 @@ export default function StaffMemberDetail({ memberId, task, listPath, post, init
   return <>
     <NavigationLink className={styles.back} to={listPath} disabled={blocked || confirmStatus} onClick={event => {
       event.preventDefault(); back()
-    }}>Personel listesine dön</NavigationLink>
+    }} aria-label="Personel listesine dön">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M19 12H5m7-7-7 7 7 7" /></svg>
+      <span>Personel listesi</span>
+    </NavigationLink>
     {member && <div className={styles.detailIdentity}><h2 className={styles.identity}>{member.name}</h2>
       <span className={styles.status}><span aria-hidden="true">{member.isActive ? '●' : '○'}</span> {member.isActive ? 'Aktif' : 'Pasif'}</span></div>}
     {loading && <p role="status">Personel bilgileri yükleniyor…</p>}

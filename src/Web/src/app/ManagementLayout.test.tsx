@@ -50,6 +50,36 @@ async function submit(label: string) {
 }
 
 describe('Yönetim gezinmesi', () => {
+  it.each(['İşletme', 'Ekip', 'Hesap'])('kayıtlardan %s grubuna ilk tıklamada alt menüyü açar', async group => {
+    await render(); await click('Değişiklik kayıtları')
+    expect(container.querySelector('#management-context')?.hasAttribute('hidden')).toBe(true)
+    await click(group)
+    expect(container.querySelector('[data-group-active="true"]')?.textContent).toBe(group)
+    expect(container.querySelector('#management-context')?.hasAttribute('hidden')).toBe(false)
+    await click(group)
+    expect(container.querySelector('#management-context')?.hasAttribute('hidden')).toBe(true)
+  })
+  it('başlıkta sunucudan gelen işletme adını gösterir; taslak ve başarısız kayıt başlığı değiştirmez', async () => {
+    await render()
+    const header = container.querySelector('header')
+    expect(header?.textContent).toContain('Örnek Kuaför●İşletme Sahibi')
+    await fill('business-name', 'Kaydedilmemiş ad')
+    expect(header?.textContent).not.toContain('Kaydedilmemiş ad')
+    const original = vi.mocked(fetch).getMockImplementation()
+    let succeeded = true
+    vi.mocked(fetch).mockImplementation(async (input, options) => {
+      if (input === '/api/business-profile/' && options?.method === 'POST') return succeeded
+        ? Response.json({ ...profile, name: 'Sunucunun onayladığı ad' }) : new Response(null, { status: 409 })
+      if (!original) throw new Error('Test isteği yok')
+      return original(input, options)
+    })
+    await submit('İşletme profilini düzenle')
+    expect(header?.textContent).toContain('Sunucunun onayladığı ad●İşletme Sahibi')
+    succeeded = false
+    await fill('business-name', 'Reddedilen ad'); await submit('İşletme profilini düzenle')
+    expect(header?.textContent).toContain('Sunucunun onayladığı ad●İşletme Sahibi')
+    expect(header?.textContent).not.toContain('Reddedilen ad')
+  })
   it('ana grupları ilgili bölüme bağlar; menüyü kapatıp yeniden açar', async () => {
     await render()
     await click('Ekip')
@@ -57,11 +87,19 @@ describe('Yönetim gezinmesi', () => {
     expect(container.querySelector('[data-group-active="true"]')?.textContent).toBe('Ekip')
     await click('Çalışan erişimleri')
     expect(container.querySelector('h1')?.textContent).toBe('Çalışan erişimleri')
-    await click('Menüyü kapat')
+    await click('Ekip')
     expect(container.querySelector('#management-context')?.hasAttribute('hidden')).toBe(true)
+    expect(container.querySelector('[data-group-active="true"]')?.getAttribute('aria-expanded')).toBe('false')
     await click('Ekip')
     expect(container.querySelector('#management-context')?.hasAttribute('hidden')).toBe(false)
+    expect(container.querySelector('[data-group-active="true"]')?.getAttribute('aria-expanded')).toBe('true')
     expect(container.querySelector('h1')?.textContent).toBe('Çalışan erişimleri')
+    const close = container.querySelector<HTMLButtonElement>('#management-context [aria-label="Yan menüyü kapat"]')
+    expect(close?.querySelector('svg')).not.toBeNull()
+    await act(async () => close?.click())
+    expect(container.querySelector('#management-context')?.hasAttribute('hidden')).toBe(true)
+    expect(document.activeElement).toBe(container.querySelector('[data-group-active="true"]'))
+    await click('Ekip')
     await click('Hesap')
     expect(container.querySelector('h1')?.textContent).toBe('Hesap ve güvenlik')
   })
@@ -172,6 +210,13 @@ describe('Yönetim gezinmesi', () => {
   it('profil yenilemesini onaylatır; vazgeçince taslağı, onaylayınca sunucu bilgisini tutar', async () => {
     await render()
     await fill('business-name', 'Taslak')
+    const original = vi.mocked(fetch).getMockImplementation()
+    vi.mocked(fetch).mockImplementation(async (input, options) => {
+      if (input === '/api/business-profile/' && options?.method === 'POST') return new Response(null, { status: 409 })
+      if (!original) throw new Error('Test isteği yok')
+      return original(input, options)
+    })
+    await submit('İşletme profilini düzenle')
     await click('Güncel bilgileri yükle')
     expect(container.querySelector<HTMLInputElement>('#business-name')?.value).toBe('Taslak')
     await click('Değişiklikleri koru')

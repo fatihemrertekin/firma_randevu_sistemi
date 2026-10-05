@@ -49,7 +49,7 @@ export default function AuditLog() {
     focusAfterPage.current = true; setLoading(true); setData(null); setError('')
     setHistory(value => next ? [...value.slice(0, -1), data?.cursor ?? null, data?.nextCursor ?? null] : value.slice(0, -1))
   }
-  return <section aria-labelledby="audit-title" aria-busy={loading}>
+  return <section className={styles.surface} aria-labelledby="audit-title" aria-busy={loading}>
     <h2 id="audit-title" ref={heading} className={styles.heading} tabIndex={-1}>İşlem geçmişi</h2>
     <p>Tanım, çalışan erişimi ve kurtarma kayıtları. Adlar ve hesap adresleri güncel kayıtlardan gösterilir.</p>
     <div className={styles.filters}>
@@ -58,7 +58,7 @@ export default function AuditLog() {
           <option value="all">Tümü</option><option value="definitions">Tanımlar</option><option value="security">Hesap ve güvenlik</option>
         </select>
       </div>
-      <button type="button" className={styles.primary} disabled={loading || retry > 0} onClick={reload}>Listeyi yenile</button>
+      {(error || (data?.items.length ?? 0) > 0) && <button type="button" className={styles.primary} disabled={loading || retry > 0} onClick={reload}>Listeyi yenile</button>}
     </div>
     {loading && <p role="status">Kayıtlar yükleniyor…</p>}
     <ErrorMessage message={error} />

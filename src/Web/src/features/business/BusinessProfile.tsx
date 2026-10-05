@@ -9,6 +9,7 @@ type Props = {
   disabled?: boolean
   onDirtyChange?: (dirty: boolean) => void
   onBusyChange?: (busy: boolean) => void
+  onConfirmedNameChange?: (name: string) => void
 }
 
 async function readProfile(response: Response): Promise<Profile> {
@@ -23,7 +24,7 @@ async function readProfile(response: Response): Promise<Profile> {
   return { name: value.name, phone: value.phone, email: value.email, address: value.address, version: value.version }
 }
 
-export default function BusinessProfile({ post, disabled = false, onDirtyChange, onBusyChange }: Props) {
+export default function BusinessProfile({ post, disabled = false, onDirtyChange, onBusyChange, onConfirmedNameChange }: Props) {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
@@ -55,7 +56,7 @@ export default function BusinessProfile({ post, disabled = false, onDirtyChange,
         if (!response.ok) throw new Error(response.status === 401 || response.status === 403
           ? 'İşletme sahibi oturumu geçersiz. Yeniden giriş yapın.' : 'Profil yüklenemedi. Yeniden yüklemeyi deneyin.')
         const loaded = await readProfile(response)
-        if (active) { setProfile(loaded); setReloadRequired(false); setDirty(false) }
+        if (active) { setProfile(loaded); setReloadRequired(false); setDirty(false); onConfirmedNameChange?.(loaded.name) }
       })
       .catch((failure: unknown) => {
         if (active) {
@@ -66,7 +67,7 @@ export default function BusinessProfile({ post, disabled = false, onDirtyChange,
       })
       .finally(() => { clearTimeout(timer); if (active) setLoading(false) })
     return () => { active = false; clearTimeout(timer); controller.abort() }
-  }, [reload])
+  }, [reload, onConfirmedNameChange])
 
   function change(field: 'name' | 'phone' | 'email' | 'address', value: string) {
     setNotice('')
@@ -86,7 +87,9 @@ export default function BusinessProfile({ post, disabled = false, onDirtyChange,
     try {
       const response = await post('/api/business-profile/', profile, AbortSignal.timeout(20000))
       if (response.status === 200) {
-        setProfile(await readProfile(response))
+        const saved = await readProfile(response)
+        setProfile(saved)
+        onConfirmedNameChange?.(saved.name)
         setDirty(false)
         setNotice('İşletme profili kaydedildi.')
       } else if (response.status === 400) {
@@ -158,7 +161,7 @@ export default function BusinessProfile({ post, disabled = false, onDirtyChange,
     {notice && <p className={styles.notice} role="status">{notice}</p>}
     <div className={styles.actions}>
       {profile && !loading && <button type="submit" form="business-profile-form" disabled={disabled || busy || reloadRequired}>{busy ? 'Profil kaydediliyor…' : 'Profili kaydet'}</button>}
-      <button type="button" disabled={disabled || busy || loading} onClick={() => dirty ? setConfirmReload(true) : reloadProfile()}>Güncel bilgileri yükle</button>
+      {(error || reloadRequired) && <button type="button" disabled={disabled || busy || loading} onClick={() => dirty ? setConfirmReload(true) : reloadProfile()}>Güncel bilgileri yükle</button>}
     </div>
     {confirmReload && <div className={styles.confirm} role="group" aria-label="Kaydedilmemiş değişiklikler">
       <p>Kaydedilmemiş değişiklikleriniz var. Güncel bilgileri yüklemek bu değişiklikleri siler.</p>

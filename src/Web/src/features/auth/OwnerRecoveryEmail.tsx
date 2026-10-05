@@ -4,6 +4,7 @@ import styles from './OwnerRecoveryEmail.module.css'
 
 type EmailStatus = { email: string; verifiedAt: string | null; deliveryAvailable: boolean }
 type Props = { post: (path: string, body: object, signal?: AbortSignal) => Promise<Response>; disabled?: boolean }
+const verificationCheckInterval = 15000
 
 export default function OwnerRecoveryEmail({ post, disabled = false }: Props) {
   const [status, setStatus] = useState<EmailStatus | null>(null)
@@ -13,10 +14,12 @@ export default function OwnerRecoveryEmail({ post, disabled = false }: Props) {
   const [notice, setNotice] = useState('')
   const [reload, setReload] = useState(0)
   const pending = useRef(false)
+  const checking = useRef(false)
 
   useEffect(() => {
     const controller = new AbortController()
     let active = true
+    checking.current = true
     const timer = setTimeout(() => controller.abort(), 15000)
     fetch('/api/auth/recovery-email/', { cache: 'no-store', signal: controller.signal })
       .then(async response => {
@@ -27,12 +30,32 @@ export default function OwnerRecoveryEmail({ post, disabled = false }: Props) {
           !('deliveryAvailable' in value) || typeof value.deliveryAvailable !== 'boolean') {
           throw new Error('E-posta doğrulama durumu alınamadı. Yeniden deneyin.')
         }
-        if (active) setStatus({ email: value.email, verifiedAt: value.verifiedAt, deliveryAvailable: value.deliveryAvailable })
+        if (active) {
+          setStatus({ email: value.email, verifiedAt: value.verifiedAt, deliveryAvailable: value.deliveryAvailable })
+          if (value.verifiedAt) setNotice('')
+        }
       })
       .catch(() => { if (active) setError('E-posta doğrulama durumu alınamadı. Yeniden deneyin.') })
-      .finally(() => { clearTimeout(timer); if (active) setLoading(false) })
-    return () => { active = false; clearTimeout(timer); controller.abort() }
+      .finally(() => { clearTimeout(timer); if (active) { checking.current = false; setLoading(false) } })
+    return () => { active = false; checking.current = false; clearTimeout(timer); controller.abort() }
   }, [reload])
+
+  useEffect(() => {
+    if (!status || status.verifiedAt || loading || busy || disabled || error) return
+    function checkVerification() {
+      if (document.visibilityState !== 'visible' || checking.current) return
+      checking.current = true
+      setReload(value => value + 1)
+    }
+    const timer = setInterval(checkVerification, verificationCheckInterval)
+    window.addEventListener('focus', checkVerification)
+    document.addEventListener('visibilitychange', checkVerification)
+    return () => {
+      clearInterval(timer)
+      window.removeEventListener('focus', checkVerification)
+      document.removeEventListener('visibilitychange', checkVerification)
+    }
+  }, [status, loading, busy, disabled, error])
 
   async function request(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -70,9 +93,9 @@ export default function OwnerRecoveryEmail({ post, disabled = false }: Props) {
         <button type="submit" disabled={disabled || busy || !status.deliveryAvailable}>
           {busy ? 'Hazırlanıyor…' : 'Doğrulama gönder'}</button>
       </form>}
-      <button type="button" disabled={disabled || loading || busy} onClick={() => {
+      {error && <button type="button" disabled={disabled || loading || busy} onClick={() => {
         setLoading(true); setError(''); setNotice(''); setReload(current => current + 1)
-      }}>Durumu yenile</button>
+      }}>Durumu yenile</button>}
     </div>
     <ErrorMessage message={error} />
     {notice && <p role="status">{notice}</p>}

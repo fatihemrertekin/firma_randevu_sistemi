@@ -50,6 +50,19 @@ async function fillAccept(confirm = 'Synthetic!Staff123') {
 }
 
 describe('Çalışan daveti', () => {
+  it('boş listede yenileme göstermez; yükleme hatasından yeniden deneyerek toparlanır', async () => {
+    const fetchInvitations = vi.fn().mockResolvedValueOnce(new Response(null, { status: 503 })).mockResolvedValueOnce(Response.json([]))
+    vi.stubGlobal('fetch', fetchInvitations)
+    const post = vi.fn()
+    await act(async () => root.render(<StaffInvitations post={post} />))
+    expect(container.querySelector('[role="alert"]')).not.toBeNull()
+    await click('Davetleri yenile')
+    expect(fetchInvitations).toHaveBeenCalledTimes(2)
+    expect(post).not.toHaveBeenCalled()
+    expect(container.querySelector('[role="alert"]')).toBeNull()
+    expect(container.textContent).toContain('Geçerli bekleyen davet yok.')
+    expect(container.textContent).not.toContain('Davetleri yenile')
+  })
   it('alıcı onayı ister, çift üretimi engeller; kodu geçici/maskeli gösterir ve iptalde temizler', async () => {
     let issued = false
     vi.stubGlobal('fetch', vi.fn(async () => Response.json(issued ? [{ id: 'invite-1', email: 'staff@example.test', expiresAt: '2026-10-02T00:00:00Z' }] : [])))

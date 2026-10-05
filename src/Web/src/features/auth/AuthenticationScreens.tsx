@@ -146,6 +146,7 @@ export default function AuthenticationScreens({ auth }: { auth: ReturnType<typeo
           </>
         ) : (
           <>
+            <div className={styles.login} data-login-buttons>
             <h1 id="page-title">İşletme girişi</h1>
             <form className={styles.loginForm} onSubmit={handleLogin}>
               <label htmlFor="email">E-posta</label>
@@ -164,6 +165,7 @@ export default function AuthenticationScreens({ auth }: { auth: ReturnType<typeo
             <div className={styles.loginOptions} role="group" aria-label="Çalışan giriş seçenekleri">
               <NavigationLink className={styles.textAction} to={authPaths.staffReset} disabled={busy} onClick={clearFeedback}>Çalışan parolamı unuttum</NavigationLink>
               <NavigationLink className={styles.textAction} to={authPaths.invitation} disabled={busy} onClick={clearFeedback}>Çalışan davetim var</NavigationLink>
+            </div>
             </div>
           </>
         )}

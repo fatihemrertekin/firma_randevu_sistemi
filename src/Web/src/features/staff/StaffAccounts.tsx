@@ -116,7 +116,7 @@ export default function StaffAccounts({ post }: Props) {
       </div>
     </fieldset>}
     <div className={styles.actions}>
-      <button type="button" disabled={busy || loading} onClick={reload}>Listeyi yenile</button>
+      {(error || (data?.items.length ?? 0) > 0) && <button type="button" disabled={busy || loading} onClick={reload}>Listeyi yenile</button>}
       <button type="button" disabled={busy || loading || page === 1 || target !== null}
         onClick={() => { setNotice(''); load(page - 1) }}>Önceki sayfa</button>
       <span>Sayfa {page}</span>

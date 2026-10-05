@@ -78,13 +78,13 @@ describe('Personelin hizmet seçimleri', () => {
   })
   it('yükleme/boş durumu ve klavye odağını ayırır; taslağı vazgeçme/sekme kapanışında korur', async () => {
     const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false)
-    const { cancel } = await render(); expect(document.activeElement).toBe(checkbox('Kesim')); await toggle('Kesim')
+    const { cancel } = await render(); expect(document.activeElement).not.toBe(checkbox('Kesim')); await toggle('Kesim')
     const beforeUnload = new Event('beforeunload', { cancelable: true }); window.dispatchEvent(beforeUnload); expect(beforeUnload.defaultPrevented).toBe(true)
     await click('Vazgeç'); expect(cancel).not.toHaveBeenCalled(); confirm.mockReturnValue(true); await click('Vazgeç'); expect(cancel).toHaveBeenCalledOnce()
   })
   it('boş liste ve bozuk yanıtı başarı saymaz', async () => {
-    vi.mocked(fetch).mockResolvedValueOnce(Response.json({ ...page, items: [] })).mockResolvedValueOnce(Response.json({ ...page, selected: [{ id: 'broken' }] }))
-    await render(); expect(container.textContent).toContain('Bu sayfada hizmet yok.'); await click('Güncel seçimleri yükle')
-    expect(container.querySelector('[role="alert"]')).not.toBeNull(); expect(container.textContent).toContain('Sonuç doğrulanamadı.')
+    vi.mocked(fetch).mockResolvedValueOnce(Response.json({ ...page, selected: [{ id: 'broken' }] })).mockResolvedValueOnce(Response.json({ ...page, items: [] }))
+    await render(); expect(container.querySelector('[role="alert"]')).not.toBeNull(); expect(container.textContent).toContain('Sonuç doğrulanamadı.')
+    await click('Güncel seçimleri yükle'); expect(container.textContent).toContain('Bu sayfada hizmet yok.'); expect(container.querySelector('[role="alert"]')).toBeNull()
   })
 })

@@ -28,3 +28,7 @@ FORM: Kullanıcının sabitlediği ilk giriş yerleşimi; önceki motor araştı
 FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
 
 Constraints: 320/390/768/1280px, 44px targets, keyboard/focus/reduced-motion, WCAG AA, Turkish, strict TS/CSS Modules and centrally recorded tokens. Exact user palette wins over sampled mock colors. No fundamental UI text/control baked into images. Photo proportion on mobile may adapt for short viewport/keyboard, as stated in the approved brief.
+
+## Kullanıcı düzeltmesi — 06.10.2026
+
+Yalnız ilk girişte önceki 18 px ana işlem, 16 px yardımcı metin ve genişlikler geri alınır. MFA ve diğer kimlik ekranlarında kompakt butonlar korunur. Kullanıcının mevcut ekran üzerinde doğrudan istediği dar düzenlemedir; yeni ekran/taslak veya başka aşama başlatılmaz. Kabul kanıtı P02 planındaki mevcut yüzey düzeltmeleri kaydına eklenir.
