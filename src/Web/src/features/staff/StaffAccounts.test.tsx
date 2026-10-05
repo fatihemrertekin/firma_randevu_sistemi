@@ -24,6 +24,41 @@ async function render(post = vi.fn(async () => new Response(null, { status: 204 
 }
 
 describe('Çalışan hesapları', () => {
+  it('pasif hesabı onayla yeniden etkinleştirir; sürüm ve çift gönderim korumasını kullanır', async () => {
+    vi.mocked(fetch).mockResolvedValue(Response.json({ items: [{ ...account, isActive: false }], page: 1, hasMore: false }))
+    let finish: ((response: Response) => void) | undefined
+    const post = vi.fn(() => new Promise<Response>(resolve => { finish = resolve }))
+    await render(post)
+    await click('Etkinleştir')
+    expect(container.querySelector('[aria-label="Hesabı etkinleştirme onayı"]')?.textContent).toContain(account.email)
+    expect(document.activeElement?.textContent).toBe('Hesabı etkinleştir')
+    expect(post).not.toHaveBeenCalled()
+    await click('Vazgeç')
+    expect(document.activeElement?.textContent).toBe('Etkinleştir')
+    await click('Etkinleştir'); await click('Hesabı etkinleştir'); await click('Etkinleştiriliyor…')
+    expect(post).toHaveBeenCalledTimes(1)
+    expect(post.mock.calls[0]).toEqual(['/api/staff-accounts/staff-1/activate', { version: 'version-1' }, expect.any(AbortSignal)])
+    expect(container.textContent).not.toContain('Çalışan hesabı etkinleştirildi.')
+    vi.mocked(fetch).mockResolvedValue(Response.json({ items: [account], page: 1, hasMore: false }))
+    if (!finish) throw new Error('Bekleyen istek yok')
+    await act(async () => finish?.(new Response(null, { status: 204 })))
+    expect(container.textContent).toContain('Çalışan hesabı etkinleştirildi.')
+    expect(container.textContent).toContain('Pasifleştir')
+    expect(container.querySelector('fieldset')).toBeNull()
+  })
+
+  it('etkinleştirme çatışmasında başarı uydurmaz; yenileyerek sunucu durumunu gösterir', async () => {
+    vi.mocked(fetch).mockResolvedValue(Response.json({ items: [{ ...account, isActive: false }], page: 1, hasMore: false }))
+    await render(vi.fn(async () => new Response(null, { status: 409 })))
+    await click('Etkinleştir'); await click('Hesabı etkinleştir')
+    expect(container.querySelector('[role="alert"]')?.textContent).toContain('Hesap değişti.')
+    expect(container.textContent).not.toContain('Çalışan hesabı etkinleştirildi.')
+    vi.mocked(fetch).mockResolvedValue(Response.json({ items: [account], page: 1, hasMore: false }))
+    await click('Listeyi yenile')
+    expect(container.querySelector('fieldset')).toBeNull()
+    expect(container.textContent).toContain('Pasifleştir')
+  })
+
   it('pasifleştirmeden önce hesabı ve etkilerini onaylatır, vazgeçince odağı geri verir', async () => {
     const post = await render()
     await click('Pasifleştir')

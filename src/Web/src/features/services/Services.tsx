@@ -15,6 +15,7 @@ export default function Services({ post, onDirtyChange, onBusyChange }: Props) {
   const [notice, setNotice] = useState('')
   const [editing, setEditing] = useState<{ service: Service | null } | null>(null)
   const [target, setTarget] = useState<Service | null>(null)
+  const [deleting, setDeleting] = useState(false)
   const [busy, setBusy] = useState(false)
   const [stale, setStale] = useState(false)
   const sending = useRef(false)
@@ -49,6 +50,11 @@ export default function Services({ post, onDirtyChange, onBusyChange }: Props) {
     if (!target || sending.current || stale) return
     sending.current = true; setBusy(true); onBusyChange(true); setError(''); setNotice('')
     try {
+      if (deleting) {
+        const response = await post(`/api/services/${target.id}/delete`, { version: target.version }, AbortSignal.timeout(15000))
+        if (response.status !== 204) throw new ServiceRequestError(response.ok ? 500 : response.status)
+        setNotice(`${target.name} hizmet listesinden silindi.`); load(1); heading.current?.focus(); return
+      }
       const updated = await readService(await post(`/api/services/${target.id}/status`,
         { isActive: !target.isActive, version: target.version }, AbortSignal.timeout(15000)))
       setNotice(`${updated.name} ${updated.isActive ? 'aktifleştirildi' : 'pasifleştirildi'}.`)
@@ -59,7 +65,7 @@ export default function Services({ post, onDirtyChange, onBusyChange }: Props) {
   const blocked = busy || loading || editing !== null || target !== null
   return <section aria-labelledby="services-title" aria-busy={loading || busy}>
     <h2 id="services-title" ref={heading} className={styles.heading} tabIndex={-1}>Hizmet listesi</h2>
-    <p>İşletmenin sunduğu hizmetlerin adını, süresini ve fiyatını düzenle. Personel ve randevu bağlantısı sonraki adımda kurulacak.</p>
+    <p>İşletmenin sunduğu hizmetlerin adını, süresini ve fiyatını düzenleyin. Pasifleştirme kaydı korur; silme listeden kaldırır ve değişiklik geçmişini korur.</p>
     <ErrorMessage message={error} />
     {notice && <p role="status">{notice}</p>}
     {loading && <><p role="status">Hizmetler yükleniyor…</p>{!data && <div aria-hidden="true" className={styles.skeleton} />}</>}
@@ -78,15 +84,19 @@ export default function Services({ post, onDirtyChange, onBusyChange }: Props) {
         }}>Düzenle</button>
         <button type="button" className={service.isActive ? styles.danger : undefined} disabled={blocked}
           aria-label={`${service.name} hizmetini ${service.isActive ? 'pasifleştir' : 'aktifleştir'}`} onClick={event => {
-            opener.current = event.currentTarget; setTarget(service); setStale(false); setError(''); setNotice('')
+            opener.current = event.currentTarget; setDeleting(false); setTarget(service); setStale(false); setError(''); setNotice('')
           }}>{service.isActive ? 'Pasifleştir' : 'Aktifleştir'}</button>
+        <button type="button" className={styles.danger} disabled={blocked} aria-label={`${service.name} hizmetini sil`} onClick={event => {
+          opener.current = event.currentTarget; setDeleting(true); setTarget(service); setStale(false); setError(''); setNotice('')
+        }}>Sil</button>
       </div>
     </li>)}</ul>}
-    {target && <fieldset className={styles.confirmation} disabled={busy} aria-label="Hizmet durum değişikliği onayı">
-      <legend>Hizmeti {target.isActive ? 'pasifleştir' : 'aktifleştir'}</legend>
-      <p className={styles.identity}><strong>{target.name}</strong> {target.isActive ? 'pasif' : 'aktif'} olarak işaretlenecek. Kayıt silinmez; hizmetin adı, süresi ve fiyatı korunur.</p>
-      <div className={styles.actions}><button type="button" className={target.isActive ? styles.confirm : styles.primary} ref={confirm} disabled={stale}
-        onClick={() => { void changeStatus() }}>{busy ? 'İşlem sürüyor…' : 'Durumu değiştir'}</button>
+    {target && <fieldset className={styles.confirmation} disabled={busy} aria-label={deleting ? 'Hizmet silme onayı' : 'Hizmet durum değişikliği onayı'}>
+      <legend>Hizmeti {deleting ? 'sil' : target.isActive ? 'pasifleştir' : 'aktifleştir'}</legend>
+      {deleting ? <p className={styles.identity}><strong>{target.name}</strong> hizmet listesinden ve personelin hizmet seçimlerinden kaldırılacak; yeniden kullanılamayacak. Önceki bağlantılar ve değişiklik geçmişi korunur.</p>
+        : <p className={styles.identity}><strong>{target.name}</strong> {target.isActive ? 'pasif' : 'aktif'} olarak işaretlenecek. Kayıt silinmez; hizmetin adı, süresi ve fiyatı korunur.</p>}
+      <div className={styles.actions}><button type="button" className={deleting || target.isActive ? styles.confirm : styles.primary} ref={confirm} disabled={stale}
+        onClick={() => { void changeStatus() }}>{busy ? 'İşlem sürüyor…' : deleting ? 'Hizmeti sil' : 'Durumu değiştir'}</button>
       <button type="button" onClick={() => { restoreFocus.current = true; setTarget(null); setError('') }}>Vazgeç</button></div>
     </fieldset>}
     <div className={styles.actions}>

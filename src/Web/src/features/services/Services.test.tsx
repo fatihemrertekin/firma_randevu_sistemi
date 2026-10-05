@@ -37,6 +37,30 @@ async function render(post = vi.fn<ServicePost>(async () => Response.json(servic
 async function newService() { await click('Yeni hizmet'); await fill('name', 'Yeni Hizmet'); await fill('duration', '45'); await fill('price', '0,29') }
 
 describe('Hizmet yönetimi', () => {
+  it('silme onayı iptal edilebilir; başarı yalnız 204 sonrası görünür ve çift gönderim engellenir', async () => {
+    let finish: ((response: Response) => void) | undefined
+    const { post } = await render(vi.fn<ServicePost>(() => new Promise(resolve => { finish = resolve })))
+    await click('Sil'); expect(post).not.toHaveBeenCalled()
+    expect(document.activeElement?.textContent).toBe('Hizmeti sil')
+    await click('Vazgeç'); expect(document.activeElement?.textContent).toBe('Sil')
+    await click('Sil'); await click('Hizmeti sil'); await click('İşlem sürüyor…')
+    expect(post).toHaveBeenCalledTimes(1)
+    expect(post.mock.calls[0]?.slice(0, 2)).toEqual(['/api/services/service-1/delete', { version: 'version-1' }])
+    expect(container.textContent).not.toContain('hizmet listesinden silindi.')
+    vi.mocked(fetch).mockResolvedValue(Response.json({ items: [], page: 1, hasMore: false }))
+    await act(async () => finish?.(new Response(null, { status: 204 })))
+    expect(container.textContent).toContain('Saç kesimi hizmet listesinden silindi.')
+    expect(container.querySelector('fieldset')).toBeNull()
+    expect(container.querySelector('ul')?.textContent).not.toContain('Saç kesimi')
+  })
+  it('eski sürümle silme reddedilince kayıt görünür kalır ve tekrar göndermek için yenileme gerekir', async () => {
+    const { post } = await render(vi.fn<ServicePost>(async () => new Response(null, { status: 409 })))
+    await click('Sil'); await click('Hizmeti sil')
+    expect(container.textContent).toContain('Hizmet kaydı değişti.')
+    expect(container.textContent).not.toContain('hizmet listesinden silindi.')
+    await click('Hizmeti sil'); expect(post).toHaveBeenCalledTimes(1)
+    await click('Listeyi yenile'); expect(container.querySelector('fieldset')).toBeNull()
+  })
   it('tutarı ondalık metin olarak gönderir; çift ve belirsiz eklemede aynı kimliği korur', async () => {
     let finish: ((response: Response) => void) | undefined
     const post = vi.fn<ServicePost>(() => new Promise<Response>(resolve => { finish = resolve }))

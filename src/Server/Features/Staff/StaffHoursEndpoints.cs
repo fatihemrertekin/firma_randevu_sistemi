@@ -32,8 +32,8 @@ public static class StaffHoursEndpoints
     {
         using var timeout = Timeout(context);
         await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.RepeatableRead, timeout.Token);
-        var member = await db.StaffMembers.AsNoTracking().SingleOrDefaultAsync(item => item.Id == id, timeout.Token);
-        if (member is null) return Results.NotFound();
+        var member = await db.StaffMembers.AsNoTracking().SingleOrDefaultAsync(item => item.Id == id && !item.IsDeleted, timeout.Token);
+        if (member is null || member.IsDeleted) return Results.NotFound();
         var days = await db.StaffWorkingDays.AsNoTracking().Where(item => item.StaffMemberId == id).ToArrayAsync(timeout.Token);
         await transaction.CommitAsync(timeout.Token);
         return Results.Ok(Response(member, days));
@@ -49,7 +49,7 @@ public static class StaffHoursEndpoints
         var owner = await OwnerMutationAuthorization.LockAsync(context, db, users, timeout.Token);
         if (owner is null) return Results.Unauthorized();
         var member = await db.StaffMembers.FromSqlInterpolated($"SELECT * FROM \"StaffMembers\" WHERE \"Id\" = {id} FOR UPDATE").SingleOrDefaultAsync(timeout.Token);
-        if (member is null) return Results.NotFound();
+        if (member is null || member.IsDeleted) return Results.NotFound();
         if (member.Version != request.Version) return Results.Problem(statusCode: 409, title: "Personel kaydı veya saatleri değişti. Güncel saatleri yükleyin.");
         if (!member.IsActive) return Results.Problem(statusCode: 409, title: "Pasif personelin saatleri değiştirilemez. Önce personeli aktifleştirin.");
         var current = await db.StaffWorkingDays.Where(item => item.StaffMemberId == id).OrderBy(item => item.Day).ToArrayAsync(timeout.Token);

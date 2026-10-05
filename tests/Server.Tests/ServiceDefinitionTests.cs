@@ -66,7 +66,7 @@ public sealed class ServiceDefinitionTests
         using var numericPrice = await PostAsync(owner, Path, new { id = Guid.NewGuid(), name = "Deneme", durationMinutes = 30, price = 0.29m }, csrf);
         Assert.Equal(HttpStatusCode.BadRequest, numericPrice.StatusCode);
         using var scope = app.Services.CreateScope(); var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        Assert.Empty(await db.ServiceDefinitions.ToArrayAsync(Token)); Assert.Empty(await db.ServiceDefinitionAudits.ToArrayAsync(Token));
+        Assert.False(await db.ServiceDefinitions.AnyAsync(Token)); Assert.Empty(await db.ServiceDefinitionAudits.ToArrayAsync(Token));
         foreach (var price in new[] { "0", "0.29", "1234.50", "999999.99" })
         {
             using var created = await PostAsync(owner, Path, new { id = Guid.NewGuid(), name = "Deneme", durationMinutes = 1440, price, currency = "USD" }, csrf);
@@ -270,10 +270,11 @@ public sealed class ServiceDefinitionTests
             """, Token);
         await migrator.MigrateAsync(migrations[index], Token);
         var user = await db.Users.AsNoTracking().SingleAsync(Token); Assert.True(user.IsActive); Assert.True(user.TwoFactorEnabled); Assert.Equal("synthetic-stamp", user.SecurityStamp);
-        Assert.Empty(await db.ServiceDefinitions.ToArrayAsync(Token)); Assert.Empty(await db.ServiceDefinitionAudits.ToArrayAsync(Token));
+        // Tarihsel şemada daha sonra eklenen IsDeleted sütunu henüz yoktur.
+        Assert.False(await db.ServiceDefinitions.AnyAsync(Token)); Assert.Empty(await db.ServiceDefinitionAudits.ToArrayAsync(Token));
         await migrator.MigrateAsync(migrations[index - 1], Token); await migrator.MigrateAsync(migrations[index], Token);
         Assert.Equal(user.SecurityStamp, (await db.Users.AsNoTracking().SingleAsync(Token)).SecurityStamp);
         Assert.Single(await db.BusinessProfiles.ToArrayAsync(Token));
-        Assert.Equal("Existing Person", (await db.StaffMembers.AsNoTracking().SingleAsync(Token)).Name);
+        Assert.Equal("Existing Person", await db.StaffMembers.AsNoTracking().Select(member => member.Name).SingleAsync(Token));
     }
 }

@@ -8,6 +8,7 @@ public sealed class ServiceDefinition
     public decimal Price { get; set; }
     public required string Currency { get; set; }
     public bool IsActive { get; set; } = true;
+    public bool IsDeleted { get; set; }
     public Guid Version { get; set; }
 }
 

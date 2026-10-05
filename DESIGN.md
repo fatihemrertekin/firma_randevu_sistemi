@@ -133,6 +133,8 @@ Parola yenileme bağlantısı formunda hesap e-postası yazılabilir; e-posta g�
 
 ## Do's and Don'ts
 
+Mevcut tanımlarda Sil, pasifleştirmeden ayrı ve tehlikeli işlem dolgusu ile gösterilir; ad ve korunacak geçmiş onayda açıklanır. Vazgeç odağı açan düğmeye döndürür. Gönderim sırasında geçiş ve çift gönderim kilitlidir; sunucu 204 onayı sonrası liste güncellenir. Personel ayrıntısında kaydedilmemiş taslak koruması sürer. Giriş hesabı Etkinleştir ana işlem dolgusu kullanır; hesap/personel ayrımı görünür metindir. [İşlem brief'i](.impeccable/surfaces/definition-access-actions.md).
+
 - Do: Yeni kimlik ekranında ortak yerleşimi ve merkezi tokenları kullan.
 - Do: Boş, yükleme, hata ve başarı durumlarını gerçek API yanıtlarına bağla.
 - Do: Fotoğrafın üstündeki yazıyı okunabilir açık alanda tut; klavye odağını görünür bırak.

@@ -8,15 +8,17 @@ import styles from './StaffMembers.module.css'
 
 type Task = 'information' | 'services' | 'hours'
 const tasks: { id: Task; label: string }[] = [{ id: 'information', label: 'Bilgiler' }, { id: 'services', label: 'Hizmetler' }, { id: 'hours', label: 'Saatler' }]
-type Props = { memberId: string; post: StaffPost; initialNotice: string; onBack: () => void;
+type Props = { memberId: string; post: StaffPost; initialNotice: string; onBack: () => void; onDeleted: (name: string) => void;
   onDirtyChange: (dirty: boolean) => void; onBusyChange: (busy: boolean) => void }
-export default function StaffMemberDetail({ memberId, post, initialNotice, onBack, onDirtyChange, onBusyChange }: Props) {
+export default function StaffMemberDetail({ memberId, post, initialNotice, onBack, onDeleted, onDirtyChange, onBusyChange }: Props) {
   const [member, setMember] = useState<StaffMember | null>(null), [task, setTask] = useState<Task>('information')
   const [revision, setRevision] = useState(0), [loading, setLoading] = useState(true)
   const [paneDirty, setPaneDirty] = useState(false), [paneBusy, setPaneBusy] = useState(false)
   const [confirmStatus, setConfirmStatus] = useState(false), [statusBusy, setStatusBusy] = useState(false), [stale, setStale] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState(''), [notice, setNotice] = useState(initialNotice)
-  const sending = useRef(false), confirm = useRef<HTMLButtonElement>(null), statusButton = useRef<HTMLButtonElement>(null), restoreStatus = useRef(false)
+  const sending = useRef(false), confirm = useRef<HTMLButtonElement>(null), statusButton = useRef<HTMLButtonElement | null>(null), restoreStatus = useRef(false)
+  const deleteButton = useRef<HTMLButtonElement>(null)
   const reportDirty = useCallback((value: boolean) => { setPaneDirty(value); onDirtyChange(value) }, [onDirtyChange])
   const blocked = loading || paneBusy || statusBusy
   useEffect(() => { onBusyChange(blocked); return () => onBusyChange(false) }, [blocked, onBusyChange])
@@ -35,8 +37,8 @@ export default function StaffMemberDetail({ memberId, post, initialNotice, onBac
   useEffect(() => {
     if (loading || statusBusy) return
     if (confirmStatus && member) confirm.current?.focus()
-    else if (restoreStatus.current) { restoreStatus.current = false; statusButton.current?.focus() }
-  }, [confirmStatus, member, loading, statusBusy])
+    else if (restoreStatus.current) { restoreStatus.current = false; (deleting ? deleteButton : statusButton).current?.focus() }
+  }, [confirmStatus, member, loading, statusBusy, deleting])
   function discard() {
     if (sending.current || blocked) return false
     if (paneDirty && !window.confirm('Kaydedilmemiş personel değişiklikleri silinsin mi?')) return false
@@ -55,6 +57,11 @@ export default function StaffMemberDetail({ memberId, post, initialNotice, onBac
     if (!member || sending.current || blocked || stale) return
     sending.current = true; setStatusBusy(true); setError(''); setNotice('')
     try {
+      if (deleting) {
+        const response = await post(`/api/staff-members/${memberId}/delete`, { version: member.version }, AbortSignal.timeout(15000))
+        if (response.status !== 204) throw new MemberRequestError(response.ok ? 500 : response.status)
+        onDeleted(member.name); return
+      }
       const updated = await readMember(await post(`/api/staff-members/${memberId}/status`,
         { isActive: !member.isActive, version: member.version }, AbortSignal.timeout(15000)))
       if (updated.id !== memberId) throw new MemberRequestError(500)
@@ -88,13 +95,17 @@ export default function StaffMemberDetail({ memberId, post, initialNotice, onBac
         {!loading && task === 'information' && <section className={styles.stateSection} aria-labelledby="member-state-title">
           <h3 id="member-state-title">Personel durumu</h3>
           <p>{member.isActive ? 'Pasifleştirme kaydı silmez.' : 'Aktifleştirme personel kaydını yeniden kullanılabilir yapar.'} Giriş hesapları etkilenmez.</p>
-          {!confirmStatus && <button ref={statusButton} type="button" disabled={blocked} onClick={() => {
-            if (discard()) { setConfirmStatus(true); setNotice(''); refresh() }
-          }}>{member.isActive ? 'Pasifleştir' : 'Aktifleştir'}</button>}
-          {confirmStatus && <fieldset className={styles.confirmation} disabled={statusBusy} aria-label="Personel durum değişikliği onayı">
-            <legend>Personeli {member.isActive ? 'pasifleştir' : 'aktifleştir'}</legend>
-            <p><strong>{member.name}</strong> {member.isActive ? 'pasif' : 'aktif'} olarak işaretlenecek. Kayıt silinmez. Giriş hesabı ve açık oturumlar etkilenmez.</p>
-            <div className={styles.actions}><button ref={confirm} type="button" disabled={stale} onClick={() => { void changeStatus() }}>{statusBusy ? 'İşlem sürüyor…' : 'Durumu değiştir'}</button>
+          {!confirmStatus && <div className={styles.actions}><button ref={statusButton} type="button" disabled={blocked} onClick={() => {
+            if (discard()) { setDeleting(false); setConfirmStatus(true); setNotice(''); refresh() }
+          }}>{member.isActive ? 'Pasifleştir' : 'Aktifleştir'}</button>
+            <button ref={deleteButton} type="button" className={styles.danger} disabled={blocked} onClick={() => {
+              if (discard()) { setDeleting(true); setConfirmStatus(true); setNotice(''); refresh() }
+            }}>Sil</button></div>}
+          {confirmStatus && <fieldset className={styles.confirmation} disabled={statusBusy} aria-label={deleting ? 'Personel silme onayı' : 'Personel durum değişikliği onayı'}>
+            <legend>Personeli {deleting ? 'sil' : member.isActive ? 'pasifleştir' : 'aktifleştir'}</legend>
+            {deleting ? <p><strong>{member.name}</strong> personel listesinden kaldırılacak ve yeniden kullanılamayacak. Hizmet ve saat bağlantıları ile değişiklik geçmişi korunur. Giriş hesabı ve açık oturumlar etkilenmez.</p>
+              : <p><strong>{member.name}</strong> {member.isActive ? 'pasif' : 'aktif'} olarak işaretlenecek. Kayıt silinmez. Giriş hesabı ve açık oturumlar etkilenmez.</p>}
+            <div className={styles.actions}><button ref={confirm} type="button" className={deleting ? styles.danger : undefined} disabled={stale} onClick={() => { void changeStatus() }}>{statusBusy ? 'İşlem sürüyor…' : deleting ? 'Personeli sil' : 'Durumu değiştir'}</button>
               <button type="button" onClick={() => { restoreStatus.current = true; setConfirmStatus(false); setError(''); refresh() }}>Vazgeç</button>
               {stale && <button type="button" onClick={reload}>Güncel kaydı yükle</button>}</div>
           </fieldset>}

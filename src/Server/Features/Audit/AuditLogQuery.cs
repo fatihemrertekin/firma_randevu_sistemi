@@ -28,6 +28,7 @@ internal static class AuditLogQuery
           UNION ALL SELECT "Id", "OccurredAt", 10, '', "ActorId", "StaffId", NULL::uuid FROM "StaffDeactivationAudits"
           UNION ALL SELECT "Id", "OccurredAt", 11, "Kind", CASE WHEN "Kind" = 'Completed' THEN "OwnerId" ELSE NULL::uuid END, "OwnerId", NULL::uuid FROM "OwnerPasswordResetAudits"
           UNION ALL SELECT "Id", "OccurredAt", 12, '', NULL::uuid, "OwnerId", NULL::uuid FROM "OwnerMfaRecoveryAudits"
+          UNION ALL SELECT "Id", "OccurredAt", 13, '', "ActorId", "StaffId", NULL::uuid FROM "StaffActivationAudits"
         ), page AS (
           SELECT * FROM events
           WHERE "OccurredAt" <= @asOf

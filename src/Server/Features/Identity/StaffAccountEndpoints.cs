@@ -10,13 +10,14 @@ public static class StaffAccountEndpoints
 {
     public sealed record StaffAccount(Guid Id, string Email, bool IsActive, string Version);
     public sealed record StaffPage(StaffAccount[] Items, int Page, bool HasMore);
-    public sealed record DeactivateRequest(string Version);
+    public sealed record StateChangeRequest(string Version);
 
     public static void MapStaffAccountEndpoints(this IEndpointRouteBuilder app)
     {
         var accounts = app.MapGroup("/api/staff-accounts").RequireAuthorization("Owner").RequireRateLimiting("login");
         accounts.MapGet("/", ListAsync);
         accounts.MapPost("/{id:guid}/deactivate", DeactivateAsync);
+        accounts.MapPost("/{id:guid}/activate", ActivateAsync);
     }
 
     private static IQueryable<AppUser> StaffOnly(AppDbContext db) => db.Users.Where(user =>
@@ -37,7 +38,15 @@ public static class StaffAccountEndpoints
         return Results.Ok(new StaffPage(rows.Take(pageSize).ToArray(), page, rows.Length > pageSize));
     }
 
-    private static async Task<IResult> DeactivateAsync(Guid id, DeactivateRequest request, HttpContext context,
+    private static Task<IResult> DeactivateAsync(Guid id, StateChangeRequest request, HttpContext context,
+        IAntiforgery antiforgery, AppDbContext db, UserManager<AppUser> users, TimeProvider clock) =>
+        ChangeActiveAsync(id, request, false, context, antiforgery, db, users, clock);
+
+    private static Task<IResult> ActivateAsync(Guid id, StateChangeRequest request, HttpContext context,
+        IAntiforgery antiforgery, AppDbContext db, UserManager<AppUser> users, TimeProvider clock) =>
+        ChangeActiveAsync(id, request, true, context, antiforgery, db, users, clock);
+
+    private static async Task<IResult> ChangeActiveAsync(Guid id, StateChangeRequest request, bool active, HttpContext context,
         IAntiforgery antiforgery, AppDbContext db, UserManager<AppUser> users, TimeProvider clock)
     {
         context.Response.Headers.CacheControl = "no-store";
@@ -64,19 +73,28 @@ public static class StaffAccountEndpoints
             $"SELECT * FROM \"AspNetUsers\" WHERE \"Id\" = {id} FOR UPDATE").SingleOrDefaultAsync(timeout.Token);
         if (staff is null || !await users.IsInRoleAsync(staff, "Staff") || await users.IsInRoleAsync(staff, "Owner"))
             return Results.NotFound();
-        if (!staff.IsActive) return Results.NoContent();
+        if (staff.IsActive == active) return Results.NoContent();
         if (staff.ConcurrencyStamp != request.Version)
             return Results.Problem(statusCode: 409, title: "Hesap değişti. Güncel listeyi yükleyin.");
-        staff.IsActive = false;
+        staff.IsActive = active;
         if (!(await users.UpdateSecurityStampAsync(staff)).Succeeded)
-            throw new InvalidOperationException("Staff hesabı pasifleştirilemedi.");
-        db.StaffDeactivationAudits.Add(new StaffDeactivationAudit
-        {
-            Id = Guid.NewGuid(),
-            StaffId = staff.Id,
-            ActorId = ownerId,
-            OccurredAt = clock.GetUtcNow()
-        });
+            throw new InvalidOperationException("Staff hesabının erişim durumu değiştirilemedi.");
+        if (active)
+            db.StaffActivationAudits.Add(new StaffActivationAudit
+            {
+                Id = Guid.NewGuid(),
+                StaffId = staff.Id,
+                ActorId = ownerId,
+                OccurredAt = clock.GetUtcNow()
+            });
+        else
+            db.StaffDeactivationAudits.Add(new StaffDeactivationAudit
+            {
+                Id = Guid.NewGuid(),
+                StaffId = staff.Id,
+                ActorId = ownerId,
+                OccurredAt = clock.GetUtcNow()
+            });
         await db.SaveChangesAsync(timeout.Token);
         await transaction.CommitAsync(timeout.Token);
         return Results.NoContent();

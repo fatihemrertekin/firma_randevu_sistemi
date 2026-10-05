@@ -39,6 +39,30 @@ async function render(post = vi.fn<StaffPost>(async () => Response.json(member))
 }
 
 describe('Personel yönetimi', () => {
+  it('silme onayı iptal edilebilir; 204 sonrası listeye döner ve çift gönderimi engeller', async () => {
+    let finish: ((response: Response) => void) | undefined
+    const { post } = await render(vi.fn<StaffPost>(() => new Promise(resolve => { finish = resolve })))
+    await click('Ayrıntılar'); await click('Sil'); expect(post).not.toHaveBeenCalled()
+    expect(document.activeElement?.textContent).toBe('Personeli sil')
+    await click('Vazgeç'); expect(document.activeElement?.textContent).toBe('Sil')
+    await click('Sil'); await click('Personeli sil'); await click('İşlem sürüyor…')
+    expect(post).toHaveBeenCalledTimes(1)
+    expect(post.mock.calls[0]?.slice(0, 2)).toEqual(['/api/staff-members/member-1/delete', { version: 'version-1' }])
+    expect(container.textContent).not.toContain('personel listesinden silindi.')
+    vi.mocked(fetch).mockResolvedValue(Response.json({ items: [], page: 1, hasMore: false }))
+    await act(async () => finish?.(new Response(null, { status: 204 })))
+    expect(container.textContent).toContain('Deneme Kişi personel listesinden silindi.')
+    expect(container.querySelector('fieldset')).toBeNull()
+    expect(container.querySelector('ul')?.textContent).not.toContain('Deneme Kişi')
+  })
+  it('silme 409 hatasında kaydı ve onayı korur; yenilemeden tekrar göndermez', async () => {
+    const { post } = await render(vi.fn<StaffPost>(async () => new Response(null, { status: 409 })))
+    await click('Ayrıntılar'); await click('Sil'); await click('Personeli sil')
+    expect(container.textContent).toContain('Personel kaydı değişti.')
+    expect(container.textContent).not.toContain('personel listesinden silindi.')
+    await click('Personeli sil'); expect(post).toHaveBeenCalledTimes(1)
+    await click('Güncel kaydı yükle'); expect(container.querySelector('fieldset')).toBeNull()
+  })
   it('ayrıntıyı eski liste kaydından değil kişi isteğinden açar', async () => {
     await render()
     currentMember = { ...member, name: 'Güncel Kişi', version: 'version-2' }

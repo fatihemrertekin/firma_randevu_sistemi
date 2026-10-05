@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Server.Infrastructure;
@@ -11,9 +12,11 @@ using Server.Infrastructure;
 namespace Server.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20261005003450_StaffAccountActivation")]
+    partial class StaffAccountActivation
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -623,11 +626,6 @@ namespace Server.Infrastructure.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
-                    b.Property<bool>("IsDeleted")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(false);
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -648,8 +646,6 @@ namespace Server.Infrastructure.Migrations
                     b.ToTable("ServiceDefinitions", t =>
                         {
                             t.HasCheckConstraint("CK_ServiceDefinitions_Currency", "\"Currency\" = 'TRY'");
-
-                            t.HasCheckConstraint("CK_ServiceDefinitions_DeletedInactive", "NOT \"IsDeleted\" OR NOT \"IsActive\"");
 
                             t.HasCheckConstraint("CK_ServiceDefinitions_Duration", "\"DurationMinutes\" BETWEEN 1 AND 1440");
 
@@ -694,7 +690,7 @@ namespace Server.Infrastructure.Migrations
 
                     b.ToTable("ServiceDefinitionAudits", t =>
                         {
-                            t.HasCheckConstraint("CK_ServiceDefinitionAudits_Kind", "\"Kind\" IN ('Created','Updated','Activated','Deactivated','Deleted')");
+                            t.HasCheckConstraint("CK_ServiceDefinitionAudits_Kind", "\"Kind\" IN ('Created','Updated','Activated','Deactivated')");
                         });
                 });
 
@@ -874,11 +870,6 @@ namespace Server.Infrastructure.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
-                    b.Property<bool>("IsDeleted")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(false);
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -894,8 +885,6 @@ namespace Server.Infrastructure.Migrations
 
                     b.ToTable("StaffMembers", t =>
                         {
-                            t.HasCheckConstraint("CK_StaffMembers_DeletedInactive", "NOT \"IsDeleted\" OR NOT \"IsActive\"");
-
                             t.HasCheckConstraint("CK_StaffMembers_Name", "length(btrim(\"Name\")) > 0");
                         });
                 });
@@ -935,7 +924,7 @@ namespace Server.Infrastructure.Migrations
 
                     b.ToTable("StaffMemberAudits", t =>
                         {
-                            t.HasCheckConstraint("CK_StaffMemberAudits_Kind", "\"Kind\" IN ('Created','Renamed','Activated','Deactivated','Deleted')");
+                            t.HasCheckConstraint("CK_StaffMemberAudits_Kind", "\"Kind\" IN ('Created','Renamed','Activated','Deactivated')");
                         });
                 });
 

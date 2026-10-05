@@ -9,3 +9,5 @@
 .heading:focus-visible { outline: solid var(--focus); }
 .invitationList { display: grid; gap: var(--action-row-gap); }
 .invitationRow { display: flex; flex-wrap: wrap; align-items: center; gap: var(--action-row-gap) var(--space-2); }
+:global(.management-theme) button.primary { border-color: var(--button-primary-bg); background: var(--button-primary-bg); color: var(--button-primary-text); }
+:global(.management-theme) button.primary:hover:enabled { background: var(--button-primary-hover); }

@@ -69,14 +69,16 @@ export default function StaffAccounts({ post }: Props) {
   }
   function reload() { setNotice(''); load(); heading.current?.focus() }
   function cancel() { restoreFocus.current = true; setTarget(null) }
-  async function deactivate() {
+  async function changeActive() {
     if (!target || sending.current) return
     sending.current = true; setBusy(true); setError(''); setNotice('')
     try {
-      const response = await post(`/api/staff-accounts/${target.id}/deactivate`, { version: target.version }, AbortSignal.timeout(15000))
+      const response = await post(`/api/staff-accounts/${target.id}/${target.isActive ? 'deactivate' : 'activate'}`, { version: target.version }, AbortSignal.timeout(15000))
       if (!response.ok) throw new StaffRequestError(failure(response.status))
       if (!mounted.current) return
-      setTarget(null); setNotice('Çalışan hesabı pasifleştirildi. Yeni giriş engellendi ve açık oturumları iptal edildi.')
+      setTarget(null); setNotice(target.isActive
+        ? 'Çalışan hesabı pasifleştirildi. Yeni giriş engellendi ve açık oturumları iptal edildi.'
+        : 'Çalışan hesabı etkinleştirildi. Çalışan mevcut parolasıyla yeniden giriş yapabilir.')
       load(); heading.current?.focus()
     } catch (problem: unknown) {
       if (mounted.current) setError(problem instanceof StaffRequestError ? problem.message : failure(500))
@@ -88,7 +90,7 @@ export default function StaffAccounts({ post }: Props) {
 
   return <section aria-labelledby="staff-accounts-title">
     <h2 id="staff-accounts-title" ref={heading} className={styles.heading} tabIndex={-1}>Çalışan hesapları</h2>
-    <p>Personelin sisteme giriş erişimini yönetin. Pasifleştirme hesabı silmez.</p>
+    <p>Çalışanların panele giriş erişimini yönetin. Personel kayıtları, hizmetleri ve çalışma saatleri ayrı yönetilir.</p>
     <ErrorMessage message={error} />
     {notice && <p role="status">{notice}</p>}
     {loading && <p role="status">Çalışan hesapları yükleniyor…</p>}
@@ -96,16 +98,20 @@ export default function StaffAccounts({ post }: Props) {
     {data && <ul className={styles.list}>
       {data.items.map(account => <li key={account.id} className={styles.row}>
         <div className={styles.account}><strong>{account.email}</strong><p>{account.isActive ? 'Aktif' : 'Pasif'}</p></div>
-        {account.isActive && <button type="button" className={styles.danger} disabled={busy || loading || target !== null}
-          aria-label={`${account.email} hesabını pasifleştir`}
-          onClick={event => { opener.current = event.currentTarget; setTarget(account); setError(''); setNotice('') }}>Pasifleştir</button>}
+        <button type="button" className={account.isActive ? styles.danger : styles.primary} disabled={busy || loading || target !== null}
+          aria-label={`${account.email} hesabını ${account.isActive ? 'pasifleştir' : 'etkinleştir'}`}
+          onClick={event => { opener.current = event.currentTarget; setTarget(account); setError(''); setNotice('') }}>{account.isActive ? 'Pasifleştir' : 'Etkinleştir'}</button>
       </li>)}
     </ul>}
-    {target && <fieldset className={styles.confirmation} aria-label="Hesabı pasifleştirme onayı" disabled={busy}>
-      <legend>Hesabı pasifleştir</legend>
-      <p className={styles.account}><strong>{target.email}</strong> hesabı sisteme giriş yapamayacak. Açık oturumları ve mevcut parola sıfırlama kodları geçersiz olacak. Hesap silinmez.</p>
+    {target && <fieldset className={styles.confirmation} aria-label={target.isActive ? 'Hesabı pasifleştirme onayı' : 'Hesabı etkinleştirme onayı'} disabled={busy}>
+      <legend>Hesabı {target.isActive ? 'pasifleştir' : 'etkinleştir'}</legend>
+      <p className={styles.account}><strong>{target.email}</strong> {target.isActive
+        ? 'hesabı sisteme giriş yapamayacak. Açık oturumları ve mevcut parola sıfırlama kodları geçersiz olacak. Hesap silinmez.'
+        : 'hesabı mevcut parolasıyla yeniden giriş yapabilecek. Çalışanın yeni oturum açması gerekir. Personel kaydı, hizmetleri ve çalışma saatleri değişmez.'}</p>
       <div className={styles.actions}>
-        <button type="button" className={styles.confirm} ref={confirm} onClick={() => { void deactivate() }}>{busy ? 'Pasifleştiriliyor…' : 'Hesabı pasifleştir'}</button>
+        <button type="button" className={target.isActive ? styles.confirm : styles.primary} ref={confirm} onClick={() => { void changeActive() }}>{busy
+          ? target.isActive ? 'Pasifleştiriliyor…' : 'Etkinleştiriliyor…'
+          : target.isActive ? 'Hesabı pasifleştir' : 'Hesabı etkinleştir'}</button>
         <button type="button" onClick={cancel}>Vazgeç</button>
       </div>
     </fieldset>}

@@ -25,7 +25,7 @@ public static class AuditLogEndpoints
         return cursor is not null && cursor.Category == category && cursor.AsOf.Offset == TimeSpan.Zero && cursor.AsOf >= DateTimeOffset.UnixEpoch &&
             ((cursor.BeforeAt is null && cursor.Source is null && cursor.Id is null) ||
              (cursor.BeforeAt is not null && cursor.BeforeAt.Value.Offset == TimeSpan.Zero && cursor.BeforeAt >= DateTimeOffset.UnixEpoch &&
-              cursor.BeforeAt <= cursor.AsOf && cursor.Source is >= 1 and <= 12 && cursor.Id is not null && cursor.Id != Guid.Empty));
+              cursor.BeforeAt <= cursor.AsOf && cursor.Source is >= 1 and <= 13 && cursor.Id is not null && cursor.Id != Guid.Empty));
     }
 
     private static async Task<IResult> ReadAsync(HttpContext context, AppDbContext db, TimeProvider clock,
@@ -44,7 +44,7 @@ public static class AuditLogEndpoints
         var rows = await db.Database.SqlQueryRaw<AuditLogQuery.Row>(AuditLogQuery.Sql,
             new NpgsqlParameter("category", category), new NpgsqlParameter("asOf", asOf),
             new NpgsqlParameter("hasCursor", before?.Id is not null), new NpgsqlParameter("beforeAt", before?.BeforeAt ?? asOf),
-            new NpgsqlParameter("source", before?.Source ?? 12), new NpgsqlParameter("id", before?.Id ?? Guid.Empty),
+            new NpgsqlParameter("source", before?.Source ?? 13), new NpgsqlParameter("id", before?.Id ?? Guid.Empty),
             new NpgsqlParameter("limit", pageSize + 1)).ToArrayAsync(timeout.Token);
         var items = rows.Take(pageSize).Select(row => new Entry($"{row.Source}:{row.Id:D}", row.OccurredAt,
             Module(row.Source), Action(row.Source, row.Kind), row.Actor, row.Target)).ToArray();
@@ -72,6 +72,7 @@ public static class AuditLogEndpoints
         10 => "Çalışan erişimi",
         11 => "Owner parola kurtarma",
         12 => "Owner MFA kurtarma",
+        13 => "Çalışan erişimi",
         _ => throw new InvalidOperationException("Bilinmeyen kayıt kaynağı.")
     };
     private static string Action(int source, string kind) => (source, kind) switch
@@ -82,6 +83,7 @@ public static class AuditLogEndpoints
         (5, "Updated") => "Düzenlendi",
         (4 or 5, "Activated") => "Etkinleştirildi",
         (4 or 5, "Deactivated") => "Pasifleştirildi",
+        (4 or 5, "Deleted") => "Silindi",
         (6, "Assigned") => "Hizmet eşleştirildi",
         (6, "Unassigned") => "Hizmet eşleştirmesi kaldırıldı",
         (8, "Issued") => "Davet oluşturuldu",
@@ -92,6 +94,7 @@ public static class AuditLogEndpoints
         (9 or 11, "Completed") => "Parola sıfırlandı",
         (10, _) => "Hesap pasifleştirildi",
         (12, _) => "MFA kurtarıldı",
+        (13, _) => "Hesap etkinleştirildi",
         _ => "İşlem kaydı"
     };
 }

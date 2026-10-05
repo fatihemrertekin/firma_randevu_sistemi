@@ -42,7 +42,9 @@ public sealed class BusinessLogoRemovalTests
         var seed = await CreateRecoveryAppAsync(database.GetConnectionString()); await using var app = seed.App;
         using var owner = await InviteOwnerAsync(seed); using var scope = app.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>(); var migrator = db.GetService<IMigrator>();
-        await migrator.MigrateAsync("20261003200924_AuditLogIndexes", Token);
+        // Yalnız logo migration'ını geri al; sonraki özelliklerin şeması/verisi korunur.
+        var down = migrator.GenerateScript("20261004151517_RemoveBusinessLogo", "20261003200924_AuditLogIndexes");
+        await db.Database.ExecuteSqlRawAsync(down, Token);
         await AuditLogTests.SeedAsync(db, seed.OwnerId, seed.OtherUserId);
         await db.Database.ExecuteSqlRawAsync("UPDATE \"BusinessLogos\" SET \"Png\" = '\\x01'::bytea, \"Width\" = 1, \"Height\" = 1", Token);
         var before = await FingerprintAsync(db);
@@ -53,7 +55,7 @@ public sealed class BusinessLogoRemovalTests
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Single(await db.BusinessLogoAudits.ToArrayAsync(Token));
         // Down restores an empty logo table; deleted image bytes require a pre-migration backup.
-        await migrator.MigrateAsync("20261003200924_AuditLogIndexes", Token);
+        await db.Database.ExecuteSqlRawAsync(down, Token);
         Assert.True(await LogoTableExistsAsync(db));
         Assert.True(await db.Database.SqlQueryRaw<bool>("SELECT \"Png\" IS NULL AS \"Value\" FROM \"BusinessLogos\"").SingleAsync(Token));
         Assert.Equal(before, await FingerprintAsync(db));

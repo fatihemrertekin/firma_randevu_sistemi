@@ -34,7 +34,7 @@ public static class StaffServiceEndpoints
     private static Task<ServiceReference[]> SelectedAsync(AppDbContext db, Guid memberId, CancellationToken token) =>
         (from link in db.StaffServiceAssignments.AsNoTracking()
          join service in db.ServiceDefinitions.AsNoTracking() on link.ServiceDefinitionId equals service.Id
-         where link.StaffMemberId == memberId
+         where link.StaffMemberId == memberId && !service.IsDeleted
          orderby service.Id
          select new ServiceReference(service.Id, service.Version)).ToArrayAsync(token);
 
@@ -45,10 +45,10 @@ public static class StaffServiceEndpoints
             return Results.Problem(statusCode: 400, title: "Geçerli sayfa ve 1–50 arası sayfa boyutu gerekli.");
         // Personel sürümü, tam seçim ve katalog aynı snapshot'tan gelir.
         await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.RepeatableRead, timeout.Token);
-        var member = await db.StaffMembers.AsNoTracking().SingleOrDefaultAsync(item => item.Id == id, timeout.Token);
+        var member = await db.StaffMembers.AsNoTracking().SingleOrDefaultAsync(item => item.Id == id && !item.IsDeleted, timeout.Token);
         if (member is null) return Results.NotFound();
         var selected = await SelectedAsync(db, id, timeout.Token);
-        var rows = await db.ServiceDefinitions.AsNoTracking().OrderBy(item => item.Name).ThenBy(item => item.Id)
+        var rows = await db.ServiceDefinitions.AsNoTracking().Where(item => !item.IsDeleted).OrderBy(item => item.Name).ThenBy(item => item.Id)
             .Skip((page - 1) * pageSize).Take(pageSize + 1).ToArrayAsync(timeout.Token);
         await transaction.CommitAsync(timeout.Token);
         return Results.Ok(new SelectionPage(Member(member), selected, rows.Take(pageSize).Select(ServiceDefinitionEndpoints.Response).ToArray(), page, rows.Length > pageSize));
@@ -67,15 +67,18 @@ public static class StaffServiceEndpoints
         if (owner is null) return Results.Unauthorized();
         var member = await db.StaffMembers.FromSqlInterpolated($"SELECT * FROM \"StaffMembers\" WHERE \"Id\" = {id} FOR UPDATE")
             .SingleOrDefaultAsync(timeout.Token);
-        if (member is null) return Results.NotFound();
+        if (member is null || member.IsDeleted) return Results.NotFound();
         if (member.Version != request.Version) return Conflict();
-        var links = await db.StaffServiceAssignments.Where(item => item.StaffMemberId == id).ToArrayAsync(timeout.Token);
-        var previous = links.Select(item => item.ServiceDefinitionId).ToHashSet();
+        var allLinks = await db.StaffServiceAssignments.Where(item => item.StaffMemberId == id).ToArrayAsync(timeout.Token);
         var desired = request.Services.Select(item => item.Id).ToHashSet();
-        var ids = desired.Order().ToArray();
-        var services = await db.ServiceDefinitions.FromSqlInterpolated($"SELECT * FROM \"ServiceDefinitions\" WHERE \"Id\" = ANY({ids}) ORDER BY \"Id\" FOR UPDATE")
+        var ids = desired.Union(allLinks.Select(item => item.ServiceDefinitionId)).Order().ToArray();
+        var lockedServices = await db.ServiceDefinitions.FromSqlInterpolated($"SELECT * FROM \"ServiceDefinitions\" WHERE \"Id\" = ANY({ids}) ORDER BY \"Id\" FOR UPDATE")
             .ToArrayAsync(timeout.Token);
-        if (services.Length != desired.Count) return Results.Problem(statusCode: 404, title: "Seçilen hizmet bulunamadı. Güncel seçimleri yükleyin.");
+        // Silme ve seçim değişikliği aynı hizmet kilitlerini kullanır; tarihsel bağlar korunur.
+        var links = allLinks.Where(link => lockedServices.Any(service => service.Id == link.ServiceDefinitionId && !service.IsDeleted)).ToArray();
+        var previous = links.Select(item => item.ServiceDefinitionId).ToHashSet();
+        var services = lockedServices.Where(service => desired.Contains(service.Id)).ToArray();
+        if (services.Length != desired.Count || services.Any(service => service.IsDeleted)) return Results.Problem(statusCode: 404, title: "Seçilen hizmet bulunamadı. Güncel seçimleri yükleyin.");
         if (services.Any(service => service.Version != request.Services.Single(item => item.Id == service.Id).Version)) return Conflict();
         if (services.Any(service => !previous.Contains(service.Id) && (!member.IsActive || !service.IsActive)))
             return Conflict("Yeni eşleşme için personel ve hizmet aktif olmalı. Güncel seçimleri yükleyin.");

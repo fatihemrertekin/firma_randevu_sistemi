@@ -13,6 +13,7 @@ public static class StaffMemberEndpoints
     public sealed record CreateRequest(Guid Id, string Name);
     public sealed record RenameRequest(string Name, Guid Version);
     public sealed record StatusRequest(bool? IsActive, Guid Version);
+    public sealed record DeleteRequest(Guid Version);
 
     public static void MapStaffMemberEndpoints(this IEndpointRouteBuilder app)
     {
@@ -22,6 +23,7 @@ public static class StaffMemberEndpoints
         members.MapPost("/", CreateAsync);
         members.MapPost("/{id:guid}", RenameAsync);
         members.MapPost("/{id:guid}/status", StatusAsync);
+        members.MapPost("/{id:guid}/delete", DeleteAsync);
         members.MapStaffServiceEndpoints();
         members.MapStaffHoursEndpoints();
     }
@@ -42,7 +44,7 @@ public static class StaffMemberEndpoints
         using var timeout = Timeout(context);
         if (page is < 1 or > 10000 || pageSize is < 1 or > 50)
             return Results.Problem(statusCode: 400, title: "Geçerli sayfa ve 1–50 arası sayfa boyutu gerekli.");
-        var rows = await db.StaffMembers.AsNoTracking().OrderBy(member => member.Name).ThenBy(member => member.Id)
+        var rows = await db.StaffMembers.AsNoTracking().Where(member => !member.IsDeleted).OrderBy(member => member.Name).ThenBy(member => member.Id)
             .Skip((page - 1) * pageSize).Take(pageSize + 1)
             .Select(member => new MemberResponse(member.Id, member.Name, member.IsActive, member.Version)).ToArrayAsync(timeout.Token);
         return Results.Ok(new MemberPage(rows.Take(pageSize).ToArray(), page, rows.Length > pageSize));
@@ -51,7 +53,7 @@ public static class StaffMemberEndpoints
     private static async Task<IResult> ReadAsync(Guid id, HttpContext context, AppDbContext db)
     {
         using var timeout = Timeout(context);
-        var member = await db.StaffMembers.AsNoTracking().SingleOrDefaultAsync(member => member.Id == id, timeout.Token);
+        var member = await db.StaffMembers.AsNoTracking().SingleOrDefaultAsync(member => member.Id == id && !member.IsDeleted, timeout.Token);
         return member is null ? Results.NotFound() : Results.Ok(Response(member));
     }
 
@@ -83,7 +85,7 @@ public static class StaffMemberEndpoints
         var added = await db.Database.ExecuteSqlInterpolatedAsync(
             $"INSERT INTO \"StaffMembers\" (\"Id\", \"Name\", \"IsActive\", \"Version\") VALUES ({request.Id}, {name!}, TRUE, {version}) ON CONFLICT (\"Id\") DO NOTHING", timeout.Token);
         var member = await db.StaffMembers.SingleAsync(member => member.Id == request.Id, timeout.Token);
-        if (added == 0) return member.Name == name ? Results.Ok(Response(member)) : Conflict();
+        if (added == 0) return !member.IsDeleted && member.Name == name ? Results.Ok(Response(member)) : Conflict();
         Audit(db, member, owner.Id, "Created", clock);
         await db.SaveChangesAsync(timeout.Token);
         await transaction.CommitAsync(timeout.Token);
@@ -98,14 +100,18 @@ public static class StaffMemberEndpoints
         AppDbContext db, UserManager<AppUser> users, TimeProvider clock) =>
         ChangeAsync(id, null, request.IsActive, request.Version, context, antiforgery, db, users, clock);
 
+    private static Task<IResult> DeleteAsync(Guid id, DeleteRequest request, HttpContext context, IAntiforgery antiforgery,
+        AppDbContext db, UserManager<AppUser> users, TimeProvider clock) =>
+        ChangeAsync(id, null, null, request.Version, context, antiforgery, db, users, clock, deleting: true);
+
     private static async Task<IResult> ChangeAsync(Guid id, string? name, bool? active, Guid version, HttpContext context,
-        IAntiforgery antiforgery, AppDbContext db, UserManager<AppUser> users, TimeProvider clock)
+        IAntiforgery antiforgery, AppDbContext db, UserManager<AppUser> users, TimeProvider clock, bool deleting = false)
     {
         using var timeout = Timeout(context);
         if (!await AuthEndpoints.HasValidCsrfAsync(antiforgery, context))
             return Results.Problem(statusCode: 400, title: "Geçersiz istek doğrulaması.");
         name = name?.Trim();
-        if (active is null && !ValidName(name)) return Results.Problem(statusCode: 400, title: "Ad soyad 1–100 karakter olmalı ve kontrol karakteri içermemeli.");
+        if (!deleting && active is null && !ValidName(name)) return Results.Problem(statusCode: 400, title: "Ad soyad 1–100 karakter olmalı ve kontrol karakteri içermemeli.");
         if (version == Guid.Empty) return Results.Problem(statusCode: 400, title: "Personel sürümü gerekli.");
         await using var transaction = await db.Database.BeginTransactionAsync(timeout.Token);
         var owner = await OwnerMutationAuthorization.LockAsync(context, db, users, timeout.Token);
@@ -113,15 +119,17 @@ public static class StaffMemberEndpoints
         var member = await db.StaffMembers.FromSqlInterpolated($"SELECT * FROM \"StaffMembers\" WHERE \"Id\" = {id} FOR UPDATE")
             .SingleOrDefaultAsync(timeout.Token);
         if (member is null) return Results.NotFound();
+        if (member.IsDeleted) return deleting ? Results.NoContent() : Results.NotFound();
         if (member.Version != version) return Conflict();
-        if (active is null ? member.Name == name : member.IsActive == active) return Results.Ok(Response(member));
-        var kind = active is null ? "Renamed" : active.Value ? "Activated" : "Deactivated";
-        if (active.HasValue) member.IsActive = active.Value;
+        if (!deleting && (active is null ? member.Name == name : member.IsActive == active)) return Results.Ok(Response(member));
+        var kind = deleting ? "Deleted" : active is null ? "Renamed" : active.Value ? "Activated" : "Deactivated";
+        if (deleting) { member.IsDeleted = true; member.IsActive = false; }
+        else if (active.HasValue) member.IsActive = active.Value;
         else member.Name = name!;
         member.Version = Guid.NewGuid();
         Audit(db, member, owner.Id, kind, clock);
         await db.SaveChangesAsync(timeout.Token);
         await transaction.CommitAsync(timeout.Token);
-        return Results.Ok(Response(member));
+        return deleting ? Results.NoContent() : Results.Ok(Response(member));
     }
 }
