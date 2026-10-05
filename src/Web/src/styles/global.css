@@ -36,3 +36,15 @@ p[role='alert']:focus-visible { outline: 2px solid var(--error); outline-offset:
 p[role='alert'] { margin-top: 1rem; padding: .75rem; border-left: 3px solid var(--error); border-radius: .25rem; background: var(--feedback-bg); color: var(--error); }
 p[role='status'] { margin-top: 1rem; }
 li { overflow-wrap: anywhere; line-height: 1.6; }
+
+/* Screen links share the existing control tokens; actions remain buttons. */
+a[data-navigation] {
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--auth-space-2);
+  min-height: var(--target-min); padding: var(--auth-space-3) var(--auth-space-4);
+  border: var(--auth-rule) solid var(--button-secondary-bg); border-radius: var(--auth-radius);
+  background: var(--button-secondary-bg); color: var(--button-secondary-text);
+  font: inherit; font-weight: 600; text-decoration: none;
+}
+a[data-navigation]:hover:not([aria-disabled='true']) { background: var(--button-secondary-hover); }
+a[data-navigation][aria-disabled='true'] { opacity: .65; cursor: not-allowed; }
+a[data-navigation]:focus-visible { outline: var(--auth-focus-width) solid var(--focus); outline-offset: var(--auth-focus-offset); }

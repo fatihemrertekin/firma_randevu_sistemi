@@ -1,0 +1,8 @@
+{
+  "name": "firma-randevu-navigation-acceptance",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": { "test": "node navigation.cjs" },
+  "devDependencies": { "playwright": "1.63.0" },
+  "engines": { "node": ">=24.15.0 <25" }
+}

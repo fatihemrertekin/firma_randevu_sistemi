@@ -1,5 +1,8 @@
 // @vitest-environment jsdom
 import { act } from 'react'
+import { createMemoryRouter } from 'react-router'
+import { RouterProvider } from 'react-router/dom'
+import { NavigationEvents } from '../../app/NavigationEvents'
 import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import StaffMembers from './StaffMembers'
@@ -18,7 +21,7 @@ beforeEach(() => {
 })
 afterEach(async () => { await act(async () => root.unmount()); container.remove(); vi.unstubAllGlobals(); vi.restoreAllMocks() })
 async function click(text: string) {
-  const button = Array.from(container.querySelectorAll('button')).find(item => item.textContent === text)
+  const button = Array.from(container.querySelectorAll<HTMLButtonElement>('button, a[data-navigation]')).find(item => item.textContent === text)
   if (!button) throw new Error('Düğme yok: ' + text)
   await act(async () => button.click())
 }
@@ -34,7 +37,8 @@ async function submit() {
   await act(async () => form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })))
 }
 async function render(post = vi.fn<StaffPost>(async () => Response.json(member)), dirty = vi.fn(), busy = vi.fn()) {
-  await act(async () => root.render(<StaffMembers post={post} onDirtyChange={dirty} onBusyChange={busy} />))
+  const router = createMemoryRouter([{ path: '*', element: <StaffMembers post={post} onDirtyChange={dirty} onBusyChange={busy} /> }], { initialEntries: ['/yonetim/personel'] })
+  await act(async () => root.render(<NavigationEvents value={listener => router.subscribe(state => listener(state.location))}><RouterProvider router={router} /></NavigationEvents>))
   return { post, dirty, busy }
 }
 
@@ -89,7 +93,7 @@ describe('Personel yönetimi', () => {
     currentMember = { ...member, name: 'Sunucudaki Ad', version: 'version-2' }
     confirm.mockReturnValue(true); await click('Hizmetler')
     expect(container.querySelector('h2')?.textContent).toBe('Sunucudaki Ad')
-    expect(container.querySelector('nav [aria-pressed="true"]')?.textContent).toBe('Hizmetler')
+    expect(container.querySelector('nav [aria-current="page"]')?.textContent).toBe('Hizmetler')
     expect(dirty).toHaveBeenLastCalledWith(false)
   })
 
@@ -144,10 +148,10 @@ describe('Personel yönetimi', () => {
     })
     const { busy } = await render(); await click('Ayrıntılar'); await click(label)
     expect(busy).toHaveBeenLastCalledWith(true)
-    expect(Array.from(container.querySelectorAll<HTMLButtonElement>('nav button')).every(button => button.disabled)).toBe(true)
-    expect(Array.from(container.querySelectorAll<HTMLButtonElement>('button')).find(button => button.textContent === 'Personel listesine dön')?.disabled).toBe(true)
+    expect(Array.from(container.querySelectorAll('nav button, nav a[data-navigation]')).every(control => control.matches(':disabled, [aria-disabled="true"]'))).toBe(true)
+    expect(Array.from(container.querySelectorAll('a')).find(button => button.textContent === 'Personel listesine dön')?.getAttribute('aria-disabled') === 'true').toBe(true)
     const cancel = label === 'Hizmetler' ? 'Vazgeç' : 'Listeye dön'
-    expect(Array.from(container.querySelectorAll<HTMLButtonElement>('button')).find(button => button.textContent === cancel)?.disabled).toBe(true)
+    expect(Array.from(container.querySelectorAll<HTMLButtonElement>('button, a[data-navigation]')).find(button => button.textContent === cancel)?.disabled).toBe(true)
     await act(async () => finish?.(Response.json(label === 'Hizmetler'
       ? { member: currentMember, selected: [], items: [], page: 1, hasMore: false }
       : { member: currentMember, version: currentMember.version, isConfigured: false, days: [] })))
@@ -162,7 +166,7 @@ describe('Personel yönetimi', () => {
       return original(input)
     })
     await render(); await click('Ayrıntılar'); await click('Hizmetler'); expect(container.querySelector('form')).not.toBeNull()
-    await click('Vazgeç'); expect(container.querySelector('nav [aria-pressed="true"]')?.textContent).toBe('Hizmetler')
+    await click('Vazgeç'); expect(container.querySelector('nav [aria-current="page"]')?.textContent).toBe('Hizmetler')
     expect(container.querySelector('h2')?.textContent).toBe(member.name)
     await click('Personel listesine dön'); expect(container.querySelector('form')).toBeNull()
     expect(document.activeElement).toBe(container.querySelector('[data-member-id="member-1"]'))
@@ -227,7 +231,7 @@ describe('Personel yönetimi', () => {
     await render(vi.fn(async () => new Response(null, { status }))); await click('Ayrıntılar'); await click('Pasifleştir'); await click('Durumu değiştir')
     expect(container.querySelector('[role="alert"]')?.textContent).toContain(text)
     expect(container.textContent).not.toContain('pasifleştirildi.')
-    expect(Array.from(container.querySelectorAll('button')).find(button => button.textContent === 'Durumu değiştir')?.disabled).toBe(true)
+    expect(Array.from(container.querySelectorAll<HTMLButtonElement>('button')).find(button => button.textContent === 'Durumu değiştir')?.disabled).toBe(true)
     await click('Güncel kaydı yükle'); expect(container.querySelector('fieldset')).toBeNull()
   })
 

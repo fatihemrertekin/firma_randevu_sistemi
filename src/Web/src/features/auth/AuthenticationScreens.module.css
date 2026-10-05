@@ -35,7 +35,7 @@
   caret-color: var(--auth-petrol);
 }
 .card input::placeholder { color: var(--muted); }
-.card button {
+.card :is(button, a[data-navigation]) {
   min-width: var(--target-min);
   min-height: var(--target-min);
   margin: 0;
@@ -47,18 +47,18 @@
   line-height: var(--auth-line);
   transition: background-color var(--auth-transition), color var(--auth-transition);
 }
-.card button[type='submit'] {
+.card :is(button, a[data-navigation])[type='submit'] {
   min-height: var(--auth-control-height);
   font-size: var(--auth-action-size);
   background: var(--button-primary-bg);
   color: var(--button-primary-text);
   border-color: var(--button-primary-bg);
 }
-.card button:hover:enabled { filter: none; background: var(--button-secondary-hover); }
-.card button[type='submit']:hover:enabled { background: var(--auth-action-hover); border-color: var(--auth-action-hover); }
-.card button:active:enabled { background: var(--button-secondary-hover); }
-.card button[type='submit']:active:enabled { background: var(--auth-action-hover); }
-.card :is(input, textarea, button, h1):focus-visible { outline: var(--auth-focus-width) solid var(--focus); outline-offset: var(--auth-focus-offset); }
+.card :is(button, a[data-navigation]):hover:not(:disabled):not([aria-disabled='true']) { filter: none; background: var(--button-secondary-hover); }
+.card :is(button, a[data-navigation])[type='submit']:hover:not(:disabled):not([aria-disabled='true']) { background: var(--auth-action-hover); border-color: var(--auth-action-hover); }
+.card :is(button, a[data-navigation]):active:not(:disabled):not([aria-disabled='true']) { background: var(--button-secondary-hover); }
+.card :is(button, a[data-navigation])[type='submit']:active:not(:disabled):not([aria-disabled='true']) { background: var(--auth-action-hover); }
+.card :is(input, textarea, :is(button, a[data-navigation]), h1):focus-visible { outline: var(--auth-focus-width) solid var(--focus); outline-offset: var(--auth-focus-offset); }
 .card [aria-invalid='true'] { border-color: var(--error); }
 .card p[role='alert'] {
   margin-top: var(--auth-space-4);
@@ -69,10 +69,10 @@
   color: var(--error);
 }
 .card p[role='status'] { margin-top: var(--auth-space-4); }
-.card form > :is(input, textarea) + :is(label, button, .passwordHeading, .confirmationActions) { margin-top: calc(var(--action-row-gap) - var(--auth-space-2)); }
-.card form > :is(label, p) + :is(button, .confirmationActions) { margin-top: calc(var(--action-row-gap) - var(--auth-space-2)); }
-.card form > button + button { margin-top: calc(var(--action-row-gap) - var(--auth-space-2)); }
-.card .formContent > form ~ button { margin-top: var(--action-row-gap); }
+.card form > :is(input, textarea) + :is(label, :is(button, a[data-navigation]), .passwordHeading, .confirmationActions) { margin-top: calc(var(--action-row-gap) - var(--auth-space-2)); }
+.card form > :is(label, p) + :is(:is(button, a[data-navigation]), .confirmationActions) { margin-top: calc(var(--action-row-gap) - var(--auth-space-2)); }
+.card form > :is(button, a[data-navigation]) + :is(button, a[data-navigation]) { margin-top: calc(var(--action-row-gap) - var(--auth-space-2)); }
+.card .formContent > form ~ :is(button, a[data-navigation]) { margin-top: var(--action-row-gap); }
 .passwordHeading { display: flex; align-items: center; justify-content: space-between; gap: var(--auth-space-2); }
 .card .textAction {
   margin: 0;
@@ -85,11 +85,11 @@
   text-align: left;
   text-underline-offset: var(--auth-space-1);
 }
-.card .textAction:hover:enabled, .card .textAction:active:enabled { background: var(--button-navigation-selected-bg); color: var(--auth-petrol); text-decoration: underline; }
+.card .textAction:hover:not(:disabled):not([aria-disabled='true']), .card .textAction:active:not(:disabled):not([aria-disabled='true']) { background: var(--button-navigation-selected-bg); color: var(--auth-petrol); text-decoration: underline; }
 .loginOptions { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--action-row-gap) var(--auth-space-4); margin-top: var(--auth-space-5); padding-top: var(--auth-space-4); border-top: var(--auth-rule) solid var(--border); }
 .confirmationActions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--action-row-gap) var(--auth-space-2); }
 .confirmationActions form { min-width: 0; }
-.confirmationActions button { width: 100%; margin: 0; }
+.confirmationActions :is(button, a[data-navigation]) { width: 100%; margin: 0; }
 .secret { overflow-wrap: anywhere; padding: var(--auth-space-3); background: var(--auth-input); border-radius: var(--auth-radius); }
 .codes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--auth-space-3); padding-left: var(--auth-space-5); }
 .hero { position: relative; isolation: isolate; min-width: 0; display: flex; align-items: center; padding: var(--auth-space-7) var(--auth-space-6); }
@@ -125,5 +125,5 @@
   .confirmationActions { grid-template-columns: minmax(0, 1fr); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .card button { transition: none; }
+  .card :is(button, a[data-navigation]) { transition: none; }
 }

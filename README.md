@@ -6,6 +6,12 @@ Frontend `src/Web/src/features/auth`, `features/business` ve `features/staff` al
 
 Giriş, kimlik formları ve ortak yönetim alanının görsel sistemi [DESIGN](DESIGN.md) içinde tutulur. Projeye kurulu [Impeccable](.agents/skills/impeccable/SKILL.md) yeni ekranlarda önce taslak/onay akışını kullanır. Dekoratif salon fotoğrafları yerleşik `image_gen` ile üretilmiştir; gerçek işletme kanıtı değildir. `assets/plates/` altında exact prompt ve onay yan kayıtlarıyla saklanır, Docker derlemesine dahildir. Harici stok fotoğraf lisansı veya yeni görsel paketi eklenmedi. Yerel Unna Bold fontu SIL Open Font License 1.1 ile kullanılır; [lisansı](src/Web/src/assets/fonts/Unna-OFL.txt) imajda `/app/Unna-OFL.txt` olarak da bulunur. Yerel motor, önbellek ve inceleme çıktıları sürümlenmez; Windows başlatıcısı motoru ilk kullanımda doğrulayarak indirir.
 
+## Ekran adresleri
+
+Yönetim ekranları ayrı adresler kullanır: `/yonetim/isletme`, `/yonetim/isletme/saatler`, `/yonetim/personel`, `/yonetim/hizmetler`, `/yonetim/calisan-erisimleri`, `/yonetim/hesap` ve `/yonetim/degisiklik-kayitlari`. Personel ayrıntısı/görevleri ve hizmet düzenlemesi de doğrudan açılabilir. Geri/ileri, yenileme ve yeni sekme ekranı korur; liste sayfası `?sayfa=2` ile taşınır. Giriş gereken adres, tamamlanmış oturum/MFA sonrasında açılır; yetkiyi mevcut API kontrol eder. Kaydedilmemiş tanım formları gezinmede onay ister, işlem sürerken geçiş engellenir. İşletme profili taslağı yönetim içinde korunur; yenilemede kalıcı olarak saklanmaz.
+
+E-posta doğrulama/sıfırlama bağlantısının kanıtı açılışta adres çubuğundan kaldırılır, yalnız bellekte tutulur ve ekran terk edildiğinde silinir. Tekrar yenilemede e-postadaki bağlantının yeniden açılması gerekir. [Mimari karar](docs/adr/004-url-navigation.md) ve [gerçek API gezinme testi](tests/Web.E2E/README.md) ayrıntıları içerir. React Router ve bağımlılıklarının [lisansları](docs/navigation-licenses.txt) imajda `/app/navigation-licenses.txt` olarak bulunur.
+
 ## Gerekenler
 
 - .NET SDK 10.0.401 (`global.json`)

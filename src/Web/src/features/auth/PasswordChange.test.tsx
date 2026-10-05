@@ -39,7 +39,7 @@ function mockRequests(change: () => Promise<Response>, account = owner) {
 
 async function renderApp() {
   await act(async () => root.render(<App />))
-  const security = Array.from(container.querySelectorAll('nav button')).find(button => button.textContent === 'Hesap ve güvenlik')
+  const security = Array.from(container.querySelectorAll('nav button, nav a[data-navigation]')).find(button => button.textContent === 'Hesap ve güvenlik')
   if (security) await act(async () => (security as HTMLButtonElement).click())
 }
 

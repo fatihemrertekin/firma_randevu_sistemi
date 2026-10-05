@@ -1,5 +1,8 @@
 // @vitest-environment jsdom
 import { act } from 'react'
+import { createMemoryRouter } from 'react-router'
+import { RouterProvider } from 'react-router/dom'
+import { NavigationEvents } from '../../app/NavigationEvents'
 import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import Services from './Services'
@@ -10,12 +13,12 @@ let container: HTMLDivElement
 let root: Root
 beforeEach(() => {
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true)
-  vi.stubGlobal('fetch', vi.fn(async () => Response.json({ items: [service], page: 1, hasMore: false })))
+  vi.stubGlobal('fetch', vi.fn(async input => String(input).includes('?') ? Response.json({ items: [service], page: 1, hasMore: false }) : Response.json(service)))
   container = document.createElement('div'); document.body.append(container); root = createRoot(container)
 })
 afterEach(async () => { await act(async () => root.unmount()); container.remove(); vi.unstubAllGlobals(); vi.restoreAllMocks() })
 async function click(text: string) {
-  const button = Array.from(container.querySelectorAll('button')).find(item => item.textContent === text)
+  const button = Array.from(container.querySelectorAll<HTMLButtonElement>('button, a[data-navigation]')).find(item => item.textContent === text)
   if (!button) throw new Error('Düğme yok: ' + text)
   await act(async () => button.click())
 }
@@ -31,7 +34,8 @@ async function submit() {
   await act(async () => form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })))
 }
 async function render(post = vi.fn<ServicePost>(async () => Response.json(service)), dirty = vi.fn(), busy = vi.fn()) {
-  await act(async () => root.render(<Services post={post} onDirtyChange={dirty} onBusyChange={busy} />))
+  const router = createMemoryRouter([{ path: '*', element: <Services post={post} onDirtyChange={dirty} onBusyChange={busy} /> }], { initialEntries: ['/yonetim/hizmetler'] })
+  await act(async () => root.render(<NavigationEvents value={listener => router.subscribe(state => listener(state.location))}><RouterProvider router={router} /></NavigationEvents>))
   return { post, dirty, busy }
 }
 async function newService() { await click('Yeni hizmet'); await fill('name', 'Yeni Hizmet'); await fill('duration', '45'); await fill('price', '0,29') }

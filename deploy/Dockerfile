@@ -19,6 +19,7 @@ FROM mcr.microsoft.com/dotnet/aspnet:10.0.12 AS runtime
 WORKDIR /app
 COPY --from=server-build /out ./
 COPY docs/identity-email-licenses.txt /app/identity-email-licenses.txt
+COPY docs/navigation-licenses.txt /app/navigation-licenses.txt
 COPY src/Web/src/assets/fonts/Unna-OFL.txt /app/Unna-OFL.txt
 RUN mkdir /app/keys && chown $APP_UID:$APP_UID /app/keys
 ENV ASPNETCORE_HTTP_PORTS=8080

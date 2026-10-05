@@ -31,7 +31,7 @@ async function submit() {
   await act(async () => form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })))
 }
 async function click(label: string) {
-  const button = Array.from(container.querySelectorAll('button')).find(item => item.textContent === label)
+  const button = Array.from(container.querySelectorAll<HTMLButtonElement>('button, a[data-navigation]')).find(item => item.textContent === label)
   if (!button) throw new Error('Buton yok')
   await act(async () => button.click())
 }
@@ -58,7 +58,7 @@ describe('Çalışan parola sıfırlama kodu üretme', () => {
     expect(code.type).toBe('password')
     expect(code.readOnly).toBe(true)
     expect(container.textContent).not.toContain('synthetic-reset')
-    expect(Array.from(container.querySelectorAll('button')).some(button => button.textContent?.includes('kopyala'))).toBe(false)
+    expect(Array.from(container.querySelectorAll<HTMLButtonElement>('button, a[data-navigation]')).some(button => button.textContent?.includes('kopyala'))).toBe(false)
     await click('Kodu göster')
     await act(async () => code.focus())
     expect(code.type).toBe('text')
@@ -96,7 +96,7 @@ describe('Çalışan parola sıfırlama kodu üretme', () => {
     vi.stubGlobal('fetch', vi.fn(async (path: string) => path === '/api/staff-invitations/' ? Response.json([]) :
       Response.json({ email: 'synthetic@example.test', staffAccess: !ownerAccess, ownerAccess, mfaEnabled: ownerAccess })))
     await act(async () => root.render(<App />))
-    const access = Array.from(container.querySelectorAll<HTMLButtonElement>('nav button')).find(button => button.textContent === 'Çalışan erişimleri')
+    const access = Array.from(container.querySelectorAll<HTMLButtonElement>('nav button, nav a[data-navigation]')).find(button => button.textContent === 'Çalışan erişimleri')
     if (access) await act(async () => access.click())
     expect(container.querySelector('form[aria-label="Çalışan sıfırlama kodu üret"]') !== null).toBe(ownerAccess)
   })

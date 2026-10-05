@@ -1,4 +1,10 @@
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useEffectEvent, useRef, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router'
+import { authPaths, resolveRoute, sectionPaths, type Section } from './routes'
+import NavigationLink from './NavigationLink'
+import useNavigationGuard from './useNavigationGuard'
+import { CompletedNavigation } from './CompletedNavigation'
+import { useNavigationChange } from './NavigationEvents'
 import type { Account } from './api'
 import { postWithCsrf } from './api'
 import type useAuthentication from '../features/auth/useAuthentication'
@@ -16,7 +22,6 @@ import OwnerRecoveryEmail from '../features/auth/OwnerRecoveryEmail'
 import MfaRecoveryCodes from '../features/auth/MfaRecoveryCodes'
 import AuditLog from '../features/audit/AuditLog'
 
-type Section = 'business' | 'hours' | 'security' | 'access' | 'personnel' | 'services' | 'audit'
 type Group = 'business' | 'team' | 'account'
 const groups = [
   { id: 'business', title: 'İşletme', initial: 'business' },
@@ -50,45 +55,51 @@ type Props = { auth: ReturnType<typeof useAuthentication>; account: Account }
 
 export default function ManagementLayout({ auth, account }: Props) {
   const owner = account.mfaEnabled && account.ownerAccess && !account.staffAccess
-  const [section, setSection] = useState<Section>(owner ? 'business' : 'security')
+  const location = useLocation(), go = useNavigate()
+  const route = resolveRoute(location.pathname)
+  const forbidden = route.kind === 'management' && !owner && route.section !== 'security'
+  const section = route.kind === 'management' && !forbidden ? route.section : null
   const [pendingRequests, setPendingRequests] = useState(0)
-  const [definitionDirty, setDefinitionDirty] = useState(false)
   const [definitionBusy, setDefinitionBusy] = useState(false)
-  const [profileDirty, setProfileDirty] = useState(false)
   const [profileBusy, setProfileBusy] = useState(false)
+  const guard = useRef({ dirty: false, profileDirty: false, busy: false })
+  const setDefinitionDirty = useCallback((value: boolean) => { guard.current.dirty = value }, [])
+  const setProfileDirty = useCallback((value: boolean) => { guard.current.profileDirty = value }, [])
   const [drawerOpen, setDrawerOpen] = useState(true)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const menuButton = useRef<HTMLButtonElement>(null)
-  const groupButton = useRef<HTMLButtonElement>(null)
+  const groupButton = useRef<HTMLAnchorElement>(null)
   const heading = useRef<HTMLHeadingElement>(null)
   const blocked = auth.busy || pendingRequests > 0 || definitionBusy || profileBusy
-  const current = sections.find(item => item.id === section) ?? sections[0]
-  const currentGroup = section === 'audit' ? null : sectionGroups[section]
+  const current = sections.find(item => item.id === section)
+  const currentGroup = section === null || section === 'audit' ? null : sectionGroups[section]
+  useEffect(() => { guard.current.busy = blocked }, [blocked])
+  useNavigationGuard(guard, useCallback(() => { guard.current.dirty = false }, []))
   const post = useCallback(async (path: string, body: object, signal?: AbortSignal) => {
     setPendingRequests(current => current + 1)
     try { return await postWithCsrf(path, body, signal) }
     finally { setPendingRequests(current => current - 1) }
   }, [])
 
-  function navigate(next: Section) {
-    if (blocked) return
-    if (section === next) { setMobileMenuOpen(false); heading.current?.focus(); return }
-    if (definitionDirty && !window.confirm('Kaydedilmemiş değişiklikler silinsin mi?')) return
-    setDefinitionDirty(false)
+  useNavigationChange(() => {
     auth.clearPasswordFields()
     auth.setError('')
     auth.setNotice('')
-    setSection(next)
     setMobileMenuOpen(false)
-    setDrawerOpen(next !== 'audit')
+    setDrawerOpen(section !== 'audit')
+  })
+  const focus = useEffectEvent(() => {
     heading.current?.focus()
-  }
+    document.title = `${current?.title ?? (forbidden ? 'Erişim izni yok' : 'Sayfa bulunamadı')} · Randevu`
+  })
+  useEffect(() => { focus() }, [location.pathname, location.search])
 
   function logout() {
     if (blocked) return
-    if ((definitionDirty || profileDirty) && !window.confirm('Kaydedilmemiş değişiklikler silinsin ve çıkış yapılsın mı?')) return
-    setDefinitionDirty(false)
-    void auth.handleLogout()
+    if ((guard.current.dirty || guard.current.profileDirty) && !window.confirm('Kaydedilmemiş değişiklikler silinsin ve çıkış yapılsın mı?')) return
+    void auth.handleLogout().then(success => {
+      if (success) { guard.current = { dirty: false, profileDirty: false, busy: false }; void go(authPaths.login, { replace: true }) }
+    })
   }
 
   function closeMenu() {
@@ -98,7 +109,8 @@ export default function ManagementLayout({ auth, account }: Props) {
     else groupButton.current?.focus()
   }
 
-  return <div className={`management-theme ${styles.page}`} onKeyDown={event => {
+  return <CompletedNavigation value={(to, options) => { guard.current.dirty = false; guard.current.busy = false; void go(to, options) }}>
+    <div className={`management-theme ${styles.page}`} onKeyDown={event => {
     if (event.key === 'Escape' && mobileMenuOpen) { event.stopPropagation(); closeMenu() }
   }}>
     <a className={styles.skipLink} href="#management-main">İçeriğe geç</a>
@@ -115,24 +127,23 @@ export default function ManagementLayout({ auth, account }: Props) {
     <div className={styles.layout} data-drawer-open={drawerOpen && currentGroup !== null} data-mobile-open={mobileMenuOpen}>
       <div id="management-navigation" className={styles.navigation}>
         <nav className={styles.rail} aria-label="Yönetim grupları">
-          {groups.filter(group => owner || group.id === 'account').map(group => <button key={group.id}
-            ref={group.id === currentGroup ? groupButton : undefined} type="button" disabled={blocked}
-            aria-pressed={group.id === currentGroup} aria-controls="management-context" onClick={() => {
-              if (group.id === currentGroup) { setDrawerOpen(true); return }
-              navigate(group.initial)
-            }}><NavigationIcon kind={group.id} /><span>{group.title}</span></button>)}
-          {owner && <button className={styles.auditLink} type="button" disabled={blocked}
-            aria-current={section === 'audit' ? 'page' : undefined} onClick={() => navigate('audit')}>
+          {groups.filter(group => owner || group.id === 'account').map(group => <NavigationLink key={group.id}
+            to={sectionPaths[group.initial]} ref={group.id === currentGroup ? groupButton : undefined} disabled={blocked}
+            data-group-active={group.id === currentGroup} aria-controls="management-context" onClick={event => {
+              if (group.id === currentGroup && !event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey) { event.preventDefault(); setDrawerOpen(true) }
+            }}><NavigationIcon kind={group.id} /><span>{group.title}</span></NavigationLink>)}
+          {owner && <NavigationLink className={styles.auditLink} to={sectionPaths.audit} disabled={blocked}
+            aria-current={section === 'audit' ? 'page' : undefined}>
             <NavigationIcon kind="audit" /><span>Değişiklik kayıtları</span>
-          </button>}
+          </NavigationLink>}
         </nav>
         <aside id="management-context" className={styles.drawer} hidden={!drawerOpen || currentGroup === null}>
           <nav aria-label="Yönetim bölümleri">
             {groups.filter(group => owner || group.id === 'account').map(group => <div key={group.id} hidden={group.id !== currentGroup}>
               <h2>{group.title}</h2>
               {sections.filter(item => item.id !== 'audit' && sectionGroups[item.id] === group.id && (owner || item.id === 'security')).map(item =>
-                <button key={item.id} type="button" aria-current={section === item.id ? 'page' : undefined}
-                  disabled={blocked} onClick={() => navigate(item.id)}>{item.title}</button>)}
+                <NavigationLink key={item.id} to={sectionPaths[item.id]} aria-current={section === item.id ? 'page' : undefined}
+                  disabled={blocked} onClick={() => { if (section === item.id) { setMobileMenuOpen(false); heading.current?.focus() } }}>{item.title}</NavigationLink>)}
             </div>)}
             <button className={styles.closeMenu} type="button" disabled={blocked} onClick={closeMenu}>Menüyü kapat</button>
           </nav>
@@ -140,8 +151,9 @@ export default function ManagementLayout({ auth, account }: Props) {
         <div className={styles.mobileAccount}><p>{account.email}</p><button type="button" disabled={blocked} onClick={logout}>Çıkış yap</button></div>
       </div>
       <main id="management-main" className={styles.content}>
-        <h1 ref={heading} tabIndex={-1}>{current.title}</h1>
-        <p>{current.description}</p>
+        <h1 ref={heading} tabIndex={-1}>{current?.title ?? (forbidden ? 'Erişim izni yok' : 'Sayfa bulunamadı')}</h1>
+        <p>{current?.description ?? (forbidden ? 'Hesabınızın bu bölüme erişim izni yok.' : 'Bu adres uygulamada bulunmuyor.')}</p>
+        {!current && <NavigationLink to={owner ? sectionPaths.business : sectionPaths.security}>Yetkili ekrana dön</NavigationLink>}
         {owner && <div hidden={section !== 'business'} className={styles.profilePanel}>
           <BusinessProfile post={post} disabled={auth.busy || pendingRequests > 0 || definitionBusy}
             onDirtyChange={setProfileDirty} onBusyChange={setProfileBusy} />
@@ -186,5 +198,5 @@ export default function ManagementLayout({ auth, account }: Props) {
         {section !== 'security' && <ErrorMessage message={auth.error} />}
       </main>
     </div>
-  </div>
+  </div></CompletedNavigation>
 }
