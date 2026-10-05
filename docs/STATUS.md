@@ -57,7 +57,7 @@ Program.cs bakımı `done`: başlangıç 265 satırdan 69 satıra indi; önce/so
 
 ## Sıradaki iş
 
-Kullanıcının istediği çalışan hesabını yeniden etkinleştirme ve personel/hizmet Sil işlemleri `in_progress`; [kapsam ve kabul](plans/P02.md#tanım-silme-ve-çalışan-hesabını-etkinleştirme--05102026). Çalışan giriş hesabı silme kapsam dışıdır. Önce bu bakımın test/CI/ana yerel teslimi kapatılır. T04–T08, P03 ve dark mode başlamış sayılmaz; native finish açık kalır.
+Çalışan hesabını yeniden etkinleştirme ve personel/hizmet Sil bakımı `done`; [PR #49](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/49), `1d945802` ve başarılı main CI sonrası yedekli 8080 teslimi tamamlandı. [Kabul, veri koruma ve geri dönüş sınırı](plans/P02.md#tanım-silme-ve-çalışan-hesabını-etkinleştirme--05102026). Çalışan giriş hesabı silme kapsam dışıdır. Sonraki tek aday T04 hizmet taslağıdır; ayrı taslak/kod onayıyla başlar. T04–T08, P03, dark mode ve native finish ilerletilmedi.
 
 ## Gelecek plan kaydı — destek ve işletim ekranı (02.10.2026)
 
