@@ -1,11 +1,11 @@
 import ErrorMessage from '../../components/ErrorMessage'
-import { useRef, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import styles from './AuthenticationScreens.module.css'
 
 type Body = { email: string; token: string; password: string; confirmPassword: string }
-type Props = { post: (body: Body) => Promise<Response>; onDone: () => void; onCancel: () => void }
+type Props = { post: (body: Body) => Promise<Response>; onDone: () => void; onCancel: () => void; onBusyChange?: (busy: boolean) => void }
 
-export default function StaffInvitationAcceptForm({ post, onDone, onCancel }: Props) {
+export default function StaffInvitationAcceptForm({ post, onDone, onCancel, onBusyChange }: Props) {
   const [email, setEmail] = useState('')
   const [token, setToken] = useState('')
   const [password, setPassword] = useState('')
@@ -13,6 +13,7 @@ export default function StaffInvitationAcceptForm({ post, onDone, onCancel }: Pr
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const pending = useRef(false)
+  useEffect(() => { onBusyChange?.(busy); return () => onBusyChange?.(false) }, [busy, onBusyChange])
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (pending.current) return

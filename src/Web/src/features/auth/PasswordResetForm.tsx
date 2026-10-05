@@ -1,17 +1,18 @@
 import ErrorMessage from '../../components/ErrorMessage'
-import { useRef, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import styles from './AuthenticationScreens.module.css'
 
 type ResetBody = { token: string; newPassword: string; confirmPassword: string }
-type Props = { onRequest: (body: ResetBody) => Promise<Response>; onDone: () => void; onCancel: () => void; staff?: boolean; linkToken?: string }
+type Props = { onRequest: (body: ResetBody) => Promise<Response>; onDone: () => void; onCancel: () => void; staff?: boolean; linkToken?: string; onBusyChange?: (busy: boolean) => void }
 
-export default function PasswordResetForm({ onRequest, onDone, onCancel, staff = false, linkToken }: Props) {
+export default function PasswordResetForm({ onRequest, onDone, onCancel, staff = false, linkToken, onBusyChange }: Props) {
   const [token, setToken] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const pending = useRef(false)
+  useEffect(() => { onBusyChange?.(busy); return () => onBusyChange?.(false) }, [busy, onBusyChange])
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()

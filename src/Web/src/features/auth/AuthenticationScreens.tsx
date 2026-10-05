@@ -6,38 +6,62 @@ import type useAuthentication from './useAuthentication'
 import { postWithCsrf } from '../../app/api'
 import styles from './AuthenticationScreens.module.css'
 import AuthenticationLayout from './AuthenticationLayout'
+import { useCallback, useEffect, useEffectEvent, useRef } from 'react'
+import { useBlocker, useLocation, useNavigate } from 'react-router'
+import { authPaths, resolveRoute } from '../../app/routes'
+import NavigationLink from '../../app/NavigationLink'
+import { useNavigationChange } from '../../app/NavigationEvents'
 
 export default function AuthenticationScreens({ auth }: { auth: ReturnType<typeof useAuthentication> }) {
   const {
     account, setAccount, loading, busy, error, setError, email, setEmail,
     password, setPassword, mfaRequired, setMfaRequired, useRecoveryCode, setUseRecoveryCode,
-    code, setCode, setupInfo, setupPassword, setSetupPassword, recoveryCodes, setRecoveryCodes,
-    notice, setNotice, resettingPassword, setResettingPassword,
-    resettingStaffPassword, setResettingStaffPassword, acceptingInvitation, setAcceptingInvitation,
-    clearPasswordFields, handleLogin, handleMfaLogin, handleSetup, handleEnable, handleLogout,
+    code, setCode, setupInfo, setSetupInfo, setupPassword, setSetupPassword, recoveryCodes, setRecoveryCodes,
+    notice, setNotice,
+    clearPasswordFields, handleLogin, handleMfaLogin, handleSetup, handleEnable, handleLogout: logout,
   } = auth
+  const location = useLocation(), navigate = useNavigate()
+  const route = resolveRoute(location.pathname)
+  const page = route.kind === 'auth' ? route.page : 'login'
+  const resettingStaffPassword = page === 'staffReset'
+  const childBusy = useRef(false)
+  const reportBusy = useCallback((value: boolean) => { childBusy.current = value }, [])
+  const blocker = useBlocker(() => busy || childBusy.current)
+  useEffect(() => { if (blocker.state === 'blocked') blocker.reset() }, [blocker])
+  useEffect(() => {
+    const warn = (event: BeforeUnloadEvent) => { if (busy || childBusy.current) { event.preventDefault(); event.returnValue = '' } }
+    window.addEventListener('beforeunload', warn)
+    return () => window.removeEventListener('beforeunload', warn)
+  }, [busy])
+  useNavigationChange(() => { setPassword(''); setCode(''); setSetupPassword(''); setSetupInfo(null); clearPasswordFields(); setError('') })
+  const title = useEffectEvent(() => { document.title = `${document.getElementById('page-title')?.textContent ?? 'İşletme girişi'} · Randevu` })
+  useEffect(() => { title() }, [location.pathname, loading, mfaRequired, recoveryCodes, account])
+  function finish() { childBusy.current = false; void navigate(authPaths.login, { replace: true }) }
+  function cancel() { void navigate(authPaths.login) }
+  function handleLogout() { void logout().then(success => { if (success) finish() }) }
+  function clearFeedback() { setPassword(''); setError(''); setNotice('') }
   return (
     <AuthenticationLayout>
         {loading ? (
           <p role="status">Oturum kontrol ediliyor…</p>
-        ) : acceptingInvitation ? (
-          <StaffInvitationAcceptForm post={body => postWithCsrf('/api/staff-invitations/accept', body)}
-            onCancel={() => setAcceptingInvitation(false)} onDone={() => {
-              setAcceptingInvitation(false)
+        ) : page === 'invitation' ? (
+          <StaffInvitationAcceptForm onBusyChange={reportBusy} post={body => postWithCsrf('/api/staff-invitations/accept', body)}
+            onCancel={cancel} onDone={() => {
+              finish()
               setPassword('')
               setNotice('Çalışan hesabınız açıldı. E-postanız ve belirlediğiniz parolayla giriş yapın.')
             }} />
-        ) : resettingPassword && !resettingStaffPassword ? (
-          <OwnerPasswordResetRequest onCancel={() => setResettingPassword(false)} onDone={() => {
-            setResettingPassword(false); setAccount(null); setMfaRequired(false)
+        ) : page === 'reset' ? (
+          <OwnerPasswordResetRequest onBusyChange={reportBusy} onManual={() => { void navigate(authPaths.resetCode) }} onCancel={cancel} onDone={() => {
+            finish(); setAccount(null); setMfaRequired(false)
             setPassword(''); setCode(''); clearPasswordFields()
             setNotice('Parolanız sıfırlandı. Yeni parolanız ve ikinci adımla yeniden giriş yapın.')
           }} />
-        ) : resettingPassword ? (
-          <PasswordResetForm staff={resettingStaffPassword} onRequest={body => postWithCsrf(
+        ) : page === 'resetCode' || resettingStaffPassword ? (
+          <PasswordResetForm key={page} onBusyChange={reportBusy} staff={resettingStaffPassword} onRequest={body => postWithCsrf(
             resettingStaffPassword ? '/api/staff-password-resets/complete' : '/api/auth/reset-password', body)}
-            onCancel={() => setResettingPassword(false)} onDone={() => {
-              setResettingPassword(false)
+            onCancel={cancel} onDone={() => {
+              finish()
               setAccount(null)
               setMfaRequired(false)
               setPassword('')
@@ -129,13 +153,7 @@ export default function AuthenticationScreens({ auth }: { auth: ReturnType<typeo
                 value={email} onChange={event => setEmail(event.target.value)} />
               <div className={styles.passwordHeading}>
                 <label htmlFor="password">Parola</label>
-                <button className={styles.textAction} type="button" disabled={busy} onClick={() => {
-                  setResettingPassword(true)
-                  setResettingStaffPassword(false)
-                  setPassword('')
-                  setError('')
-                  setNotice('')
-                }}>Parolamı unuttum</button>
+                <NavigationLink className={styles.textAction} to={authPaths.reset} disabled={busy} onClick={clearFeedback}>Parolamı unuttum</NavigationLink>
               </div>
               <input id="password" type="password" autoComplete="current-password" required disabled={busy} maxLength={1024}
                 value={password} onChange={event => setPassword(event.target.value)} />
@@ -144,19 +162,8 @@ export default function AuthenticationScreens({ auth }: { auth: ReturnType<typeo
               </button>
             </form>
             <div className={styles.loginOptions} role="group" aria-label="Çalışan giriş seçenekleri">
-              <button className={styles.textAction} type="button" disabled={busy} onClick={() => {
-                setResettingPassword(true)
-                setResettingStaffPassword(true)
-                setPassword('')
-                setError('')
-                setNotice('')
-              }}>Çalışan parolamı unuttum</button>
-              <button className={styles.textAction} type="button" disabled={busy} onClick={() => {
-                setAcceptingInvitation(true)
-                setPassword('')
-                setError('')
-                setNotice('')
-              }}>Çalışan davetim var</button>
+              <NavigationLink className={styles.textAction} to={authPaths.staffReset} disabled={busy} onClick={clearFeedback}>Çalışan parolamı unuttum</NavigationLink>
+              <NavigationLink className={styles.textAction} to={authPaths.invitation} disabled={busy} onClick={clearFeedback}>Çalışan davetim var</NavigationLink>
             </div>
           </>
         )}

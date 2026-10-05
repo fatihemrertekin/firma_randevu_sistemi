@@ -21,7 +21,7 @@ async function fill(id: string, value: string) {
   await act(async () => { setter.call(input, value); input.dispatchEvent(new Event('input', { bubbles: true })) })
 }
 async function click(text: string) {
-  const button = Array.from(container.querySelectorAll('button')).find(item => item.textContent === text)
+  const button = Array.from(container.querySelectorAll<HTMLButtonElement>('button, a[data-navigation]')).find(item => item.textContent === text)
   if (!button) throw new Error('Davet butonu yok')
   await act(async () => button.click())
 }
@@ -108,7 +108,7 @@ describe('Çalışan daveti', () => {
     if (!checkbox) throw new Error('Alıcı onayı yok')
     await act(async () => checkbox.click())
     await submit('Çalışan daveti oluştur')
-    expect(Array.from(container.querySelectorAll('button')).some(button => button.textContent === 'Davet kodunu kopyala')).toBe(false)
+    expect(Array.from(container.querySelectorAll<HTMLButtonElement>('button, a[data-navigation]')).some(button => button.textContent === 'Davet kodunu kopyala')).toBe(false)
     expect(container.querySelector<HTMLInputElement>('#issued-invitation')?.type).toBe('password')
     await click('Kodu göster')
     const input = container.querySelector<HTMLInputElement>('#issued-invitation')

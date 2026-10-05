@@ -5,13 +5,16 @@ import StaffServicesEditor from './StaffServicesEditor'
 import StaffHoursEditor from './StaffHoursEditor'
 import { MemberRequestError, memberFailure, readMember, type StaffMember, type StaffPost } from './staffMembersApi'
 import styles from './StaffMembers.module.css'
+import { pageSearch, personnelPath, readPage, type PersonnelTask } from '../../app/routes'
+import NavigationLink from '../../app/NavigationLink'
+import { useLocation } from 'react-router'
 
-type Task = 'information' | 'services' | 'hours'
-const tasks: { id: Task; label: string }[] = [{ id: 'information', label: 'Bilgiler' }, { id: 'services', label: 'Hizmetler' }, { id: 'hours', label: 'Saatler' }]
+const tasks: { id: PersonnelTask; label: string }[] = [{ id: 'information', label: 'Bilgiler' }, { id: 'services', label: 'Hizmetler' }, { id: 'hours', label: 'Saatler' }]
 type Props = { memberId: string; post: StaffPost; initialNotice: string; onBack: () => void; onDeleted: (name: string) => void;
-  onDirtyChange: (dirty: boolean) => void; onBusyChange: (busy: boolean) => void }
-export default function StaffMemberDetail({ memberId, post, initialNotice, onBack, onDeleted, onDirtyChange, onBusyChange }: Props) {
-  const [member, setMember] = useState<StaffMember | null>(null), [task, setTask] = useState<Task>('information')
+  task: PersonnelTask; listPath: string; onDirtyChange: (dirty: boolean) => void; onBusyChange: (busy: boolean) => void }
+export default function StaffMemberDetail({ memberId, task, listPath, post, initialNotice, onBack, onDeleted, onDirtyChange, onBusyChange }: Props) {
+  const [member, setMember] = useState<StaffMember | null>(null)
+  const location = useLocation()
   const [revision, setRevision] = useState(0), [loading, setLoading] = useState(true)
   const [paneDirty, setPaneDirty] = useState(false), [paneBusy, setPaneBusy] = useState(false)
   const [confirmStatus, setConfirmStatus] = useState(false), [statusBusy, setStatusBusy] = useState(false), [stale, setStale] = useState(false)
@@ -46,10 +49,6 @@ export default function StaffMemberDetail({ memberId, post, initialNotice, onBac
   }
   function refresh() { setLoading(true); setError(''); setStale(false); setPaneBusy(false); setRevision(value => value + 1) }
   function reload() { if (discard()) { setConfirmStatus(false); setNotice(''); refresh() } }
-  function changeTask(next: Task) {
-    if (task === next || confirmStatus || !discard()) return
-    setTask(next); setNotice(''); refresh()
-  }
   function saved(message: string) { reportDirty(false); setNotice(message); refresh() }
   function resetTask() { reportDirty(false); setNotice(''); refresh() }
   function back() { if (!confirmStatus && discard()) onBack() }
@@ -70,7 +69,9 @@ export default function StaffMemberDetail({ memberId, post, initialNotice, onBac
     finally { sending.current = false; setStatusBusy(false) }
   }
   return <>
-    <button className={styles.back} type="button" disabled={blocked || confirmStatus} onClick={back}>Personel listesine dön</button>
+    <NavigationLink className={styles.back} to={listPath} disabled={blocked || confirmStatus} onClick={event => {
+      event.preventDefault(); back()
+    }}>Personel listesine dön</NavigationLink>
     {member && <div className={styles.detailIdentity}><h2 className={styles.identity}>{member.name}</h2>
       <span className={styles.status}><span aria-hidden="true">{member.isActive ? '●' : '○'}</span> {member.isActive ? 'Aktif' : 'Pasif'}</span></div>}
     {loading && <p role="status">Personel bilgileri yükleniyor…</p>}
@@ -78,8 +79,10 @@ export default function StaffMemberDetail({ memberId, post, initialNotice, onBac
     {notice && <p className={styles.notice} role="status">{notice}</p>}
     {!loading && !member && <button type="button" onClick={reload}>Güncel kaydı yükle</button>}
     {member && <>
-      <nav className={styles.tasks} aria-label="Personel görevleri">{tasks.map(item => <button key={item.id} type="button"
-        aria-pressed={task === item.id} aria-controls="personnel-task" disabled={blocked || confirmStatus} onClick={() => changeTask(item.id)}>{item.label}</button>)}</nav>
+      <nav className={styles.tasks} aria-label="Personel görevleri">{tasks.map(item => <NavigationLink key={item.id}
+        to={personnelPath(memberId, item.id) + pageSearch(readPage(location.search))}
+        aria-current={task === item.id ? 'page' : undefined} aria-controls="personnel-task" disabled={blocked || confirmStatus}
+        onClick={event => { if (task !== item.id) { if (!discard()) event.preventDefault(); else { setNotice(''); refresh() } } }}>{item.label}</NavigationLink>)}</nav>
       <div id="personnel-task" className={styles.task} aria-busy={blocked}>
         {!loading && !confirmStatus && <>
           {task === 'information' && <StaffMemberEditor key={revision} member={member} embedded post={post}

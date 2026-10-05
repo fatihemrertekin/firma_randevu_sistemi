@@ -4,7 +4,9 @@ import ErrorMessage from '../../components/ErrorMessage'
 import PasswordResetForm from './PasswordResetForm'
 import styles from './AuthenticationScreens.module.css'
 
-export default function OwnerPasswordResetRequest({ onCancel, onDone }: { onCancel: () => void; onDone: () => void }) {
+export default function OwnerPasswordResetRequest({ onCancel, onDone, onManual, onBusyChange }: {
+  onCancel: () => void; onDone: () => void; onManual?: () => void; onBusyChange?: (busy: boolean) => void;
+}) {
   const [email, setEmail] = useState('')
   const [available, setAvailable] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -13,6 +15,7 @@ export default function OwnerPasswordResetRequest({ onCancel, onDone }: { onCanc
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
   const pending = useRef(false)
+  useEffect(() => { onBusyChange?.(busy); return () => onBusyChange?.(false) }, [busy, onBusyChange])
   useEffect(() => {
     const controller = new AbortController()
     let active = true
@@ -60,6 +63,6 @@ export default function OwnerPasswordResetRequest({ onCancel, onDone }: { onCanc
     </form>
     <ErrorMessage message={error} />
     {notice && <p role="status">{notice}</p>}
-    <button className={styles.textAction} type="button" disabled={busy} onClick={() => setManual(true)}>Parola sıfırlama kodum var</button>
+    <button className={styles.textAction} type="button" disabled={busy} onClick={() => { if (onManual) onManual(); else setManual(true) }}>Parola sıfırlama kodum var</button>
   </>
 }

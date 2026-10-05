@@ -2,14 +2,15 @@ import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 
 export default defineConfig({
-  // Keep the production asset bundle portable for local design review.
-  base: './',
+  // Direct navigation to nested screen URLs must load assets from the same origin's root.
+  base: '/',
   plugins: [react()],
   build: {
     outDir: '../Server/wwwroot',
     emptyOutDir: true,
   },
   test: {
+    setupFiles: ['./src/testSetup.ts'],
     include: ['src/**/*.test.tsx'],
   },
 })

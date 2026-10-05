@@ -29,11 +29,11 @@ async function openReset(handler: () => Promise<Response>, staff = false) {
   })
   vi.stubGlobal('fetch', requests)
   await act(async () => root.render(<App />))
-  const button = Array.from(container.querySelectorAll('button')).find(item => item.textContent === (staff ? 'Çalışan parolamı unuttum' : 'Parolamı unuttum'))
+  const button = Array.from(container.querySelectorAll<HTMLButtonElement>('button, a[data-navigation]')).find(item => item.textContent === (staff ? 'Çalışan parolamı unuttum' : 'Parolamı unuttum'))
   if (!button) throw new Error('Sıfırlama bağlantısı yok')
   await act(async () => button.click())
   if (!staff) {
-    const manual = Array.from(container.querySelectorAll('button')).find(item => item.textContent === 'Parola sıfırlama kodum var')
+    const manual = Array.from(container.querySelectorAll<HTMLButtonElement>('button, a[data-navigation]')).find(item => item.textContent === 'Parola sıfırlama kodum var')
     if (!manual) throw new Error('Manuel kurtarma seçeneği yok')
     await act(async () => manual.click())
   }
@@ -110,11 +110,11 @@ describe.each([false, true])('Parola sıfırlama (Staff: %s)', staff => {
   it('girişe dönünce kod ve parolalar yeni açılan forma taşınmaz', async () => {
     await openReset(async () => new Response(null, { status: 204 }), staff)
     await fillReset()
-    const cancel = Array.from(container.querySelectorAll('button')).find(item => item.textContent === 'Girişe dön')
+    const cancel = Array.from(container.querySelectorAll<HTMLButtonElement>('button, a[data-navigation]')).find(item => item.textContent === 'Girişe dön')
     if (!cancel) throw new Error('Dönüş düğmesi yok')
     await act(async () => cancel.click())
     expect(container.textContent).toContain('İşletme girişi')
-    const reopen = Array.from(container.querySelectorAll('button')).find(item => item.textContent === (staff ? 'Çalışan parolamı unuttum' : 'Parolamı unuttum'))
+    const reopen = Array.from(container.querySelectorAll<HTMLButtonElement>('button, a[data-navigation]')).find(item => item.textContent === (staff ? 'Çalışan parolamı unuttum' : 'Parolamı unuttum'))
     if (!reopen) throw new Error('Sıfırlama düğmesi yok')
     await act(async () => reopen.click())
     expect(Array.from(container.querySelectorAll<HTMLInputElement>('input')).every(input => input.value === '')).toBe(true)

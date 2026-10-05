@@ -41,7 +41,7 @@ describe('Owner otomatik parola sıfırlama', () => {
     await input('reset-email', 'owner@example.test')
     await submit(); await submit()
     expect(requests.mock.calls.filter(([path]) => path.endsWith('request'))).toHaveLength(1)
-    expect([...container.querySelectorAll('button')].every(button => button.disabled)).toBe(true)
+    expect([...container.querySelectorAll<HTMLButtonElement>('button, a[data-navigation]')].every(button => button.disabled)).toBe(true)
     await act(async () => finish?.(new Response(null, { status: 202 })))
     expect(container.querySelector('[role="status"]')?.textContent).toContain('Bilgiler uygunsa')
     expect(container.textContent).not.toContain('gönderildi')
@@ -65,7 +65,7 @@ describe('Owner otomatik parola sıfırlama', () => {
     await submit()
     expect(requests).toHaveBeenCalledTimes(1)
     expect(container.textContent).toContain('henüz kullanılamıyor')
-    const manual = [...container.querySelectorAll('button')].find(button => button.textContent === 'Parola sıfırlama kodum var')
+    const manual = [...container.querySelectorAll<HTMLButtonElement>('button, a[data-navigation]')].find(button => button.textContent === 'Parola sıfırlama kodum var')
     await act(async () => manual?.click())
     expect(container.querySelector('#reset-token')).not.toBeNull()
   })
@@ -83,7 +83,7 @@ describe('Owner otomatik parola sıfırlama', () => {
     vi.stubGlobal('fetch', requests)
     await act(async () => root.render(<App />))
     // Follow the real browser path: open the request screen, then the received link in the same tab.
-    const forgot = [...container.querySelectorAll('button')].find(button => button.textContent === 'Parolamı unuttum')
+    const forgot = [...container.querySelectorAll<HTMLButtonElement>('button, a[data-navigation]')].find(button => button.textContent === 'Parolamı unuttum')
     await act(async () => forgot?.click())
     expect(container.textContent).toContain('Parolanızı yenileyin')
     await act(async () => {

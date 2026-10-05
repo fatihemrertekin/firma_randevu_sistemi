@@ -43,7 +43,7 @@ it('MFA iptalinde sunucudaki geçici oturumu kapatır ve normal girişe döner',
   const requests = await pendingMfa(204)
   await input('mfa-code', '123456')
   expect(container.textContent).toContain('sakladığınız MFA kurtarma kodunu')
-  const cancel = [...container.querySelectorAll('button')].find(button => button.textContent === 'Girişe dön')
+  const cancel = [...container.querySelectorAll<HTMLButtonElement>('button, a[data-navigation]')].find(button => button.textContent === 'Girişe dön')
   await act(async () => cancel?.click())
   expect(requests.mock.calls.some(([path]) => path.endsWith('/logout'))).toBe(true)
   expect(container.querySelector('#mfa-code')).toBeNull()
@@ -51,7 +51,7 @@ it('MFA iptalinde sunucudaki geçici oturumu kapatır ve normal girişe döner',
 })
 it('sunucu çıkışı başarısızsa MFA oturumunu kapandı gibi göstermez', async () => {
   await pendingMfa(503)
-  const cancel = [...container.querySelectorAll('button')].find(button => button.textContent === 'Girişe dön')
+  const cancel = [...container.querySelectorAll<HTMLButtonElement>('button, a[data-navigation]')].find(button => button.textContent === 'Girişe dön')
   await act(async () => cancel?.click())
   expect(container.querySelector('#mfa-code')).not.toBeNull()
   expect(container.querySelector('[role="alert"]')?.textContent).toContain('Çıkış yapılamadı')

@@ -1,4 +1,5 @@
-import { useRef, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { useBlocker } from 'react-router'
 import { postWithCsrf } from '../../app/api'
 import ErrorMessage from '../../components/ErrorMessage'
 import styles from './AuthenticationScreens.module.css'
@@ -9,6 +10,13 @@ export default function OwnerEmailConfirmation({ token, onClose }: { token: stri
   const [confirmed, setConfirmed] = useState(false)
   const [error, setError] = useState('')
   const pending = useRef(false)
+  const blocker = useBlocker(() => pending.current)
+  useEffect(() => { if (blocker.state === 'blocked') blocker.reset() }, [blocker])
+  useEffect(() => {
+    const warn = (event: BeforeUnloadEvent) => { if (pending.current) { event.preventDefault(); event.returnValue = '' } }
+    window.addEventListener('beforeunload', warn)
+    return () => window.removeEventListener('beforeunload', warn)
+  }, [])
   async function confirm(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (pending.current || confirmed) return

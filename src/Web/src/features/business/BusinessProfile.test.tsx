@@ -30,10 +30,10 @@ async function submit() {
   await act(async () => form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })))
 }
 async function reload() {
-  const button = Array.from(container.querySelectorAll('button')).find(item => item.textContent === 'Güncel bilgileri yükle')
+  const button = Array.from(container.querySelectorAll<HTMLButtonElement>('button, a[data-navigation]')).find(item => item.textContent === 'Güncel bilgileri yükle')
   if (!button) throw new Error('Yenileme yok')
   await act(async () => button.click())
-  const confirm = Array.from(container.querySelectorAll('button')).find(item => item.textContent === 'Değişiklikleri sil ve yükle')
+  const confirm = Array.from(container.querySelectorAll<HTMLButtonElement>('button, a[data-navigation]')).find(item => item.textContent === 'Değişiklikleri sil ve yükle')
   if (confirm) await act(async () => confirm.click())
 }
 

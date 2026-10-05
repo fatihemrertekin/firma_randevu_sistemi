@@ -15,6 +15,7 @@ src/Server/wwwroot
 tests
 docs/*
 !docs/identity-email-licenses.txt
+!docs/navigation-licenses.txt
 !docs/logo-image-licenses.txt
 *.user
 *.suo

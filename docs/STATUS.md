@@ -32,6 +32,10 @@ Güncelleme: 2026-10-05. Güncel özet burada; kapsam ve kanıt bağlantıları 
 
 ## Bakım durumu
 
+URL ile ekran gezinmesi geliştirme/ayrı sentetik kabulü `done` (05.10.2026): 226 web/140 sunucu testi, 28 durum × dört genişlik ve gerçek API kabulü geçti. [PR #51](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/51) açıldı; uygulama commit `cb1ca5e` push/PR CI başarılı, son belge/test commit kontrolleri PR son head üzerinden takip edilir. Ana 8080 güncellenmedi; [kabul paketi, güvenli dönüş ve teslim sınırı](plans/P02.md#url-ile-ekran-gezinmesi--05102026).
+
+Çalışan hesabını yeniden etkinleştirme ve personel/hizmet Sil bakımı geliştirme/ana yerel teslimi `done` (05.10.2026): [PR #49](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/49), `1d945802` ve başarılı main CI sonrası yedekli 8080 teslimi tamamlandı. [Kabul ve geri dönüş sınırı](plans/P02.md#tanım-silme-ve-çalışan-hesabını-etkinleştirme--05102026). Çalışan giriş hesabı silme kapsam dışıdır.
+
 Hafif pastel/fotoğraf/dikey boşluk bakımı (05.10.2026) geliştirme/GitHub/ana yerel teslim `done`: [PR #47](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/47) `ce8cd91` ile birleşti; aynı commit [main CI](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/37246715420) başarılı. Bütün renk aileleri hafif yumuşatıldı, tek nötr fotoğraf kullanıldı; tüm frontend buton grupları için 16 px dikey aralık tamamlandı. 203 test/19 durum × dört genişlik/gerçek API/kontrast ve ölçüm kabulü geçti; yedekli 8080 tesliminde 30 tablo/hesap/MFA/anahtar/SMTP korundu. [Kabul ve geri dönüş sınırı](plans/P02.md#hafif-pastel-ve-fotoğraf-uyumu--05102026).
 
 Ortak açık palet bakımı (05.10.2026) geliştirme/GitHub/ana yerel teslim `done`: [PR #45](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/45) `7aa6cfd` ile birleşti; aynı commit [main CI](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/37242678219) başarılı. Giriş/MFA dahil bütün frontend beyaza yakın zemin ve dolu mavi/lacivert butonlara geçti. 203 test, 16 durum × dört genişlik, gerçek API ve kontrast kontrolleri geçti; yedekli 8080 tesliminde 30 tablo/hesap/MFA/anahtar/SMTP korundu. [Kabul ve geri dönüş sınırı](plans/P02.md#ortak-açık-palet-bakımı--05102026).
@@ -57,7 +61,7 @@ Program.cs bakımı `done`: başlangıç 265 satırdan 69 satıra indi; önce/so
 
 ## Sıradaki iş
 
-Çalışan hesabını yeniden etkinleştirme ve personel/hizmet Sil bakımı `done`; [PR #49](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/49), `1d945802` ve başarılı main CI sonrası yedekli 8080 teslimi tamamlandı. [Kabul, veri koruma ve geri dönüş sınırı](plans/P02.md#tanım-silme-ve-çalışan-hesabını-etkinleştirme--05102026). Çalışan giriş hesabı silme kapsam dışıdır. Sonraki tek aday T04 hizmet taslağıdır; ayrı taslak/kod onayıyla başlar. T04–T08, P03, dark mode ve native finish ilerletilmedi.
+Sıradaki tek iş, kabul edilmiş URL gezinme paketini ayrı onayla ana 8080 uygulamasına yedekli teslim etmektir. [PR #51](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/51) son head kontrolleri yeşilken birleşme ve güncelleme yapılır; mevcut eski imajla sentetik geri dönüş provası hazırdır. Ana uygulama bu işte değiştirilmedi. T04/P03/dark mode için yetki verilmiş sayılmaz.
 
 ## Gelecek plan kaydı — destek ve işletim ekranı (02.10.2026)
 

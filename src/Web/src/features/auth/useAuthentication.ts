@@ -21,9 +21,6 @@ export default function useAuthentication() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [notice, setNotice] = useState('')
   const requestPending = useRef(false)
-  const [resettingPassword, setResettingPassword] = useState(false)
-  const [resettingStaffPassword, setResettingStaffPassword] = useState(false)
-  const [acceptingInvitation, setAcceptingInvitation] = useState(false)
 
   function clearPasswordFields() {
     setCurrentPassword('')
@@ -222,12 +219,11 @@ export default function useAuthentication() {
       setCode('')
       setPassword('')
       setRecoveryCodes(null)
-      setResettingPassword(false)
-      setResettingStaffPassword(false)
-      setAcceptingInvitation(false)
       setNotice('')
+      return true
     } catch {
       setError('Çıkış yapılamadı. Lütfen yeniden deneyin.')
+      return false
     } finally {
       requestPending.current = false
       setBusy(false)
@@ -237,11 +233,10 @@ export default function useAuthentication() {
   return {
     account, setAccount, loading, busy, error, setError, notice, setNotice,
     email, setEmail, password, setPassword, mfaRequired, setMfaRequired,
-    useRecoveryCode, setUseRecoveryCode, code, setCode, setupInfo,
+    useRecoveryCode, setUseRecoveryCode, code, setCode, setupInfo, setSetupInfo,
     setupPassword, setSetupPassword, recoveryCodes, setRecoveryCodes,
     currentPassword, setCurrentPassword, newPassword, setNewPassword,
-    confirmPassword, setConfirmPassword, resettingPassword, setResettingPassword,
-    resettingStaffPassword, setResettingStaffPassword, acceptingInvitation, setAcceptingInvitation,
+    confirmPassword, setConfirmPassword,
     clearPasswordFields, handlePasswordChange, handleLogin, handleMfaLogin,
     handleSetup, handleEnable, handleLogout,
   }
