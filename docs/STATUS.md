@@ -32,7 +32,7 @@ Güncelleme: 2026-10-05. Güncel özet burada; kapsam ve kanıt bağlantıları 
 
 ## Bakım durumu
 
-URL ile ekran gezinmesi geliştirme/ayrı sentetik kabulü `done` (05.10.2026): 226 web/140 sunucu testi, 28 durum × dört genişlik ve gerçek API kabulü geçti. [PR #51](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/51) açıldı; uygulama commit `cb1ca5e` push/PR CI başarılı, son belge/test commit kontrolleri PR son head üzerinden takip edilir. Ana 8080 güncellenmedi; [kabul paketi, güvenli dönüş ve teslim sınırı](plans/P02.md#url-ile-ekran-gezinmesi--05102026).
+URL ile ekran gezinmesi geliştirme/GitHub/ana yerel teslimi `done` (05.10.2026): [PR #51](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/51) `a0cef55` ile birleşti; aynı commit [main CI](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/37303555024) başarılı. 226 web/140 sunucu testi ve sentetik 28 durum × dört genişlik kabulü geçti. Ayrı onayla yedekli 8080 tesliminde 32 tablo, hesap/MFA, anahtar ve SMTP korundu; sağlık/restart ve anonim doğrudan adres/F5/geri/ileri/yeni sekme kabulü geçti. [Kabul paketi ve geri dönüş sınırı](plans/P02.md#url-ile-ekran-gezinmesi--05102026).
 
 Çalışan hesabını yeniden etkinleştirme ve personel/hizmet Sil bakımı geliştirme/ana yerel teslimi `done` (05.10.2026): [PR #49](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/49), `1d945802` ve başarılı main CI sonrası yedekli 8080 teslimi tamamlandı. [Kabul ve geri dönüş sınırı](plans/P02.md#tanım-silme-ve-çalışan-hesabını-etkinleştirme--05102026). Çalışan giriş hesabı silme kapsam dışıdır.
 
@@ -61,7 +61,7 @@ Program.cs bakımı `done`: başlangıç 265 satırdan 69 satıra indi; önce/so
 
 ## Sıradaki iş
 
-Sıradaki tek iş, kabul edilmiş URL gezinme paketini ayrı onayla ana 8080 uygulamasına yedekli teslim etmektir. [PR #51](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/51) son head kontrolleri yeşilken birleşme ve güncelleme yapılır; mevcut eski imajla sentetik geri dönüş provası hazırdır. Ana uygulama bu işte değiştirilmedi. T04/P03/dark mode için yetki verilmiş sayılmaz.
+Sıradaki tek aday, T04 hizmet listesi/ekle/düzenle yüzeyi için görsel taslak ve kapsam hazırlamaktır; yeni iş için ayrı onay beklenir. URL gezinmesi ana yerel teslimi tamamlandı. T04/P03/dark mode için uygulama yetkisi verilmiş sayılmaz.
 
 ## Gelecek plan kaydı — destek ve işletim ekranı (02.10.2026)
 
