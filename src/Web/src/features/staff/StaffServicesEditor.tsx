@@ -8,6 +8,10 @@ import { SelectionError, readSelection, readSelectionPage, type Selection, type 
 import styles from '../../components/DefinitionManagement.module.css'
 import choices from './StaffServicesEditor.module.css'
 import personnel from './StaffMembers.module.css'
+import { useLocation, useNavigate } from 'react-router'
+import { readPage, readPageSize } from '../../app/routes'
+import { useCompletedNavigation } from '../../app/CompletedNavigation'
+import Pagination from '../../components/Pagination'
 
 type Props = { memberId: string; post: StaffPost; onSaved: () => void; onCancel: () => void; onDirtyChange: (dirty: boolean) => void; onBusyChange: (busy: boolean) => void;
   embedded?: boolean; onMemberRead?: (member: StaffMember) => void }
@@ -18,7 +22,9 @@ export default function StaffServicesEditor({ memberId, post, onSaved, onCancel,
   const [snapshot, setSnapshot] = useState<Selection | null>(null)
   const [selected, setSelected] = useState(new Map<string, ServiceReference>())
   const [data, setData] = useState<SelectionPage | null>(null)
-  const [page, setPage] = useState(1), [revision, setRevision] = useState(0)
+  const location = useLocation(), navigate = useNavigate(), completed = useCompletedNavigation()
+  const page = readPage(location.search, 'hizmetSayfa'), pageSize = readPageSize(location.search, 10, 'hizmetBoyut')
+  const [revision, setRevision] = useState(0)
   const [loading, setLoading] = useState(true), [busy, setBusy] = useState(false), [locked, setLocked] = useState(false)
   const [error, setError] = useState(''), [fieldError, setFieldError] = useState('')
   const baseline = useRef<Selection | null>(null), chosen = useRef(selected), reset = useRef(false), sending = useRef(false)
@@ -28,7 +34,7 @@ export default function StaffServicesEditor({ memberId, post, onSaved, onCancel,
   useEffect(() => { onBusyChange(loading || busy); return () => onBusyChange(false) }, [loading, busy, onBusyChange])
   useEffect(() => {
     const controller = new AbortController()
-    void fetch(`/api/staff-members/${memberId}/services?page=${page}&pageSize=10`, { cache: 'no-store', signal: AbortSignal.any([controller.signal, AbortSignal.timeout(15000)]) })
+    void fetch(`/api/staff-members/${memberId}/services?page=${page}&pageSize=${pageSize}`, { cache: 'no-store', signal: AbortSignal.any([controller.signal, AbortSignal.timeout(15000)]) })
       .then(readSelectionPage).then(current => {
         if (controller.signal.aborted) return
         if (!baseline.current || reset.current) {
@@ -40,11 +46,16 @@ export default function StaffServicesEditor({ memberId, post, onSaved, onCancel,
           setLocked(true); setError(new SelectionError(409).message); return
         }
         setData(current); setLocked(false)
+        if (current.page !== page) {
+          const query = new URLSearchParams(location.search)
+          if (current.page > 1) query.set('hizmetSayfa', String(current.page)); else query.delete('hizmetSayfa')
+          completed(location.pathname + (query.size ? `?${query}` : ''), { replace: true }, true)
+        }
       }).catch((problem: unknown) => {
         if (!controller.signal.aborted) { setError(problem instanceof SelectionError ? problem.message : new SelectionError(500).message); setLocked(true) }
       }).finally(() => { if (!controller.signal.aborted) setLoading(false) })
     return () => controller.abort()
-  }, [memberId, page, revision, onMemberRead])
+  }, [memberId, page, pageSize, revision, onMemberRead, completed, location.pathname, location.search])
   useEffect(() => {
     if (loading || busy) return
     if (fieldError) {
@@ -60,10 +71,16 @@ export default function StaffServicesEditor({ memberId, post, onSaved, onCancel,
     } else next.delete(service.id)
     chosen.current = next; setSelected(next); setFieldError('')
   }
-  function turnPage(next: number) { setLoading(true); setError(''); setPage(next) }
+  function turnPage(next: number, size = pageSize, replace = false) {
+    const query = new URLSearchParams(location.search)
+    if (next > 1) query.set('hizmetSayfa', String(next)); else query.delete('hizmetSayfa')
+    if (size !== 10) query.set('hizmetBoyut', String(size)); else query.delete('hizmetBoyut')
+    setLoading(true); setError('')
+    void navigate(location.pathname + (query.size ? `?${query}` : ''), { replace })
+  }
   function reload() {
     if (sending.current || (dirty && !window.confirm('Güncel seçimler yüklensin ve kaydedilmemiş değişiklikler silinsin mi?'))) return
-    reset.current = true; setLoading(true); setError(''); setFieldError(''); setPage(1); setRevision(value => value + 1)
+    reset.current = true; setLoading(true); setError(''); setFieldError(''); setRevision(value => value + 1)
   }
   function cancel() {
     if (sending.current || loading) return
@@ -112,10 +129,7 @@ export default function StaffServicesEditor({ memberId, post, onSaved, onCancel,
       <button type="button" disabled={busy || loading} onClick={cancel}>Vazgeç</button>
       {(error || fieldError || locked) && <button type="button" disabled={busy || loading} onClick={reload}>Güncel seçimleri yükle</button>}
     </div>
-    <div className={styles.actions}>
-      <button type="button" disabled={blocked || page === 1} onClick={() => turnPage(page - 1)}>Önceki hizmet sayfası</button>
-      <span>Hizmet sayfası {data?.page ?? page}</span>
-      <button type="button" disabled={blocked || !data?.hasMore} onClick={() => turnPage(page + 1)}>Sonraki hizmet sayfası</button>
-    </div>
+    <Pagination label="Personel hizmet sayfaları" page={data?.page ?? page} pageSize={pageSize} itemCount={data?.items.length ?? 0} totalCount={data?.totalCount}
+      hasNext={data?.hasMore ?? false} disabled={blocked} onPageChange={next => turnPage(next)} onPageSizeChange={size => turnPage(1, size)} />
   </form>
 }

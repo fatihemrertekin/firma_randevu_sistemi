@@ -1,6 +1,7 @@
 import type { postWithCsrf } from '../../app/api'
+import { isPageMetadata, type PageMetadata } from '../../app/pageMetadata'
 export type Service = { id: string; name: string; durationMinutes: number; price: string; currency: 'TRY'; isActive: boolean; version: string }
-export type ServicePage = { items: Service[]; page: number; hasMore: boolean }
+export type ServicePage = PageMetadata & { items: Service[] }
 export type ServicePost = typeof postWithCsrf
 export class ServiceRequestError extends Error {
   constructor(public status: number, message = serviceFailure(status)) { super(message) }
@@ -33,8 +34,8 @@ export async function readServicePage(response: Response): Promise<ServicePage> 
   const value: unknown = await response.json()
   if (typeof value !== 'object' || value === null || !('items' in value) || !Array.isArray(value.items) ||
     !value.items.every(isService) || !('page' in value) || typeof value.page !== 'number' || !Number.isInteger(value.page) ||
-    !('hasMore' in value) || typeof value.hasMore !== 'boolean') throw new ServiceRequestError(500, 'Liste yanıtı doğrulanamadı. Yeniden yükleyin.')
-  return { items: value.items, page: value.page, hasMore: value.hasMore }
+    !isPageMetadata(value) || value.items.length > value.pageSize) throw new ServiceRequestError(500, 'Liste yanıtı doğrulanamadı. Yeniden yükleyin.')
+  return { items: value.items, page: value.page, hasMore: value.hasMore, pageSize: value.pageSize, totalCount: value.totalCount }
 }
 export async function readFieldErrors(response: Response): Promise<Record<string, string>> {
   const value: unknown = await response.json()

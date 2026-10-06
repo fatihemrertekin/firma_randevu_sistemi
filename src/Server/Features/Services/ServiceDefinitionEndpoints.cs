@@ -1,3 +1,4 @@
+using System.Data;
 using System.Globalization;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Antiforgery;
@@ -12,7 +13,7 @@ public static class ServiceDefinitionEndpoints
 {
     // Tutar sözleşmede ondalık metindir; istemcide para hesabı/float yuvarlama yapılmaz.
     public sealed record ServiceResponse(Guid Id, string Name, int DurationMinutes, string Price, string Currency, bool IsActive, Guid Version);
-    public sealed record ServicePage(ServiceResponse[] Items, int Page, bool HasMore);
+    public sealed record ServicePage(ServiceResponse[] Items, int Page, bool HasMore, int PageSize, int TotalCount);
     public sealed record CreateRequest(Guid Id, string Name, int DurationMinutes, string Price);
     public sealed record UpdateRequest(string Name, int DurationMinutes, string Price, Guid Version);
     public sealed record StatusRequest(bool? IsActive, Guid Version);
@@ -57,9 +58,14 @@ public static class ServiceDefinitionEndpoints
         using var timeout = Timeout(context);
         if (page is < 1 or > 10000 || pageSize is < 1 or > 50)
             return Results.Problem(statusCode: 400, title: "Geçerli sayfa ve 1–50 arası sayfa boyutu gerekli.");
-        var rows = await db.ServiceDefinitions.AsNoTracking().Where(item => !item.IsDeleted).OrderBy(item => item.Name).ThenBy(item => item.Id)
+        await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.RepeatableRead, timeout.Token);
+        var query = db.ServiceDefinitions.AsNoTracking().Where(item => !item.IsDeleted);
+        var totalCount = await query.CountAsync(timeout.Token);
+        page = Math.Min(page, Math.Max(1, (int)Math.Ceiling((double)totalCount / pageSize)));
+        var rows = await query.OrderBy(item => item.Name).ThenBy(item => item.Id)
             .Skip((page - 1) * pageSize).Take(pageSize + 1).ToArrayAsync(timeout.Token);
-        return Results.Ok(new ServicePage(rows.Take(pageSize).Select(Response).ToArray(), page, rows.Length > pageSize));
+        await transaction.CommitAsync(timeout.Token);
+        return Results.Ok(new ServicePage(rows.Take(pageSize).Select(Response).ToArray(), page, rows.Length > pageSize, pageSize, totalCount));
     }
     private static async Task<IResult> ReadAsync(Guid id, HttpContext context, AppDbContext db)
     {

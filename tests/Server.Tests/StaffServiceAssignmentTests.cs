@@ -105,6 +105,9 @@ public sealed class StaffServiceAssignmentTests
         using var initial = await SaveAsync(owner, member, csrf, Ref(second), Ref(first)); var saved = await SelectionAsync(initial);
         Assert.NotEqual(member.Version, saved.Member.Version); Assert.Equal(member.Name, saved.Member.Name); Assert.True(saved.Member.IsActive);
         var page1 = await ReadAsync(owner, member.Id, "?pageSize=1"); var page2 = await ReadAsync(owner, member.Id, "?pageSize=1&page=2");
+        Assert.Equal(1, page1.PageSize); Assert.Equal(2, page1.TotalCount); Assert.Equal(2, page2.TotalCount);
+        var clamped = await ReadAsync(owner, member.Id, "?pageSize=1&page=999");
+        Assert.Equal(2, clamped.Page); Assert.False(clamped.HasMore); Assert.Equal(page2.Items[0].Id, Assert.Single(clamped.Items).Id);
         Assert.True(page1.HasMore); Assert.False(page2.HasMore); Assert.Equal(2, page1.Selected.Length); Assert.Equal(2, page2.Selected.Length);
         Assert.NotEqual(Assert.Single(page1.Items).Id, Assert.Single(page2.Items).Id); Assert.All(page1.Items, item => Assert.Equal("0.29", item.Price));
         using var noOp = await SaveAsync(owner, saved.Member, csrf, Ref(first), Ref(second)); Assert.Equal(saved.Member, (await SelectionAsync(noOp)).Member);

@@ -12,16 +12,16 @@ function isEntry(value: unknown): value is AuditEntry {
     'occurredAt' in value && typeof value.occurredAt === 'string' && /^\d{4}-\d{2}-\d{2}T.*(?:Z|\+00:00)$/u.test(value.occurredAt) && Number.isFinite(Date.parse(value.occurredAt)) &&
     ['module', 'action', 'actor', 'target'].every(key => { const field = fields[key]; return typeof field === 'string' && field.length > 0 && field.length <= 512 })
 }
-export async function readAuditPage(response: Response, category: Category): Promise<AuditPage> {
+export async function readAuditPage(response: Response, category: Category, pageSize = 20): Promise<AuditPage> {
   if (!response.ok) {
     const retry = Number(response.headers.get('Retry-After'))
     throw new AuditError(response.status, response.status === 429 ? Number.isFinite(retry) && retry > 0 ? Math.min(120, Math.ceil(retry)) : 60 : 0)
   }
   const body: unknown = await response.json()
-  if (typeof body !== 'object' || body === null || !('items' in body) || !Array.isArray(body.items) || body.items.length > 20 || !body.items.every(isEntry) ||
+  if (typeof body !== 'object' || body === null || !('items' in body) || !Array.isArray(body.items) || body.items.length > pageSize || !body.items.every(isEntry) ||
     new Set(body.items.map(item => item.id)).size !== body.items.length || !('category' in body) || body.category !== category ||
     !('timeZone' in body) || body.timeZone !== 'Europe/Istanbul' || !('cursor' in body) || typeof body.cursor !== 'string' || !/^[A-Za-z0-9_-]{1,512}$/u.test(body.cursor) || !('nextCursor' in body) ||
-    !(body.nextCursor === null || typeof body.nextCursor === 'string' && /^[A-Za-z0-9_-]{1,512}$/u.test(body.nextCursor) && body.nextCursor !== body.cursor && body.items.length === 20)) throw new AuditError(500)
+    !(body.nextCursor === null || typeof body.nextCursor === 'string' && /^[A-Za-z0-9_-]{1,512}$/u.test(body.nextCursor) && body.nextCursor !== body.cursor && body.items.length === pageSize)) throw new AuditError(500)
   return { items: body.items, category, timeZone: 'Europe/Istanbul', cursor: body.cursor, nextCursor: body.nextCursor }
 }
 export function auditFailure(status: number) {

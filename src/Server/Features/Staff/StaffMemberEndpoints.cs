@@ -1,3 +1,4 @@
+using System.Data;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -9,7 +10,7 @@ namespace Server.Features.Staff;
 public static class StaffMemberEndpoints
 {
     public sealed record MemberResponse(Guid Id, string Name, bool IsActive, Guid Version);
-    public sealed record MemberPage(MemberResponse[] Items, int Page, bool HasMore);
+    public sealed record MemberPage(MemberResponse[] Items, int Page, bool HasMore, int PageSize, int TotalCount);
     public sealed record CreateRequest(Guid Id, string Name);
     public sealed record RenameRequest(string Name, Guid Version);
     public sealed record StatusRequest(bool? IsActive, Guid Version);
@@ -44,10 +45,15 @@ public static class StaffMemberEndpoints
         using var timeout = Timeout(context);
         if (page is < 1 or > 10000 || pageSize is < 1 or > 50)
             return Results.Problem(statusCode: 400, title: "Geçerli sayfa ve 1–50 arası sayfa boyutu gerekli.");
-        var rows = await db.StaffMembers.AsNoTracking().Where(member => !member.IsDeleted).OrderBy(member => member.Name).ThenBy(member => member.Id)
+        await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.RepeatableRead, timeout.Token);
+        var query = db.StaffMembers.AsNoTracking().Where(member => !member.IsDeleted);
+        var totalCount = await query.CountAsync(timeout.Token);
+        page = Math.Min(page, Math.Max(1, (int)Math.Ceiling((double)totalCount / pageSize)));
+        var rows = await query.OrderBy(member => member.Name).ThenBy(member => member.Id)
             .Skip((page - 1) * pageSize).Take(pageSize + 1)
             .Select(member => new MemberResponse(member.Id, member.Name, member.IsActive, member.Version)).ToArrayAsync(timeout.Token);
-        return Results.Ok(new MemberPage(rows.Take(pageSize).ToArray(), page, rows.Length > pageSize));
+        await transaction.CommitAsync(timeout.Token);
+        return Results.Ok(new MemberPage(rows.Take(pageSize).ToArray(), page, rows.Length > pageSize, pageSize, totalCount));
     }
 
     private static async Task<IResult> ReadAsync(Guid id, HttpContext context, AppDbContext db)

@@ -18,9 +18,9 @@ beforeEach(() => {
     if (path === '/api/business-profile/') return Response.json(profile)
     if (path === '/api/business-hours/') return Response.json({ isConfigured: false, timeZone: 'Europe/Istanbul', version: 'd317d899-8208-41f1-9b8e-c6fbde437cde', days: [] })
     if (path === '/api/staff-invitations/') return Response.json([])
-    if (path.startsWith('/api/staff-accounts/')) return Response.json({ items: [], page: 1, hasMore: false })
-    if (path.startsWith('/api/staff-members/')) return Response.json({ items: [], page: 1, hasMore: false })
-    if (path.startsWith('/api/services/')) return Response.json({ items: [], page: 1, hasMore: false })
+    if (path.startsWith('/api/staff-accounts/')) return Response.json({ items: [], page: 1, hasMore: false, pageSize: 20, totalCount: 0 })
+    if (path.startsWith('/api/staff-members/')) return Response.json({ items: [], page: 1, hasMore: false, pageSize: 20, totalCount: 0 })
+    if (path.startsWith('/api/services/')) return Response.json({ items: [], page: 1, hasMore: false, pageSize: 20, totalCount: 0 })
     if (path === '/api/auth/csrf') return Response.json({ token: 'synthetic-csrf' })
     if (path === '/api/staff-password-resets/') return Response.json({ token: 'synthetic-delivery-code', expiresAt: '2026-10-01T23:00:00Z' })
     if (path === '/api/auth/logout') return new Response(null, { status: 204 })
@@ -33,7 +33,7 @@ beforeEach(() => {
 afterEach(async () => { await act(async () => root.unmount()); container.remove(); vi.unstubAllGlobals() })
 async function render() { await act(async () => root.render(<App />)) }
 async function click(text: string) {
-  const button = Array.from(container.querySelectorAll<HTMLButtonElement>('button, a[data-navigation]')).find(item => item.textContent === text)
+  const button = Array.from(container.querySelectorAll<HTMLButtonElement>('button, a[data-navigation]')).find(item => (item.textContent === text || item.getAttribute('aria-label') === text))
   if (!button) throw new Error('Düğme yok: ' + text)
   await act(async () => button.click())
 }
@@ -50,14 +50,26 @@ async function submit(label: string) {
 }
 
 describe('Yönetim gezinmesi', () => {
+  it('menü daraltılır, ikonlar adını korur ve Escape alt menüyü kapatıp odağı gruba döndürür', async () => {
+    window.history.replaceState(null, '', '/yonetim/isletme')
+    await render(); await click('Menüyü daralt')
+    expect(container.querySelector('[data-navigation-collapsed="true"]')).not.toBeNull()
+    expect(container.querySelector('a[aria-label="İşletme"]')?.getAttribute('aria-expanded')).toBe('true')
+    await act(async () => container.querySelector('#management-navigation')?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })))
+    expect(container.querySelector('a[aria-label="İşletme"]')?.getAttribute('aria-expanded')).toBe('false')
+    expect(document.activeElement?.getAttribute('aria-label')).toBe('İşletme')
+    await click('İşletme'); await click('Menüyü genişlet')
+    expect(container.querySelector('[data-navigation-collapsed="false"]')).not.toBeNull()
+    expect(container.querySelector('a[aria-label="İşletme"]')?.getAttribute('aria-expanded')).toBe('true')
+  })
   it.each(['İşletme', 'Ekip', 'Hesap'])('kayıtlardan %s grubuna ilk tıklamada alt menüyü açar', async group => {
     await render(); await click('Değişiklik kayıtları')
-    expect(container.querySelector('#management-context')?.hasAttribute('hidden')).toBe(true)
+    expect(!container.querySelector('[id^="management-context-"]:not([hidden])')).toBe(true)
     await click(group)
     expect(container.querySelector('[data-group-active="true"]')?.textContent).toBe(group)
-    expect(container.querySelector('#management-context')?.hasAttribute('hidden')).toBe(false)
+    expect(!container.querySelector('[id^="management-context-"]:not([hidden])')).toBe(false)
     await click(group)
-    expect(container.querySelector('#management-context')?.hasAttribute('hidden')).toBe(true)
+    expect(!container.querySelector('[id^="management-context-"]:not([hidden])')).toBe(true)
   })
   it('başlıkta sunucudan gelen işletme adını gösterir; taslak ve başarısız kayıt başlığı değiştirmez', async () => {
     await render()
@@ -88,16 +100,16 @@ describe('Yönetim gezinmesi', () => {
     await click('Çalışan erişimleri')
     expect(container.querySelector('h1')?.textContent).toBe('Çalışan erişimleri')
     await click('Ekip')
-    expect(container.querySelector('#management-context')?.hasAttribute('hidden')).toBe(true)
+    expect(!container.querySelector('[id^="management-context-"]:not([hidden])')).toBe(true)
     expect(container.querySelector('[data-group-active="true"]')?.getAttribute('aria-expanded')).toBe('false')
     await click('Ekip')
-    expect(container.querySelector('#management-context')?.hasAttribute('hidden')).toBe(false)
+    expect(!container.querySelector('[id^="management-context-"]:not([hidden])')).toBe(false)
     expect(container.querySelector('[data-group-active="true"]')?.getAttribute('aria-expanded')).toBe('true')
     expect(container.querySelector('h1')?.textContent).toBe('Çalışan erişimleri')
-    const close = container.querySelector<HTMLButtonElement>('#management-context [aria-label="Yan menüyü kapat"]')
+    const close = container.querySelector<HTMLButtonElement>('[id^="management-context-"]:not([hidden]) [aria-label="Yan menüyü kapat"]')
     expect(close?.querySelector('svg')).not.toBeNull()
     await act(async () => close?.click())
-    expect(container.querySelector('#management-context')?.hasAttribute('hidden')).toBe(true)
+    expect(!container.querySelector('[id^="management-context-"]:not([hidden])')).toBe(true)
     expect(document.activeElement).toBe(container.querySelector('[data-group-active="true"]'))
     await click('Ekip')
     await click('Hesap')
@@ -143,10 +155,10 @@ describe('Yönetim gezinmesi', () => {
     vi.mocked(fetch).mockImplementation(async (input, options) => {
       if (String(input).startsWith('/api/staff-members/') && String(input).includes('/services')) {
         if (options?.method === 'POST') return new Promise<Response>(resolve => { finish = resolve })
-        return Response.json({ member, selected: [], items: [service], page: 1, hasMore: false })
+        return Response.json({ member, selected: [], items: [service], page: 1, hasMore: false, pageSize: 10, totalCount: 1 })
       }
       if (String(input) === '/api/staff-members/member-1') return Response.json(member)
-      if (String(input).startsWith('/api/staff-members/')) return Response.json({ items: [member], page: 1, hasMore: false })
+      if (String(input).startsWith('/api/staff-members/')) return Response.json({ items: [member], page: 1, hasMore: false, pageSize: 20, totalCount: 1 })
       if (!original) throw new Error('Test isteği yok')
       return original(input, options)
     })

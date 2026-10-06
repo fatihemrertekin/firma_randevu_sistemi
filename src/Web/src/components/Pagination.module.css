@@ -1,0 +1,16 @@
+.pagination { container: pager / inline-size; width: 100%; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--auth-space-4); margin-block: var(--auth-space-4); font-size: var(--button-font-size); }
+.range { color: var(--muted); font-variant-numeric: tabular-nums; }
+.pages, .numberGroup, .size { display: flex; align-items: center; gap: var(--auth-space-1); }
+.size { gap: var(--auth-space-2); color: var(--muted); }
+.pagination .pages button[type='button'] { padding: var(--auth-space-2); min-width: var(--target-min); min-height: var(--target-min); border: var(--auth-rule) solid var(--border); background: var(--surface); color: var(--text); font-weight: 500; font-variant-numeric: tabular-nums; }
+.pagination .pages button[type='button']:is(:hover, :active):not(:disabled):not([aria-disabled='true']) { background: var(--button-navigation-bg); color: var(--text); }
+.pagination .pages button[aria-current='page'] { background: var(--primary-soft); border-color: var(--primary); color: var(--text); font-weight: 700; opacity: 1; cursor: default; }
+.pages svg { width: var(--auth-space-5); height: var(--auth-space-5); display: block; }
+.ellipsis { padding-inline: var(--auth-space-1); color: var(--muted); }
+.pagination .size select { min-height: var(--target-min); border: var(--auth-rule) solid var(--border); border-radius: var(--button-radius); background: var(--surface); color: var(--text); padding: var(--auth-space-2); font-size: var(--button-font-size); }
+.size select:focus-visible { outline: var(--auth-focus-width) solid var(--focus); outline-offset: var(--auth-focus-offset); }
+@container pager (max-width: 40rem) {
+  .pages { order: 3; flex-basis: 100%; gap: var(--auth-space-1); }
+  .pages .distantGroup, .pages .last, .ellipsis { display: none; }
+  .size label { position: absolute; width: var(--auth-rule); height: var(--auth-rule); overflow: hidden; clip-path: inset(50%); }
+}

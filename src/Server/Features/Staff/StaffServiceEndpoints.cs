@@ -13,7 +13,7 @@ public static class StaffServiceEndpoints
     public sealed record ServiceReference(Guid Id, Guid Version);
     public sealed record SelectionResponse(StaffMemberEndpoints.MemberResponse Member, ServiceReference[] Selected);
     public sealed record SelectionPage(StaffMemberEndpoints.MemberResponse Member, ServiceReference[] Selected,
-        ServiceDefinitionEndpoints.ServiceResponse[] Items, int Page, bool HasMore);
+        ServiceDefinitionEndpoints.ServiceResponse[] Items, int Page, bool HasMore, int PageSize, int TotalCount);
     public sealed record UpdateRequest(Guid Version, ServiceReference[]? Services);
 
     internal static void MapStaffServiceEndpoints(this RouteGroupBuilder members)
@@ -48,10 +48,13 @@ public static class StaffServiceEndpoints
         var member = await db.StaffMembers.AsNoTracking().SingleOrDefaultAsync(item => item.Id == id && !item.IsDeleted, timeout.Token);
         if (member is null) return Results.NotFound();
         var selected = await SelectedAsync(db, id, timeout.Token);
-        var rows = await db.ServiceDefinitions.AsNoTracking().Where(item => !item.IsDeleted).OrderBy(item => item.Name).ThenBy(item => item.Id)
+        var query = db.ServiceDefinitions.AsNoTracking().Where(item => !item.IsDeleted);
+        var totalCount = await query.CountAsync(timeout.Token);
+        page = Math.Min(page, Math.Max(1, (int)Math.Ceiling((double)totalCount / pageSize)));
+        var rows = await query.OrderBy(item => item.Name).ThenBy(item => item.Id)
             .Skip((page - 1) * pageSize).Take(pageSize + 1).ToArrayAsync(timeout.Token);
         await transaction.CommitAsync(timeout.Token);
-        return Results.Ok(new SelectionPage(Member(member), selected, rows.Take(pageSize).Select(ServiceDefinitionEndpoints.Response).ToArray(), page, rows.Length > pageSize));
+        return Results.Ok(new SelectionPage(Member(member), selected, rows.Take(pageSize).Select(ServiceDefinitionEndpoints.Response).ToArray(), page, rows.Length > pageSize, pageSize, totalCount));
     }
     private static async Task<IResult> UpdateAsync(Guid id, UpdateRequest request, HttpContext context, IAntiforgery antiforgery,
         AppDbContext db, UserManager<AppUser> users, TimeProvider clock)

@@ -8,7 +8,7 @@ const origin = process.env.NAVIGATION_TEST_ORIGIN || 'http://127.0.0.1:8092'
 if (origin !== 'http://127.0.0.1:8092' && !(process.env.CI === 'true' && origin === 'http://127.0.0.1:8080')) {
   throw new Error('Yalnız ayrı yerel sentetik ortam veya geçici CI ortamı kabul edilir.')
 }
-const out = path.resolve(__dirname, process.env.MENU_TEST === 'true' ? '../../.local/menu-login/browser' : process.env.T04_TEST === 'true' ? '../../.local/t04/browser' : '../../.local/url-navigation/browser')
+const out = path.resolve(__dirname, process.env.MINIMAL_TEST === 'true' ? '../../.local/minimal-navigation/browser' : process.env.MENU_TEST === 'true' ? '../../.local/menu-login/browser' : process.env.T04_TEST === 'true' ? '../../.local/t04/browser' : '../../.local/url-navigation/browser')
 fs.mkdirSync(out, { recursive: true })
 const widths = [320, 390, 768, 1280], states = [], errors = [], assets = {}, failedAssets = []
 function totp(secret) {
@@ -38,8 +38,14 @@ async function check(page, state) {
         const values = [...ctx.getImageData(0, 0, 1, 1).data].slice(0, 3).map(n => { n /= 255; return n <= .04045 ? n / 12.92 : ((n + .055) / 1.055) ** 2.4 })
         return .2126 * values[0] + .7152 * values[1] + .0722 * values[2]
       }
-      const ls = [luminance(css.color), luminance(css.backgroundColor)].sort((a, b) => b - a)
-      return { target: rect.width >= 44 && rect.height >= 44, contrast: (ls[0] + .05) / (ls[1] + .05), disabled: item.matches(':disabled,[aria-disabled="true"]'), compact: !!item.closest('[data-login-buttons]') || (css.fontSize === '14px' && css.fontWeight === '600') }
+      let background = css.backgroundColor, ancestor = item.parentElement
+      while ((background === 'transparent' || /rgba\([^)]*,\s*0\)$/.test(background)) && ancestor) {
+        background = getComputedStyle(ancestor).backgroundColor; ancestor = ancestor.parentElement
+      }
+      const ls = [luminance(css.color), luminance(background)].sort((a, b) => b - a)
+      const navigationWeight = item.closest('#management-navigation') && ['500', '600'].includes(css.fontWeight)
+      const paginationWeight = item.closest('nav[aria-label$="sayfaları"]') && ['500', '700'].includes(css.fontWeight)
+      return { target: rect.width >= 44 && rect.height >= 44, contrast: (ls[0] + .05) / (ls[1] + .05), disabled: item.matches(':disabled,[aria-disabled="true"]'), compact: !!navigationWeight || !!paginationWeight || !!item.closest('[data-login-buttons]') || (css.fontSize === '14px' && css.fontWeight === '600') }
     }))
     assert.deepEqual(controls.filter(item => !item.target || (!item.disabled && item.contrast < 4.5)), [], `${state} targets/contrast ${width}`)
     if (process.env.T04_TEST === 'true') assert.deepEqual(controls.filter(item => !item.compact), [], `${state} compact buttons ${width}`)
@@ -82,7 +88,7 @@ async function main() {
       const response = await post(seed, '/api/staff-members/', { id: crypto.randomUUID(), name: `Sentetik kişi ${String(i).padStart(2, '0')}` })
       assert.equal(response.status(), 201); member = await response.json()
     }
-    console.log('Kayıt hazırlığı: gerçek istek sınırı penceresi bekleniyor.'); await page.waitForTimeout(61000)
+    console.log('Kayıt hazırlığı: gerçek istek sınırı penceresi bekleniyor.'); await page.waitForTimeout(30500); await page.waitForTimeout(30500)
     console.log('Sentetik kayıtlar hazır; tarayıcı akışları başladı.')
     await page.goto(origin + '/yonetim/hizmetler'); await heading(page, 'İşletme girişi'); await check(page, 'login-deep-link')
     assert.equal(new URL(page.url()).searchParams.get('donus'), '/yonetim/hizmetler')
@@ -94,9 +100,9 @@ async function main() {
     await page.setViewportSize({ width: 320, height: 1000 }); await page.getByRole('link', { name: 'Ekip', exact: true }).click(); await heading(page, 'Personel'); await ready(page)
     assert.equal(await page.getByRole('button', { name: 'Menü', exact: true }).getAttribute('aria-expanded'), 'false'); await page.setViewportSize({ width: 1280, height: 1000 })
     await page.goBack(); await heading(page, 'Hizmetler'); await ready(page); await page.goForward(); await heading(page, 'Personel'); await ready(page)
-    await page.goto(origin + '/yonetim/personel?sayfa=2'); await page.getByText('Sayfa 2', { exact: true }).waitFor()
-    await page.getByRole('link', { name: /için ayrıntılar$/ }).first().click(); assert.equal(new URL(page.url()).search, '?sayfa=2')
-    await page.getByRole('link', { name: 'Personel listesine dön', exact: true }).click(); await page.getByText('Sayfa 2', { exact: true }).waitFor()
+    await page.goto(origin + '/yonetim/personel?sayfa=2'); await page.getByRole('button', { name: 'Sayfa 2', exact: true }).waitFor()
+    await page.getByRole('link', { name: /için ayrıntılar$/ }).first().click(); await ready(page); assert.equal(new URL(page.url()).search, '?sayfa=2')
+    await page.getByRole('link', { name: 'Personel listesine dön', exact: true }).click(); await page.getByRole('button', { name: 'Sayfa 2', exact: true }).waitFor()
     await ready(page); await check(page, 'personnel-page-two')
     for (const [url, title, state] of [
       ['/yonetim/isletme', 'İşletme bilgileri', 'business'], ['/yonetim/isletme/saatler', 'İşletme saatleri', 'business-hours'],
@@ -133,18 +139,18 @@ async function main() {
       await check(page, 'business-saved-header')
       for (const label of ['İşletme', 'Ekip', 'Hesap']) {
         await page.getByRole('link', { name: 'Değişiklik kayıtları', exact: true }).click(); await heading(page, 'Değişiklik kayıtları'); await ready(page)
-        assert.equal(await page.locator('#management-context').isVisible(), false)
+        assert.equal(await page.locator('[id^="management-context-"]:visible').count().then(count => count > 0), false)
         await page.getByRole('link', { name: label, exact: true }).click(); await ready(page)
-        assert.equal(await page.locator('#management-context').isVisible(), true, label + ' first click after audit')
+        assert.equal(await page.locator('[id^="management-context-"]:visible').count().then(count => count > 0), true, label + ' first click after audit')
       }
       await page.goto(origin + '/yonetim/isletme'); await heading(page, 'İşletme bilgileri'); await ready(page)
       const group = page.getByRole('link', { name: 'İşletme', exact: true })
       await group.click(); assert.equal(await group.getAttribute('aria-expanded'), 'false')
-      assert.equal(await page.locator('#management-context').isVisible(), false)
+      assert.equal(await page.locator('[id^="management-context-"]:visible').count().then(count => count > 0), false)
       await group.focus(); await group.press('Enter'); assert.equal(await group.getAttribute('aria-expanded'), 'true')
       await check(page, 'menu-open')
       await page.getByRole('button', { name: 'Yan menüyü kapat', exact: true }).click()
-      assert.equal(await page.locator('#management-context').isVisible(), false)
+      assert.equal(await page.locator('[id^="management-context-"]:visible').count().then(count => count > 0), false)
       assert.equal(await group.evaluate(node => node === document.activeElement), true)
       await check(page, 'menu-closed')
       await group.click()
@@ -225,6 +231,12 @@ async function main() {
     await page.goto(origin + '/eposta-dogrula'); await heading(page, 'Doğrulama bağlantısı gerekli')
     const invitation = await post(seed, '/api/staff-invitations/', { email: 'staff@example.test', verifiedRecipient: true }); assert.equal(invitation.status(), 200)
     assert.equal((await post(ctx, '/api/staff-invitations/accept', { email: 'staff@example.test', token: (await invitation.json()).token, password: 'Synthetic!Staff123', confirmPassword: 'Synthetic!Staff123' })).status(), 204)
+    if (process.env.MINIMAL_TEST === 'true') {
+      const ownerPage = await seed.newPage(); ownerPage.on('pageerror', error => errors.push(error.message))
+      activePage = ownerPage
+      await require('./minimal-navigation.cjs')({ page: ownerPage, seed, member, origin, post, ready, heading, check })
+      await ownerPage.close(); activePage = page
+    }
     assert.equal((await post(ctx, '/api/auth/login', { email: 'staff@example.test', password: 'Synthetic!Staff123' })).status(), 204)
     await page.goto(origin + '/yonetim/hizmetler'); await heading(page, 'Erişim izni yok'); assert.equal((await ctx.request.get(origin + '/api/services/')).status(), 403); await check(page, 'staff-forbidden')
     await page.goto(origin + '/yonetim/hesap'); await heading(page, 'Hesap ve güvenlik'); await check(page, 'staff-account')

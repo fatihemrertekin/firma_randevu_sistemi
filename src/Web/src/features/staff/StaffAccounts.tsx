@@ -1,9 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
 import ErrorMessage from '../../components/ErrorMessage'
 import styles from './StaffAccounts.module.css'
+import { useLocation, useNavigate } from 'react-router'
+import { pageSearch, readPage, readPageSize, sectionPaths } from '../../app/routes'
+import Pagination from '../../components/Pagination'
+import { isPageMetadata, type PageMetadata } from '../../app/pageMetadata'
+import { useNavigationChange } from '../../app/NavigationEvents'
+import { useCompletedNavigation } from '../../app/CompletedNavigation'
 
 type StaffAccount = { id: string; email: string; isActive: boolean; version: string }
-type StaffPage = { items: StaffAccount[]; page: number; hasMore: boolean }
+type StaffPage = PageMetadata & { items: StaffAccount[] }
 type Props = { post: (path: string, body: object, signal?: AbortSignal) => Promise<Response> }
 
 class StaffRequestError extends Error { }
@@ -15,8 +21,8 @@ function isAccount(value: unknown): value is StaffAccount {
 function parsePage(value: unknown): StaffPage {
   if (typeof value !== 'object' || value === null || !('items' in value) || !Array.isArray(value.items) ||
     !value.items.every(isAccount) || !('page' in value) || typeof value.page !== 'number' ||
-    !('hasMore' in value) || typeof value.hasMore !== 'boolean') throw new StaffRequestError('Liste yanıtı doğrulanamadı. Listeyi yenile.')
-  return { items: value.items, page: value.page, hasMore: value.hasMore }
+    !isPageMetadata(value) || value.items.length > value.pageSize) throw new StaffRequestError('Liste yanıtı doğrulanamadı. Listeyi yenile.')
+  return { items: value.items, page: value.page, hasMore: value.hasMore, pageSize: value.pageSize, totalCount: value.totalCount }
 }
 
 function failure(status: number) {
@@ -30,7 +36,8 @@ function failure(status: number) {
 }
 
 export default function StaffAccounts({ post }: Props) {
-  const [page, setPage] = useState(1)
+  const location = useLocation(), navigate = useNavigate(), completed = useCompletedNavigation()
+  const page = readPage(location.search), pageSize = readPageSize(location.search)
   const [revision, setRevision] = useState(0)
   const [data, setData] = useState<StaffPage | null>(null)
   const [loading, setLoading] = useState(true)
@@ -44,6 +51,7 @@ export default function StaffAccounts({ post }: Props) {
   const heading = useRef<HTMLHeadingElement>(null)
   const opener = useRef<HTMLButtonElement | null>(null)
   const restoreFocus = useRef(false)
+  useNavigationChange(next => { if (next.pathname === sectionPaths.access) { setLoading(true); setError(''); setData(null) } })
   useEffect(() => { mounted.current = true; return () => { mounted.current = false } }, [])
   useEffect(() => {
     if (target) confirm.current?.focus()
@@ -52,20 +60,24 @@ export default function StaffAccounts({ post }: Props) {
   useEffect(() => {
     const controller = new AbortController()
     const signal = AbortSignal.any([controller.signal, AbortSignal.timeout(15000)])
-    void fetch(`/api/staff-accounts/?page=${page}`, { cache: 'no-store', signal })
+    void fetch(`/api/staff-accounts/?page=${page}${pageSize !== 20 ? `&pageSize=${pageSize}` : ''}`, { cache: 'no-store', signal })
       .then(async response => {
         if (!response.ok) throw new StaffRequestError(failure(response.status))
         const body = parsePage(await response.json())
-        if (!controller.signal.aborted) setData(body)
+        if (!controller.signal.aborted) {
+          setData(body)
+          if (body.page !== page) completed(sectionPaths.access + pageSearch(body.page, pageSize), { replace: true })
+        }
       }).catch((problem: unknown) => {
         if (!controller.signal.aborted) setError(problem instanceof StaffRequestError ? problem.message : 'Liste alınamadı. Yeniden dene.')
       }).finally(() => { if (!controller.signal.aborted) setLoading(false) })
     return () => controller.abort()
-  }, [page, revision])
+  }, [page, pageSize, revision, completed, location.key])
 
-  function load(nextPage = page) {
+  function load(nextPage = page, size = pageSize) {
     setLoading(true); setError(''); setData(null); setTarget(null)
-    setPage(nextPage); setRevision(value => value + 1)
+    if (nextPage !== page || size !== pageSize) void navigate(sectionPaths.access + pageSearch(nextPage, size))
+    else setRevision(value => value + 1)
   }
   function reload() { setNotice(''); load(); heading.current?.focus() }
   function cancel() { restoreFocus.current = true; setTarget(null) }
@@ -117,11 +129,8 @@ export default function StaffAccounts({ post }: Props) {
     </fieldset>}
     <div className={styles.actions}>
       {(error || (data?.items.length ?? 0) > 0) && <button type="button" disabled={busy || loading} onClick={reload}>Listeyi yenile</button>}
-      <button type="button" disabled={busy || loading || page === 1 || target !== null}
-        onClick={() => { setNotice(''); load(page - 1) }}>Önceki sayfa</button>
-      <span>Sayfa {page}</span>
-      <button type="button" disabled={busy || loading || !data?.hasMore || target !== null}
-        onClick={() => { setNotice(''); load(page + 1) }}>Sonraki sayfa</button>
+      <Pagination label="Çalışan hesabı sayfaları" page={data?.page ?? page} pageSize={pageSize} itemCount={data?.items.length ?? 0} totalCount={data?.totalCount}
+        hasNext={data?.hasMore ?? false} disabled={busy || loading || !!error || target !== null} onPageChange={next => { setNotice(''); load(next) }} onPageSizeChange={size => load(1, size)} />
     </div>
   </section>
 }

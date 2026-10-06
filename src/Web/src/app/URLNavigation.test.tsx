@@ -22,10 +22,10 @@ beforeEach(() => {
     if (input === '/api/business-profile/') return Response.json({ name: 'Sentetik salon', phone: null, email: null, address: null, version: 'v1' })
     if (input === '/api/auth/mfa/recovery-codes') return Response.json({ remaining: 8 })
     if (input === '/api/auth/recovery-email/') return Response.json({ email: owner.email, verifiedAt: null, deliveryAvailable: false })
-    if (input.startsWith('/api/staff-members/?')) return Response.json({ items: [member], page: Number(new URLSearchParams(input.split('?')[1]).get('page')), hasMore: true })
+    if (input.startsWith('/api/staff-members/?')) return Response.json({ items: [member], page: Number(new URLSearchParams(input.split('?')[1]).get('page')), hasMore: true, pageSize: 20, totalCount: ((Number(new URLSearchParams(input.split('?')[1]).get('page'))) - 1) * 20 + ((21)) })
     if (input === '/api/staff-members/member-1') return Response.json(member)
-    if (input === '/api/staff-members/member-1/services?page=1') return Response.json({ member, selected: [], items: [], page: 1, hasMore: false })
-    if (input.startsWith('/api/services/?')) return Response.json({ items: [service], page: 1, hasMore: false })
+    if (input === '/api/staff-members/member-1/services?page=1&pageSize=10') return Response.json({ member, selected: [], items: [], page: 1, hasMore: false, pageSize: 10, totalCount: 0 })
+    if (input.startsWith('/api/services/?')) return Response.json({ items: [service], page: 1, hasMore: false, pageSize: 20, totalCount: 1 })
     if (input === '/api/services/service-1' && options?.method !== 'POST') return Response.json(service)
     throw new Error('Beklenmeyen sentetik istek: ' + input)
   }))
@@ -37,7 +37,7 @@ async function render(path: string) {
   await act(async () => root.render(<App />))
 }
 async function click(text: string) {
-  const control = Array.from(container.querySelectorAll<HTMLElement>('button,a')).find(item => item.textContent === text)
+  const control = Array.from(container.querySelectorAll<HTMLElement>('button,a')).find(item => (item.textContent === text || item.getAttribute('aria-label') === text))
   if (!control) throw new Error('Kontrol yok: ' + text)
   await act(async () => control.click())
 }
@@ -58,6 +58,51 @@ async function history(direction: 'back' | 'forward') {
 }
 
 describe('Ekran URL ve geçmiş kabulü', () => {
+  it('profil okunurken sunucunun onayladığı hesap sayfasına URL ile döner', async () => {
+    let finish: ((response: Response) => void) | undefined
+    const original = vi.mocked(fetch).getMockImplementation()
+    vi.mocked(fetch).mockImplementation(async (input, options) => {
+      if (input === '/api/business-profile/') return new Promise<Response>(resolve => { finish = resolve })
+      if (String(input).startsWith('/api/staff-accounts/?')) return Response.json({ items: [], page: 2, pageSize: 10, totalCount: 13, hasMore: false })
+      if (input === '/api/staff-invitations/') return Response.json([])
+      if (!original) throw new Error('Test isteği yok')
+      return original(input, options)
+    })
+    await render(sectionPaths.access + '?sayfa=999&boyut=10')
+    expect(window.location.search).toBe('?sayfa=2&boyut=10')
+    await act(async () => finish?.(Response.json({ name: 'Sentetik salon', phone: null, email: null, address: null, version: 'v1' })))
+    expect(window.location.search).toBe('?sayfa=2&boyut=10')
+  })
+  it('hizmet seçiminde sayfa ve boyut değişince taslağı korur; başka göreve geçişi korur', async () => {
+    const original = vi.mocked(fetch).getMockImplementation()
+    vi.mocked(fetch).mockImplementation(async (input, options) => {
+      if (String(input).includes('/member-1/services?')) {
+        const query = new URLSearchParams(String(input).split('?')[1]), page = Number(query.get('page')), pageSize = Number(query.get('pageSize'))
+        return Response.json({ member, selected: [], items: [{ ...service, id: 'service-' + page }], page, pageSize, totalCount: 21, hasMore: page * pageSize < 21 })
+      }
+      if (!original) throw new Error('Test isteği yok')
+      return original(input, options)
+    })
+    await render(sectionPaths.personnel + '/member-1/hizmetler?sayfa=2&boyut=10')
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false)
+    await act(async () => container.querySelector<HTMLInputElement>('input[type="checkbox"]')?.click())
+    await click('Sonraki sayfa')
+    expect(window.location.search).toBe('?sayfa=2&boyut=10&hizmetSayfa=2')
+    expect(container.textContent).toContain('Seçili: 1 hizmet')
+    const size = container.querySelector<HTMLSelectElement>('select[aria-label="Sayfadaki kayıt sayısı"]')
+    await act(async () => { if (size) { size.value = '20'; size.dispatchEvent(new Event('change', { bubbles: true })) } })
+    expect(window.location.search).toBe('?sayfa=2&boyut=10&hizmetBoyut=20')
+    expect(confirm).not.toHaveBeenCalled()
+    expect(container.querySelector<HTMLInputElement>('input[type="checkbox"]')?.checked).toBe(true)
+    await click('Bilgiler')
+    expect(confirm).toHaveBeenCalledOnce()
+    expect(window.location.pathname).toBe(sectionPaths.personnel + '/member-1/hizmetler')
+    expect(container.textContent).toContain('Değişiklikler henüz kaydedilmedi.')
+  })
+  it('giriş dönüşünde yalnız izinli sayfalama parametrelerini korur', () => {
+    expect(safeReturnPath('/yonetim/personel/member-1/hizmetler?sayfa=2&boyut=10&hizmetSayfa=3&hizmetBoyut=50&secret=discard'))
+      .toBe('/yonetim/personel/member-1/hizmetler?sayfa=2&boyut=10&hizmetSayfa=3&hizmetBoyut=50')
+  })
   it('doğrudan adres ve yeni mount seçili ekranı korur; menüler gerçek bağlantıdır', async () => {
     await render(sectionPaths.services)
     expect(container.querySelector('h1')?.textContent).toBe('Hizmetler')
@@ -76,7 +121,7 @@ describe('Ekran URL ve geçmiş kabulü', () => {
     expect(window.location.search).toBe('?sayfa=2')
     await click('Personel listesi')
     expect(window.location.search).toBe('?sayfa=2')
-    expect(container.textContent).toContain('Sayfa 2')
+    expect(container.querySelector('[aria-current="page"][aria-label="Sayfa 2"]')).not.toBeNull()
     expect(document.activeElement?.textContent).toBe('Ayrıntılar')
   })
   it('doğrudan personel görevi ve hizmet düzenleme adresini sunucudan yükler', async () => {

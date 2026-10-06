@@ -5,7 +5,7 @@ import StaffServicesEditor from './StaffServicesEditor'
 import StaffHoursEditor from './StaffHoursEditor'
 import { MemberRequestError, memberFailure, readMember, type StaffMember, type StaffPost } from './staffMembersApi'
 import styles from './StaffMembers.module.css'
-import { pageSearch, personnelPath, readPage, type PersonnelTask } from '../../app/routes'
+import { pageSearch, personnelPath, readPage, readPageSize, type PersonnelTask } from '../../app/routes'
 import NavigationLink from '../../app/NavigationLink'
 import { useLocation } from 'react-router'
 
@@ -83,7 +83,7 @@ export default function StaffMemberDetail({ memberId, task, listPath, post, init
     {!loading && !member && <button type="button" onClick={reload}>Güncel kaydı yükle</button>}
     {member && <>
       <nav className={styles.tasks} aria-label="Personel görevleri">{tasks.map(item => <NavigationLink key={item.id}
-        to={personnelPath(memberId, item.id) + pageSearch(readPage(location.search))}
+        to={personnelPath(memberId, item.id) + pageSearch(readPage(location.search), readPageSize(location.search))}
         aria-current={task === item.id ? 'page' : undefined} aria-controls="personnel-task" disabled={blocked || confirmStatus}
         onClick={event => { if (task !== item.id) { if (!discard()) event.preventDefault(); else { setNotice(''); refresh() } } }}>{item.label}</NavigationLink>)}</nav>
       <div id="personnel-task" className={styles.task} aria-busy={blocked}>

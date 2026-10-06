@@ -1,5 +1,6 @@
 export type StaffMember = { id: string; name: string; isActive: boolean; version: string }
-export type StaffMemberPage = { items: StaffMember[]; page: number; hasMore: boolean }
+import { isPageMetadata, type PageMetadata } from '../../app/pageMetadata'
+export type StaffMemberPage = PageMetadata & { items: StaffMember[] }
 export type StaffPost = (path: string, body: object, signal?: AbortSignal) => Promise<Response>
 
 export class MemberRequestError extends Error {
@@ -30,6 +31,6 @@ export async function readMemberPage(response: Response): Promise<StaffMemberPag
   const value: unknown = await response.json()
   if (typeof value !== 'object' || value === null || !('items' in value) || !Array.isArray(value.items) ||
     !value.items.every(isMember) || !('page' in value) || !Number.isInteger(value.page) || typeof value.page !== 'number' ||
-    !('hasMore' in value) || typeof value.hasMore !== 'boolean') throw new MemberRequestError(500, 'Liste yanıtı doğrulanamadı. Yeniden yükleyin.')
-  return { items: value.items, page: value.page, hasMore: value.hasMore }
+    !isPageMetadata(value) || value.items.length > value.pageSize) throw new MemberRequestError(500, 'Liste yanıtı doğrulanamadı. Yeniden yükleyin.')
+  return { items: value.items, page: value.page, hasMore: value.hasMore, pageSize: value.pageSize, totalCount: value.totalCount }
 }

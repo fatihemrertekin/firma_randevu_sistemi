@@ -149,6 +149,11 @@ public sealed class StaffAccountTests
         Assert.True(first.HasMore); Assert.Equal(id, Assert.Single(first.Items).Id);
         var last = await ReadAsync(owner, "?page=2&pageSize=1");
         Assert.False(last.HasMore); Assert.Equal(other.Id, Assert.Single(last.Items).Id);
+        Assert.Equal(1, first.PageSize); Assert.Equal(2, first.TotalCount); Assert.Equal(2, last.TotalCount);
+        var clamped = await ReadAsync(owner, "?page=999&pageSize=1");
+        Assert.Equal(2, clamped.Page); Assert.False(clamped.HasMore); Assert.Equal(other.Id, Assert.Single(clamped.Items).Id);
+        // Liste gezinmesi giriş denemelerinin 10 istek/5 dakika sınırını tüketmez.
+        for (var pageRead = 0; pageRead < 11; pageRead++) Assert.Equal(2, (await ReadAsync(owner, "?pageSize=1")).TotalCount);
         var csrf = await GetCsrfAsync(owner);
         var writes = await Task.WhenAll(Enumerable.Range(0, 4).Select(_ => DisableAsync(owner, id, first.Items[0].Version, csrf)));
         foreach (var response in writes) { Assert.Equal(HttpStatusCode.NoContent, response.StatusCode); response.Dispose(); }

@@ -42,14 +42,30 @@ export function resolveRoute(pathname: string): AppRoute {
 export function personnelPath(id: string, task: PersonnelTask = 'information') {
   return `${sectionPaths.personnel}/${encodeURIComponent(id)}${task === 'services' ? '/hizmetler' : task === 'hours' ? '/saatler' : ''}`
 }
-export function readPage(search: string) {
-  const value = new URLSearchParams(search).get('sayfa')
+export function readPage(search: string, key = 'sayfa') {
+  const value = new URLSearchParams(search).get(key)
   return value && /^[1-9]\d{0,4}$/.test(value) && Number(value) <= 10000 ? Number(value) : 1
 }
-export function pageSearch(page: number) { return page > 1 ? `?sayfa=${page}` : '' }
+export function readPageSize(search: string, fallback = 20, key = 'boyut') {
+  const value = Number(new URLSearchParams(search).get(key))
+  return [10, 20, 50].includes(value) ? value : fallback
+}
+export function pageSearch(page: number, pageSize = 20) {
+  const query = new URLSearchParams()
+  if (page > 1) query.set('sayfa', String(page))
+  if (pageSize !== 20) query.set('boyut', String(pageSize))
+  return query.size ? `?${query}` : ''
+}
 export function safeReturnPath(value: string | null) {
   if (!value || !value.startsWith('/') || value.startsWith('//') || value.includes('\\')) return null
   const [pathname, search = ''] = value.split('?')
-  if (resolveRoute(pathname).kind !== 'management') return null
-  return pathname + pageSearch(readPage('?' + search))
+  const route = resolveRoute(pathname)
+  if (route.kind !== 'management') return null
+  const query = new URLSearchParams(pageSearch(readPage('?' + search), readPageSize('?' + search)))
+  if (route.task === 'services') {
+    const page = readPage('?' + search, 'hizmetSayfa'), size = readPageSize('?' + search, 10, 'hizmetBoyut')
+    if (page > 1) query.set('hizmetSayfa', String(page))
+    if (size !== 10) query.set('hizmetBoyut', String(size))
+  }
+  return pathname + (query.size ? `?${query}` : '')
 }

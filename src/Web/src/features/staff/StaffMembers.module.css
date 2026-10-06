@@ -12,7 +12,7 @@
 .status > span { color: var(--auth-petrol); }
 .pagination { margin-top: var(--auth-space-5); }
 .surface a[data-navigation].back { margin-block: 0 var(--auth-space-3); padding: 0 var(--auth-space-2); border: 0; background: var(--background); color: var(--auth-petrol); gap: var(--auth-space-2); text-decoration: underline; text-underline-offset: var(--auth-space-1); }
-.surface a[data-navigation].back:hover:not([aria-disabled='true']) { background: var(--button-navigation-bg); color: var(--auth-petrol); }
+.surface a[data-navigation].back:is(:hover, :active):not(:disabled):not([aria-disabled='true']) { background: var(--button-navigation-bg); color: var(--text); }
 .back svg { width: var(--auth-body-size); height: var(--auth-body-size); flex-shrink: 0; }
 .detailIdentity { justify-content: flex-start; margin-bottom: var(--auth-space-5); }
 .detailIdentity h2 { margin: 0; font-size: var(--personnel-identity-size); }
