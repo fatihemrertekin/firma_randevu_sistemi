@@ -5,6 +5,9 @@ const { execFileSync } = require('node:child_process')
 // Yalnız bağımsız, sentetik yerel kabul ortamında çağrılır.
 module.exports = async ({ page, seed, member, origin, post, ready, heading, check }) => {
   assert.equal(origin, 'http://127.0.0.1:8092')
+  const waitWindow = async () => { await page.waitForTimeout(30500); await page.waitForTimeout(30500) }
+  // Önceki kabul akışının gerçek 30 istek/dakika penceresi sona ersin.
+  await waitWindow()
   const compose = '.local/minimal-navigation/compose.yaml'
   const accountSeed = `INSERT INTO "AspNetUsers" SELECT (jsonb_populate_record(NULL::"AspNetUsers", to_jsonb(u) ||
     jsonb_build_object('Id', gen_random_uuid(), 'Email', 'pager-' || n || '@example.test', 'NormalizedEmail', 'PAGER-' || n || '@EXAMPLE.TEST',
@@ -19,6 +22,8 @@ module.exports = async ({ page, seed, member, origin, post, ready, heading, chec
     const response = await post(seed, '/api/services/', { id: crypto.randomUUID(), name: `Seçim hizmeti ${String(i).padStart(2, '0')}`, durationMinutes: 30, price: '350.00' })
     assert.equal(response.status(), 201)
   }
+  // Hazırlama POST'ları ile kullanıcı gezinmesini aynı pencereye yığma.
+  await waitWindow()
   for (const [url, title, label] of [
     ['/yonetim/personel', 'Personel', 'Personel sayfaları'],
     ['/yonetim/hizmetler', 'Hizmetler', 'Hizmet sayfaları'],

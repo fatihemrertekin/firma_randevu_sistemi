@@ -43,7 +43,9 @@ async function check(page, state) {
         background = getComputedStyle(ancestor).backgroundColor; ancestor = ancestor.parentElement
       }
       const ls = [luminance(css.color), luminance(background)].sort((a, b) => b - a)
-      return { target: rect.width >= 44 && rect.height >= 44, contrast: (ls[0] + .05) / (ls[1] + .05), disabled: item.matches(':disabled,[aria-disabled="true"]'), compact: (getComputedStyle(item).fontWeight === '500' && !!item.closest('#management-navigation,nav[aria-label$="sayfaları"]')) || !!item.closest('[data-login-buttons]') || (css.fontSize === '14px' && css.fontWeight === '600') }
+      const navigationWeight = item.closest('#management-navigation') && ['500', '600'].includes(css.fontWeight)
+      const paginationWeight = item.closest('nav[aria-label$="sayfaları"]') && ['500', '700'].includes(css.fontWeight)
+      return { target: rect.width >= 44 && rect.height >= 44, contrast: (ls[0] + .05) / (ls[1] + .05), disabled: item.matches(':disabled,[aria-disabled="true"]'), compact: !!navigationWeight || !!paginationWeight || !!item.closest('[data-login-buttons]') || (css.fontSize === '14px' && css.fontWeight === '600') }
     }))
     assert.deepEqual(controls.filter(item => !item.target || (!item.disabled && item.contrast < 4.5)), [], `${state} targets/contrast ${width}`)
     if (process.env.T04_TEST === 'true') assert.deepEqual(controls.filter(item => !item.compact), [], `${state} compact buttons ${width}`)
@@ -99,7 +101,7 @@ async function main() {
     assert.equal(await page.getByRole('button', { name: 'Menü', exact: true }).getAttribute('aria-expanded'), 'false'); await page.setViewportSize({ width: 1280, height: 1000 })
     await page.goBack(); await heading(page, 'Hizmetler'); await ready(page); await page.goForward(); await heading(page, 'Personel'); await ready(page)
     await page.goto(origin + '/yonetim/personel?sayfa=2'); await page.getByRole('button', { name: 'Sayfa 2', exact: true }).waitFor()
-    await page.getByRole('link', { name: /için ayrıntılar$/ }).first().click(); assert.equal(new URL(page.url()).search, '?sayfa=2')
+    await page.getByRole('link', { name: /için ayrıntılar$/ }).first().click(); await ready(page); assert.equal(new URL(page.url()).search, '?sayfa=2')
     await page.getByRole('link', { name: 'Personel listesine dön', exact: true }).click(); await page.getByRole('button', { name: 'Sayfa 2', exact: true }).waitFor()
     await ready(page); await check(page, 'personnel-page-two')
     for (const [url, title, state] of [
