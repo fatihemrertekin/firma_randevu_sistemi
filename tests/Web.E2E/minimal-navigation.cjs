@@ -45,6 +45,8 @@ module.exports = async ({ page, seed, member, origin, post, ready, heading, chec
       assert.equal(await pager.getByRole('button', { name: 'Sonraki sayfa', exact: true }).count(), 0)
     }
     await page.goto(origin + url + '?boyut=10&sayfa=999'); await ready(page)
+    await page.waitForURL(value => value.searchParams.get('sayfa') !== '999')
+    await ready(page)
     assert.notEqual(new URL(page.url()).searchParams.get('sayfa'), '999')
     await check(page, title === 'Personel' ? 'minimal-personnel-pagination' : title === 'Hizmetler' ? 'minimal-services-pagination' : 'minimal-accounts-pagination')
   }
