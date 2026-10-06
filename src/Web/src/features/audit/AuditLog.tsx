@@ -3,12 +3,14 @@ import ErrorMessage from '../../components/ErrorMessage'
 import { formatBusinessDateTime } from '../../app/format'
 import { auditEndpoint, AuditError, auditFailure, readAuditPage, type AuditPage, type Category } from './auditLogApi'
 import styles from './AuditLog.module.css'
+import Pagination from '../../components/Pagination'
 
 export default function AuditLog() {
   const [category, setCategory] = useState<Category>('all'), [history, setHistory] = useState<(string | null)[]>([null])
   const [revision, setRevision] = useState(0), [data, setData] = useState<AuditPage | null>(null)
   const [loading, setLoading] = useState(true), [error, setError] = useState(''), [retry, setRetry] = useState(0)
   const [locked, setLocked] = useState(false)
+  const [pageSize, setPageSize] = useState(20)
   const heading = useRef<HTMLHeadingElement>(null), focusAfterPage = useRef(false)
   const cursor = history[history.length - 1]
   useEffect(() => {
@@ -19,9 +21,10 @@ export default function AuditLog() {
   useEffect(() => {
     const controller = new AbortController()
     const query = new URLSearchParams({ category })
+    if (pageSize !== 20) query.set('pageSize', String(pageSize))
     if (cursor) query.set('cursor', cursor)
     void fetch(`${auditEndpoint}?${query}`, { cache: 'no-store', signal: AbortSignal.any([controller.signal, AbortSignal.timeout(15000)]) })
-      .then(response => readAuditPage(response, category)).then(value => {
+      .then(response => readAuditPage(response, category, pageSize)).then(value => {
         if (!controller.signal.aborted) { setData(value); setError(''); setLocked(false) }
       }).catch((problem: unknown) => {
         if (controller.signal.aborted) return
@@ -34,7 +37,7 @@ export default function AuditLog() {
         if (focusAfterPage.current) { focusAfterPage.current = false; heading.current?.focus() }
       })
     return () => controller.abort()
-  }, [category, cursor, revision])
+  }, [category, cursor, pageSize, revision])
   function reload() {
     if (loading || retry) return
     setLoading(true); setError(''); setHistory([null]); setRevision(value => value + 1)
@@ -48,6 +51,12 @@ export default function AuditLog() {
     if (loading || locked || retry || (next ? !data?.nextCursor : history.length === 1)) return
     focusAfterPage.current = true; setLoading(true); setData(null); setError('')
     setHistory(value => next ? [...value.slice(0, -1), data?.cursor ?? null, data?.nextCursor ?? null] : value.slice(0, -1))
+  }
+  function turnPage(next: number) {
+    if (next > history.length) page(true)
+    else if (next < history.length && !loading && !locked && !retry) {
+      focusAfterPage.current = true; setLoading(true); setData(null); setError(''); setHistory(value => value.slice(0, next))
+    }
   }
   return <section className={styles.surface} aria-labelledby="audit-title" aria-busy={loading}>
     <h2 id="audit-title" ref={heading} className={styles.heading} tabIndex={-1}>İşlem geçmişi</h2>
@@ -74,10 +83,9 @@ export default function AuditLog() {
         </dl></div>
       </li>)}
     </ol>}
-    <div className={styles.actions} aria-label="Kayıt sayfaları">
-      <button type="button" disabled={loading || locked || retry > 0 || history.length === 1} onClick={() => page(false)}>Önceki sayfa</button>
-      <span>Sayfa {history.length} · İstanbul saati</span>
-      <button type="button" disabled={loading || locked || retry > 0 || !data?.nextCursor} onClick={() => page(true)}>Sonraki sayfa</button>
-    </div>
+    <Pagination label="Kayıt sayfaları" page={history.length} pageSize={pageSize} itemCount={data?.items.length ?? 0} knownPages={history.length}
+      hasNext={!!data?.nextCursor} disabled={loading || locked || retry > 0} onPageChange={turnPage} onPageSizeChange={size => {
+        setPageSize(size); setHistory([null]); setData(null); setError(''); setLoading(true); setRevision(value => value + 1)
+      }} />
   </section>
 }

@@ -117,7 +117,13 @@
 
 .management-theme {
   --shadow: none;
-  --management-rail: 8rem;
+  --management-rail: 14rem;
+  --management-rail-narrow: 4.5rem;
+  --management-menu-icon: 1.25rem;
+  --management-menu-indent: 2rem;
+  --management-menu-popover: 13rem;
+  --management-menu-popover-layer: 5;
+  --service-choice-min: 17rem;
   --management-drawer: 15.5rem;
   --management-header: 5rem;
   --management-inset: 2.5rem;
@@ -131,7 +137,7 @@
   --management-photo-ratio: 410 / 224;
   --management-photo-mobile: 7rem;
   --management-rail-selected: color-mix(in srgb, var(--auth-petrol) 75%, var(--auth-ink));
-  --management-rail-bg: var(--color-ink);
+  --management-rail-bg: var(--color-surface);
   --management-rail-action-bg: var(--color-navy);
   --hours-editor-max: 64rem;
   --personnel-form-max: 48rem;

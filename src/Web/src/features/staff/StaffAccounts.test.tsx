@@ -3,29 +3,32 @@ import { act } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import StaffAccounts from './StaffAccounts'
+import { createMemoryRouter } from 'react-router'
+import { RouterProvider } from 'react-router/dom'
 
 const account = { id: 'staff-1', email: 'staff@example.test', isActive: true, version: 'version-1' }
 let container: HTMLDivElement
 let root: Root
 beforeEach(() => {
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true)
-  vi.stubGlobal('fetch', vi.fn(async () => Response.json({ items: [account], page: 1, hasMore: false })))
+  vi.stubGlobal('fetch', vi.fn(async () => Response.json({ items: [account], page: 1, hasMore: false, pageSize: 20, totalCount: 1 })))
   container = document.createElement('div'); document.body.append(container); root = createRoot(container)
 })
 afterEach(async () => { await act(async () => root.unmount()); container.remove(); vi.unstubAllGlobals() })
 async function click(label: string) {
-  const button = Array.from(container.querySelectorAll('button')).find(item => item.textContent === label)
+  const button = Array.from(container.querySelectorAll('button')).find(item => item.textContent === label || item.getAttribute('aria-label') === label)
   if (!button) throw new Error('Düğme yok: ' + label)
   await act(async () => button.click())
 }
 async function render(post = vi.fn(async () => new Response(null, { status: 204 }))) {
-  await act(async () => root.render(<StaffAccounts post={post} />))
+  const router = createMemoryRouter([{ path: '*', element: <StaffAccounts post={post} /> }], { initialEntries: ['/yonetim/calisan-erisimleri'] })
+  await act(async () => root.render(<RouterProvider router={router} />))
   return post
 }
 
 describe('Çalışan hesapları', () => {
   it('pasif hesabı onayla yeniden etkinleştirir; sürüm ve çift gönderim korumasını kullanır', async () => {
-    vi.mocked(fetch).mockResolvedValue(Response.json({ items: [{ ...account, isActive: false }], page: 1, hasMore: false }))
+    vi.mocked(fetch).mockResolvedValue(Response.json({ items: [{ ...account, isActive: false }], page: 1, hasMore: false, pageSize: 20, totalCount: 1 }))
     let finish: ((response: Response) => void) | undefined
     const post = vi.fn(() => new Promise<Response>(resolve => { finish = resolve }))
     await render(post)
@@ -39,7 +42,7 @@ describe('Çalışan hesapları', () => {
     expect(post).toHaveBeenCalledTimes(1)
     expect(post.mock.calls[0]).toEqual(['/api/staff-accounts/staff-1/activate', { version: 'version-1' }, expect.any(AbortSignal)])
     expect(container.textContent).not.toContain('Çalışan hesabı etkinleştirildi.')
-    vi.mocked(fetch).mockResolvedValue(Response.json({ items: [account], page: 1, hasMore: false }))
+    vi.mocked(fetch).mockResolvedValue(Response.json({ items: [account], page: 1, hasMore: false, pageSize: 20, totalCount: 1 }))
     if (!finish) throw new Error('Bekleyen istek yok')
     await act(async () => finish?.(new Response(null, { status: 204 })))
     expect(container.textContent).toContain('Çalışan hesabı etkinleştirildi.')
@@ -48,12 +51,12 @@ describe('Çalışan hesapları', () => {
   })
 
   it('etkinleştirme çatışmasında başarı uydurmaz; yenileyerek sunucu durumunu gösterir', async () => {
-    vi.mocked(fetch).mockResolvedValue(Response.json({ items: [{ ...account, isActive: false }], page: 1, hasMore: false }))
+    vi.mocked(fetch).mockResolvedValue(Response.json({ items: [{ ...account, isActive: false }], page: 1, hasMore: false, pageSize: 20, totalCount: 1 }))
     await render(vi.fn(async () => new Response(null, { status: 409 })))
     await click('Etkinleştir'); await click('Hesabı etkinleştir')
     expect(container.querySelector('[role="alert"]')?.textContent).toContain('Hesap değişti.')
     expect(container.textContent).not.toContain('Çalışan hesabı etkinleştirildi.')
-    vi.mocked(fetch).mockResolvedValue(Response.json({ items: [account], page: 1, hasMore: false }))
+    vi.mocked(fetch).mockResolvedValue(Response.json({ items: [account], page: 1, hasMore: false, pageSize: 20, totalCount: 1 }))
     await click('Listeyi yenile')
     expect(container.querySelector('fieldset')).toBeNull()
     expect(container.textContent).toContain('Pasifleştir')
@@ -81,7 +84,7 @@ describe('Çalışan hesapları', () => {
     expect(post.mock.calls[0]).toEqual(['/api/staff-accounts/staff-1/deactivate', { version: 'version-1' }, expect.any(AbortSignal)])
     expect(container.textContent).not.toContain('Çalışan hesabı pasifleştirildi.')
     expect(container.querySelector<HTMLFieldSetElement>('fieldset')?.disabled).toBe(true)
-    vi.mocked(fetch).mockResolvedValue(Response.json({ items: [{ ...account, isActive: false }], page: 1, hasMore: false }))
+    vi.mocked(fetch).mockResolvedValue(Response.json({ items: [{ ...account, isActive: false }], page: 1, hasMore: false, pageSize: 20, totalCount: 1 }))
     if (!finish) throw new Error('Bekleyen istek yok')
     await act(async () => finish?.(new Response(null, { status: 204 })))
     expect(container.textContent).toContain('Çalışan hesabı pasifleştirildi.')
@@ -108,7 +111,7 @@ describe('Çalışan hesapları', () => {
     await render(vi.fn(async () => { throw new TypeError('synthetic network failure') }))
     await click('Pasifleştir'); await click('Hesabı pasifleştir')
     expect(container.querySelector('[role="alert"]')?.textContent).toContain('Sonuç doğrulanamadı.')
-    vi.mocked(fetch).mockResolvedValue(Response.json({ items: [{ ...account, isActive: false }], page: 1, hasMore: false }))
+    vi.mocked(fetch).mockResolvedValue(Response.json({ items: [{ ...account, isActive: false }], page: 1, hasMore: false, pageSize: 20, totalCount: 1 }))
     await click('Listeyi yenile')
     expect(container.textContent).toContain('Pasif')
     expect(container.textContent).not.toContain('Çalışan hesabı pasifleştirildi.')
@@ -120,12 +123,12 @@ describe('Çalışan hesapları', () => {
     await render()
     expect(container.textContent).toContain('Çalışan hesapları yükleniyor…')
     if (!finish) throw new Error('Liste isteği yok')
-    await act(async () => finish?.(Response.json({ items: [], page: 1, hasMore: true })))
+    await act(async () => finish?.(Response.json({ items: [], page: 1, hasMore: true, pageSize: 20, totalCount: 21 })))
     expect(container.textContent).toContain('Bu sayfada çalışan hesabı yok.')
-    vi.mocked(fetch).mockResolvedValueOnce(Response.json({ items: [account], page: 2, hasMore: false }))
+    vi.mocked(fetch).mockResolvedValueOnce(Response.json({ items: [account], page: 2, hasMore: false, pageSize: 20, totalCount: 21 }))
     await click('Sonraki sayfa')
     expect(vi.mocked(fetch).mock.calls.at(-1)?.[0]).toBe('/api/staff-accounts/?page=2')
-    expect(container.textContent).toContain('Sayfa 2')
+    expect(container.querySelector('[aria-current="page"][aria-label="Sayfa 2"]')).not.toBeNull()
     vi.mocked(fetch).mockResolvedValueOnce(Response.json({ wrong: 'shape' }))
     await click('Listeyi yenile')
     expect(container.querySelector('[role="alert"]')?.textContent).toContain('Liste yanıtı doğrulanamadı.')

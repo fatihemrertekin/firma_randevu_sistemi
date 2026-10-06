@@ -1,3 +1,4 @@
+using System.Data;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Identity;
@@ -9,7 +10,7 @@ namespace Server.Features.Identity;
 public static class StaffAccountEndpoints
 {
     public sealed record StaffAccount(Guid Id, string Email, bool IsActive, string Version);
-    public sealed record StaffPage(StaffAccount[] Items, int Page, bool HasMore);
+    public sealed record StaffPage(StaffAccount[] Items, int Page, bool HasMore, int PageSize, int TotalCount);
     public sealed record StateChangeRequest(string Version);
 
     public static void MapStaffAccountEndpoints(this IEndpointRouteBuilder app)
@@ -31,11 +32,16 @@ public static class StaffAccountEndpoints
             return Results.Problem(statusCode: 400, title: "Geçerli sayfa ve 1–50 arası sayfa boyutu gerekli.");
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(context.RequestAborted);
         timeout.CancelAfter(TimeSpan.FromSeconds(15));
-        var rows = await StaffOnly(db).AsNoTracking().OrderBy(user => user.Email).ThenBy(user => user.Id)
+        await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.RepeatableRead, timeout.Token);
+        var query = StaffOnly(db).AsNoTracking();
+        var totalCount = await query.CountAsync(timeout.Token);
+        page = Math.Min(page, Math.Max(1, (int)Math.Ceiling((double)totalCount / pageSize)));
+        var rows = await query.OrderBy(user => user.Email).ThenBy(user => user.Id)
             .Skip((page - 1) * pageSize).Take(pageSize + 1)
             .Select(user => new StaffAccount(user.Id, user.Email ?? "", user.IsActive, user.ConcurrencyStamp ?? ""))
             .ToArrayAsync(timeout.Token);
-        return Results.Ok(new StaffPage(rows.Take(pageSize).ToArray(), page, rows.Length > pageSize));
+        await transaction.CommitAsync(timeout.Token);
+        return Results.Ok(new StaffPage(rows.Take(pageSize).ToArray(), page, rows.Length > pageSize, pageSize, totalCount));
     }
 
     private static Task<IResult> DeactivateAsync(Guid id, StateChangeRequest request, HttpContext context,

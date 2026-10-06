@@ -13,7 +13,7 @@ let container: HTMLDivElement
 let root: Root
 beforeEach(() => {
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true)
-  vi.stubGlobal('fetch', vi.fn(async input => String(input).includes('?') ? Response.json({ items: [service], page: 1, hasMore: false }) : Response.json(service)))
+  vi.stubGlobal('fetch', vi.fn(async input => String(input).includes('?') ? Response.json({ items: [service], page: 1, hasMore: false, pageSize: 20, totalCount: 1 }) : Response.json(service)))
   container = document.createElement('div'); document.body.append(container); root = createRoot(container)
 })
 afterEach(async () => { await act(async () => root.unmount()); container.remove(); vi.unstubAllGlobals(); vi.restoreAllMocks() })
@@ -36,7 +36,7 @@ async function submit() {
 }
 async function render(post = vi.fn<ServicePost>(async () => Response.json(service)), dirty = vi.fn(), busy = vi.fn()) {
   const router = createMemoryRouter([{ path: '*', element: <Services post={post} onDirtyChange={dirty} onBusyChange={busy} /> }], { initialEntries: ['/yonetim/hizmetler'] })
-  await act(async () => root.render(<NavigationEvents value={listener => router.subscribe(state => listener(state.location))}><RouterProvider router={router} /></NavigationEvents>))
+  await act(async () => root.render(<NavigationEvents value={listener => (() => { let key = router.state.location.key; return router.subscribe(state => { if (state.location.key !== key) { key = state.location.key; listener(state.location) } }) })()}><RouterProvider router={router} /></NavigationEvents>))
   return { post, dirty, busy, router }
 }
 async function newService() { await click('Yeni hizmet'); await fill('name', 'Yeni Hizmet'); await fill('duration', '45'); await fill('price', '0,29') }
@@ -76,7 +76,9 @@ describe('Hizmet yönetimi', () => {
   })
   it('ikinci sayfadan düzenleme, vazgeçme ve kaydetme aynı sayfaya döner', async () => {
     const { router } = await render()
-    vi.mocked(fetch).mockResolvedValueOnce(Response.json({ items: [service], page: 2, hasMore: false }))
+    vi.mocked(fetch).mockImplementation(async input => String(input).includes('?')
+      ? Response.json({ items: [service], page: 2, hasMore: false, pageSize: 20, totalCount: 21 }) : Response.json(service))
+    vi.mocked(fetch).mockResolvedValueOnce(Response.json({ items: [service], page: 2, hasMore: false, pageSize: 20, totalCount: 21 }))
     await act(async () => { await router.navigate('/yonetim/hizmetler?sayfa=2') })
     await click('Düzenle'); expect(router.state.location.search).toBe('?sayfa=2')
     await click('Vazgeç'); expect(router.state.location.search).toBe('?sayfa=2')
@@ -94,7 +96,7 @@ describe('Hizmet yönetimi', () => {
     expect(post).toHaveBeenCalledTimes(1)
     expect(post.mock.calls[0]?.slice(0, 2)).toEqual(['/api/services/service-1/delete', { version: 'version-1' }])
     expect(container.textContent).not.toContain('hizmet listesinden silindi.')
-    vi.mocked(fetch).mockResolvedValue(Response.json({ items: [], page: 1, hasMore: false }))
+    vi.mocked(fetch).mockResolvedValue(Response.json({ items: [], page: 1, hasMore: false, pageSize: 20, totalCount: 0 }))
     await act(async () => finish?.(new Response(null, { status: 204 })))
     expect(container.textContent).toContain('Saç kesimi hizmet listesinden silindi.')
     expect(container.querySelector('fieldset')).toBeNull()
@@ -177,11 +179,11 @@ describe('Hizmet yönetimi', () => {
     let finish: ((response: Response) => void) | undefined
     vi.mocked(fetch).mockImplementationOnce(() => new Promise<Response>(resolve => { finish = resolve }))
     await render(); expect(container.textContent).toContain('Hizmetler yükleniyor…')
-    await act(async () => finish?.(Response.json({ items: [], page: 1, hasMore: true })))
+    await act(async () => finish?.(Response.json({ items: [], page: 1, hasMore: true, pageSize: 20, totalCount: 21 })))
     expect(container.textContent).toContain('Bu sayfada hizmet yok.')
-    vi.mocked(fetch).mockResolvedValueOnce(Response.json({ items: [service], page: 2, hasMore: false }))
+    vi.mocked(fetch).mockResolvedValueOnce(Response.json({ items: [service], page: 2, hasMore: false, pageSize: 20, totalCount: 21 }))
     await click('Sonraki sayfa'); expect(vi.mocked(fetch).mock.calls.at(-1)?.[0]).toBe('/api/services/?page=2')
-    vi.mocked(fetch).mockResolvedValueOnce(Response.json({ items: [{ ...service, price: 350.01 }], page: 2, hasMore: false }))
+    vi.mocked(fetch).mockResolvedValueOnce(Response.json({ items: [{ ...service, price: 350.01 }], page: 2, hasMore: false, pageSize: 20, totalCount: 21 }))
     await click('Listeyi yenile'); expect(container.querySelector('[role="alert"]')?.textContent).toContain('Liste yanıtı doğrulanamadı.')
     expect(container.textContent).not.toContain('350,01 ₺')
   })

@@ -1,9 +1,10 @@
 import { isService, type Service } from '../services/servicesApi'
 import { isMember, memberFailure, type StaffMember } from './staffMembersApi'
+import { isPageMetadata, type PageMetadata } from '../../app/pageMetadata'
 
 export type ServiceReference = { id: string; version: string }
 export type Selection = { member: StaffMember; selected: ServiceReference[] }
-export type SelectionPage = Selection & { items: Service[]; page: number; hasMore: boolean }
+export type SelectionPage = Selection & PageMetadata & { items: Service[] }
 export class SelectionError extends Error {
   constructor(public status: number) {
     super(status === 400 ? 'Hizmet seçimlerini kontrol edip yeniden dene.'
@@ -28,6 +29,6 @@ export async function readSelectionPage(response: Response): Promise<SelectionPa
   const value: unknown = await response.json()
   if (!isSelection(value) || !('items' in value) || !Array.isArray(value.items) || !value.items.every(isService) ||
     !('page' in value) || typeof value.page !== 'number' || !Number.isInteger(value.page) || value.page < 1 ||
-    !('hasMore' in value) || typeof value.hasMore !== 'boolean') throw new SelectionError(500)
+    !isPageMetadata(value) || value.items.length > value.pageSize) throw new SelectionError(500)
   return { ...value, items: value.items, page: value.page, hasMore: value.hasMore }
 }

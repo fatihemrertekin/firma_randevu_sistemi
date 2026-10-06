@@ -67,6 +67,7 @@ export default function ManagementLayout({ auth, account }: Props) {
   const setDefinitionDirty = useCallback((value: boolean) => { guard.current.dirty = value }, [])
   const setProfileDirty = useCallback((value: boolean) => { guard.current.profileDirty = value }, [])
   const [drawerOpen, setDrawerOpen] = useState(true)
+  const [navigationCollapsed, setNavigationCollapsed] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const menuButton = useRef<HTMLButtonElement>(null)
   const groupButton = useRef<HTMLAnchorElement>(null)
@@ -111,9 +112,13 @@ export default function ManagementLayout({ auth, account }: Props) {
     else groupButton.current?.focus()
   }
 
-  return <CompletedNavigation value={(to, options) => { guard.current.dirty = false; guard.current.busy = false; void go(to, options) }}>
+  const completeNavigation = useCallback((to: string, options?: import('react-router').NavigateOptions, preserveDraft = false) => {
+    if (!preserveDraft) guard.current.dirty = false
+    guard.current.busy = false; void go(to, options)
+  }, [go])
+  return <CompletedNavigation value={completeNavigation}>
     <div className={`management-theme ${styles.page}`} onKeyDown={event => {
-    if (event.key === 'Escape' && mobileMenuOpen) { event.stopPropagation(); closeMenu() }
+    if (event.key === 'Escape' && (mobileMenuOpen || (navigationCollapsed && drawerOpen))) { event.stopPropagation(); closeMenu() }
   }}>
     <a className={styles.skipLink} href="#management-main">İçeriğe geç</a>
     <header className={styles.header}>
@@ -128,35 +133,41 @@ export default function ManagementLayout({ auth, account }: Props) {
         <button type="button" disabled={blocked} onClick={logout}>Çıkış yap</button>
       </div>
     </header>
-    <div className={styles.layout} data-drawer-open={drawerOpen && currentGroup !== null} data-mobile-open={mobileMenuOpen}>
+    <div className={styles.layout} data-drawer-open={drawerOpen && currentGroup !== null} data-mobile-open={mobileMenuOpen} data-navigation-collapsed={navigationCollapsed}>
       <div id="management-navigation" className={styles.navigation}>
         <nav className={styles.rail} aria-label="Yönetim grupları">
-          {groups.filter(group => owner || group.id === 'account').map(group => <NavigationLink key={group.id}
+          <div className={styles.navigationTools}><button type="button" className={styles.collapseMenu} disabled={blocked}
+            aria-label={navigationCollapsed ? 'Menüyü genişlet' : 'Menüyü daralt'} title={navigationCollapsed ? 'Menüyü genişlet' : 'Menüyü daralt'}
+            aria-controls="management-navigation" aria-expanded={!navigationCollapsed} onClick={() => setNavigationCollapsed(value => !value)}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={navigationCollapsed ? 'm10 6 6 6-6 6M16 12H4' : 'm14 6-6 6 6 6M8 12h12'} /></svg>
+          </button></div>
+          {groups.filter(group => owner || group.id === 'account').map(group => <div className={styles.group} key={group.id}><NavigationLink
             to={sectionPaths[group.initial]} ref={group.id === currentGroup ? groupButton : undefined} disabled={blocked}
-            data-group-active={group.id === currentGroup} aria-controls="management-context"
+            aria-label={group.title} title={navigationCollapsed ? group.title : undefined}
+            data-group-active={group.id === currentGroup} aria-controls={`management-context-${group.id}`}
             aria-expanded={group.id === currentGroup && drawerOpen} onClick={event => {
               if (group.id === currentGroup && !event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey) { event.preventDefault(); setDrawerOpen(value => !value) }
-            }}><NavigationIcon kind={group.id} /><span>{group.title}</span></NavigationLink>)}
+            }}><NavigationIcon kind={group.id} /><span className={styles.navLabel}>{group.title}</span>
+              <svg className={styles.chevron} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden="true"><path d={group.id === currentGroup && drawerOpen ? 'm6 15 6-6 6 6' : 'm6 9 6 6 6-6'} /></svg>
+            </NavigationLink>
+            <div id={`management-context-${group.id}`} className={styles.drawer} hidden={!drawerOpen || group.id !== currentGroup}>
+              <nav aria-label={`${group.title} bölümleri`}>
+                <div className={styles.drawerHeading}><h2>{group.title}</h2>
+                  <button className={styles.closeMenu} type="button" aria-label="Yan menüyü kapat" title="Yan menüyü kapat" disabled={blocked} onClick={closeMenu}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M19 12H5m7-7-7 7 7 7" /></svg>
+                  </button>
+                </div>
+                {sections.filter(item => item.id !== 'audit' && sectionGroups[item.id] === group.id && (owner || item.id === 'security')).map(item =>
+                  <NavigationLink key={item.id} to={sectionPaths[item.id]} aria-current={section === item.id ? 'page' : undefined}
+                    disabled={blocked} onClick={() => { if (section === item.id) { setMobileMenuOpen(false); heading.current?.focus() } }}>{item.title}</NavigationLink>)}
+              </nav>
+            </div>
+          </div>)}
           {owner && <NavigationLink className={styles.auditLink} to={sectionPaths.audit} disabled={blocked}
-            aria-current={section === 'audit' ? 'page' : undefined}>
-            <NavigationIcon kind="audit" /><span>Değişiklik kayıtları</span>
+            aria-label="Değişiklik kayıtları" title={navigationCollapsed ? 'Değişiklik kayıtları' : undefined} aria-current={section === 'audit' ? 'page' : undefined}>
+            <NavigationIcon kind="audit" /><span className={styles.navLabel}>Değişiklik kayıtları</span>
           </NavigationLink>}
         </nav>
-        <aside id="management-context" className={styles.drawer} hidden={!drawerOpen || currentGroup === null}>
-          <nav aria-label="Yönetim bölümleri">
-            {groups.filter(group => owner || group.id === 'account').map(group => <div key={group.id} hidden={group.id !== currentGroup}>
-              <div className={styles.drawerHeading}>
-                <h2>{group.title}</h2>
-                <button className={styles.closeMenu} type="button" aria-label="Yan menüyü kapat" title="Yan menüyü kapat" disabled={blocked} onClick={closeMenu}>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M19 12H5m7-7-7 7 7 7" /></svg>
-                </button>
-              </div>
-              {sections.filter(item => item.id !== 'audit' && sectionGroups[item.id] === group.id && (owner || item.id === 'security')).map(item =>
-                <NavigationLink key={item.id} to={sectionPaths[item.id]} aria-current={section === item.id ? 'page' : undefined}
-                  disabled={blocked} onClick={() => { if (section === item.id) { setMobileMenuOpen(false); heading.current?.focus() } }}>{item.title}</NavigationLink>)}
-            </div>)}
-          </nav>
-        </aside>
         <div className={styles.mobileAccount}><div>
           <div className={styles.accountIdentity}>{owner && businessName && <><span className={styles.businessName}>{businessName}</span><span aria-hidden="true">●</span></>}
             <span>{owner ? 'İşletme Sahibi' : 'Çalışan'}</span></div><p>{account.email}</p></div><button type="button" disabled={blocked} onClick={logout}>Çıkış yap</button></div>

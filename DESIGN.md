@@ -159,3 +159,9 @@ Normal form açılışında personel adı, hizmet alanı ve hizmet seçimlerine 
 Kurtarma e-postası doğrulanmamışken, görünür ve boşta olan hesap ekranında 15 saniyede bir ve sekmeye dönüşte yalnız mevcut GET ile kontrol edilir. Doğrulandıktan sonra veya hata/oturum/bekleyen işlem durumunda otomatik kontrol durur. Durumu yenile yalnız hata toparlama işlemidir; otomatik ileti gönderilmez.
 
 Ekran ve kayıt sayfası değişiminde başlığa erişilebilirlik odağı taşınır; etkileşimli olmayan bu başlıkların etrafında gereksiz mavi çerçeve çizilmez. Düğme, bağlantı, alan ve seçimlerin klavye odak çerçeveleri aynen korunur.
+
+## Sade gezinme ve ortak sayfalama — 06.10.2026
+
+Onaylı [geniş](.impeccable/mocks/minimal-navigation/preview-1280.png), [dar](.impeccable/mocks/minimal-navigation/preview-collapsed.png) ve [mobil](.impeccable/mocks/minimal-navigation/preview-390.png) örnekler bu dar kapsamın görsel kaynağıdır. Sol menü beyaz yüzeyde yatay ikon/metin satırlarına döner; büyük koyu kutular kaldırılır. Geniş menü 14 rem, ikon şeridi 4,5 rem; sakin seçili yüzey, 44 px hedef ve açık hover kullanılır. Normal gezinme satırları 14 px/500, seçili satırlar 600; işlem butonlarının mevcut ölçüsü korunur. Personel listesi dönüşü hover sırasında açık zeminde koyu/altı çizili kalır. Hizmet seçimleri mevcut form genişliği sınırından çıkar, en az 17 rem sütunlarla alanı kullanır; mobilde tek sütundur.
+
+Beş listede ortak sayfalama: gerçek kayıt aralığı, yakın numaralar, ilk/önceki/sonraki/son okları ve 10/20/50 seçimi. Numara metni 14 px/500, geçerli sayfa 700 ve aria-current; tüm hedefler en az 44 px. Mobilde aralık/boyut üstte, yakın sayfalar altta; uzak sayfalar azaltılır. Boş/tek sayfada gereksiz oklar görünmez. Audit toplam/son sayfa uydurmaz; yalnız ziyaret edilmiş cursor sayfaları ve devam oku sunulur. Hata/işlem/yükleme kilidi, URL geçmişi ve hizmet seçimi taslağı korunur.

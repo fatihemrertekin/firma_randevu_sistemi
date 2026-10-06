@@ -4,12 +4,14 @@ import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import StaffServicesEditor from './StaffServicesEditor'
 import type { StaffPost } from './staffMembersApi'
+import { createMemoryRouter } from 'react-router'
+import { RouterProvider } from 'react-router/dom'
 
 const member = { id: 'member-1', name: 'Deneme Personel', isActive: true, version: 'member-version' }
 const first = { id: 'service-1', name: 'Kesim', durationMinutes: 30, price: '0.29', currency: 'TRY', isActive: true, version: 'service-version-1' }
 const second = { ...first, id: 'service-2', name: 'Boya', version: 'service-version-2' }
 const reference = (item: typeof first) => ({ id: item.id, version: item.version })
-const page = { member, selected: [], items: [first, second], page: 1, hasMore: false }
+const page = { member, selected: [], items: [first, second], page: 1, hasMore: false, pageSize: 10, totalCount: 2 }
 let container: HTMLDivElement, root: Root
 beforeEach(() => {
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true)
@@ -18,7 +20,8 @@ beforeEach(() => {
 })
 afterEach(async () => { await act(async () => root.unmount()); container.remove(); vi.unstubAllGlobals(); vi.restoreAllMocks() })
 async function click(name: string) {
-  const button = Array.from(container.querySelectorAll('button')).find(item => item.textContent === name)
+  const label = name.replace(' hizmet sayfası', ' sayfa')
+  const button = Array.from(container.querySelectorAll('button')).find(item => item.textContent === name || item.getAttribute('aria-label') === label)
   if (!button) throw new Error('Düğme yok: ' + name)
   await act(async () => button.click())
 }
@@ -31,13 +34,14 @@ async function toggle(name: string) { await act(async () => checkbox(name).click
 async function submit() { await act(async () => container.querySelector('form')?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))) }
 async function render(post = vi.fn<StaffPost>(async () => Response.json({ member: { ...member, version: 'saved-version' }, selected: [reference(first)] }))) {
   const saved = vi.fn(), cancel = vi.fn(), dirty = vi.fn(), busy = vi.fn()
-  await act(async () => root.render(<StaffServicesEditor memberId={member.id} post={post} onSaved={saved} onCancel={cancel} onDirtyChange={dirty} onBusyChange={busy} />))
+  const router = createMemoryRouter([{ path: '*', element: <StaffServicesEditor memberId={member.id} post={post} onSaved={saved} onCancel={cancel} onDirtyChange={dirty} onBusyChange={busy} /> }], { initialEntries: ['/yonetim/personel/member-1/hizmetler'] })
+  await act(async () => root.render(<RouterProvider router={router} />))
   return { post, saved, cancel, dirty, busy }
 }
 describe('Personelin hizmet seçimleri', () => {
   it('sunucu sayfaları arasında mevcut ve taslak seçimleri koruyup tam kümeyi kaydeder', async () => {
     vi.mocked(fetch).mockImplementation(async input => Response.json({ ...page, selected: [reference(second)],
-      items: String(input).includes('page=2') ? [second] : [first], page: String(input).includes('page=2') ? 2 : 1, hasMore: !String(input).includes('page=2') }))
+      items: String(input).includes('page=2') ? [second] : [first], page: String(input).includes('page=2') ? 2 : 1, hasMore: !String(input).includes('page=2') , pageSize: 10, totalCount: ((String(input).includes('page=2') ? 2 : 1) - 1) * 10 + ((!String(input).includes('page=2')) ? 11 : (String(input).includes('page=2') ? [second] : [first]).length) }))
     const { post, saved, dirty } = await render(); await toggle('Kesim'); expect(dirty).toHaveBeenLastCalledWith(true)
     await click('Sonraki hizmet sayfası'); expect(checkbox('Boya').checked).toBe(true); await toggle('Boya')
     await click('Önceki hizmet sayfası'); expect(checkbox('Kesim').checked).toBe(true); await submit()
@@ -66,7 +70,7 @@ describe('Personelin hizmet seçimleri', () => {
   })
   it('katalog sayfalarken değişirse eski seçimi ezmez ve güncel sürüm ister', async () => {
     vi.mocked(fetch).mockImplementation(async input => Response.json(String(input).includes('page=2')
-      ? { ...page, member: { ...member, version: 'changed-version' }, page: 2 } : { ...page, items: [first], hasMore: true }))
+      ? { ...page, member: { ...member, version: 'changed-version' }, page: 2 , pageSize: 10, totalCount: ((2) - 1) * 10 + (((page.items).length)) } : { ...page, items: [first], hasMore: true, pageSize: 10, totalCount: 11 }))
     const { post } = await render(); await toggle('Kesim'); await click('Sonraki hizmet sayfası')
     expect(checkbox('Kesim').checked).toBe(true); expect(container.textContent).toContain('Taslağın korundu'); await submit(); expect(post).not.toHaveBeenCalled()
   })

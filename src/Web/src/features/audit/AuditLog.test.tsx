@@ -14,7 +14,7 @@ beforeEach(() => {
 })
 afterEach(async () => { await act(async () => root.unmount()); container.remove(); vi.useRealTimers(); vi.unstubAllGlobals(); vi.restoreAllMocks() })
 async function render() { await act(async () => root.render(<AuditLog />)) }
-function button(name: string) { const found = Array.from(container.querySelectorAll('button')).find(value => value.textContent === name); if (!found) throw new Error(name); return found }
+function button(name: string) { const found = Array.from(container.querySelectorAll('button')).find(value => value.textContent === name || value.getAttribute('aria-label') === name); if (!found) throw new Error(name); return found }
 async function click(name: string) { await act(async () => button(name).click()) }
 async function filter(value: string) { await act(async () => { const select = container.querySelector('select'); if (!select) throw new Error('Kategori yok'); select.value = value; select.dispatchEvent(new Event('change', { bubbles: true })) }) }
 
@@ -46,7 +46,7 @@ describe('Değişiklik kayıtları', () => {
   it.each([400, 401, 403, 500])('%i sonrası önceki sonucu açıkça belirtir, sayfalama kilitlenir ve yenileme düzelir', async status => {
     await render(); vi.mocked(fetch).mockResolvedValueOnce(new Response(null, { status })); await click('Listeyi yenile')
     expect(container.querySelector('[role=alert]')).not.toBeNull(); expect(container.textContent).toContain('Önceki sonuçlar gösteriliyor')
-    expect(button('Sonraki sayfa').disabled).toBe(true); expect(container.querySelector('select')?.disabled).toBe(true)
+    expect(container.querySelector('[aria-label="Sonraki sayfa"]')).toBeNull(); expect(container.querySelector('select')?.disabled).toBe(true)
     await click('Listeyi yenile'); expect(container.querySelector('[role=alert]')).toBeNull(); expect(container.querySelector('select')?.disabled).toBe(false)
   })
   it('429 bekler ve süre dolmadan tekrar istek göndermez', async () => {

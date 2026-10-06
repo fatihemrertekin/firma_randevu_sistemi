@@ -191,6 +191,9 @@ public sealed class ServiceDefinitionTests
         Assert.Single(writes, response => response.StatusCode == HttpStatusCode.OK); Assert.Single(writes, response => response.StatusCode == HttpStatusCode.Conflict);
         foreach (var response in writes) response.Dispose();
         var page1 = await ListAsync(owner, "?pageSize=1"); var page2 = await ListAsync(owner, "?pageSize=1&page=2");
+        Assert.Equal(1, page1.PageSize); Assert.Equal(2, page1.TotalCount); Assert.Equal(2, page2.TotalCount);
+        var clamped = await ListAsync(owner, "?pageSize=1&page=999");
+        Assert.Equal(2, clamped.Page); Assert.False(clamped.HasMore); Assert.Equal(page2.Items[0].Id, Assert.Single(clamped.Items).Id);
         Assert.True(page1.HasMore); Assert.False(page2.HasMore); Assert.NotEqual(Assert.Single(page1.Items).Id, Assert.Single(page2.Items).Id);
         using var scope = app.Services.CreateScope(); var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         Assert.Equal(3, await db.ServiceDefinitionAudits.CountAsync(Token));

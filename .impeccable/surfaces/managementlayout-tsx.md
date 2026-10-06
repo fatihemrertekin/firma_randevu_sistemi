@@ -40,3 +40,9 @@ Actual Chrome/API acceptance: 196 frontend tests, typecheck/lint/build, successf
 Seçili İşletme/Ekip/Hesap bağlantısı alt menüyü açıp kapatır; sağ üstte erişilebilir sola ok kapanışı vardır. Ayrı metinli kapanış satırı kaldırılır. Kullanıcının mevcut ekran üzerinde doğrudan istediği dar düzenlemedir; yeni ekran/taslak veya başka aşama başlatılmaz. Kabul kanıtı P02 planındaki mevcut yüzey düzeltmeleri kaydına eklenir.
 
 İşletme sahibi başlığı mevcut profil yanıtından onaylı işletme adını rolün solunda gösterir; taslak/başarısız kayıt yansıtılmaz. Kayıtlardan gruba ilk geçişte alt menü açılır; hedef rota durumu kaynak rotadan ayrılır.
+
+## Onaylı sade menü — 06.10.2026
+
+Kullanıcı gösterilen [geniş menü](../mocks/minimal-navigation/preview-1280.png), [dar menü](../mocks/minimal-navigation/preview-collapsed.png) ve [mobil](../mocks/minimal-navigation/preview-390.png) taslağına “onaylıyorum” dedi. Bu karar önceki büyük koyu grup kutuları/ayrı alt menü sütunu yerine aynı açık paletten beyaz yüzey, ikon+metin satırları, sakin seçili dolgu ve isteğe bağlı dar ikon şeridini yetkilendirir. Alt sayfalar geniş menüde aynı sütunda, dar menüde küçük açılır yüzeydedir. Tekrar tıklama, sola ok, dar menüde Escape/odak dönüşü ve mobil Menü korunur. Logo/dark mode/gelecek modül eklenmez.
+
+Personel listesi dönüşünün hover zemin/metin önceliği düzeltilir; personel hizmet seçimleri yeterli alanda 2–3 sütun, dar alanda tek sütundur. Klavye sırası görsel sıra ile aynı ve etiket hedefleri en az 44 px. Gerçek kabul ve teslim [P02 kaydında](../../docs/plans/P02.md#sade-menü-ve-ortak-sayfalama--06102026) tutulur; taslak entegrasyon kanıtı değildir.

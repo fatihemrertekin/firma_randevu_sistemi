@@ -16,12 +16,12 @@ beforeEach(() => {
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true)
   currentMember = { ...member }
   vi.stubGlobal('fetch', vi.fn(async input => String(input).includes('?')
-    ? Response.json({ items: [currentMember], page: 1, hasMore: false }) : Response.json(currentMember)))
+    ? Response.json({ items: [currentMember], page: 1, hasMore: false, pageSize: 20, totalCount: 1 }) : Response.json(currentMember)))
   container = document.createElement('div'); document.body.append(container); root = createRoot(container)
 })
 afterEach(async () => { await act(async () => root.unmount()); container.remove(); vi.unstubAllGlobals(); vi.restoreAllMocks() })
 async function click(text: string) {
-  const button = Array.from(container.querySelectorAll<HTMLButtonElement>('button, a[data-navigation]')).find(item => item.textContent === text)
+  const button = Array.from(container.querySelectorAll<HTMLButtonElement>('button, a[data-navigation]')).find(item => (item.textContent === text || item.getAttribute('aria-label') === text))
   if (!button) throw new Error('Düğme yok: ' + text)
   await act(async () => button.click())
 }
@@ -38,7 +38,7 @@ async function submit() {
 }
 async function render(post = vi.fn<StaffPost>(async () => Response.json(member)), dirty = vi.fn(), busy = vi.fn()) {
   const router = createMemoryRouter([{ path: '*', element: <StaffMembers post={post} onDirtyChange={dirty} onBusyChange={busy} /> }], { initialEntries: ['/yonetim/personel'] })
-  await act(async () => root.render(<NavigationEvents value={listener => router.subscribe(state => listener(state.location))}><RouterProvider router={router} /></NavigationEvents>))
+  await act(async () => root.render(<NavigationEvents value={listener => (() => { let key = router.state.location.key; return router.subscribe(state => { if (state.location.key !== key) { key = state.location.key; listener(state.location) } }) })()}><RouterProvider router={router} /></NavigationEvents>))
   return { post, dirty, busy }
 }
 
@@ -53,7 +53,7 @@ describe('Personel yönetimi', () => {
     expect(post).toHaveBeenCalledTimes(1)
     expect(post.mock.calls[0]?.slice(0, 2)).toEqual(['/api/staff-members/member-1/delete', { version: 'version-1' }])
     expect(container.textContent).not.toContain('personel listesinden silindi.')
-    vi.mocked(fetch).mockResolvedValue(Response.json({ items: [], page: 1, hasMore: false }))
+    vi.mocked(fetch).mockResolvedValue(Response.json({ items: [], page: 1, hasMore: false, pageSize: 20, totalCount: 0 }))
     await act(async () => finish?.(new Response(null, { status: 204 })))
     expect(container.textContent).toContain('Deneme Kişi personel listesinden silindi.')
     expect(container.querySelector('fieldset')).toBeNull()
@@ -79,7 +79,7 @@ describe('Personel yönetimi', () => {
   it('görev veya liste geçişi reddedilince taslağı korur; onaylanınca yeni görevi güncel kayıttan açar', async () => {
     const original = vi.mocked(fetch).getMockImplementation()
     vi.mocked(fetch).mockImplementation(async input => {
-      if (String(input).includes('/services')) return Response.json({ member: currentMember, selected: [], items: [], page: 1, hasMore: false })
+      if (String(input).includes('/services')) return Response.json({ member: currentMember, selected: [], items: [], page: 1, hasMore: false, pageSize: 10, totalCount: 0 })
       if (!original) throw new Error('Test isteği yok')
       return original(input)
     })
@@ -101,8 +101,8 @@ describe('Personel yönetimi', () => {
     const service = { id: 'service-1', name: 'Kesim', durationMinutes: 30, price: '350.00', currency: 'TRY', isActive: true, version: 'service-version' }
     vi.mocked(fetch).mockImplementation(async input => {
       const path = String(input)
-      if (path.includes('/services')) return Response.json({ member: currentMember, selected: [], items: [service], page: 1, hasMore: false })
-      return path.includes('?') ? Response.json({ items: [currentMember], page: 1, hasMore: false }) : Response.json(currentMember)
+      if (path.includes('/services')) return Response.json({ member: currentMember, selected: [], items: [service], page: 1, hasMore: false, pageSize: 10, totalCount: 1 })
+      return path.includes('?') ? Response.json({ items: [currentMember], page: 1, hasMore: false, pageSize: 20, totalCount: 1 }) : Response.json(currentMember)
     })
     const post = vi.fn<StaffPost>(async (path, body) => {
       currentMember = { ...currentMember, version: 'version-2' }
@@ -121,7 +121,7 @@ describe('Personel yönetimi', () => {
 
   it('ikinci sayfadaki ayrıntıdan aynı sayfaya ve açan düğmeye döner', async () => {
     vi.mocked(fetch).mockImplementation(async input => String(input).includes('?')
-      ? Response.json({ items: [member], page: String(input).endsWith('2') ? 2 : 1, hasMore: !String(input).endsWith('2') }) : Response.json(member))
+      ? Response.json({ items: [member], page: String(input).endsWith('2') ? 2 : 1, hasMore: !String(input).endsWith('2') , pageSize: 20, totalCount: ((String(input).endsWith('2') ? 2 : 1) - 1) * 20 + ((!String(input).endsWith('2')) ? 21 : ([member]).length) }) : Response.json(member))
     await render(); await click('Sonraki sayfa'); await click('Ayrıntılar'); await click('Personel listesi')
     expect(vi.mocked(fetch).mock.calls.at(-1)?.[0]).toBe('/api/staff-members/?page=2')
     expect(document.activeElement).toBe(container.querySelector('[data-member-id="member-1"]'))
@@ -144,7 +144,7 @@ describe('Personel yönetimi', () => {
     vi.mocked(fetch).mockImplementation(async input => {
       const path = String(input)
       if (path.includes('/services') || path.endsWith('/hours')) return new Promise<Response>(resolve => { finish = resolve })
-      return path.includes('?') ? Response.json({ items: [currentMember], page: 1, hasMore: false }) : Response.json(currentMember)
+      return path.includes('?') ? Response.json({ items: [currentMember], page: 1, hasMore: false, pageSize: 20, totalCount: 1 }) : Response.json(currentMember)
     })
     const { busy } = await render(); await click('Ayrıntılar'); await click(label)
     expect(busy).toHaveBeenLastCalledWith(true)
@@ -153,7 +153,7 @@ describe('Personel yönetimi', () => {
     const cancel = label === 'Hizmetler' ? 'Vazgeç' : 'Listeye dön'
     expect(Array.from(container.querySelectorAll<HTMLButtonElement>('button, a[data-navigation]')).find(button => button.textContent === cancel)?.disabled).toBe(true)
     await act(async () => finish?.(Response.json(label === 'Hizmetler'
-      ? { member: currentMember, selected: [], items: [], page: 1, hasMore: false }
+      ? { member: currentMember, selected: [], items: [], page: 1, hasMore: false, pageSize: 10, totalCount: 0 }
       : { member: currentMember, version: currentMember.version, isConfigured: false, days: [] })))
     expect(busy).toHaveBeenLastCalledWith(false)
   })
@@ -161,7 +161,7 @@ describe('Personel yönetimi', () => {
   it('hizmetten vazgeçince kişi bağlamını korur; listeye dönünce ayrıntı düğmesine odak döndürür', async () => {
     const original = vi.mocked(fetch).getMockImplementation()
     vi.mocked(fetch).mockImplementation(async input => {
-      if (String(input).includes('/services')) return Response.json({ member, selected: [], items: [], page: 1, hasMore: false })
+      if (String(input).includes('/services')) return Response.json({ member, selected: [], items: [], page: 1, hasMore: false, pageSize: 10, totalCount: 0 })
       if (!original) throw new Error('Test isteği yok')
       return original(input)
     })
@@ -239,9 +239,9 @@ describe('Personel yönetimi', () => {
     let finish: ((response: Response) => void) | undefined
     vi.mocked(fetch).mockImplementationOnce(() => new Promise<Response>(resolve => { finish = resolve }))
     await render(); expect(container.textContent).toContain('Personel yükleniyor…')
-    await act(async () => finish?.(Response.json({ items: [], page: 1, hasMore: true })))
+    await act(async () => finish?.(Response.json({ items: [], page: 1, hasMore: true, pageSize: 20, totalCount: 21 })))
     expect(container.textContent).toContain('Bu sayfada personel yok.')
-    vi.mocked(fetch).mockResolvedValueOnce(Response.json({ items: [member], page: 2, hasMore: false }))
+    vi.mocked(fetch).mockResolvedValueOnce(Response.json({ items: [member], page: 2, hasMore: false, pageSize: 20, totalCount: 21 }))
     await click('Sonraki sayfa'); expect(vi.mocked(fetch).mock.calls.at(-1)?.[0]).toBe('/api/staff-members/?page=2')
     vi.mocked(fetch).mockResolvedValueOnce(Response.json({ wrong: true })); await click('Listeyi yenile')
     expect(container.querySelector('[role="alert"]')?.textContent).toContain('Liste yanıtı doğrulanamadı.')
