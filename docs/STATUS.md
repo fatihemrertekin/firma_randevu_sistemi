@@ -2,7 +2,7 @@
 
 Güncelleme: 2026-10-06. Güncel özet burada; kapsam ve kanıt bağlantıları [P02 planında](plans/P02.md), önceki oturum kayıtları [arşivde](archive/2026-10-02/STATUS.md). Arşivdeki eski durum ve onay bekleme ifadeleri güncel yönlendirme değildir.
 
-Sade menü ve ortak sayfalama `in_progress`: taslak onaylandı, 241 web/33 ilgili PostgreSQL testi ve build/format geçti. Ayrı 8092 gerçek tarayıcı kabulü ve korumalı ana teslim sürüyor. [Kapsam ve kanıt](plans/P02.md#sade-menü-ve-ortak-sayfalama--06102026).
+Sade menü ve ortak sayfalama `done`: [PR #57](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/57) `fd3a4b3` ile birleşti; [main CI](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/37394954109) başarılı. 241 web/33 ilgili PostgreSQL testi, 44 gerçek API durumu × dört genişlik ve ana anonim kabul geçti. Şifreli yedek sonrası 32 tablo, hesap/MFA/anahtar/SMTP korundu; yeni menü ve sayfalama 8080’de çalışıyor. [Kabul ve geri dönüş](plans/P02.md#sade-menü-ve-ortak-sayfalama--06102026).
 
 ## Aşamalar
 

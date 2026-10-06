@@ -46,3 +46,7 @@ Seçili İşletme/Ekip/Hesap bağlantısı alt menüyü açıp kapatır; sağ ü
 Kullanıcı gösterilen [geniş menü](../mocks/minimal-navigation/preview-1280.png), [dar menü](../mocks/minimal-navigation/preview-collapsed.png) ve [mobil](../mocks/minimal-navigation/preview-390.png) taslağına “onaylıyorum” dedi. Bu karar önceki büyük koyu grup kutuları/ayrı alt menü sütunu yerine aynı açık paletten beyaz yüzey, ikon+metin satırları, sakin seçili dolgu ve isteğe bağlı dar ikon şeridini yetkilendirir. Alt sayfalar geniş menüde aynı sütunda, dar menüde küçük açılır yüzeydedir. Tekrar tıklama, sola ok, dar menüde Escape/odak dönüşü ve mobil Menü korunur. Logo/dark mode/gelecek modül eklenmez.
 
 Personel listesi dönüşünün hover zemin/metin önceliği düzeltilir; personel hizmet seçimleri yeterli alanda 2–3 sütun, dar alanda tek sütundur. Klavye sırası görsel sıra ile aynı ve etiket hedefleri en az 44 px. Gerçek kabul ve teslim [P02 kaydında](../../docs/plans/P02.md#sade-menü-ve-ortak-sayfalama--06102026) tutulur; taslak entegrasyon kanıtı değildir.
+
+## Gerçek kabul — 06.10.2026
+
+Onaylı sade menü ve hizmet ızgarası gerçek Chrome/API ile 44 durum ve 320/390/768/1280 genişlikte doğrulandı; 241 web testi geçti. İlk kontroldeki üst üste gelen grup işaretleri giderildi. Açık/dar/mobil düzen, etiket/Escape/odak, hover ve sayfalama okunur; üç sütun hizmet seçimi sağ alanı kullanır. Ana 8080 kabul imajıyla, mevcut 32 tablo/hesap/MFA/anahtar/SMTP korunarak teslim edildi. Ayrıntı ve sınırlar P02 kabul kaydındadır; native finish veya tam WCAG sertifikası iddia edilmez.
