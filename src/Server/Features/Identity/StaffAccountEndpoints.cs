@@ -15,10 +15,10 @@ public static class StaffAccountEndpoints
 
     public static void MapStaffAccountEndpoints(this IEndpointRouteBuilder app)
     {
-        var accounts = app.MapGroup("/api/staff-accounts").RequireAuthorization("Owner").RequireRateLimiting("login");
-        accounts.MapGet("/", ListAsync);
-        accounts.MapPost("/{id:guid}/deactivate", DeactivateAsync);
-        accounts.MapPost("/{id:guid}/activate", ActivateAsync);
+        var accounts = app.MapGroup("/api/staff-accounts").RequireAuthorization("Owner");
+        accounts.MapGet("/", ListAsync).RequireRateLimiting("staff-management");
+        accounts.MapPost("/{id:guid}/deactivate", DeactivateAsync).RequireRateLimiting("login");
+        accounts.MapPost("/{id:guid}/activate", ActivateAsync).RequireRateLimiting("login");
     }
 
     private static IQueryable<AppUser> StaffOnly(AppDbContext db) => db.Users.Where(user =>

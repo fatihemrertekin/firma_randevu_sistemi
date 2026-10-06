@@ -48,6 +48,8 @@ module.exports = async ({ page, seed, member, origin, post, ready, heading, chec
     assert.notEqual(new URL(page.url()).searchParams.get('sayfa'), '999')
     await check(page, title === 'Personel' ? 'minimal-personnel-pagination' : title === 'Hizmetler' ? 'minimal-services-pagination' : 'minimal-accounts-pagination')
   }
+  // Personel ve hesap okuması aynı yönetim penceresini paylaşır.
+  await waitWindow()
   await page.goto(origin + `/yonetim/personel/${member.id}/hizmetler?boyut=10&sayfa=2`); await ready(page)
   const back = page.getByRole('link', { name: 'Personel listesine dön', exact: true })
   await back.hover()
