@@ -58,6 +58,21 @@ async function history(direction: 'back' | 'forward') {
 }
 
 describe('Ekran URL ve geçmiş kabulü', () => {
+  it('profil okunurken sunucunun onayladığı hesap sayfasına URL ile döner', async () => {
+    let finish: ((response: Response) => void) | undefined
+    const original = vi.mocked(fetch).getMockImplementation()
+    vi.mocked(fetch).mockImplementation(async (input, options) => {
+      if (input === '/api/business-profile/') return new Promise<Response>(resolve => { finish = resolve })
+      if (String(input).startsWith('/api/staff-accounts/?')) return Response.json({ items: [], page: 2, pageSize: 10, totalCount: 13, hasMore: false })
+      if (input === '/api/staff-invitations/') return Response.json([])
+      if (!original) throw new Error('Test isteği yok')
+      return original(input, options)
+    })
+    await render(sectionPaths.access + '?sayfa=999&boyut=10')
+    expect(window.location.search).toBe('?sayfa=2&boyut=10')
+    await act(async () => finish?.(Response.json({ name: 'Sentetik salon', phone: null, email: null, address: null, version: 'v1' })))
+    expect(window.location.search).toBe('?sayfa=2&boyut=10')
+  })
   it('hizmet seçiminde sayfa ve boyut değişince taslağı korur; başka göreve geçişi korur', async () => {
     const original = vi.mocked(fetch).getMockImplementation()
     vi.mocked(fetch).mockImplementation(async (input, options) => {

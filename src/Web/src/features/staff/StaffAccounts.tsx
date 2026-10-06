@@ -6,6 +6,7 @@ import { pageSearch, readPage, readPageSize, sectionPaths } from '../../app/rout
 import Pagination from '../../components/Pagination'
 import { isPageMetadata, type PageMetadata } from '../../app/pageMetadata'
 import { useNavigationChange } from '../../app/NavigationEvents'
+import { useCompletedNavigation } from '../../app/CompletedNavigation'
 
 type StaffAccount = { id: string; email: string; isActive: boolean; version: string }
 type StaffPage = PageMetadata & { items: StaffAccount[] }
@@ -35,7 +36,7 @@ function failure(status: number) {
 }
 
 export default function StaffAccounts({ post }: Props) {
-  const location = useLocation(), navigate = useNavigate()
+  const location = useLocation(), navigate = useNavigate(), completed = useCompletedNavigation()
   const page = readPage(location.search), pageSize = readPageSize(location.search)
   const [revision, setRevision] = useState(0)
   const [data, setData] = useState<StaffPage | null>(null)
@@ -65,13 +66,13 @@ export default function StaffAccounts({ post }: Props) {
         const body = parsePage(await response.json())
         if (!controller.signal.aborted) {
           setData(body)
-          if (body.page !== page) void navigate(sectionPaths.access + pageSearch(body.page, pageSize), { replace: true })
+          if (body.page !== page) completed(sectionPaths.access + pageSearch(body.page, pageSize), { replace: true })
         }
       }).catch((problem: unknown) => {
         if (!controller.signal.aborted) setError(problem instanceof StaffRequestError ? problem.message : 'Liste alınamadı. Yeniden dene.')
       }).finally(() => { if (!controller.signal.aborted) setLoading(false) })
     return () => controller.abort()
-  }, [page, pageSize, revision, navigate, location.key])
+  }, [page, pageSize, revision, completed, location.key])
 
   function load(nextPage = page, size = pageSize) {
     setLoading(true); setError(''); setData(null); setTarget(null)
