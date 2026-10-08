@@ -14,7 +14,6 @@
 .row dl > div { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 .row dt { color: var(--muted); }
 .row dd { margin: 0; overflow-wrap: anywhere; min-width: 0; }
-.actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--action-row-gap) var(--space-2); margin-top: calc(var(--space-2) * 2); }
 @container audit (min-width: 56rem) {
   .row { grid-template-columns: var(--audit-time-column) minmax(0, 1fr); gap: var(--auth-space-5); align-items: start; }
   .row > div { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr); gap: var(--auth-space-5); min-width: 0; }

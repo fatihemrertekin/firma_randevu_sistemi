@@ -30,7 +30,7 @@ export async function readMemberPage(response: Response): Promise<StaffMemberPag
   if (!response.ok) throw new MemberRequestError(response.status)
   const value: unknown = await response.json()
   if (typeof value !== 'object' || value === null || !('items' in value) || !Array.isArray(value.items) ||
-    !value.items.every(isMember) || !('page' in value) || !Number.isInteger(value.page) || typeof value.page !== 'number' ||
+    !value.items.every(isMember) ||
     !isPageMetadata(value) || value.items.length > value.pageSize) throw new MemberRequestError(500, 'Liste yanıtı doğrulanamadı. Yeniden yükleyin.')
   return { items: value.items, page: value.page, hasMore: value.hasMore, pageSize: value.pageSize, totalCount: value.totalCount }
 }

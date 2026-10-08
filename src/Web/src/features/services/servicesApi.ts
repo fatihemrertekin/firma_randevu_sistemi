@@ -33,7 +33,7 @@ export async function readServicePage(response: Response): Promise<ServicePage> 
   if (!response.ok) throw new ServiceRequestError(response.status)
   const value: unknown = await response.json()
   if (typeof value !== 'object' || value === null || !('items' in value) || !Array.isArray(value.items) ||
-    !value.items.every(isService) || !('page' in value) || typeof value.page !== 'number' || !Number.isInteger(value.page) ||
+    !value.items.every(isService) ||
     !isPageMetadata(value) || value.items.length > value.pageSize) throw new ServiceRequestError(500, 'Liste yanıtı doğrulanamadı. Yeniden yükleyin.')
   return { items: value.items, page: value.page, hasMore: value.hasMore, pageSize: value.pageSize, totalCount: value.totalCount }
 }

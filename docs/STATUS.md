@@ -1,6 +1,8 @@
 # STATUS — Güncel durum ve sıradaki iş
 
-Güncelleme: 2026-10-06. Güncel özet burada; kapsam ve kanıt bağlantıları [P02 planında](plans/P02.md), önceki oturum kayıtları [arşivde](archive/2026-10-02/STATUS.md). Arşivdeki eski durum ve onay bekleme ifadeleri güncel yönlendirme değildir.
+Güncelleme: 2026-10-08. Güncel özet burada; kapsam ve kanıt bağlantıları [P02 planında](plans/P02.md), önceki oturum kayıtları [arşivde](archive/2026-10-02/STATUS.md). Arşivdeki eski durum ve onay bekleme ifadeleri güncel yönlendirme değildir.
+
+Ponytail audit sadeleştirmesi yerel kabulü `done`: onaylanan beş bulgu uygulandı; net 18 satır ve bir yönlendirme dosyası kaldırıldı. 241 web testi, frontend kapıları ve ayrı sentetik kurulumda 44 gerçek API durumu × dört genişlik geçti. GitHub teslimi dalın PR/CI kanıtıyla izlenir; ana 8080 imajı güncellenmedi. [Kapsam ve kanıt](plans/P02.md#ponytail-audit-sadeleştirmesi--08102026).
 
 Sade menü ve ortak sayfalama `done`: [PR #57](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/57) `fd3a4b3` ile birleşti; [main CI](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/37394954109) başarılı. 241 web/33 ilgili PostgreSQL testi, 44 gerçek API durumu × dört genişlik ve ana anonim kabul geçti. Şifreli yedek sonrası 32 tablo, hesap/MFA/anahtar/SMTP korundu; yeni menü ve sayfalama 8080’de çalışıyor. [Kabul ve geri dönüş](plans/P02.md#sade-menü-ve-ortak-sayfalama--06102026).
 
@@ -67,7 +69,7 @@ Program.cs bakımı `done`: başlangıç 265 satırdan 69 satıra indi; önce/so
 
 ## Sıradaki iş
 
-Sıradaki tek aday T05 Hesap ve güvenlik yüzeyinin mevcut API'lerle bağlı masaüstü/mobil taslağı ve kapsamıdır. Yalnız öneridir; taslak hazırlığı ve ardından ekran kodu ayrı kullanıcı onayı ister. T05–T08/P03/dark mode/native finish başlatılmadı.
+Sıradaki tek bakım adayı, `npm audit` tarafından bildirilen geliştirme bağımlılığı `source-map-js` uyarısının dar bir lock dosyası güncellemesiyle giderilmesidir. Bu sadeleştirmede bağımlılıklar değiştirilmedi. T05 Hesap ve güvenlik taslağı/ekran kodu ayrı kullanıcı onayı ister; T05–T08/P03/dark mode/native finish başlatılmadı.
 
 ## Gelecek plan kaydı — destek ve işletim ekranı (02.10.2026)
 

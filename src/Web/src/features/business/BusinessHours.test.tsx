@@ -3,7 +3,7 @@ import { act } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import BusinessHours from './BusinessHours'
-import { hoursDraft, readHours, type HoursPost } from './businessHoursApi'
+import { hoursDraft, readHours, type HoursPost } from '../../app/weeklyHoursApi'
 
 const initial = { isConfigured: false, timeZone: 'Europe/Istanbul' as const, version: 'd317d899-8208-41f1-9b8e-c6fbde437cde', days: [] }
 const saved = { ...initial, isConfigured: true, version: 'b112d899-8208-41f1-9b8e-c6fbde437cde', days: hoursDraft(initial) }

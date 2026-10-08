@@ -12,9 +12,8 @@
 .metrics { display: contents; }
 .metrics span { font-variant-numeric: tabular-nums; }
 .status { color: var(--muted); }
-.footer, .pagination, .actions { display: flex; align-items: center; flex-wrap: wrap; gap: var(--action-row-gap) var(--auth-space-3); }
+.footer, .actions { display: flex; align-items: center; flex-wrap: wrap; gap: var(--action-row-gap) var(--auth-space-3); }
 .footer { margin-top: var(--auth-space-6); }
-.pagination span { font-size: var(--button-font-size); }
 :global(.management-theme) a[data-navigation].back { margin-bottom: var(--auth-space-5); background: var(--button-navigation-bg); color: var(--muted); border-color: var(--button-navigation-bg); }
 :global(.management-theme) a[data-navigation].back:hover { background: var(--button-navigation-selected-bg); }
 .editor { max-width: var(--service-form-max); margin-top: var(--auth-space-5); display: grid; gap: var(--auth-space-2); }
