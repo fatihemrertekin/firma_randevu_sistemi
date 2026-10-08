@@ -28,7 +28,6 @@ export async function readSelectionPage(response: Response): Promise<SelectionPa
   if (!response.ok) throw new SelectionError(response.status)
   const value: unknown = await response.json()
   if (!isSelection(value) || !('items' in value) || !Array.isArray(value.items) || !value.items.every(isService) ||
-    !('page' in value) || typeof value.page !== 'number' || !Number.isInteger(value.page) || value.page < 1 ||
     !isPageMetadata(value) || value.items.length > value.pageSize) throw new SelectionError(500)
   return { ...value, items: value.items, page: value.page, hasMore: value.hasMore }
 }

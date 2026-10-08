@@ -1,5 +1,5 @@
 import WeeklyHoursEditor from '../../components/WeeklyHoursEditor'
-import type { HoursPost } from './businessHoursApi'
+import type { HoursPost } from '../../app/weeklyHoursApi'
 
 type Props = { post: HoursPost; onDirtyChange: (dirty: boolean) => void; onBusyChange: (busy: boolean) => void }
 export default function BusinessHours(props: Props) {

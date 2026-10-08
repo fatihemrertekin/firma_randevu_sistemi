@@ -20,7 +20,7 @@ function isAccount(value: unknown): value is StaffAccount {
 }
 function parsePage(value: unknown): StaffPage {
   if (typeof value !== 'object' || value === null || !('items' in value) || !Array.isArray(value.items) ||
-    !value.items.every(isAccount) || !('page' in value) || typeof value.page !== 'number' ||
+    !value.items.every(isAccount) ||
     !isPageMetadata(value) || value.items.length > value.pageSize) throw new StaffRequestError('Liste yanıtı doğrulanamadı. Listeyi yenile.')
   return { items: value.items, page: value.page, hasMore: value.hasMore, pageSize: value.pageSize, totalCount: value.totalCount }
 }

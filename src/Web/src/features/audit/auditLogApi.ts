@@ -1,3 +1,5 @@
+import { retrySeconds } from '../../app/weeklyHoursApi'
+
 export const auditEndpoint = '/api/audit-log/'
 export type Category = 'all' | 'definitions' | 'security'
 export type AuditEntry = { id: string; occurredAt: string; module: string; action: string; actor: string; target: string }
@@ -14,8 +16,7 @@ function isEntry(value: unknown): value is AuditEntry {
 }
 export async function readAuditPage(response: Response, category: Category, pageSize = 20): Promise<AuditPage> {
   if (!response.ok) {
-    const retry = Number(response.headers.get('Retry-After'))
-    throw new AuditError(response.status, response.status === 429 ? Number.isFinite(retry) && retry > 0 ? Math.min(120, Math.ceil(retry)) : 60 : 0)
+    throw new AuditError(response.status, response.status === 429 ? retrySeconds(response) : 0)
   }
   const body: unknown = await response.json()
   if (typeof body !== 'object' || body === null || !('items' in body) || !Array.isArray(body.items) || body.items.length > pageSize || !body.items.every(isEntry) ||
