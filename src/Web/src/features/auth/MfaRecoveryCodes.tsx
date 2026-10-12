@@ -6,16 +6,20 @@ type Props = {
   post: (path: string, body: object, signal?: AbortSignal) => Promise<Response>
   disabled: boolean
   onReplaced: (codes: string[]) => void
+  onBusyChange: (busy: boolean) => void
 }
 
-export default function MfaRecoveryCodes({ post, disabled, onReplaced }: Props) {
+export default function MfaRecoveryCodes({ post, disabled, onReplaced, onBusyChange }: Props) {
   const [remaining, setRemaining] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
+  const [revision, setRevision] = useState(0)
+  const [countError, setCountError] = useState('')
   const [password, setPassword] = useState('')
   const [confirmed, setConfirmed] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const pending = useRef(false)
+  useEffect(() => { onBusyChange(busy); return () => onBusyChange(false) }, [busy, onBusyChange])
   useEffect(() => {
     const controller = new AbortController()
     fetch('/api/auth/mfa/recovery-codes', { cache: 'no-store', signal: AbortSignal.any([controller.signal, AbortSignal.timeout(15000)]) })
@@ -25,10 +29,10 @@ export default function MfaRecoveryCodes({ post, disabled, onReplaced }: Props) 
         if (typeof body !== 'object' || body === null || !('remaining' in body) ||
           typeof body.remaining !== 'number' || !Number.isInteger(body.remaining) || body.remaining < 0) throw new Error('count')
         if (!controller.signal.aborted) setRemaining(body.remaining)
-      }).catch(() => { if (!controller.signal.aborted) setError('Kod sayısı alınamadı. Bölümü yeniden açın.') })
+      }).catch(() => { if (!controller.signal.aborted) setCountError('Kod sayısı alınamadı. Yeniden deneyin.') })
       .finally(() => { if (!controller.signal.aborted) setLoading(false) })
     return () => controller.abort()
-  }, [])
+  }, [revision])
   async function replace(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (pending.current || disabled || !confirmed) return
@@ -54,6 +58,10 @@ export default function MfaRecoveryCodes({ post, disabled, onReplaced }: Props) 
     <h2 id="recovery-title">MFA kurtarma kodları</h2>
     <p>Telefonunuza erişemediğinizde parolanızdan sonraki ikinci adımda kullanılır. Parola sıfırlamaz.</p>
     <p role="status">{loading ? 'Kod sayısı kontrol ediliyor…' : remaining === null ? 'Kod sayısı şu anda bilinmiyor.' : `Kalan kullanılmamış kod: ${remaining}`}</p>
+    <ErrorMessage message={countError} />
+    {countError && <button type="button" disabled={loading || busy || disabled} onClick={() => {
+      setLoading(true); setCountError(''); setRevision(current => current + 1)
+    }}>Kod sayısını yeniden yükle</button>}
     <p id="recovery-warning">Yeni kodlar oluşturunca eski kodlar geçersiz olur ve bütün oturumlar kapanır. Parolanız ve doğrulayıcı uygulamanız değişmez. Yeni kodlar yalnız bir kez gösterilir.</p>
     <form onSubmit={replace} aria-label="MFA kurtarma kodlarını yenile" aria-busy={busy}>
       <label htmlFor="recovery-password">Mevcut parola</label>

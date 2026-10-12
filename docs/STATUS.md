@@ -73,7 +73,7 @@ Program.cs bakımı `done`: başlangıç 265 satırdan 69 satıra indi; önce/so
 
 ## Sıradaki iş
 
-Sıradaki tek aday, T05 Hesap ve güvenlik yüzeyinin mevcut durumunu değerlendirip gerekiyorsa plan/görsel taslak hazırlamaktır. Yeni ekran kodu ayrı taslak onayı ister; bu bakım kapsamında T05–T08/P03/dark mode/native finish başlatılmadı.
+Aktif iş T05 Hesap ve güvenlik bakımıdır. Kullanıcı bu mevcut yüzey için önizleme üretmeden doğrudan kod istedi. Yerel kabul geçti; GitHub ve ana 8080 teslimi sürüyor. Sonraki tek aday T06 Çalışan erişimleri yüzeyinin değerlendirilmesidir; bu iş henüz başlatılmadı.
 
 ## Gelecek plan kaydı — destek ve işletim ekranı (02.10.2026)
 
