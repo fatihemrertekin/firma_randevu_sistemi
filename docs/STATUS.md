@@ -2,6 +2,8 @@
 
 Güncelleme: 2026-10-13. Güncel özet burada; kapsam ve kanıt bağlantıları [P02 planında](plans/P02.md), önceki oturum kayıtları [arşivde](archive/2026-10-02/STATUS.md). Arşivdeki eski durum ve onay bekleme ifadeleri güncel yönlendirme değildir.
 
+`source-map-js` güvenlik bakımının yerel kabulü `done`: yalnız geçişli paket 1.2.1 → 1.2.2 güncellendi; temiz kurulum, audit 0 açık, 247 test ve frontend kapıları geçti. Ana 8080/DB/hesap/MFA/anahtar/SMTP değişmedi. GitHub teslimi bakım PR son head CI/birleşme kaydından izlenir. [Kapsam ve kanıt](plans/P02.md#source-map-js-güvenlik-bakımı--13102026).
+
 Impeccable frontend düzenlemesi `done`: critique → extract → polish; 247 web testi, 50 gerçek API durumu × dört genişlik, 80 son görüntü ve geri dönüş provası geçti. [PR #60](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/60) `4b789fa` ile birleşti; [main CI](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/38308796260) başarılı. Yedekli 8080 tesliminde 32 tablo, hesap/MFA/anahtar/ayar/SMTP korundu; sağlık/restart ve ana tarayıcı kabulü geçti. [Kapsam ve kanıt](plans/P02.md#impeccable-frontend-düzenlemesi--08102026).
 
 Ponytail audit sadeleştirmesi yerel kabulü `done`: onaylanan beş bulgu uygulandı; net 18 satır ve bir yönlendirme dosyası kaldırıldı. 241 web testi, frontend kapıları ve ayrı sentetik kurulumda 44 gerçek API durumu × dört genişlik geçti. GitHub teslimi dalın PR/CI kanıtıyla izlenir; ana 8080 imajı güncellenmedi. [Kapsam ve kanıt](plans/P02.md#ponytail-audit-sadeleştirmesi--08102026).
@@ -71,7 +73,7 @@ Program.cs bakımı `done`: başlangıç 265 satırdan 69 satıra indi; önce/so
 
 ## Sıradaki iş
 
-Sıradaki tek bakım adayı, `npm audit` tarafından bildirilen geliştirme bağımlılığı `source-map-js` uyarısının dar bir lock dosyası güncellemesiyle giderilmesidir. Bu sadeleştirmede bağımlılıklar değiştirilmedi. T05 Hesap ve güvenlik taslağı/ekran kodu ayrı kullanıcı onayı ister; T05–T08/P03/dark mode/native finish başlatılmadı.
+Sıradaki tek aday, T05 Hesap ve güvenlik yüzeyinin mevcut durumunu değerlendirip gerekiyorsa plan/görsel taslak hazırlamaktır. Yeni ekran kodu ayrı taslak onayı ister; bu bakım kapsamında T05–T08/P03/dark mode/native finish başlatılmadı.
 
 ## Gelecek plan kaydı — destek ve işletim ekranı (02.10.2026)
 
