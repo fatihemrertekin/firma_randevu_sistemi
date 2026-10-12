@@ -116,6 +116,8 @@ describe('İşletme sahibi kurtarma e-postası', () => {
     expect(window.location.hash).toBe('')
     expect(container.textContent).not.toContain(token)
     expect(fetcher.mock.calls.some(([path]) => path.endsWith('/confirm'))).toBe(false)
+    expect(document.activeElement).toBe(container.querySelector('h1'))
+    expect(document.title).toBe('Hesap e-postasını doğrula · Randevu')
     await submit('Hesap e-postasını doğrulama')
     expect(container.querySelector('[role="status"]')?.textContent).toContain('doğrulandı')
     expect(fetcher.mock.calls.some(([path]) => path.endsWith('/confirm'))).toBe(true)
@@ -127,6 +129,7 @@ describe('İşletme sahibi kurtarma e-postası', () => {
     expect(container.querySelector('[role="status"]')).toBeNull()
     expect(container.querySelector('form')).not.toBeNull()
     expect(fetcher.mock.calls.filter(([path]) => path.endsWith('/confirm'))).toHaveLength(1)
+    expect(document.activeElement).toBe(container.querySelector('h1'))
   })
 
   it('geçersiz bağlantıda hata gösterir ve doğrulanmış göstermez', async () => {
@@ -139,6 +142,7 @@ describe('İşletme sahibi kurtarma e-postası', () => {
     await act(async () => root.render(<App />))
     await submit('Hesap e-postasını doğrulama')
     expect(container.querySelector('[role="alert"]')?.textContent).toContain('geçersiz veya süresi dolmuş')
+    expect(document.activeElement).toBe(container.querySelector('[role="alert"]'))
     expect(container.querySelector('[role="status"]')).toBeNull()
   })
 })

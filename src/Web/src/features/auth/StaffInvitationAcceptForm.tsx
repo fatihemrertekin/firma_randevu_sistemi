@@ -12,6 +12,7 @@ export default function StaffInvitationAcceptForm({ post, onDone, onCancel, onBu
   const [confirmPassword, setConfirmPassword] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const mismatch = error === 'Parola ve tekrarı aynı olmalı.'
   const pending = useRef(false)
   useEffect(() => { onBusyChange?.(busy); return () => onBusyChange?.(false) }, [busy, onBusyChange])
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -37,7 +38,7 @@ export default function StaffInvitationAcceptForm({ post, onDone, onCancel, onBu
     finally { setToken(''); setPassword(''); setConfirmPassword(''); pending.current = false; setBusy(false) }
   }
   return <>
-    <h1 id="page-title">Çalışan davetini kabul et</h1>
+    <h1 id="page-title" tabIndex={-1}>Çalışan davetini kabul et</h1>
     <p>İşletme sahibinin size verdiği kodu ve davet edilen e-postanızı kullanın. Kod 24 saat geçerlidir.</p>
     <form onSubmit={submit} aria-label="Çalışan davetini kabul et" aria-busy={busy}>
       <label htmlFor="accept-email">Davet edilen e-posta</label>
@@ -49,15 +50,17 @@ export default function StaffInvitationAcceptForm({ post, onDone, onCancel, onBu
       <p id="invite-password-rules">Parola en az 12 karakter; büyük/küçük harf, rakam ve özel karakter içermeli.</p>
       <label htmlFor="accept-password">Parola</label>
       <input id="accept-password" type="password" autoComplete="new-password" required minLength={12} maxLength={1024}
-        aria-describedby="invite-password-rules" disabled={busy} value={password} onChange={event => setPassword(event.target.value)} />
+        aria-describedby="invite-password-rules" disabled={busy} value={password} onChange={event => { setPassword(event.target.value); if (mismatch) setError('') }} />
       <label htmlFor="accept-confirm">Parola tekrarı</label>
       <input id="accept-confirm" type="password" autoComplete="new-password" required maxLength={1024} disabled={busy}
-        value={confirmPassword} onChange={event => setConfirmPassword(event.target.value)} />
+        aria-invalid={mismatch || undefined} aria-describedby={mismatch ? 'accept-mismatch' : undefined}
+        value={confirmPassword} onChange={event => { setConfirmPassword(event.target.value); if (mismatch) setError('') }} />
+      {mismatch && <ErrorMessage id="accept-mismatch" message={error} />}
       <div className={styles.confirmationActions}>
         <button type="submit" disabled={busy}>{busy ? 'Hesap açılıyor…' : 'Hesabımı aç'}</button>
         <button type="button" disabled={busy} onClick={onCancel}>Girişe dön</button>
       </div>
     </form>
-    <ErrorMessage message={error} />
+    <ErrorMessage message={mismatch ? '' : error} />
   </>
 }

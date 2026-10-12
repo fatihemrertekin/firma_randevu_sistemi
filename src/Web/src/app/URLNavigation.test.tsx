@@ -136,6 +136,17 @@ describe('Ekran URL ve geçmiş kabulü', () => {
     expect(container.querySelector<HTMLInputElement>('#service-name')?.value).toBe(service.name)
     expect(vi.mocked(fetch).mock.calls.some(([input]) => input === '/api/services/service-1')).toBe(true)
   })
+  it('hizmet düzenlemeden listeye dönüşte sayfayı ve kayıt boyutunu korur', async () => {
+    const original = vi.mocked(fetch).getMockImplementation()
+    vi.mocked(fetch).mockImplementation(async (input, options) => String(input).startsWith('/api/services/?')
+      ? Response.json({ items: [service], page: 2, hasMore: false, pageSize: 50, totalCount: 51 })
+      : original ? original(input, options) : new Response(null, { status: 500 }))
+    await render(sectionPaths.services + '/service-1/duzenle?sayfa=2&boyut=50')
+    await click('Listeye dön')
+    expect(window.location.pathname).toBe(sectionPaths.services)
+    expect(window.location.search).toBe('?sayfa=2&boyut=50')
+    expect(container.querySelector<HTMLSelectElement>('select[aria-label="Sayfadaki kayıt sayısı"]')?.value).toBe('50')
+  })
   it('taslakta geri geçişini reddedince adresi ve alanları korur; onaylayınca geçer', async () => {
     await render(sectionPaths.services); await click('Yeni hizmet'); await fill('service-name', 'Kaydedilmemiş')
     const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false)

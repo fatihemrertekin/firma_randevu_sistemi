@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState, type RefObject } from 'react'
 import ServiceEditor from './ServiceEditor'
 import ServiceActions from './ServiceActions'
 import NavigationLink from '../../app/NavigationLink'
-import { pageSearch, readPage, sectionPaths } from '../../app/routes'
+import { pageSearch, readPage, readPageSize, sectionPaths } from '../../app/routes'
 import { useLocation } from 'react-router'
 import ErrorMessage from '../../components/ErrorMessage'
 import { readService, ServiceRequestError, serviceFailure, type Service, type ServicePost } from './servicesApi'
@@ -38,7 +38,7 @@ export default function ServiceRouteEditor({ id, post, onSaved, onCancel, onDele
     setService(current); setEditorRevision(value => value + 1); setRequiresReload(false); setActionOpen(false); setNotice(message)
   }
   return <section className={styles.surface} aria-labelledby="service-title">
-    <NavigationLink to={sectionPaths.services + pageSearch(readPage(location.search))} className={styles.back} disabled={busy}>Listeye dön</NavigationLink>
+    <NavigationLink to={sectionPaths.services + pageSearch(readPage(location.search), readPageSize(location.search))} className={styles.back} disabled={busy}>Listeye dön</NavigationLink>
     <h1 id="service-title" ref={heading} tabIndex={-1}>{id ? service?.name ?? 'Hizmeti düzenle' : 'Yeni hizmet'}</h1>
     {id && service && <p>{service.isActive ? 'Aktif' : 'Pasif'}</p>}
     {loading ? <p role="status">Hizmet bilgileri yükleniyor…</p> : id && !service ? <>

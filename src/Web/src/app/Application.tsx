@@ -9,11 +9,17 @@ import LinkPasswordReset from '../features/auth/LinkPasswordReset'
 import AuthenticationLayout from '../features/auth/AuthenticationLayout'
 import { postWithCsrf } from './api'
 import NavigationLink from './NavigationLink'
+import { useCallback } from 'react'
 
 export default function Application({ initialProof }: { initialProof: () => LinkProof }) {
   const auth = useAuthentication(), location = useLocation(), navigate = useNavigate()
   const { proof, clearProof } = useLinkProof(initialProof)
   const route = resolveRoute(location.pathname)
+  const focusUnavailablePage = useCallback((heading: HTMLHeadingElement | null) => {
+    if (!heading) return
+    document.title = `${heading.textContent} · Randevu`
+    if (document.activeElement?.getAttribute('role') !== 'alert') heading.focus()
+  }, [])
   const account = auth.account
   const ready = !auth.loading && !auth.recoveryCodes && account &&
     (account.staffAccess || (account.mfaEnabled && account.ownerAccess))
@@ -38,7 +44,7 @@ export default function Application({ initialProof }: { initialProof: () => Link
   }
   if (ready && account) return <ManagementLayout auth={auth} account={account} />
   if (route.kind === 'missing' || (route.kind === 'auth' && route.page === 'verify')) return <AuthenticationLayout>
-    <h1 id="page-title">{route.kind === 'missing' ? 'Sayfa bulunamadı' : 'Doğrulama bağlantısı gerekli'}</h1>
+    <h1 key={location.pathname} id="page-title" tabIndex={-1} ref={focusUnavailablePage}>{route.kind === 'missing' ? 'Sayfa bulunamadı' : 'Doğrulama bağlantısı gerekli'}</h1>
     <p>{route.kind === 'missing' ? 'Bu adres uygulamada bulunmuyor.' : 'E-postanızdaki doğrulama bağlantısını yeniden açın.'}</p>
     <NavigationLink to={authPaths.login}>Girişe dön</NavigationLink>
   </AuthenticationLayout>

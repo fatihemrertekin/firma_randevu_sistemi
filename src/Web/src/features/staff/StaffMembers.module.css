@@ -2,8 +2,7 @@
 .toolbar, .pagination, .pagination > div, .detailIdentity { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--auth-space-4); }
 .toolbar { margin-bottom: var(--auth-space-6); }
 .toolbar p { margin: 0; min-width: 0; }
-.surface .primary, .surface :is(button, a[data-navigation])[type='submit'] { background: var(--button-primary-bg); color: var(--button-primary-text); border-color: var(--button-primary-bg); font-weight: var(--button-font-weight); }
-.surface .primary:hover:not(:disabled):not([aria-disabled='true']), .surface :is(button, a[data-navigation])[type='submit']:hover:not(:disabled):not([aria-disabled='true']) { background: var(--button-primary-hover); }
+.primary { composes: primary from '../../components/DefinitionManagement.module.css'; }
 .columns, .row { display: grid; grid-template-columns: minmax(0, 1fr) var(--personnel-status-width) var(--personnel-action-width); gap: var(--auth-space-4); align-items: center; padding-block: var(--auth-space-3); border-bottom: var(--auth-rule) solid var(--border); }
 .columns { font-weight: 700; }
 .list { margin: 0; padding: 0; list-style: none; }
@@ -27,8 +26,7 @@
 .draft { color: var(--auth-brown); margin-block: var(--auth-space-4) 0; }
 .actions { display: flex; gap: var(--auth-space-4); flex-wrap: wrap; margin-top: var(--auth-space-3); }
 .actions :is(button, a[data-navigation]) { flex: 0 1 auto; min-width: var(--target-min); }
-:global(.management-theme) :is(button, a[data-navigation]).danger { color: var(--button-danger-text); background: var(--button-danger-bg); border-color: var(--button-danger-bg); }
-:global(.management-theme) :is(button, a[data-navigation]).danger:hover:not(:disabled):not([aria-disabled='true']) { background: var(--button-danger-hover); }
+.danger { composes: danger from '../../components/DefinitionManagement.module.css'; }
 .stateSection { border-top: var(--auth-rule) solid var(--border); margin-top: var(--auth-space-6); padding-top: var(--auth-space-5); }
 .stateSection h3 { margin-top: 0; }
 .stateSection p { color: var(--auth-petrol); }

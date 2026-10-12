@@ -10,6 +10,11 @@ export default function OwnerEmailConfirmation({ token, onClose }: { token: stri
   const [confirmed, setConfirmed] = useState(false)
   const [error, setError] = useState('')
   const pending = useRef(false)
+  useEffect(() => {
+    const heading = document.getElementById('page-title')
+    document.title = `${heading?.textContent ?? 'Hesap e-postasını doğrula'} · Randevu`
+    if (document.activeElement?.getAttribute('role') !== 'alert') heading?.focus()
+  }, [])
   const blocker = useBlocker(() => pending.current)
   useEffect(() => { if (blocker.state === 'blocked') blocker.reset() }, [blocker])
   useEffect(() => {
@@ -35,7 +40,7 @@ export default function OwnerEmailConfirmation({ token, onClose }: { token: stri
     finally { clearTimeout(timer); setBusy(false); pending.current = false }
   }
   return <AuthenticationLayout>
-      <h1 id="page-title">Hesap e-postasını doğrula</h1>
+      <h1 id="page-title" tabIndex={-1}>Hesap e-postasını doğrula</h1>
       {confirmed ? <p role="status">Hesap e-postanız doğrulandı. Hesabınıza dönebilirsiniz.</p> : <>
         <p>Bağlantıyı onaylayarak hesap e-postanıza erişebildiğinizi doğrulayın. Parolanız ve iki aşamalı girişiniz değişmez.</p>
       </>}

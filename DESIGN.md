@@ -44,13 +44,14 @@ components:
     backgroundColor: "{colors.action}"
     textColor: "{colors.surface}"
     rounded: "{rounded.control}"
-    padding: ".5rem 1rem"
-    height: "3rem"
+    padding: ".375rem .75rem"
+    height: "44px"
   button-secondary:
     backgroundColor: "{colors.navy}"
     textColor: "{colors.surface}"
     rounded: "{rounded.control}"
-    padding: ".5rem 1rem"
+    padding: ".375rem .75rem"
+    height: "44px"
   input:
     backgroundColor: "{colors.surface}"
     textColor: "{colors.ink}"
@@ -105,7 +106,7 @@ Tüm kimlik formları aynı sıkı ölçüleri kullanır: marka 48 px, görev ba
 
 ## Elevation & Depth
 
-Yönetimde beyaza yakın başlık, koyu lacivert dar grup menüsü ve kapanabilir açık alt menü vardır. İşletme/Ekip/Hesap grupları yalnız mevcut yetkili bölümlere götürür; değişiklik kayıtları ayrı bağlantıdır. Logo simgesi yoktur. Masaüstü marka ve görev başlığı 44 px; mobil başlık 32 px, alanlar 48 px, buton hedefi en az 44 px'tir. Yönetimin bütün ölçüleri merkezi tokenlarla tanımlanır.
+Yönetimde beyaza yakın başlık, beyaz ikon/metin grup menüsü ve kapanabilir alt görevler vardır; daraltıldığında ikon şeridi ve küçük açılır yüzey kullanılır. İşletme/Ekip/Hesap grupları yalnız mevcut yetkili bölümlere götürür; değişiklik kayıtları ayrı bağlantıdır. Logo simgesi yoktur. Masaüstü marka ve görev başlığı 44 px; mobil başlık 32 px, alanlar 48 px, buton hedefi en az 44 px'tir. Yönetimin bütün ölçüleri merkezi tokenlarla tanımlanır.
 
 Profil formu geniş masaüstünde küçük fotoğraflı bilgi özetiyle yan yanadır. 1280 px ve altında özet formun altına geçer; 900 px ve altında menü kapalı başlar, eylemler tek sütun olur, fotoğraf 112 px yüksekliğe iner. Taslak özeti değişen alanları gösterir; sunucu yüklemesi/kayıt sonrası profil özeti, belirsiz kayıt veya sürüm çatışmasında doğrulanmamış bilgiler olarak etiketlenir. Bölüm değişiminde profil taslağı korunur; yenileme ve çıkışta silme onayı gerekir.
 
@@ -118,6 +119,8 @@ Kimlik kontrollerinde gölge yoktur. Ayrım, boşluk ve ince sınırla sağlanı
 Kontroller mütevazı yuvarlak köşelidir. İşlem hedefi en az 44 × 44 px'tir; metin eylemleri de aynı dokunma alanını sağlar. Ana işlem düz mavi, yardımcı işlem dolu laciverttir; her ikisinde beyaz yazı kullanılır.
 
 ## Components
+
+Kontrollerin ortak kaynağı `src/Web/src/styles/global.css` ve `tokens.css` dosyalarıdır. Giriş, MFA, kurtarma/davet formları ve yönetim aynı temel alan, düğme, odak, hata ve azaltılmış hareket kurallarını kullanır; yüzey CSS'i yalnız yerleşim ve gerçek varyasyonları ekler. `DefinitionManagement.module.css` içindeki `primary` ve `danger`, personel/hizmet/çalışan hesabı CSS Modules dosyalarında `composes` ile paylaşılır. Örneğin `.primary { composes: primary from '../../components/DefinitionManagement.module.css'; }`. Submit ana işlem, primary açık ana işlem bağlantısı/düğmesi, danger onaylı tehlikeli işlem içindir; varsayılan yardımcı işlem laciverttir. Girişin büyük düğme istisnası ve hafif dolgulu gezinme/sekme stilleri korunur.
 
 **Düğmeler:** tek ana işlem belirgindir. Ortak metin 14 px/600, yatay iç boşluk 12 px, köşe 6 px, asgari hedef 44×44 px'tir. Genişlik metne göre belirlenir; gereksiz tam genişlik yardımcı işlemler kaldırılır. Grup menüsünün çok satırlı etiketi daha yüksek kalabilir. Yardımcı işlemler dolu lacivert, gezinme ve metin eylemleri hafif dolguludur; buton zemini transparan değildir. Hover, active, disabled ve loading davranışı ortak yerleşim içinde tutarlıdır; 180 ms renk geçişleri azaltılmış hareket tercihinde kapanır.
 
@@ -165,3 +168,5 @@ Ekran ve kayıt sayfası değişiminde başlığa erişilebilirlik odağı taş�
 Onaylı [geniş](.impeccable/mocks/minimal-navigation/preview-1280.png), [dar](.impeccable/mocks/minimal-navigation/preview-collapsed.png) ve [mobil](.impeccable/mocks/minimal-navigation/preview-390.png) örnekler bu dar kapsamın görsel kaynağıdır. Sol menü beyaz yüzeyde yatay ikon/metin satırlarına döner; büyük koyu kutular kaldırılır. Geniş menü 14 rem, ikon şeridi 4,5 rem; sakin seçili yüzey, 44 px hedef ve açık hover kullanılır. Normal gezinme satırları 14 px/500, seçili satırlar 600; işlem butonlarının mevcut ölçüsü korunur. Personel listesi dönüşü hover sırasında açık zeminde koyu/altı çizili kalır. Hizmet seçimleri mevcut form genişliği sınırından çıkar, en az 17 rem sütunlarla alanı kullanır; mobilde tek sütundur.
 
 Beş listede ortak sayfalama: gerçek kayıt aralığı, yakın numaralar, ilk/önceki/sonraki/son okları ve 10/20/50 seçimi. Numara metni 14 px/500, geçerli sayfa 700 ve aria-current; tüm hedefler en az 44 px. Mobilde aralık/boyut üstte, yakın sayfalar altta; uzak sayfalar azaltılır. Boş/tek sayfada gereksiz oklar görünmez. Audit toplam/son sayfa uydurmaz; yalnız ziyaret edilmiş cursor sayfaları ve devam oku sunulur. Hata/işlem/yükleme kilidi, URL geçmişi ve hizmet seçimi taslağı korunur.
+
+08.10.2026 mevcut frontend polish: yönetim içerik alanı yeterince genişse hesap güvenliği ve çalışan erişimindeki mevcut görev panelleri iki sütuna yayılır; dar alanda aynı DOM sırasıyla tek sütun kalır. Profil adresi doğal üç satır ve kullanıcı tarafından büyütülebilir alan olarak kalır. Kimlik görev geçişi başlığa erişilebilirlik odağı taşır, inputu otomatik seçmez; MFA yöntem değiştirme düğmesinin odağı korunur. Parola eşleşme hatası görünür alert üzerinden tekrar alanıyla ilişkilidir. Davet boş durumu yalnız başarıyla alınmış listeye dayanır; hizmetten dönüş URL'deki sayfa/boyut tercihini korur.

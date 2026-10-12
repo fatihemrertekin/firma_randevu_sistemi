@@ -65,6 +65,7 @@ describe.each([false, true])('Parola sıfırlama (Staff: %s)', staff => {
     let finish: ((response: Response) => void) | undefined
     const pending = new Promise<Response>(resolve => { finish = resolve })
     const requests = await openReset(() => pending, staff)
+    expect(document.activeElement).toBe(container.querySelector('h1'))
     expect(Array.from(container.querySelectorAll<HTMLInputElement>('input')).map(input => input.autocomplete))
       .toEqual(['off', 'new-password', 'new-password'])
     await fillReset()
@@ -78,6 +79,7 @@ describe.each([false, true])('Parola sıfırlama (Staff: %s)', staff => {
     expect(container.querySelector('[role="status"]')?.textContent).toContain(staff ? 'Yeni parolanızla yeniden giriş' : 'ikinci adımla yeniden giriş')
     expect(container.querySelector('#reset-token')).toBeNull()
     expect(container.querySelector<HTMLInputElement>('#password')?.value).toBe('')
+    expect(document.activeElement).toBe(container.querySelector('h1'))
   })
 
   it('uyuşmayan parolada istek göndermez ve parolaları temizler', async () => {
@@ -87,6 +89,17 @@ describe.each([false, true])('Parola sıfırlama (Staff: %s)', staff => {
     expect(container.querySelector('[role="alert"]')?.textContent).toContain('aynı olmalı')
     expect(requests.mock.calls.some(([requestPath]) => requestPath === path)).toBe(false)
     expect(container.querySelector<HTMLInputElement>('#reset-password')?.value).toBe('')
+    const confirm = container.querySelector<HTMLInputElement>('#reset-confirm')
+    const alert = container.querySelector('[role="alert"]')
+    expect(confirm?.value).toBe('')
+    expect(confirm?.getAttribute('aria-invalid')).toBe('true')
+    expect(confirm?.getAttribute('aria-describedby')).toBe(alert?.id)
+    expect(confirm?.nextElementSibling).toBe(alert)
+    expect(document.activeElement).toBe(alert)
+    await fill('reset-confirm', 'Synthetic!Reset456')
+    expect(confirm?.hasAttribute('aria-invalid')).toBe(false)
+    expect(confirm?.hasAttribute('aria-describedby')).toBe(false)
+    expect(container.querySelector('[role="alert"]')).toBeNull()
   })
 
   it.each([400, 409, 429, 500])('sunucu reddinde (%i) başarı göstermez ve hassas alanları temizler', async status => {

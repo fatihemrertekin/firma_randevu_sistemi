@@ -1,6 +1,8 @@
 # STATUS — Güncel durum ve sıradaki iş
 
-Güncelleme: 2026-10-08. Güncel özet burada; kapsam ve kanıt bağlantıları [P02 planında](plans/P02.md), önceki oturum kayıtları [arşivde](archive/2026-10-02/STATUS.md). Arşivdeki eski durum ve onay bekleme ifadeleri güncel yönlendirme değildir.
+Güncelleme: 2026-10-13. Güncel özet burada; kapsam ve kanıt bağlantıları [P02 planında](plans/P02.md), önceki oturum kayıtları [arşivde](archive/2026-10-02/STATUS.md). Arşivdeki eski durum ve onay bekleme ifadeleri güncel yönlendirme değildir.
+
+Impeccable frontend düzenlemesi `in_progress`: bütün ekranlarda critique → extract → polish sırası uygulandı; 247 frontend testi ve kapılar geçti. 50 gerçek API durumu × dört genişlik, 80 son görüntü ve geri dönüş provası geçti. [PR #60](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/60) CI/ana teslimi sürüyor. [Kapsam ve kanıt](plans/P02.md#impeccable-frontend-düzenlemesi--08102026).
 
 Ponytail audit sadeleştirmesi yerel kabulü `done`: onaylanan beş bulgu uygulandı; net 18 satır ve bir yönlendirme dosyası kaldırıldı. 241 web testi, frontend kapıları ve ayrı sentetik kurulumda 44 gerçek API durumu × dört genişlik geçti. GitHub teslimi dalın PR/CI kanıtıyla izlenir; ana 8080 imajı güncellenmedi. [Kapsam ve kanıt](plans/P02.md#ponytail-audit-sadeleştirmesi--08102026).
 
