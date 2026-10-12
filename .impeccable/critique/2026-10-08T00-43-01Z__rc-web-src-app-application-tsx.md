@@ -10,6 +10,7 @@ target_fingerprint: "sha256:9f4b40600a873a03b1a64ff4eb47678c77b63008c65976fe67b9
 target_path: "C:\\Users\\MONSTER\\Desktop\\YAZILIM PROJELERİM\\firma_randevu_sistemi\\src\\Web\\src\\app\\Application.tsx"
 timestamp: 2026-10-08T00-43-01Z
 slug: rc-web-src-app-application-tsx
+closed: true
 ---
 # Bütün frontend critique — 08.10.2026
 
