@@ -50,3 +50,7 @@ Personel listesi dönüşünün hover zemin/metin önceliği düzeltilir; person
 ## Gerçek kabul — 06.10.2026
 
 Onaylı sade menü ve hizmet ızgarası gerçek Chrome/API ile 44 durum ve 320/390/768/1280 genişlikte doğrulandı; 241 web testi geçti. İlk kontroldeki üst üste gelen grup işaretleri giderildi. Açık/dar/mobil düzen, etiket/Escape/odak, hover ve sayfalama okunur; üç sütun hizmet seçimi sağ alanı kullanır. Ana 8080 kabul imajıyla, mevcut 32 tablo/hesap/MFA/anahtar/SMTP korunarak teslim edildi. Ayrıntı ve sınırlar P02 kabul kaydındadır; native finish veya tam WCAG sertifikası iddia edilmez.
+
+## Hesap ve güvenlik kararı — 13.10.2026
+
+Kullanıcı bu mevcut yüzey için önizleme/taslak üretmeden doğrudan kod uygulanmasını açıkça istedi. Mevcut açık palet, ortak form/hata bileşenleri, masaüstünde görev bazlı iki sütun ve mobilde tek sütun korunur; yeni ekran veya görsel dünya eklenmez. Parola eşleşme hatası alan yanında tek erişilebilir uyarı olur ve düzenlenince temizlenir. MFA kodları yanıt gövdesi tamamlanana kadar mevcut gezinme kilidine katılır; kod sayısı okuma hatasında formu koruyan yeniden deneme yalnız hata halinde görünür. API/DTO/rol/CSRF/oturum sözleşmesi değişmez. Gerçek kabul ve teslim P02 planındaki T05 kaydındadır.

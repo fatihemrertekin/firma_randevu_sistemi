@@ -55,6 +55,7 @@ type Props = { auth: ReturnType<typeof useAuthentication>; account: Account }
 
 export default function ManagementLayout({ auth, account }: Props) {
   const owner = account.mfaEnabled && account.ownerAccess && !account.staffAccess
+  const passwordMismatch = auth.error === 'Yeni parola ve tekrarı aynı olmalı.'
   const location = useLocation(), go = useNavigate()
   const route = resolveRoute(location.pathname)
   const forbidden = route.kind === 'management' && !owner && route.section !== 'security'
@@ -197,21 +198,24 @@ export default function ManagementLayout({ auth, account }: Props) {
           <OwnerRecoveryEmail post={post} disabled={blocked} />
         </div>}
         {owner && <div className={styles.panel}>
-          <MfaRecoveryCodes post={post} disabled={blocked} onReplaced={codes => {
+          <MfaRecoveryCodes post={post} disabled={blocked} onBusyChange={setDefinitionBusy} onReplaced={codes => {
             auth.setAccount(null); auth.setRecoveryCodes(codes); auth.setPassword(''); auth.setCode('')
             auth.setMfaRequired(false); auth.setUseRecoveryCode(false); auth.clearPasswordFields()
+            auth.setError('')
             auth.setNotice('Eski MFA kurtarma kodları geçersiz. Yeni kodları saklayıp yeniden giriş yapın.')
           }} />
         </div>}
         <div className={styles.panel}>
           <p>{account.mfaEnabled ? 'İki aşamalı giriş açık.' : 'Çalışan hesabınız açık.'}</p>
           <PasswordChangeForm requiresSecondFactor={account.mfaEnabled || account.ownerAccess}
-            mismatch={auth.error === 'Yeni parola ve tekrarı aynı olmalı.'}
+            mismatch={passwordMismatch}
             currentPassword={auth.currentPassword} newPassword={auth.newPassword}
             confirmPassword={auth.confirmPassword} busy={blocked}
-            onCurrentPassword={auth.setCurrentPassword} onNewPassword={auth.setNewPassword}
-            onConfirmPassword={auth.setConfirmPassword} onSubmit={auth.handlePasswordChange} />
-          <ErrorMessage message={auth.error} />
+            onCurrentPassword={auth.setCurrentPassword}
+            onNewPassword={value => { auth.setNewPassword(value); if (passwordMismatch) auth.setError('') }}
+            onConfirmPassword={value => { auth.setConfirmPassword(value); if (passwordMismatch) auth.setError('') }}
+            onSubmit={auth.handlePasswordChange} />
+          <ErrorMessage message={passwordMismatch ? '' : auth.error} />
           {auth.notice && <p role="status">{auth.notice}</p>}
         </div>
         </div>}

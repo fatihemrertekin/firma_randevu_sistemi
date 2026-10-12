@@ -1,4 +1,5 @@
 import type { FormEvent } from 'react'
+import ErrorMessage from '../../components/ErrorMessage'
 
 type Props = {
   requiresSecondFactor?: boolean
@@ -34,7 +35,7 @@ export default function PasswordChangeForm(props: Props) {
         aria-invalid={props.mismatch || undefined} aria-describedby={props.mismatch ? 'password-mismatch' : undefined}
         disabled={props.busy} value={props.confirmPassword}
         onChange={event => props.onConfirmPassword(event.target.value)} />
-      {props.mismatch && <p id="password-mismatch">Yeni parola ve tekrarı aynı olmalı.</p>}
+      {props.mismatch && <ErrorMessage id="password-mismatch" message="Yeni parola ve tekrarı aynı olmalı." />}
       <button type="submit" disabled={props.busy}>
         {props.busy ? 'Parola değiştiriliyor…' : 'Parolayı değiştir'}
       </button>
