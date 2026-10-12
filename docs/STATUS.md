@@ -40,6 +40,8 @@ Sade menü ve ortak sayfalama `done`: [PR #57](https://github.com/fatihemrerteki
 
 ## Bakım durumu
 
+T05 Hesap ve güvenlik bakımı geliştirme/GitHub/ana yerel teslimi `done` (13.10.2026): [PR #63](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/63), aynı birleşme commit'i için başarılı main CI ve yedekli 8080 teslimi. Tek parola hata gösterimi, MFA yanıtı boyunca gezinme kilidi ve yalnız kod sayısı hatasında taslağı koruyan tekrar deneme; 249 web testi ve 10 gerçek API durumu × dört genişlik geçti. 32 tablo/hesap/MFA/anahtar/ayar/SMTP korundu; sağlık/restart ve ana anonim tarayıcı kabulü geçti. [Kabul ve geri dönüş sınırı](plans/P02.md#t05-hesap-ve-güvenlik-bakımı--13102026).
+
 Mevcut yüzey düzeltmeleri geliştirme/GitHub/ana yerel teslimi `done` (06.10.2026): yalnız ilk giriş butonlarının önceki ölçüsü, grup menüsü aç/kapat ve ilk tıklama düzeltmesi, personel geri bağlantısı, gereksiz yenileme/otomatik alan odağı, kayıtların geniş ekran düzeni, onaylı işletme adı ve otomatik e-posta doğrulama kontrolü. [Kapsam ve kabul](plans/P02.md#mevcut-yüzey-düzeltmeleri--06102026). Ortak kompakt butonların bütünü için geri alma isteği kullanıcı tarafından iptal edildi; T04 Hizmetler/URL yapısı korunur. [PR #55](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/55) ve aynı birleşme commit’i için başarılı main CI sonrası yedekli 8080 teslimi yapıldı; 32 tablo/hesap/MFA/anahtar/ayar/SMTP, sağlık/restart ve anonim tarayıcı/paket eşitliği doğrulandı.
 
 T04 hizmet listesi/ayrı form ve ortak minimalist buton stili geliştirme/GitHub/ana yerel teslimi `done` (05.10.2026): [PR #53](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/53) `575b9a2` ile birleşti, aynı commit'in [main CI](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/37324323785) sonucu başarılı. Ayrı onayla yeni şifreli yedek sonrası 8080'de kabul imajı kuruldu; 32 tablo/hesap/MFA/anahtar/SMTP ayarları, sağlık/restart ve anonim tarayıcı/paket hashleri doğrulandı. [Kabul ve geri dönüş sınırı](plans/P02.md#t04-ana-yerel-teslim--05102026).
@@ -73,7 +75,7 @@ Program.cs bakımı `done`: başlangıç 265 satırdan 69 satıra indi; önce/so
 
 ## Sıradaki iş
 
-Aktif iş T05 Hesap ve güvenlik bakımıdır. Kullanıcı bu mevcut yüzey için önizleme üretmeden doğrudan kod istedi. Yerel kabul geçti; GitHub ve ana 8080 teslimi sürüyor. Sonraki tek aday T06 Çalışan erişimleri yüzeyinin değerlendirilmesidir; bu iş henüz başlatılmadı.
+Sıradaki tek aday T06 Çalışan erişimleri yüzeyinin mevcut durumunu değerlendirmektir. T05 tamamlandı; T06–T08/P03/dark mode/native finish bu iş kapsamında başlatılmadı.
 
 ## Gelecek plan kaydı — destek ve işletim ekranı (02.10.2026)
 
