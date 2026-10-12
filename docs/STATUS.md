@@ -2,6 +2,8 @@
 
 Güncelleme: 2026-10-08. Güncel özet burada; kapsam ve kanıt bağlantıları [P02 planında](plans/P02.md), önceki oturum kayıtları [arşivde](archive/2026-10-02/STATUS.md). Arşivdeki eski durum ve onay bekleme ifadeleri güncel yönlendirme değildir.
 
+Impeccable frontend düzenlemesi `in_progress`: bütün ekranlarda critique → extract → polish sırası uygulandı; 247 frontend testi ve kapılar geçti. Gerçek API/görsel kabul ve PR/CI teslimi sürüyor. [Kapsam ve kanıt](plans/P02.md#impeccable-frontend-düzenlemesi--08102026).
+
 Ponytail audit sadeleştirmesi yerel kabulü `done`: onaylanan beş bulgu uygulandı; net 18 satır ve bir yönlendirme dosyası kaldırıldı. 241 web testi, frontend kapıları ve ayrı sentetik kurulumda 44 gerçek API durumu × dört genişlik geçti. GitHub teslimi dalın PR/CI kanıtıyla izlenir; ana 8080 imajı güncellenmedi. [Kapsam ve kanıt](plans/P02.md#ponytail-audit-sadeleştirmesi--08102026).
 
 Sade menü ve ortak sayfalama `done`: [PR #57](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/57) `fd3a4b3` ile birleşti; [main CI](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/37394954109) başarılı. 241 web/33 ilgili PostgreSQL testi, 44 gerçek API durumu × dört genişlik ve ana anonim kabul geçti. Şifreli yedek sonrası 32 tablo, hesap/MFA/anahtar/SMTP korundu; yeni menü ve sayfalama 8080’de çalışıyor. [Kabul ve geri dönüş](plans/P02.md#sade-menü-ve-ortak-sayfalama--06102026).

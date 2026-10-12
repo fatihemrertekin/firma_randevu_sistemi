@@ -17,6 +17,12 @@ export default function OwnerPasswordResetRequest({ onCancel, onDone, onManual, 
   const pending = useRef(false)
   useEffect(() => { onBusyChange?.(busy); return () => onBusyChange?.(false) }, [busy, onBusyChange])
   useEffect(() => {
+    if (!manual) return
+    const heading = document.getElementById('page-title')
+    document.title = `${heading?.textContent ?? 'Parola sıfırlama'} · Randevu`
+    if (document.activeElement?.getAttribute('role') !== 'alert') heading?.focus()
+  }, [manual])
+  useEffect(() => {
     const controller = new AbortController()
     let active = true
     const timer = setTimeout(() => controller.abort(), 15000)
@@ -48,7 +54,7 @@ export default function OwnerPasswordResetRequest({ onCancel, onDone, onManual, 
   if (manual) return <PasswordResetForm onRequest={body => postWithCsrf('/api/auth/reset-password', body, AbortSignal.timeout(15000))}
     onCancel={onCancel} onDone={onDone} />
   return <>
-    <h1 id="page-title">Parolanızı yenileyin</h1>
+    <h1 id="page-title" tabIndex={-1}>Parolanızı yenileyin</h1>
     <p>Önceden doğruladığınız hesap e-postasına sıfırlama bağlantısı isteyin. İki aşamalı girişiniz korunur.</p>
     {loading ? <p role="status">Gönderim durumu kontrol ediliyor…</p>
       : !available && <p>Otomatik e-posta gönderimi bu kurulumda henüz kullanılamıyor.</p>}

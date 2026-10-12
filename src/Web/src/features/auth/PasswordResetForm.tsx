@@ -11,6 +11,7 @@ export default function PasswordResetForm({ onRequest, onDone, onCancel, staff =
   const [confirmPassword, setConfirmPassword] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const mismatch = error === 'Yeni parola ve tekrarı aynı olmalı.'
   const pending = useRef(false)
   useEffect(() => { onBusyChange?.(busy); return () => onBusyChange?.(false) }, [busy, onBusyChange])
 
@@ -51,7 +52,7 @@ export default function PasswordResetForm({ onRequest, onDone, onCancel, staff =
 
   return (
     <>
-      <h1 id="page-title">{staff ? 'Çalışan parola sıfırlama' : 'İşletme sahibi parola sıfırlama'}</h1>
+      <h1 id="page-title" tabIndex={-1}>{staff ? 'Çalışan parola sıfırlama' : 'İşletme sahibi parola sıfırlama'}</h1>
       <p>{staff
         ? 'İşletme sahibinden, kimliğiniz doğrulandıktan sonra aldığınız 30 dakika geçerli kodu kullanın.'
         : linkToken !== undefined ? 'E-posta bağlantınızla yeni parolanızı belirleyin. Sonraki girişte mevcut ikinci adımınızı kullanın.'
@@ -64,16 +65,18 @@ export default function PasswordResetForm({ onRequest, onDone, onCancel, staff =
         <label htmlFor="reset-password">Yeni parola</label>
         <input id="reset-password" type="password" autoComplete="new-password" required minLength={12} maxLength={1024}
           aria-describedby="reset-rules" disabled={busy} value={newPassword}
-          onChange={event => setNewPassword(event.target.value)} />
+          onChange={event => { setNewPassword(event.target.value); if (mismatch) setError('') }} />
         <label htmlFor="reset-confirm">Yeni parola tekrarı</label>
         <input id="reset-confirm" type="password" autoComplete="new-password" required maxLength={1024}
-          disabled={busy} value={confirmPassword} onChange={event => setConfirmPassword(event.target.value)} />
+          aria-invalid={mismatch || undefined} aria-describedby={mismatch ? 'reset-mismatch' : undefined}
+          disabled={busy} value={confirmPassword} onChange={event => { setConfirmPassword(event.target.value); if (mismatch) setError('') }} />
+        {mismatch && <ErrorMessage id="reset-mismatch" message={error} />}
         <div className={styles.confirmationActions}>
           <button type="submit" disabled={busy}>{busy ? 'Parola sıfırlanıyor…' : 'Parolayı sıfırla'}</button>
           <button type="button" onClick={onCancel} disabled={busy}>Girişe dön</button>
         </div>
       </form>
-      <ErrorMessage message={error} />
+      <ErrorMessage message={mismatch ? '' : error} />
     </>
   )
 }

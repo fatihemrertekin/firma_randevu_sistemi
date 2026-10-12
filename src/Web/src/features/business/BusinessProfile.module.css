@@ -4,7 +4,7 @@
 .field { display: grid; gap: var(--auth-space-2); }
 .field label { color: var(--text); }
 .required { color: var(--error); }
-.field textarea { min-height: var(--management-rail); }
+.field textarea { min-height: var(--auth-control-height); }
 .actions { display: flex; flex-wrap: wrap; gap: var(--auth-space-4); margin-top: var(--auth-space-5); }
 .actions button { flex: 0 1 auto; min-width: var(--target-min); }
 .editor .draft { margin: var(--auth-space-5) 0 0; padding: var(--auth-space-3) var(--auth-space-4); color: var(--auth-brown); background: var(--auth-feedback); border-radius: var(--auth-radius); }

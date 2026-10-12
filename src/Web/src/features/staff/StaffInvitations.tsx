@@ -13,6 +13,7 @@ export default function StaffInvitations({ post }: Props) {
   const [verified, setVerified] = useState(false)
   const [issued, setIssued] = useState<Issued | null>(null)
   const [list, setList] = useState<Invitation[]>([])
+  const [listLoaded, setListLoaded] = useState(false)
   const [busy, setBusy] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -23,13 +24,14 @@ export default function StaffInvitations({ post }: Props) {
     const response = await fetch('/api/staff-invitations/', { cache: 'no-store' })
     if (!response.ok) throw new Error('Davet listesi alınamadı. Oturumunuzu kontrol edip yeniden deneyin.')
     setList((await response.json()) as Invitation[])
+    setListLoaded(true)
   }
   useEffect(() => {
     let active = true
     void fetch('/api/staff-invitations/', { cache: 'no-store' }).then(async response => {
       if (!response.ok) throw new Error('Davet listesi alınamadı. Oturumunuzu kontrol edip yeniden deneyin.')
       const items = (await response.json()) as Invitation[]
-      if (active) setList(items)
+      if (active) { setList(items); setListLoaded(true) }
     }).catch((failure: unknown) => { if (active) setError(failure instanceof Error ? failure.message : 'Davet listesi alınamadı.') })
       .finally(() => { if (active) setLoading(false) })
     return () => { active = false }
@@ -93,7 +95,7 @@ export default function StaffInvitations({ post }: Props) {
       label="Davet kodu — yalnız bu ekranda gösterilir" token={issued.token}
       expiresAt={issued.expiresAt} busy={busy} onClear={() => setIssued(null)} />}
     <h3>Bekleyen davetler</h3>
-    {loading ? <p role="status">Davetler yükleniyor…</p> : list.length === 0 ? <p>Geçerli bekleyen davet yok.</p> : <ul className={styles.invitationList}>
+    {loading ? <p role="status">Davetler yükleniyor…</p> : listLoaded && list.length === 0 ? <p>Geçerli bekleyen davet yok.</p> : list.length > 0 && <ul className={styles.invitationList}>
       {list.map(item => <li key={item.id} className={styles.invitationRow}><span className={styles.account}>{item.email} — {formatBusinessDateTime(item.expiresAt)}</span>
         <button type="button" disabled={busy} onClick={() => revoke(item.id)} aria-label={`${item.email} davetini iptal et`}>Daveti iptal et</button>
       </li>)}

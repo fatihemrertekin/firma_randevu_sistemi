@@ -34,8 +34,13 @@ export default function AuthenticationScreens({ auth }: { auth: ReturnType<typeo
     return () => window.removeEventListener('beforeunload', warn)
   }, [busy])
   useNavigationChange(() => { setPassword(''); setCode(''); setSetupPassword(''); setSetupInfo(null); clearPasswordFields(); setError('') })
-  const title = useEffectEvent(() => { document.title = `${document.getElementById('page-title')?.textContent ?? 'İşletme girişi'} · Randevu` })
-  useEffect(() => { title() }, [location.pathname, loading, mfaRequired, recoveryCodes, account])
+  const title = useEffectEvent(() => {
+    if (loading) return
+    const heading = document.getElementById('page-title')
+    document.title = `${heading?.textContent ?? 'İşletme girişi'} · Randevu`
+    if (document.activeElement?.getAttribute('role') !== 'alert') heading?.focus()
+  })
+  useEffect(() => { title() }, [location.pathname, loading, mfaRequired, recoveryCodes, account, setupInfo])
   function finish() { childBusy.current = false; void navigate(authPaths.login, { replace: true }) }
   function cancel() { void navigate(authPaths.login) }
   function handleLogout() { void logout().then(success => { if (success) finish() }) }
@@ -73,7 +78,7 @@ export default function AuthenticationScreens({ auth }: { auth: ReturnType<typeo
             }} />
         ) : recoveryCodes ? (
           <>
-            <h1 id="page-title">Kurtarma kodlarını saklayın</h1>
+            <h1 id="page-title" tabIndex={-1}>Kurtarma kodlarını saklayın</h1>
             <p>Bu kodların her biri yalnız bir kez kullanılır. Güvenli bir yere kaydedin; tekrar gösterilmeyecekler.</p>
             <ul className={styles.codes}>
               {recoveryCodes.map(recoveryCode => <li key={recoveryCode}><code>{recoveryCode}</code></li>)}
@@ -83,13 +88,13 @@ export default function AuthenticationScreens({ auth }: { auth: ReturnType<typeo
         ) : account ? (
           account.mfaEnabled ? (
             <>
-              <h1 id="page-title">Yeniden giriş yapın</h1>
+              <h1 id="page-title" tabIndex={-1}>Yeniden giriş yapın</h1>
               <p>İki aşamalı giriş etkin. Hesaba devam etmek için yeniden giriş yapın.</p>
               <button type="button" onClick={handleLogout} disabled={busy}>Çıkış yap</button>
             </>
           ) : (
             <>
-              <h1 id="page-title">İki aşamalı girişi kurun</h1>
+              <h1 id="page-title" tabIndex={-1}>İki aşamalı girişi kurun</h1>
               <p>İşletme sahibi hesabını korumak için doğrulayıcı uygulamanıza bir hesap ekleyin.</p>
               {setupInfo ? (
                 <>
@@ -123,7 +128,7 @@ export default function AuthenticationScreens({ auth }: { auth: ReturnType<typeo
           )
         ) : mfaRequired ? (
           <>
-            <h1 id="page-title">İkinci adımı tamamlayın</h1>
+            <h1 id="page-title" tabIndex={-1}>İkinci adımı tamamlayın</h1>
             <p id="mfa-help">{useRecoveryCode
               ? 'MFA kurulurken sakladığınız kodlardan birini girin. Her kod yalnız bir kez kullanılır; parolanızın yerine geçmez.'
               : 'Doğrulayıcı uygulamanızdaki güncel altı haneli kodu girin. Telefonunuza erişemiyorsanız sakladığınız MFA kurtarma kodunu kullanabilirsiniz.'}</p>
@@ -147,7 +152,7 @@ export default function AuthenticationScreens({ auth }: { auth: ReturnType<typeo
         ) : (
           <>
             <div className={styles.login} data-login-buttons>
-            <h1 id="page-title">İşletme girişi</h1>
+            <h1 id="page-title" tabIndex={-1}>İşletme girişi</h1>
             <form className={styles.loginForm} onSubmit={handleLogin}>
               <label htmlFor="email">E-posta</label>
               <input id="email" type="email" autoComplete="username" required disabled={busy} maxLength={254}

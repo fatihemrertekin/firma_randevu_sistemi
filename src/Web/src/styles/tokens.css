@@ -38,6 +38,8 @@
   --button-rule: 1px;
   --space-2: .5rem;
   --action-row-gap: 1rem;
+  --section-title-size: 1.25rem;
+  --prose-line: 1.6;
 }
 
 /* Shared palette roles also cover identity and management surfaces. */
@@ -141,5 +143,5 @@
   --service-status-column: 4rem;
   --service-action-column: 5rem;
   --service-form-max: 35rem;
-  --service-section-size: 1.25rem;
+  --service-section-size: var(--section-title-size);
 }

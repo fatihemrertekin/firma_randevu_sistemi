@@ -29,10 +29,8 @@
 .definitionActions p { max-width: var(--service-form-max); }
 .confirmation { margin: 0; padding: var(--auth-space-4); border: var(--auth-rule) solid var(--control-border); min-width: 0; }
 .confirmation p { overflow-wrap: anywhere; }
-:global(.management-theme) :is(button, a[data-navigation]).primary { background: var(--button-primary-bg); color: var(--button-primary-text); border-color: var(--button-primary-bg); }
-:global(.management-theme) :is(button, a[data-navigation]).primary:hover:not(:disabled):not([aria-disabled='true']) { background: var(--button-primary-hover); }
-:global(.management-theme) :is(button, a[data-navigation]).danger { background: var(--button-danger-bg); color: var(--button-danger-text); border-color: var(--button-danger-bg); }
-:global(.management-theme) :is(button, a[data-navigation]).danger:hover:enabled { background: var(--button-danger-hover); }
+.primary { composes: primary from '../../components/DefinitionManagement.module.css'; }
+.danger { composes: danger from '../../components/DefinitionManagement.module.css'; }
 .skeleton { min-height: var(--management-rail-action); background: var(--border); }
 @container services (max-width: 40rem) {
   .columnLabels { display: none; }

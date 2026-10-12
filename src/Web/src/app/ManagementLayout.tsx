@@ -192,17 +192,18 @@ export default function ManagementLayout({ auth, account }: Props) {
           <Services post={post} onDirtyChange={setDefinitionDirty} onBusyChange={setDefinitionBusy} headingRef={heading} />
         </div>}
         {owner && section === 'audit' && <div className={styles.panel}><AuditLog /></div>}
-        {owner && section === 'security' && <div className={styles.panel}>
+        {section === 'security' && <div className={styles.taskPanels + ' ' + styles.securityPanels}>
+        {owner && <div className={styles.panel}>
           <OwnerRecoveryEmail post={post} disabled={blocked} />
         </div>}
-        {owner && section === 'security' && <div className={styles.panel}>
+        {owner && <div className={styles.panel}>
           <MfaRecoveryCodes post={post} disabled={blocked} onReplaced={codes => {
             auth.setAccount(null); auth.setRecoveryCodes(codes); auth.setPassword(''); auth.setCode('')
             auth.setMfaRequired(false); auth.setUseRecoveryCode(false); auth.clearPasswordFields()
             auth.setNotice('Eski MFA kurtarma kodları geçersiz. Yeni kodları saklayıp yeniden giriş yapın.')
           }} />
         </div>}
-        {section === 'security' && <div className={styles.panel}>
+        <div className={styles.panel}>
           <p>{account.mfaEnabled ? 'İki aşamalı giriş açık.' : 'Çalışan hesabınız açık.'}</p>
           <PasswordChangeForm requiresSecondFactor={account.mfaEnabled || account.ownerAccess}
             mismatch={auth.error === 'Yeni parola ve tekrarı aynı olmalı.'}
@@ -212,12 +213,15 @@ export default function ManagementLayout({ auth, account }: Props) {
             onConfirmPassword={auth.setConfirmPassword} onSubmit={auth.handlePasswordChange} />
           <ErrorMessage message={auth.error} />
           {auth.notice && <p role="status">{auth.notice}</p>}
+        </div>
         </div>}
         {owner && section === 'access' && <>
+          <p className={styles.deliveryNote}>Bölümden ayrıldığınızda ekrandaki teslim kodları temizlenir.</p>
+          <div className={styles.taskPanels + ' ' + styles.accessPanels}>
           <div className={styles.panel}><StaffAccounts post={post} /></div>
-          <p>Bölümden ayrıldığınızda ekrandaki teslim kodları temizlenir.</p>
           <div className={styles.panel}><StaffInvitations post={post} /></div>
           <div className={styles.panel}><StaffPasswordReset post={post} /></div>
+          </div>
         </>}
         {section !== 'security' && <ErrorMessage message={auth.error} />}
       </main>

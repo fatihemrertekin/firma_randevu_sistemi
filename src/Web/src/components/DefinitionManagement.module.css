@@ -4,7 +4,9 @@
 .identity p { margin-block: var(--space-2); color: var(--muted); }
 .actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--action-row-gap) var(--space-2); margin-block: calc(var(--space-2) * 2); }
 :global(.management-theme) :is(button, a[data-navigation]).primary { background: var(--button-primary-bg); color: var(--button-primary-text); border-color: var(--button-primary-bg); font-weight: var(--button-font-weight); }
-:global(.management-theme) :is(button, a[data-navigation]).primary:hover:not(:disabled):not([aria-disabled='true']) { background: var(--button-primary-hover); }
+:global(.management-theme) :is(button, a[data-navigation]).primary:is(:hover, :active):not(:disabled):not([aria-disabled='true']) { background: var(--button-primary-hover); }
+:global(.management-theme) :is(button, a[data-navigation]).danger { color: var(--button-danger-text); background: var(--button-danger-bg); border-color: var(--button-danger-bg); }
+:global(.management-theme) :is(button, a[data-navigation]).danger:is(:hover, :active):not(:disabled):not([aria-disabled='true']) { background: var(--button-danger-hover); }
 .editor { display: grid; gap: var(--space-2); margin-block: calc(var(--space-2) * 2); }
 .editor input { width: 100%; min-width: 0; }
 .fieldError { color: var(--error); }

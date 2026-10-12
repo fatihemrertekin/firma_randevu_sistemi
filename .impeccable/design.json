@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-05T02:36:00+03:00",
-  "title": "Randevu — açık kimlik yüzeyleri",
+  "generatedAt": "2026-10-08T03:53:16+03:00",
+  "title": "Randevu — kimlik ve yönetim yüzeyleri",
   "extensions": {
     "colorMeta": {
       "action": {
@@ -60,15 +60,15 @@
     {
       "description": "Dolu mavi, beyaz metin ve görünür mavi odak",
       "kind": "button",
-      "css": ".ds-primary{background:var(--color-blue);color:var(--button-primary-text);border:1px solid var(--color-blue);border-radius:.375rem;padding:.5rem 1rem;min-height:3rem;font:700 1.125rem/1.5 system-ui;cursor:pointer}.ds-primary:hover,.ds-primary:active{background:var(--button-primary-hover)}.ds-primary:focus-visible{outline:3px solid var(--color-blue);outline-offset:3px}.ds-primary:disabled{opacity:.65;cursor:not-allowed}",
+      "css": ".ds-primary{background:var(--color-blue);color:var(--button-primary-text);border:1px solid var(--color-blue);border-radius:.375rem;padding:.375rem .75rem;min-height:44px;min-width:44px;font:600 .875rem/1.4 system-ui;cursor:pointer}.ds-primary:hover,.ds-primary:active{background:var(--button-primary-hover)}.ds-primary:focus-visible{outline:3px solid var(--color-blue);outline-offset:3px}.ds-primary:disabled{opacity:.65;cursor:not-allowed}",
       "refersTo": "button-primary",
-      "html": "<button class=\"ds-primary\">Giriş yap</button>",
+      "html": "<button class=\"ds-primary\">Profili kaydet</button>",
       "name": "Ana işlem"
     },
     {
       "description": "Dolu lacivert ve beyaz metin",
       "kind": "button",
-      "css": ".ds-secondary{background:var(--button-secondary-bg);color:var(--button-secondary-text);border:1px solid var(--button-secondary-bg);border-radius:.375rem;padding:.5rem 1rem;min-height:44px;font:600 1rem/1.5 system-ui;cursor:pointer}.ds-secondary:hover,.ds-secondary:active{background:var(--button-secondary-hover)}.ds-secondary:focus-visible{outline:3px solid var(--color-blue);outline-offset:3px}",
+      "css": ".ds-secondary{background:var(--button-secondary-bg);color:var(--button-secondary-text);border:1px solid var(--button-secondary-bg);border-radius:.375rem;padding:.375rem .75rem;min-height:44px;font:600 .875rem/1.4 system-ui;cursor:pointer}.ds-secondary:hover,.ds-secondary:active{background:var(--button-secondary-hover)}.ds-secondary:focus-visible{outline:3px solid var(--color-blue);outline-offset:3px}",
       "refersTo": "button-secondary",
       "html": "<button class=\"ds-secondary\">Girişe dön</button>",
       "name": "Yardımcı eylem"
@@ -92,7 +92,9 @@
   "narrative": {
     "northStar": "Gün ışığında sade işletme erişimi",
     "dos": [
-      "Merkezi token ve ortak kimlik yerleşimini kullan"
+      "Yeni kimlik ekranında ortak yerleşimi ve merkezi tokenları kullan.",
+      "Boş, yükleme, hata ve başarı durumlarını gerçek API yanıtlarına bağla.",
+      "Fotoğrafın üstündeki yazıyı okunabilir açık alanda tut; klavye odağını görünür bırak."
     ],
     "rules": [
       {
@@ -103,7 +105,7 @@
       {
         "section": "layout",
         "name": "Ortak kimlik formu ölçüleri",
-        "body": "Tüm kimlik formlarında marka 48px, başlık 32px, gövde 16px, işlem 18px, alan 48px, form aralığı 8px. Uzun mobil içerik doğal kayar; fotoğraf sütununun ölçeği korunur."
+        "body": "Kimlik marka 48px, başlık32px, gövde16px, alan48px, form aralığı8px. Ortak işlem14px/600 ve en az44px; ilk giriş ana işlem18px/700 ve48px, yardımcı metin16px/500 istisnası korunur."
       }
     ],
     "overview": "Beyaza yakın açık gri zeminde dolu hafif pastel mavi ana işlemler, lacivert yardımcı işlemler ve krem içermeyen beyaz/açık gri salon fotoğrafı. Ortak palet giriş, MFA, diğer kimlik işlemleri ve mevcut yönetim ekranlarının tamamına uygulanır; ekranların ayrıntılı dönüşümü T01–T08 kapsamında ayrı ilerler. Dark mode uygulanmadı.",
@@ -114,7 +116,9 @@
       "İşlem odaklı sans"
     ],
     "donts": [
-      "Planlanan modülü veya sunucu başarısını uydurma"
+      "Minimalizmi fotoğrafı kaldırmak veya tüm sayfayı boşaltmak olarak yorumlama.",
+      "Gelecekteki modülü, istatistiği veya başarı mesajını uydurma.",
+      "Bu değişikliği yönetim ekranlarının ya da dark mode'un tamamlandığı şeklinde gösterme."
     ]
   }
 }
