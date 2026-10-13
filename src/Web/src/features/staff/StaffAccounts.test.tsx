@@ -21,17 +21,30 @@ async function click(label: string) {
   await act(async () => button.click())
 }
 async function render(post = vi.fn(async () => new Response(null, { status: 204 }))) {
-  const router = createMemoryRouter([{ path: '*', element: <StaffAccounts post={post} /> }], { initialEntries: ['/yonetim/calisan-erisimleri'] })
+  const router = createMemoryRouter([{ path: '*', element: <StaffAccounts post={post} disabled={false} onBusyChange={vi.fn()} /> }], { initialEntries: ['/yonetim/calisan-erisimleri'] })
   await act(async () => root.render(<RouterProvider router={router} />))
   return post
 }
 
 describe('Çalışan hesapları', () => {
+  it('sayfaya dönüşte güncel hesabı okur; odak/görünürlük olayları isteği çoğaltmaz', async () => {
+    vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('visible')
+    await render()
+    vi.mocked(fetch).mockResolvedValue(Response.json({ items: [{ ...account, isActive: false }], page: 1, hasMore: false, pageSize: 20, totalCount: 1 }))
+    await act(async () => {
+      window.dispatchEvent(new Event('focus')); document.dispatchEvent(new Event('visibilitychange'))
+    })
+    expect(vi.mocked(fetch)).toHaveBeenCalledTimes(2)
+    expect(container.textContent).toContain('Etkinleştir')
+    expect(container.textContent).not.toContain('Listeyi yenile')
+    vi.restoreAllMocks()
+  })
   it('pasif hesabı onayla yeniden etkinleştirir; sürüm ve çift gönderim korumasını kullanır', async () => {
     vi.mocked(fetch).mockResolvedValue(Response.json({ items: [{ ...account, isActive: false }], page: 1, hasMore: false, pageSize: 20, totalCount: 1 }))
     let finish: ((response: Response) => void) | undefined
     const post = vi.fn(() => new Promise<Response>(resolve => { finish = resolve }))
     await render(post)
+    expect(container.textContent).not.toContain('Listeyi yenile')
     await click('Etkinleştir')
     expect(container.querySelector('[aria-label="Hesabı etkinleştirme onayı"]')?.textContent).toContain(account.email)
     expect(document.activeElement?.textContent).toBe('Hesabı etkinleştir')
@@ -130,7 +143,7 @@ describe('Çalışan hesapları', () => {
     expect(vi.mocked(fetch).mock.calls.at(-1)?.[0]).toBe('/api/staff-accounts/?page=2')
     expect(container.querySelector('[aria-current="page"][aria-label="Sayfa 2"]')).not.toBeNull()
     vi.mocked(fetch).mockResolvedValueOnce(Response.json({ wrong: 'shape' }))
-    await click('Listeyi yenile')
+    await click('Önceki sayfa')
     expect(container.querySelector('[role="alert"]')?.textContent).toContain('Liste yanıtı doğrulanamadı.')
     expect(container.textContent).not.toContain(account.email)
   })

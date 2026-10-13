@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useEffectEvent, useRef, useState } from 'react'
 import ErrorMessage from '../../components/ErrorMessage'
 import styles from './StaffAccounts.module.css'
 import { useLocation, useNavigate } from 'react-router'
@@ -10,7 +10,11 @@ import { useCompletedNavigation } from '../../app/CompletedNavigation'
 
 type StaffAccount = { id: string; email: string; isActive: boolean; version: string }
 type StaffPage = PageMetadata & { items: StaffAccount[] }
-type Props = { post: (path: string, body: object, signal?: AbortSignal) => Promise<Response> }
+type Props = {
+  post: (path: string, body: object, signal?: AbortSignal) => Promise<Response>
+  disabled: boolean
+  onBusyChange: (busy: boolean) => void
+}
 
 class StaffRequestError extends Error { }
 function isAccount(value: unknown): value is StaffAccount {
@@ -35,7 +39,7 @@ function failure(status: number) {
   return 'Sonuç doğrulanamadı. Listeyi yenileyerek hesabın durumunu kontrol et.'
 }
 
-export default function StaffAccounts({ post }: Props) {
+export default function StaffAccounts({ post, disabled, onBusyChange }: Props) {
   const location = useLocation(), navigate = useNavigate(), completed = useCompletedNavigation()
   const page = readPage(location.search), pageSize = readPageSize(location.search)
   const [revision, setRevision] = useState(0)
@@ -51,6 +55,18 @@ export default function StaffAccounts({ post }: Props) {
   const heading = useRef<HTMLHeadingElement>(null)
   const opener = useRef<HTMLButtonElement | null>(null)
   const restoreFocus = useRef(false)
+  const lastAutomaticRefresh = useRef(0)
+  const refreshOnReturn = useEffectEvent(() => {
+    if (document.visibilityState !== 'visible' || disabled || busy || loading || target || error ||
+      Date.now() - lastAutomaticRefresh.current < 15000) return
+    lastAutomaticRefresh.current = Date.now(); load()
+  })
+  useEffect(() => {
+    const refresh = () => refreshOnReturn()
+    window.addEventListener('focus', refresh); document.addEventListener('visibilitychange', refresh)
+    return () => { window.removeEventListener('focus', refresh); document.removeEventListener('visibilitychange', refresh) }
+  }, [])
+  useEffect(() => { if (busy) { onBusyChange(true); return () => onBusyChange(false) } }, [busy, onBusyChange])
   useNavigationChange(next => { if (next.pathname === sectionPaths.access) { setLoading(true); setError(''); setData(null) } })
   useEffect(() => { mounted.current = true; return () => { mounted.current = false } }, [])
   useEffect(() => {
@@ -82,7 +98,7 @@ export default function StaffAccounts({ post }: Props) {
   function reload() { setNotice(''); load(); heading.current?.focus() }
   function cancel() { restoreFocus.current = true; setTarget(null) }
   async function changeActive() {
-    if (!target || sending.current) return
+    if (!target || sending.current || disabled) return
     sending.current = true; setBusy(true); setError(''); setNotice('')
     try {
       const response = await post(`/api/staff-accounts/${target.id}/${target.isActive ? 'deactivate' : 'activate'}`, { version: target.version }, AbortSignal.timeout(15000))
@@ -110,12 +126,12 @@ export default function StaffAccounts({ post }: Props) {
     {data && <ul className={styles.list}>
       {data.items.map(account => <li key={account.id} className={styles.row}>
         <div className={styles.account}><strong>{account.email}</strong><p>{account.isActive ? 'Aktif' : 'Pasif'}</p></div>
-        <button type="button" className={account.isActive ? styles.danger : styles.primary} disabled={busy || loading || target !== null}
+        <button type="button" className={account.isActive ? styles.danger : styles.primary} disabled={disabled || busy || loading || target !== null}
           aria-label={`${account.email} hesabını ${account.isActive ? 'pasifleştir' : 'etkinleştir'}`}
           onClick={event => { opener.current = event.currentTarget; setTarget(account); setError(''); setNotice('') }}>{account.isActive ? 'Pasifleştir' : 'Etkinleştir'}</button>
       </li>)}
     </ul>}
-    {target && <fieldset className={styles.confirmation} aria-label={target.isActive ? 'Hesabı pasifleştirme onayı' : 'Hesabı etkinleştirme onayı'} disabled={busy}>
+    {target && <fieldset className={styles.confirmation} aria-label={target.isActive ? 'Hesabı pasifleştirme onayı' : 'Hesabı etkinleştirme onayı'} disabled={disabled || busy}>
       <legend>Hesabı {target.isActive ? 'pasifleştir' : 'etkinleştir'}</legend>
       <p className={styles.account}><strong>{target.email}</strong> {target.isActive
         ? 'hesabı sisteme giriş yapamayacak. Açık oturumları ve mevcut parola sıfırlama kodları geçersiz olacak. Hesap silinmez.'
@@ -128,9 +144,9 @@ export default function StaffAccounts({ post }: Props) {
       </div>
     </fieldset>}
     <div className={styles.actions}>
-      {(error || (data?.items.length ?? 0) > 0) && <button type="button" disabled={busy || loading} onClick={reload}>Listeyi yenile</button>}
+      {error && <button type="button" disabled={disabled || busy || loading} onClick={reload}>Listeyi yenile</button>}
       <Pagination label="Çalışan hesabı sayfaları" page={data?.page ?? page} pageSize={pageSize} itemCount={data?.items.length ?? 0} totalCount={data?.totalCount}
-        hasNext={data?.hasMore ?? false} disabled={busy || loading || !!error || target !== null} onPageChange={next => { setNotice(''); load(next) }} onPageSizeChange={size => load(1, size)} />
+        hasNext={data?.hasMore ?? false} disabled={disabled || busy || loading || !!error || target !== null} onPageChange={next => { setNotice(''); load(next) }} onPageSizeChange={size => load(1, size)} />
     </div>
   </section>
 }

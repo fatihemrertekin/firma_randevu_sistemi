@@ -12,7 +12,7 @@ type Props = {
 
 export default function ManualDeliveryCode(props: Props) {
   const [showCode, setShowCode] = useState(false)
-  return <div>
+  return <div className={styles.deliveryCode}>
     <label htmlFor={props.inputId}>{props.label}</label>
     <input id={props.inputId} type={showCode ? 'text' : 'password'} autoComplete="off" readOnly value={props.token}
       onFocus={event => { if (showCode) event.currentTarget.select() }} />

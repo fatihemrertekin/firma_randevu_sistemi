@@ -50,11 +50,43 @@ async function fillAccept(confirm = 'Synthetic!Staff123') {
 }
 
 describe('Çalışan daveti', () => {
+  it('sayfaya dönüşte davetleri okur; form taslağını korur ve olayı çoğaltmaz', async () => {
+    vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('visible')
+    const requests = vi.fn().mockResolvedValueOnce(Response.json([{ id: 'invite-1', email: 'staff@example.test', expiresAt: '2026-10-02T00:00:00Z' }]))
+      .mockResolvedValueOnce(Response.json([]))
+    vi.stubGlobal('fetch', requests)
+    await act(async () => root.render(<StaffInvitations post={vi.fn()} disabled={false} onBusyChange={vi.fn()} />))
+    await fill('invite-email', 'draft@example.test')
+    await act(async () => { window.dispatchEvent(new Event('focus')); document.dispatchEvent(new Event('visibilitychange')) })
+    expect(requests).toHaveBeenCalledTimes(2)
+    expect(container.textContent).toContain('Geçerli bekleyen davet yok.')
+    expect(container.querySelector<HTMLInputElement>('#invite-email')?.value).toBe('draft@example.test')
+    vi.restoreAllMocks()
+  })
+  it('bozuk liste yanıtını boş liste veya geçerli davet olarak göstermez', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => Response.json([{ id: 'invite-1', email: 'staff@example.test', expiresAt: 'invalid' }])))
+    await act(async () => root.render(<StaffInvitations post={vi.fn()} disabled={false} onBusyChange={vi.fn()} />))
+    expect(container.querySelector('[role="alert"]')?.textContent).toContain('Davet listesi doğrulanamadı')
+    expect(container.textContent).not.toContain('Geçerli bekleyen davet yok.')
+    expect(container.querySelectorAll('li')).toHaveLength(0)
+  })
+  it.each([null, { id: 'invite-1', token: '', expiresAt: '2026-10-02T00:00:00Z' },
+    { id: 'invite-1', token: 'synthetic', expiresAt: 'invalid' }])('bozuk kod yanıtını teslim kodu olarak sunmaz (%j)', async body => {
+    vi.stubGlobal('fetch', vi.fn(async () => Response.json([])))
+    const post = vi.fn(async () => Response.json(body))
+    await act(async () => root.render(<StaffInvitations post={post} disabled={false} onBusyChange={vi.fn()} />))
+    await fill('invite-email', 'staff@example.test')
+    await act(async () => container.querySelector<HTMLInputElement>('input[type="checkbox"]')?.click())
+    await submit('Çalışan daveti oluştur')
+    expect(container.querySelector('#issued-invitation')).toBeNull()
+    expect(container.querySelector('[role="alert"]')?.textContent).toContain('sonucu doğrulanamadı')
+    expect(post).toHaveBeenCalledTimes(1)
+  })
   it('boş listede yenileme göstermez; yükleme hatasından yeniden deneyerek toparlanır', async () => {
     const fetchInvitations = vi.fn().mockResolvedValueOnce(new Response(null, { status: 503 })).mockResolvedValueOnce(Response.json([]))
     vi.stubGlobal('fetch', fetchInvitations)
     const post = vi.fn()
-    await act(async () => root.render(<StaffInvitations post={post} />))
+    await act(async () => root.render(<StaffInvitations post={post} disabled={false} onBusyChange={vi.fn()} />))
     expect(container.querySelector('[role="alert"]')).not.toBeNull()
     expect(container.textContent).not.toContain('Geçerli bekleyen davet yok.')
     await click('Davetleri yenile')
@@ -73,7 +105,7 @@ describe('Çalışan daveti', () => {
       if (path.endsWith('/revoke')) { issued = false; return new Response(null, { status: 204 }) }
       return waiting
     })
-    await act(async () => root.render(<StaffInvitations post={post} />))
+    await act(async () => root.render(<StaffInvitations post={post} disabled={false} onBusyChange={vi.fn()} />))
     await fill('invite-email', 'staff@example.test')
     expect(container.querySelector<HTMLButtonElement>('button[type="submit"]')?.disabled).toBe(true)
     await submit('Çalışan daveti oluştur')
@@ -91,6 +123,7 @@ describe('Çalışan daveti', () => {
     expect(container.querySelector<HTMLInputElement>('#issued-invitation')?.type).toBe('password')
     expect(container.querySelector<HTMLInputElement>('#issued-invitation')?.value).toBe('synthetic-token')
     expect(container.textContent).not.toContain('synthetic-token')
+    expect(container.textContent).not.toContain('Davetleri yenile')
     await click('Daveti iptal et')
     expect(container.querySelector('#issued-invitation')).toBeNull()
     expect(container.textContent).toContain('Geçerli bekleyen davet yok')
@@ -116,7 +149,7 @@ describe('Çalışan daveti', () => {
   it('kodu açık onayla gösterip elle seçmeye izin verir, temizlemede kodu kaldırır', async () => {
     vi.stubGlobal('fetch', vi.fn(async () => Response.json([])))
     const post = vi.fn(async () => Response.json({ id: 'invite-1', token: 'synthetic-token', expiresAt: '2026-10-02T00:00:00Z' }))
-    await act(async () => root.render(<StaffInvitations post={post} />))
+    await act(async () => root.render(<StaffInvitations post={post} disabled={false} onBusyChange={vi.fn()} />))
     await fill('invite-email', 'staff@example.test')
     const checkbox = container.querySelector<HTMLInputElement>('input[type="checkbox"]')
     if (!checkbox) throw new Error('Alıcı onayı yok')

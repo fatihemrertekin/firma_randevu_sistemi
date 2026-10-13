@@ -61,6 +61,8 @@ export default function ManagementLayout({ auth, account }: Props) {
   const forbidden = route.kind === 'management' && !owner && route.section !== 'security'
   const section = route.kind === 'management' && !forbidden ? route.section : null
   const [pendingRequests, setPendingRequests] = useState(0)
+  const [accessBusy, setAccessBusy] = useState(0)
+  const onAccessBusyChange = useCallback((busy: boolean) => { setAccessBusy(current => current + (busy ? 1 : -1)) }, [])
   const [definitionBusy, setDefinitionBusy] = useState(false)
   const [profileBusy, setProfileBusy] = useState(false)
   const [businessName, setBusinessName] = useState('')
@@ -73,7 +75,7 @@ export default function ManagementLayout({ auth, account }: Props) {
   const menuButton = useRef<HTMLButtonElement>(null)
   const groupButton = useRef<HTMLAnchorElement>(null)
   const heading = useRef<HTMLHeadingElement>(null)
-  const blocked = auth.busy || pendingRequests > 0 || definitionBusy || profileBusy
+  const blocked = auth.busy || pendingRequests > 0 || definitionBusy || profileBusy || accessBusy > 0
   const current = sections.find(item => item.id === section)
   const currentGroup = section === null || section === 'audit' ? null : sectionGroups[section]
   useEffect(() => { guard.current.busy = blocked }, [blocked])
@@ -222,9 +224,9 @@ export default function ManagementLayout({ auth, account }: Props) {
         {owner && section === 'access' && <>
           <p className={styles.deliveryNote}>Bölümden ayrıldığınızda ekrandaki teslim kodları temizlenir.</p>
           <div className={styles.taskPanels + ' ' + styles.accessPanels}>
-          <div className={styles.panel}><StaffAccounts post={post} /></div>
-          <div className={styles.panel}><StaffInvitations post={post} /></div>
-          <div className={styles.panel}><StaffPasswordReset post={post} /></div>
+          <div className={styles.panel}><StaffAccounts post={post} disabled={blocked} onBusyChange={onAccessBusyChange} /></div>
+          <div className={styles.panel}><StaffInvitations post={post} disabled={blocked} onBusyChange={onAccessBusyChange} /></div>
+          <div className={styles.panel}><StaffPasswordReset post={post} disabled={blocked} onBusyChange={onAccessBusyChange} /></div>
           </div>
         </>}
         {section !== 'security' && <ErrorMessage message={auth.error} />}

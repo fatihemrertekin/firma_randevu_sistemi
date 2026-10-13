@@ -292,8 +292,13 @@ describe('Yönetim gezinmesi', () => {
     await fill('invite-email', 'invite@example.test')
     await fill('staff-reset-email', 'staff@example.test')
     for (const checkbox of container.querySelectorAll<HTMLInputElement>('input[type="checkbox"]')) await act(async () => checkbox.click())
-    await submit('Çalışan daveti oluştur')
-    await submit('Çalışan sıfırlama kodu üret')
+    await act(async () => {
+      for (const label of ['Çalışan daveti oluştur', 'Çalışan sıfırlama kodu üret']) {
+        const form = container.querySelector(`form[aria-label="${label}"]`)
+        if (!form) throw new Error('Erişim formu yok')
+        form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))
+      }
+    })
     await act(async () => completions['/api/staff-invitations/']?.(Response.json({ id: 'invite', token: 'synthetic-invite', expiresAt: '2026-10-02T01:00:00Z' })))
     expect(Array.from(container.querySelectorAll('nav button, nav a[data-navigation]')).every(control => control.matches(':disabled, [aria-disabled="true"]'))).toBe(true)
     await act(async () => completions['/api/staff-password-resets/']?.(Response.json({ token: 'synthetic-reset', expiresAt: '2026-10-01T23:00:00Z' })))
