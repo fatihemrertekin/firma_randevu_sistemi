@@ -39,6 +39,44 @@ async function pendingMfa(logoutStatus: number) {
   await input('email', 'owner@example.test'); await input('password', 'Synthetic!Owner123'); await submit()
   return requests
 }
+it.each([
+  ['/api/staff-invitations/', 'invite-email', 'Çalışan daveti oluştur', 'issued-invitation'],
+  ['/api/staff-password-resets/', 'staff-reset-email', 'Çalışan sıfırlama kodu üret', 'issued-staff-reset'],
+])('teslim kodunun yanıt gövdesi beklerken gezinme ve diğer erişim işlemlerini kilitler (%s)', async (endpoint, emailId, label, codeId) => {
+  let finish: ((body: { id: string; token: string; expiresAt: string }) => void) | undefined
+  const body = new Promise<{ id: string; token: string; expiresAt: string }>(resolve => { finish = resolve })
+  const response = Response.json({})
+  vi.spyOn(response, 'json').mockImplementation(() => body)
+  vi.stubGlobal('fetch', vi.fn(async (path: string, options?: RequestInit) => {
+    if (path === '/api/auth/me') return Response.json({ email: 'owner@example.test', mfaEnabled: true, ownerAccess: true, staffAccess: false })
+    if (path === '/api/business-profile/') return Response.json({ name: '', phone: null, email: null, address: null, version: 'v1' })
+    if (path === '/api/auth/csrf') return Response.json({ token: 'synthetic-csrf' })
+    if (path === endpoint && options?.method === 'POST') return response
+    if (path === '/api/staff-invitations/') return Response.json([])
+    if (path.startsWith('/api/staff-accounts/')) return Response.json({ items: [], page: 1, pageSize: 20, totalCount: 0, hasMore: false })
+    throw new Error('Beklenmeyen istek')
+  }))
+  window.history.replaceState(null, '', '/yonetim/isletme')
+  await act(async () => root.render(<App />))
+  await act(async () => container.querySelector<HTMLAnchorElement>('a[href="/yonetim/calisan-erisimleri"]')?.click())
+  await input(emailId, 'staff@example.test')
+  const form = container.querySelector(`form[aria-label="${label}"]`)
+  await act(async () => form?.querySelector<HTMLInputElement>('input[type="checkbox"]')?.click())
+  await submit(label)
+  expect(container.querySelector<HTMLButtonElement>('header button')?.disabled).toBe(true)
+  expect([...container.querySelectorAll<HTMLButtonElement>('form button')].every(button => button.disabled)).toBe(true)
+  const unload = new Event('beforeunload', { cancelable: true })
+  window.dispatchEvent(unload); expect(unload.defaultPrevented).toBe(true)
+  await act(async () => { window.history.back(); await new Promise(resolve => setTimeout(resolve, 80)) })
+  await act(async () => { await new Promise(resolve => setTimeout(resolve, 80)) })
+  expect(window.location.pathname).toBe('/yonetim/calisan-erisimleri')
+  await act(async () => finish?.({ id: 'invite-1', token: 'synthetic-code', expiresAt: '2026-10-14T00:00:00Z' }))
+  expect(container.querySelector<HTMLInputElement>('#' + codeId)?.value).toBe('synthetic-code')
+  expect(container.querySelector<HTMLInputElement>('#' + codeId)?.type).toBe('password')
+  expect(container.querySelector<HTMLButtonElement>('header button')?.disabled).toBe(false)
+  const completeUnload = new Event('beforeunload', { cancelable: true })
+  window.dispatchEvent(completeUnload); expect(completeUnload.defaultPrevented).toBe(false)
+})
 it('MFA iptalinde sunucudaki geçici oturumu kapatır ve normal girişe döner', async () => {
   const requests = await pendingMfa(204)
   expect(document.activeElement).toBe(container.querySelector('h1'))

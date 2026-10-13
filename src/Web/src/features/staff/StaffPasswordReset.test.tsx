@@ -37,11 +37,20 @@ async function click(label: string) {
 }
 
 describe('Çalışan parola sıfırlama kodu üretme', () => {
+  it.each([null, { token: '', expiresAt: '2026-10-02T00:00:00Z' },
+    { token: 'synthetic', expiresAt: 'invalid' }])('bozuk kod yanıtında kod veya başarı göstermez (%j)', async body => {
+    const post = vi.fn(async () => Response.json(body))
+    await act(async () => root.render(<StaffPasswordReset post={post} disabled={false} onBusyChange={vi.fn()} />))
+    await prepare(); await submit()
+    expect(container.querySelector('#issued-staff-reset')).toBeNull()
+    expect(container.querySelector('[role="alert"]')?.textContent).toContain('Kod üretimi doğrulanamadı')
+    expect(post).toHaveBeenCalledTimes(1)
+  })
   it('alıcı onayı ister, çift gönderimi engeller; kodu göster/seç/gizle/temizle ile geçici sunar', async () => {
     let finish: ((response: Response) => void) | undefined
     const waiting = new Promise<Response>(resolve => { finish = resolve })
     const post = vi.fn(async () => waiting)
-    await act(async () => root.render(<StaffPasswordReset post={post} />))
+    await act(async () => root.render(<StaffPasswordReset post={post} disabled={false} onBusyChange={vi.fn()} />))
     await submit()
     expect(post).not.toHaveBeenCalled()
     await prepare()
@@ -72,7 +81,7 @@ describe('Çalışan parola sıfırlama kodu üretme', () => {
 
   it.each([400, 401, 403, 429, 500])('hata (%i) halinde kod teslimi/başarı iddia etmez, alanları temizler', async status => {
     const post = vi.fn(async () => status === 400 ? Response.json({ title: 'Yalnız mevcut Staff hesabı.' }, { status }) : new Response(null, { status }))
-    await act(async () => root.render(<StaffPasswordReset post={post} />))
+    await act(async () => root.render(<StaffPasswordReset post={post} disabled={false} onBusyChange={vi.fn()} />))
     await prepare()
     await submit()
     expect(post).toHaveBeenCalledTimes(1)
@@ -84,7 +93,7 @@ describe('Çalışan parola sıfırlama kodu üretme', () => {
 
   it('belirsiz bağlantıda otomatik tekrar yapmaz', async () => {
     const post = vi.fn(async () => { throw new TypeError('synthetic network failure') })
-    await act(async () => root.render(<StaffPasswordReset post={post} />))
+    await act(async () => root.render(<StaffPasswordReset post={post} disabled={false} onBusyChange={vi.fn()} />))
     await prepare()
     await submit()
     expect(post).toHaveBeenCalledTimes(1)

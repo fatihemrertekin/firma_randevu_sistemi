@@ -54,3 +54,7 @@ Onaylı sade menü ve hizmet ızgarası gerçek Chrome/API ile 44 durum ve 320/3
 ## Hesap ve güvenlik kararı — 13.10.2026
 
 Kullanıcı bu mevcut yüzey için önizleme/taslak üretmeden doğrudan kod uygulanmasını açıkça istedi. Mevcut açık palet, ortak form/hata bileşenleri, masaüstünde görev bazlı iki sütun ve mobilde tek sütun korunur; yeni ekran veya görsel dünya eklenmez. Parola eşleşme hatası alan yanında tek erişilebilir uyarı olur ve düzenlenince temizlenir. MFA kodları yanıt gövdesi tamamlanana kadar mevcut gezinme kilidine katılır; kod sayısı okuma hatasında formu koruyan yeniden deneme yalnız hata halinde görünür. API/DTO/rol/CSRF/oturum sözleşmesi değişmez. Gerçek kabul ve teslim P02 planındaki T05 kaydındadır.
+
+## Çalışan erişimleri kararı — 13.10.2026
+
+T06 mevcut yüzey bakımı kullanıcı tarafından doğrudan kodla onaylandı; önizleme/taslak üretilmez. Mevcut hesap/davet/parola sıfırlama görev grupları, açık palet, iki sütun masaüstü ve tek sütun mobil korunur. Sağlıklı listelerde yenileme düğmeleri yerine sayfaya dönüşte kontrollü GET kullanılır; hata halinde yeniden deneme görünür. Kod yanıtı tamamlanana kadar gezinme ve diğer erişim işlemleri kilitlenir. Maskeli göster/seç/gizle/temizle ve süre bilgisi korunur; ortak kod bölümü formdan mevcut boşluk tokenıyla ayrılır. Gerçek kabul/teslim P02 planındaki T06 kaydındadır.

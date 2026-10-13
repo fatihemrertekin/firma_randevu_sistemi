@@ -75,7 +75,7 @@ Program.cs bakımı `done`: başlangıç 265 satırdan 69 satıra indi; önce/so
 
 ## Sıradaki iş
 
-Sıradaki tek aday T06 Çalışan erişimleri yüzeyinin mevcut durumunu değerlendirmektir. T05 tamamlandı; T06–T08/P03/dark mode/native finish bu iş kapsamında başlatılmadı.
+Aktif iş T06 Çalışan erişimleri bakımıdır. Kullanıcı önizleme üretmeden doğrudan kod uygulanmasını onayladı. Yerel kabul tamamlandı; GitHub ve yedekli ana 8080 teslimi sürüyor. Sonraki tek aday T07 Değişiklik kayıtları değerlendirmesidir; henüz başlatılmadı.
 
 ## Gelecek plan kaydı — destek ve işletim ekranı (02.10.2026)
 
