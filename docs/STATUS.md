@@ -77,7 +77,7 @@ Program.cs bakımı `done`: başlangıç 265 satırdan 69 satıra indi; önce/so
 
 ## Sıradaki iş
 
-Aktif iş T07 Değişiklik kayıtları bakımıdır. Yerel kabul tamamlandı; GitHub ve yedekli ana 8080 teslimi sürüyor. Sonraki tek aday T08 mevcut yüzeylerin tutarlılık ve erişilebilirlik değerlendirmesidir; henüz başlatılmadı.
+T07 Değişiklik kayıtları bakımı ve güvenli bağımlılık yaması `done`: [PR #67](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/67), aynı head/main CI ve yedekli ana 8080 kabulü geçti; [kapsam, kanıt ve yerel test sınırı](plans/P02.md#t07-değişiklik-kayıtları-bakımı--14102026). Sonraki tek aday T08 mevcut yüzeylerin tutarlılık ve erişilebilirlik değerlendirmesidir; henüz başlatılmadı.
 
 ## Gelecek plan kaydı — destek ve işletim ekranı (02.10.2026)
 
