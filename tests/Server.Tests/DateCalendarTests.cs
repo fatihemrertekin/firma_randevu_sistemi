@@ -35,6 +35,100 @@ public sealed class DateCalendarTests
     private static AppointmentEndpoints.CreateRequest Booking(ServiceDefinition service, Guid member, int hour, int minute = 0) => new(Guid.NewGuid(), service.Id, service.Version, member, Hour(hour, minute), "Sentetik müşteri", "05000000001");
     private static bool Offered(AppointmentEndpoints.AvailabilityResponse slots, int hour, int minute = 0) => slots.StartsAt.Contains(DateTimeOffset.Parse(Hour(hour, minute), System.Globalization.CultureInfo.InvariantCulture).UtcDateTime);
 
+    [Fact]
+    public async Task WeeklyBreakDateExceptionLeaveAndBothBuffersShareExactBoundaries()
+    {
+        await using var database = RecoveryDatabase(); await database.StartAsync(Token);
+        var seed = await CreateRecoveryAppAsync(database.GetConnectionString(), new Clock()); await using var app = seed.App;
+        await AppointmentTests.ConfigureAsync(app); using var owner = await InviteOwnerAsync(seed); var csrf = await GetCsrfAsync(owner);
+        using var scope = app.Services.CreateScope(); var db = scope.ServiceProvider.GetRequiredService<AppDbContext>(); var member = await db.StaffMembers.OrderBy(item => item.Id).FirstAsync(Token); var service = await db.ServiceDefinitions.SingleAsync(Token);
+        service.DurationMinutes = 25; service.BufferBeforeMinutes = 5; service.BufferAfterMinutes = 10; await db.SaveChangesAsync(Token);
+        object Breaks(Guid version, string start, string end) => new { version, days = Enumerable.Range(0, 7).Select(day => new WeeklyBreaks.DayRequest(day, day == 4 ? [new(start, end)] : [])).ToArray() };
+        using var weekly = await PostAsync(owner, Source(true, member.Id) + "/breaks", Breaks(await Version(owner, true, member.Id), "12:00", "13:00"), csrf); Assert.Equal(HttpStatusCode.OK, weekly.StatusCode);
+        using var dated = await PostAsync(owner, Path(false, member.Id), Day(await Version(owner, false, member.Id), breaks: [new("14:00", "15:00")]), csrf); Assert.Equal(HttpStatusCode.OK, dated.StatusCode);
+        var leaveId = Guid.NewGuid();
+        using var leave = await PostAsync(owner, Source(false, member.Id) + "/leave", new StaffLeaveEndpoints.CreateRequest(leaveId, await Version(owner, false, member.Id), Hour(15, 50), Hour(17)), csrf); Assert.Equal(HttpStatusCode.OK, leave.StatusCode);
+        var slots = await Slots(owner, member.Id, service.Id);
+        foreach (var time in new[] { (11, 30), (13, 0), (13, 30), (15, 0), (15, 30), (17, 0) })
+        {
+            Assert.False(Offered(slots, time.Item1, time.Item2));
+            using var blocked = await PostAsync(owner, "/api/appointments/", Booking(service, member.Id, time.Item1, time.Item2), csrf); Assert.Equal(HttpStatusCode.Conflict, blocked.StatusCode);
+        }
+        Assert.True(Offered(slots, 13, 15)); Assert.True(Offered(slots, 15, 15));
+        using var first = await PostAsync(owner, "/api/appointments/", Booking(service, member.Id, 13, 15), csrf); await Body<AppointmentEndpoints.AppointmentResponse>(first, HttpStatusCode.Created);
+        var request = Booking(service, member.Id, 15, 15);
+        using var second = await PostAsync(owner, "/api/appointments/", request, csrf); var appointment = await Body<AppointmentEndpoints.AppointmentResponse>(second, HttpStatusCode.Created);
+        var businessVersion = await Version(owner, true, member.Id); var staffVersion = await Version(owner, false, member.Id);
+        using var weeklyOverlap = await PostAsync(owner, Source(true, member.Id) + "/breaks", Breaks(businessVersion, "13:49", "14:00"), csrf); Assert.Equal(HttpStatusCode.Conflict, weeklyOverlap.StatusCode);
+        using var exceptionOverlap = await PostAsync(owner, Path(false, member.Id), Day(staffVersion, breaks: [new("15:49", "16:00")]), csrf); Assert.Equal(HttpStatusCode.Conflict, exceptionOverlap.StatusCode);
+        using var leaveOverlap = await PostAsync(owner, Source(false, member.Id) + "/leave/" + leaveId, new StaffLeaveEndpoints.UpdateRequest(staffVersion, Hour(15, 49), Hour(17)), csrf); Assert.Equal(HttpStatusCode.Conflict, leaveOverlap.StatusCode);
+        Assert.Equal(businessVersion, await Version(owner, true, member.Id)); Assert.Equal(staffVersion, await Version(owner, false, member.Id));
+        using var weeklyTouch = await PostAsync(owner, Source(true, member.Id) + "/breaks", Breaks(businessVersion, "13:50", "14:00"), csrf); Assert.Equal(HttpStatusCode.OK, weeklyTouch.StatusCode);
+        using var exceptionTouch = await PostAsync(owner, Path(false, member.Id), Day(staffVersion, breaks: [new("15:50", "16:00")]), csrf); Assert.Equal(HttpStatusCode.OK, exceptionTouch.StatusCode);
+        using var replay = await PostAsync(owner, "/api/appointments/", request, csrf); Assert.Equal(appointment.Id, (await Body<AppointmentEndpoints.AppointmentResponse>(replay)).Id);
+        var block = await db.AppointmentTimeBlocks.AsNoTracking().SingleAsync(item => item.AppointmentId == appointment.Id, Token);
+        Assert.Equal(DateTimeOffset.Parse(Hour(15, 10), System.Globalization.CultureInfo.InvariantCulture).UtcDateTime, block.OccupiedStartsAt);
+        Assert.Equal(DateTimeOffset.Parse(Hour(15, 50), System.Globalization.CultureInfo.InvariantCulture).UtcDateTime, block.OccupiedEndsAt);
+        Assert.Equal(2, await db.Appointments.CountAsync(Token)); Assert.Equal(2, await db.AppointmentAudits.CountAsync(Token));
+        var results = await Task.WhenAll(Enumerable.Range(0, 20).Select(_ => PostAsync(owner, "/api/appointments/", Booking(service, member.Id, 10), csrf)));
+        try { Assert.Single(results, item => item.StatusCode == HttpStatusCode.Created); Assert.Equal(19, results.Count(item => item.StatusCode == HttpStatusCode.Conflict)); }
+        finally { foreach (var result in results) result.Dispose(); }
+        using var bufferOnlyOverlap = await PostAsync(owner, "/api/appointments/", Booking(service, member.Id, 10, 30), csrf); Assert.Equal(HttpStatusCode.Conflict, bufferOnlyOverlap.StatusCode);
+        Assert.Equal(3, await db.Appointments.CountAsync(Token)); Assert.Equal(3, await db.AppointmentAudits.CountAsync(Token));
+        await AssertOriginalStateAsync(app, seed);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    [InlineData(2)]
+    public async Task CalendarRateLimitRejectsWritesWithoutChangingVersionOrAudit(int kind)
+    {
+        await using var database = RecoveryDatabase(); await database.StartAsync(Token);
+        var seed = await CreateRecoveryAppAsync(database.GetConnectionString(), new Clock()); await using var app = seed.App;
+        await AppointmentTests.ConfigureAsync(app); using var owner = await InviteOwnerAsync(seed); var csrf = await GetCsrfAsync(owner);
+        using var scope = app.Services.CreateScope(); var db = scope.ServiceProvider.GetRequiredService<AppDbContext>(); var member = await db.StaffMembers.OrderBy(item => item.Id).FirstAsync(Token);
+        var business = kind == 0; var version = business ? (await db.BusinessHoursSchedules.SingleAsync(Token)).Version : member.Version;
+        var path = kind == 2 ? Source(false, member.Id) + "/leave" : Path(business, member.Id);
+        object invalid = kind == 2 ? new StaffLeaveEndpoints.CreateRequest(Guid.Empty, version, Hour(12), Hour(13)) : Day(Guid.Empty);
+        for (var attempt = 0; attempt < 30; attempt++)
+        { using var bad = await PostAsync(owner, path, invalid, csrf); Assert.Equal(HttpStatusCode.BadRequest, bad.StatusCode); }
+        object valid = kind == 2 ? new StaffLeaveEndpoints.CreateRequest(Guid.NewGuid(), version, Hour(12), Hour(13)) : Day(version);
+        using var limited = await PostAsync(owner, path, valid, csrf); Assert.Equal(HttpStatusCode.TooManyRequests, limited.StatusCode);
+        await db.Entry(member).ReloadAsync(Token); Assert.Equal(version, business ? (await db.BusinessHoursSchedules.AsNoTracking().SingleAsync(Token)).Version : member.Version);
+        Assert.Empty(await db.BusinessDateExceptions.ToArrayAsync(Token)); Assert.Empty(await db.StaffDateExceptions.ToArrayAsync(Token)); Assert.Empty(await db.StaffLeaves.ToArrayAsync(Token));
+        Assert.Empty(await db.BusinessHoursAudits.ToArrayAsync(Token)); Assert.Empty(await db.StaffHoursAudits.ToArrayAsync(Token));
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    [InlineData(2)]
+    public async Task CalendarServerTimeoutRollsBackAndSameRequestCanBeRetried(int kind)
+    {
+        await using var database = RecoveryDatabase(); await database.StartAsync(Token);
+        var seed = await CreateRecoveryAppAsync(database.GetConnectionString(), new Clock()); await using var app = seed.App;
+        await AppointmentTests.ConfigureAsync(app); using var owner = await InviteOwnerAsync(seed); var csrf = await GetCsrfAsync(owner);
+        using var scope = app.Services.CreateScope(); var db = scope.ServiceProvider.GetRequiredService<AppDbContext>(); var member = await db.StaffMembers.OrderBy(item => item.Id).FirstAsync(Token);
+        var business = kind == 0; var version = await Version(owner, business, member.Id);
+        var path = kind == 2 ? Source(false, member.Id) + "/leave" : Path(business, member.Id);
+        object payload = kind == 2 ? new StaffLeaveEndpoints.CreateRequest(Guid.NewGuid(), version, Hour(12), Hour(13)) : Day(version);
+        await using var connection = new NpgsqlConnection(database.GetConnectionString()); await connection.OpenAsync(Token); await using var transaction = await connection.BeginTransactionAsync(Token);
+        await using (var command = new NpgsqlCommand(business ? "SELECT 1 FROM \"BusinessHoursSchedules\" WHERE \"Id\"=1 FOR UPDATE" : "SELECT 1 FROM \"StaffMembers\" WHERE \"Id\"=@id FOR UPDATE", connection, transaction))
+        { if (!business) command.Parameters.AddWithValue("id", member.Id); await command.ExecuteScalarAsync(Token); }
+        var timer = System.Diagnostics.Stopwatch.StartNew(); var write = PostAsync(owner, path, payload, csrf);
+        using var wait = new CancellationTokenSource(TimeSpan.FromSeconds(8));
+        while (await db.Database.SqlQueryRaw<int>("SELECT count(*)::int AS \"Value\" FROM pg_stat_activity WHERE datname=current_database() AND wait_event_type='Lock'").SingleAsync(wait.Token) < 1) await Task.Delay(20, wait.Token);
+        using var failed = await write.WaitAsync(TimeSpan.FromSeconds(25), Token); Assert.Equal(HttpStatusCode.InternalServerError, failed.StatusCode);
+        Assert.InRange(timer.Elapsed.TotalSeconds, 12, 25); await transaction.CommitAsync(Token);
+        Assert.Equal(version, await Version(owner, business, member.Id));
+        Assert.Empty(await db.BusinessDateExceptions.ToArrayAsync(Token)); Assert.Empty(await db.StaffDateExceptions.ToArrayAsync(Token)); Assert.Empty(await db.StaffLeaves.ToArrayAsync(Token));
+        Assert.Empty(await db.BusinessHoursAudits.ToArrayAsync(Token)); Assert.Empty(await db.StaffHoursAudits.ToArrayAsync(Token));
+        using var retry = await PostAsync(owner, path, payload, csrf); Assert.Equal(HttpStatusCode.OK, retry.StatusCode);
+        Assert.NotEqual(version, await Version(owner, business, member.Id));
+        Assert.Equal(1, await db.BusinessHoursAudits.CountAsync(Token) + await db.StaffHoursAudits.CountAsync(Token));
+    }
+
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
@@ -242,13 +336,22 @@ public sealed class DateCalendarTests
     [InlineData(3, false)]
     [InlineData(4, true)]
     [InlineData(4, false)]
+    [InlineData(5, true)]
+    [InlineData(5, false)]
     public async Task CalendarChangeAndBookingShareTheParentLock(int kind, bool changeFirst)
     {
         await using var database = RecoveryDatabase(); await database.StartAsync(Token);
         var seed = await CreateRecoveryAppAsync(database.GetConnectionString(), new Clock()); await using var app = seed.App;
         await AppointmentTests.ConfigureAsync(app); using var owner = await InviteOwnerAsync(seed); using var other = await AppointmentTests.OtherOwnerAsync(seed); var csrf = await GetCsrfAsync(owner); var otherCsrf = await GetCsrfAsync(other);
         using var scope = app.Services.CreateScope(); var db = scope.ServiceProvider.GetRequiredService<AppDbContext>(); var member = await db.StaffMembers.OrderBy(item => item.Id).FirstAsync(Token); var service = await db.ServiceDefinitions.SingleAsync(Token);
-        var business = kind is 0 or 3; var remove = kind >= 3;
+        var business = kind is 0 or 3; var remove = kind is 3 or 4; var leaveId = Guid.NewGuid();
+        if (kind == 5)
+        {
+            service.DurationMinutes = 25; service.BufferBeforeMinutes = 5; service.BufferAfterMinutes = 10; await db.SaveChangesAsync(Token);
+            using var weekly = await PostAsync(owner, Source(true, member.Id) + "/breaks", new { version = await Version(owner, true, member.Id), days = Enumerable.Range(0, 7).Select(day => new WeeklyBreaks.DayRequest(day, day == 4 ? [new("12:00", "13:00")] : [])).ToArray() }, csrf); Assert.Equal(HttpStatusCode.OK, weekly.StatusCode);
+            using var dated = await PostAsync(owner, Path(false, member.Id), Day(await Version(owner, false, member.Id), breaks: [new("14:00", "15:00")]), csrf); Assert.Equal(HttpStatusCode.OK, dated.StatusCode);
+            using var leave = await PostAsync(owner, Source(false, member.Id) + "/leave", new StaffLeaveEndpoints.CreateRequest(leaveId, await Version(owner, false, member.Id), Hour(15, 50), Hour(17)), csrf); Assert.Equal(HttpStatusCode.OK, leave.StatusCode);
+        }
         if (remove)
         {
             using var hours = await PostAsync(owner, business ? "/api/business-hours/" : Source(false, member.Id) + "/hours", new { version = await Version(owner, business, member.Id), days = Enumerable.Range(0, 7).Select(day => new WeeklyHours.DayRequest(day, false, "09:00", "13:00")).ToArray() }, csrf); Assert.Equal(HttpStatusCode.OK, hours.StatusCode);
@@ -257,8 +360,8 @@ public sealed class DateCalendarTests
         var version = await Version(owner, business, member.Id);
         await using var connection = new NpgsqlConnection(database.GetConnectionString()); await connection.OpenAsync(Token); await using var transaction = await connection.BeginTransactionAsync(Token);
         await using (var command = new NpgsqlCommand(business ? "SELECT 1 FROM \"BusinessHoursSchedules\" WHERE \"Id\"=1 FOR UPDATE" : "SELECT 1 FROM \"StaffMembers\" WHERE \"Id\"=@id FOR UPDATE", connection, transaction)) { if (!business) command.Parameters.AddWithValue("id", member.Id); await command.ExecuteScalarAsync(Token); }
-        Task<HttpResponseMessage> Change() => kind == 2 ? PostAsync(other, Source(false, member.Id) + "/leave", new StaffLeaveEndpoints.CreateRequest(Guid.NewGuid(), version, Hour(12), Hour(13)), otherCsrf) : remove ? PostAsync(other, Path(business, member.Id) + "/remove", new { version }, otherCsrf) : PostAsync(other, Path(business, member.Id), Day(version, true), otherCsrf);
-        Task<HttpResponseMessage> Book() => PostAsync(owner, "/api/appointments/", Booking(service, member.Id, remove ? 17 : 12, 30), csrf);
+        Task<HttpResponseMessage> Change() => kind == 5 ? PostAsync(other, Source(false, member.Id) + "/leave/" + leaveId, new StaffLeaveEndpoints.UpdateRequest(version, Hour(15, 49), Hour(17)), otherCsrf) : kind == 2 ? PostAsync(other, Source(false, member.Id) + "/leave", new StaffLeaveEndpoints.CreateRequest(Guid.NewGuid(), version, Hour(12), Hour(13)), otherCsrf) : remove ? PostAsync(other, Path(business, member.Id) + "/remove", new { version }, otherCsrf) : PostAsync(other, Path(business, member.Id), Day(version, true), otherCsrf);
+        Task<HttpResponseMessage> Book() => PostAsync(owner, "/api/appointments/", Booking(service, member.Id, kind == 5 ? 15 : remove ? 17 : 12, kind == 5 ? 15 : 30), csrf);
         var first = changeFirst ? Change() : Book(); using var wait = new CancellationTokenSource(TimeSpan.FromSeconds(8));
         while (await db.Database.SqlQueryRaw<int>("SELECT count(*)::int AS \"Value\" FROM pg_stat_activity WHERE datname=current_database() AND wait_event_type='Lock'").SingleAsync(wait.Token) < 1) await Task.Delay(20, wait.Token);
         var second = changeFirst ? Book() : Change(); await AwaitInviteLocksAsync(app); await transaction.CommitAsync(Token);
