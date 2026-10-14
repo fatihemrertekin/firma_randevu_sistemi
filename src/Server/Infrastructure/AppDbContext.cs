@@ -51,11 +51,46 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<StaffHoursAudit> StaffHoursAudits => Set<StaffHoursAudit>();
     public DbSet<BusinessWeeklyBreak> BusinessWeeklyBreaks => Set<BusinessWeeklyBreak>();
     public DbSet<StaffWeeklyBreak> StaffWeeklyBreaks => Set<StaffWeeklyBreak>();
+    public DbSet<BusinessDateException> BusinessDateExceptions => Set<BusinessDateException>();
+    public DbSet<StaffDateException> StaffDateExceptions => Set<StaffDateException>();
+    public DbSet<BusinessDateBreak> BusinessDateBreaks => Set<BusinessDateBreak>();
+    public DbSet<StaffDateBreak> StaffDateBreaks => Set<StaffDateBreak>();
+    public DbSet<StaffLeave> StaffLeaves => Set<StaffLeave>();
     public DbSet<BusinessLogoAudit> BusinessLogoAudits => Set<BusinessLogoAudit>();
 
+    private static void ConfigureDateCalendar(ModelBuilder builder)
+    {
+        const string dateCheck = "\"Date\" BETWEEN DATE '0001-01-01' AND DATE '9999-12-31'";
+        const string hoursCheck = "(\"IsClosed\" AND \"OpensAtMinute\" IS NULL AND \"ClosesAtMinute\" IS NULL) OR (NOT \"IsClosed\" AND \"OpensAtMinute\" IS NOT NULL AND \"ClosesAtMinute\" IS NOT NULL AND \"OpensAtMinute\" BETWEEN 0 AND 1439 AND \"ClosesAtMinute\" BETWEEN 0 AND 1439 AND \"OpensAtMinute\" < \"ClosesAtMinute\")";
+        const string breakCheck = "\"Position\" BETWEEN 1 AND 8 AND \"StartsAtMinute\" BETWEEN 0 AND 1439 AND \"EndsAtMinute\" BETWEEN 0 AND 1439 AND \"StartsAtMinute\" < \"EndsAtMinute\"";
+        var business = builder.Entity<BusinessDateException>();
+        business.HasKey(item => new { item.ScheduleId, item.Date });
+        business.HasOne<BusinessHoursSchedule>().WithMany().HasForeignKey(item => item.ScheduleId).OnDelete(DeleteBehavior.Restrict);
+        business.ToTable(table => { table.HasCheckConstraint("CK_BusinessDateExceptions_Date", dateCheck); table.HasCheckConstraint("CK_BusinessDateExceptions_Hours", hoursCheck); });
+        var staff = builder.Entity<StaffDateException>();
+        staff.HasKey(item => new { item.StaffMemberId, item.Date });
+        staff.HasOne<StaffMember>().WithMany().HasForeignKey(item => item.StaffMemberId).OnDelete(DeleteBehavior.Restrict);
+        staff.ToTable(table => { table.HasCheckConstraint("CK_StaffDateExceptions_Date", dateCheck); table.HasCheckConstraint("CK_StaffDateExceptions_Hours", hoursCheck); });
+        var businessBreak = builder.Entity<BusinessDateBreak>();
+        businessBreak.HasKey(item => new { item.ScheduleId, item.Date, item.Position });
+        businessBreak.HasOne<BusinessDateException>().WithMany().HasForeignKey(item => new { item.ScheduleId, item.Date }).OnDelete(DeleteBehavior.Restrict);
+        businessBreak.ToTable(table => table.HasCheckConstraint("CK_BusinessDateBreaks_Time", breakCheck));
+        var staffBreak = builder.Entity<StaffDateBreak>();
+        staffBreak.HasKey(item => new { item.StaffMemberId, item.Date, item.Position });
+        staffBreak.HasOne<StaffDateException>().WithMany().HasForeignKey(item => new { item.StaffMemberId, item.Date }).OnDelete(DeleteBehavior.Restrict);
+        staffBreak.ToTable(table => table.HasCheckConstraint("CK_StaffDateBreaks_Time", breakCheck));
+        var leave = builder.Entity<StaffLeave>();
+        leave.Property(item => item.Id).ValueGeneratedNever();
+        leave.Property(item => item.RequestHash).HasMaxLength(64);
+        leave.HasOne<StaffMember>().WithMany().HasForeignKey(item => item.StaffMemberId).OnDelete(DeleteBehavior.Restrict);
+        leave.HasIndex(item => new { item.StaffMemberId, item.StartsAt, item.Id });
+        leave.ToTable(table => table.HasCheckConstraint("CK_StaffLeaves_Time", "isfinite(\"StartsAt\") AND isfinite(\"EndsAt\") AND \"StartsAt\" < \"EndsAt\" AND \"EndsAt\" - \"StartsAt\" <= INTERVAL '366 days' AND date_trunc('minute', \"StartsAt\" AT TIME ZONE 'UTC') = \"StartsAt\" AT TIME ZONE 'UTC' AND date_trunc('minute', \"EndsAt\" AT TIME ZONE 'UTC') = \"EndsAt\" AT TIME ZONE 'UTC'"));
+        leave.ToTable(table => table.HasCheckConstraint("CK_StaffLeaves_RequestHash", "\"RequestHash\" ~ '^[0-9A-F]{64}$'"));
+    }
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
+        ConfigureDateCalendar(builder);
         builder.HasPostgresExtension("btree_gist");
         var appointment = builder.Entity<Appointment>();
         appointment.Property(item => item.RequestHash).HasMaxLength(64);
@@ -126,8 +161,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
             table.HasCheckConstraint("CK_StaffWorkingDays_Hours", "(\"IsClosed\" AND \"OpensAtMinute\" IS NULL AND \"ClosesAtMinute\" IS NULL) OR (NOT \"IsClosed\" AND \"OpensAtMinute\" IS NOT NULL AND \"ClosesAtMinute\" IS NOT NULL AND \"OpensAtMinute\" BETWEEN 0 AND 1439 AND \"ClosesAtMinute\" BETWEEN 0 AND 1439 AND \"OpensAtMinute\" < \"ClosesAtMinute\")");
         });
         var staffHoursAudit = builder.Entity<StaffHoursAudit>();
-        staffHoursAudit.Property(item => item.Kind).HasMaxLength(8).HasDefaultValue("Hours");
-        staffHoursAudit.ToTable(table => table.HasCheckConstraint("CK_StaffHoursAudits_Kind", "\"Kind\" IN ('Hours','Breaks')"));
+        staffHoursAudit.Property(item => item.Kind).HasMaxLength(16).HasDefaultValue("Hours");
+        staffHoursAudit.ToTable(table => table.HasCheckConstraint("CK_StaffHoursAudits_Kind", "\"Kind\" IN ('Hours','Breaks','Exception','Leave')"));
         staffHoursAudit.HasIndex(entry => new { entry.StaffMemberId, entry.MemberVersion }).IsUnique();
         staffHoursAudit.HasOne<StaffMember>().WithMany().HasForeignKey(entry => entry.StaffMemberId).OnDelete(DeleteBehavior.Restrict);
         staffHoursAudit.HasOne<AppUser>().WithMany().HasForeignKey(entry => entry.ActorId).OnDelete(DeleteBehavior.Restrict);
@@ -145,8 +180,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
             table.HasCheckConstraint("CK_BusinessOpeningDays_Hours", "(\"IsClosed\" AND \"OpensAtMinute\" IS NULL AND \"ClosesAtMinute\" IS NULL) OR (NOT \"IsClosed\" AND \"OpensAtMinute\" IS NOT NULL AND \"ClosesAtMinute\" IS NOT NULL AND \"OpensAtMinute\" BETWEEN 0 AND 1439 AND \"ClosesAtMinute\" BETWEEN 0 AND 1439 AND \"OpensAtMinute\" < \"ClosesAtMinute\")");
         });
         var hoursAudit = builder.Entity<BusinessHoursAudit>();
-        hoursAudit.Property(item => item.Kind).HasMaxLength(8).HasDefaultValue("Hours");
-        hoursAudit.ToTable(table => table.HasCheckConstraint("CK_BusinessHoursAudits_Kind", "\"Kind\" IN ('Hours','Breaks')"));
+        hoursAudit.Property(item => item.Kind).HasMaxLength(16).HasDefaultValue("Hours");
+        hoursAudit.ToTable(table => table.HasCheckConstraint("CK_BusinessHoursAudits_Kind", "\"Kind\" IN ('Hours','Breaks','Exception')"));
         hoursAudit.HasIndex(entry => entry.ScheduleVersion).IsUnique();
         hoursAudit.HasOne<AppUser>().WithMany().HasForeignKey(entry => entry.ActorId).OnDelete(DeleteBehavior.Restrict);
         var businessBreak = builder.Entity<BusinessWeeklyBreak>();

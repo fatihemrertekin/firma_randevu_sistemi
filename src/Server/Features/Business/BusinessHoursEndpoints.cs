@@ -19,6 +19,7 @@ public static class BusinessHoursEndpoints
         hours.MapGet("/", ReadAsync);
         hours.MapPost("/", UpdateAsync);
         hours.MapBusinessBreaks();
+        hours.MapBusinessExceptions();
     }
 
     private static CancellationTokenSource Timeout(HttpContext context)

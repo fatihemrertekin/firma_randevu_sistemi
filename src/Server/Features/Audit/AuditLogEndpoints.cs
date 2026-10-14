@@ -78,6 +78,8 @@ public static class AuditLogEndpoints
     private static string Action(int source, string kind) => (source, kind) switch
     {
         (3 or 7, "Breaks") => "Molalar güncellendi",
+        (3 or 7, "Exception") => "Tarihli çalışma günü güncellendi",
+        (7, "Leave") => "İzinler güncellendi",
         (1 or 2 or 3 or 7, _) => "Güncellendi",
         (4 or 5, "Created") => "Eklendi",
         (4, "Renamed") => "Ad değiştirildi",

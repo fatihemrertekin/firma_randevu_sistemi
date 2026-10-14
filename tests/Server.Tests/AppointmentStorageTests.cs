@@ -182,6 +182,20 @@ public sealed class AppointmentStorageTests
             }, await GetCsrfAsync(owner));
             Assert.Equal(HttpStatusCode.OK, saveBreaks.StatusCode);
         }
+        foreach (var source in new[] { "/api/business-hours", $"/api/staff-members/{member.Id}" })
+        {
+            using var readWeek = await owner.GetAsync(source + "/breaks", Token);
+            var parent = Assert.IsType<Server.Features.Business.WeeklyBreaks.Response>(await readWeek.Content.ReadFromJsonAsync<Server.Features.Business.WeeklyBreaks.Response>(Token));
+            using var dated = await PostAsync(owner, source + "/exceptions/2026-10-15", new Server.Features.Business.DateExceptionEndpoints.UpdateRequest(parent.Version, false, "09:00", "19:00", []), await GetCsrfAsync(owner));
+            Assert.Equal(HttpStatusCode.OK, dated.StatusCode);
+            var day = Assert.IsType<Server.Features.Business.DateExceptionEndpoints.Response>(await dated.Content.ReadFromJsonAsync<Server.Features.Business.DateExceptionEndpoints.Response>(Token));
+            using var removeDay = await PostAsync(owner, source + "/exceptions/2026-10-15/remove", new { version = day.Version }, await GetCsrfAsync(owner)); Assert.Equal(HttpStatusCode.OK, removeDay.StatusCode);
+        }
+        using var readMember = await owner.GetAsync($"/api/staff-members/{member.Id}/breaks", Token);
+        var memberWeek = Assert.IsType<Server.Features.Business.WeeklyBreaks.Response>(await readMember.Content.ReadFromJsonAsync<Server.Features.Business.WeeklyBreaks.Response>(Token));
+        using var createLeave = await PostAsync(owner, $"/api/staff-members/{member.Id}/leave", new Server.Features.Staff.StaffLeaveEndpoints.CreateRequest(Guid.NewGuid(), memberWeek.Version, "2026-10-15T12:00:00+03:00", "2026-10-15T13:00:00+03:00"), await GetCsrfAsync(owner)); Assert.Equal(HttpStatusCode.OK, createLeave.StatusCode);
+        var leave = Assert.IsType<Server.Features.Staff.StaffLeaveEndpoints.Response>(await createLeave.Content.ReadFromJsonAsync<Server.Features.Staff.StaffLeaveEndpoints.Response>(Token));
+        using var removeLeave = await PostAsync(owner, $"/api/staff-members/{member.Id}/leave/{leave.Leave.Id}/remove", new { version = leave.Version }, await GetCsrfAsync(owner)); Assert.Equal(HttpStatusCode.OK, removeLeave.StatusCode);
         using var buffersWrite = await PostAsync(owner, $"/api/services/{service.Id}/buffers", new { version = service.Version, bufferBeforeMinutes = 5, bufferAfterMinutes = 10 }, await GetCsrfAsync(owner));
         Assert.Equal(HttpStatusCode.OK, buffersWrite.StatusCode);
         var buffers = Assert.IsType<Server.Features.Services.ServiceDefinitionEndpoints.BuffersResponse>(await buffersWrite.Content.ReadFromJsonAsync<Server.Features.Services.ServiceDefinitionEndpoints.BuffersResponse>(Token));
@@ -199,7 +213,7 @@ public sealed class AppointmentStorageTests
         Assert.NotNull(await response.Content.ReadFromJsonAsync<AppointmentEndpoints.AppointmentResponse>(Token));
         var saved = await db.AppointmentTimeBlocks.AsNoTracking().SingleAsync(Token); Assert.Equal(5, saved.BufferBeforeMinutes); Assert.Equal(10, saved.BufferAfterMinutes);
         await using var connection = new NpgsqlConnection(limitedConnection); await connection.OpenAsync(Token);
-        foreach (var sql in new[] { "UPDATE \"AppointmentAudits\" SET \"ActorId\"=\"ActorId\"", "DELETE FROM \"Appointments\"", "UPDATE \"BookingPolicies\" SET \"LeadMinutes\"=0", "TRUNCATE \"BusinessWeeklyBreaks\"", "TRUNCATE \"StaffWeeklyBreaks\"", "UPDATE \"BusinessHoursAudits\" SET \"Kind\"='Hours'", "DELETE FROM \"StaffHoursAudits\"" })
+        foreach (var sql in new[] { "UPDATE \"AppointmentAudits\" SET \"ActorId\"=\"ActorId\"", "DELETE FROM \"Appointments\"", "UPDATE \"BookingPolicies\" SET \"LeadMinutes\"=0", "TRUNCATE \"BusinessWeeklyBreaks\"", "TRUNCATE \"StaffWeeklyBreaks\"", "UPDATE \"BusinessHoursAudits\" SET \"Kind\"='Hours'", "DELETE FROM \"StaffHoursAudits\"", "DELETE FROM \"StaffLeaves\"", "TRUNCATE \"StaffLeaves\"", "TRUNCATE \"BusinessDateExceptions\"", "TRUNCATE \"StaffDateBreaks\"" })
         {
             await using var command = new NpgsqlCommand(sql, connection);
             var failure = await Assert.ThrowsAsync<PostgresException>(() => command.ExecuteNonQueryAsync(Token)); Assert.Equal("42501", failure.SqlState);

@@ -19,6 +19,8 @@ public static class StaffHoursEndpoints
         members.MapGet("/{id:guid}/hours", ReadAsync);
         members.MapPost("/{id:guid}/hours", UpdateAsync);
         members.MapStaffBreaks();
+        members.MapStaffExceptions();
+        members.MapStaffLeave();
     }
     private static CancellationTokenSource Timeout(HttpContext context)
     {
