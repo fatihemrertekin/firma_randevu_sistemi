@@ -116,7 +116,7 @@ export default function StaffInvitations({ post, disabled, onBusyChange }: Props
       <label htmlFor="invite-email">Çalışanın e-postası</label>
       <input id="invite-email" type="email" required maxLength={256} autoComplete="off" disabled={disabled || busy}
         value={email} onChange={event => setEmail(event.target.value)} />
-      <label><input type="checkbox" checked={verified} disabled={disabled || busy}
+      <label className={styles.recipientConfirmation}><input type="checkbox" checked={verified} disabled={disabled || busy}
         onChange={event => setVerified(event.target.checked)} /> E-postanın çalışana ait olduğunu doğruladım; kodu yalnız kendisine teslim edeceğim.</label>
       <button type="submit" disabled={disabled || busy || !verified}>{busy ? 'İşlem sürüyor…' : 'Davet oluştur'}</button>
     </form>

@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
-import salonPhoto from '../../../../../assets/plates/salon-background-neutral.png'
+import salonPhoto from '../../../../../assets/plates/salon-background-neutral-1254.webp'
+import salonPhotoSmall from '../../../../../assets/plates/salon-background-neutral-640.webp'
 import styles from './AuthenticationScreens.module.css'
 
 export default function AuthenticationLayout({ children }: { children: ReactNode }) {
@@ -15,7 +16,8 @@ export default function AuthenticationLayout({ children }: { children: ReactNode
         <div className={styles.formContent}>{children}</div>
       </section>
       <aside className={styles.hero} aria-label="İşletme paneli hakkında">
-        <img className={styles.heroPhoto} src={salonPhoto} alt="" fetchPriority="high" />
+        <img className={styles.heroPhoto} src={salonPhoto} srcSet={`${salonPhotoSmall} 640w, ${salonPhoto} 1254w`}
+          sizes="(max-width: 900px) 100vw, 64vw" width={1254} height={1254} alt="" decoding="async" fetchPriority="high" />
         <div className={styles.heroContent}>
           <p className={styles.audience}>Berber ve kuaför işletmeleri için</p>
           <h2>İşletmenize odaklanın.<span>Kontrol sizde olsun.</span></h2>

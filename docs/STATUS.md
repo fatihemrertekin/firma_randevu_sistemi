@@ -1,6 +1,6 @@
 # STATUS — Güncel durum ve sıradaki iş
 
-Güncelleme: 2026-10-13. Güncel özet burada; kapsam ve kanıt bağlantıları [P02 planında](plans/P02.md), önceki oturum kayıtları [arşivde](archive/2026-10-02/STATUS.md). Arşivdeki eski durum ve onay bekleme ifadeleri güncel yönlendirme değildir.
+Güncelleme: 2026-10-14. Güncel özet burada; kapsam ve kanıt bağlantıları [P02 planında](plans/P02.md), önceki oturum kayıtları [arşivde](archive/2026-10-02/STATUS.md). Arşivdeki eski durum ve onay bekleme ifadeleri güncel yönlendirme değildir.
 
 `source-map-js` güvenlik bakımının yerel kabulü `done`: yalnız geçişli paket 1.2.1 → 1.2.2 güncellendi; temiz kurulum, audit 0 açık, 247 test ve frontend kapıları geçti. Ana 8080/DB/hesap/MFA/anahtar/SMTP değişmedi. GitHub teslimi bakım PR son head CI/birleşme kaydından izlenir. [Kapsam ve kanıt](plans/P02.md#source-map-js-güvenlik-bakımı--13102026).
 
@@ -77,9 +77,11 @@ Program.cs bakımı `done`: başlangıç 265 satırdan 69 satıra indi; önce/so
 
 ## Sıradaki iş
 
-T07 Değişiklik kayıtları bakımı ve güvenli bağımlılık yaması `done`: [PR #67](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/67), aynı head/main CI ve yedekli ana 8080 kabulü geçti; [kapsam, kanıt ve yerel test sınırı](plans/P02.md#t07-değişiklik-kayıtları-bakımı--14102026). Sonraki tek aday T08 mevcut yüzeylerin tutarlılık ve erişilebilirlik değerlendirmesidir; henüz başlatılmadı.
+T07 Değişiklik kayıtları bakımı ve güvenli bağımlılık yaması `done`: [PR #67](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/67), aynı head/main CI ve yedekli ana 8080 kabulü geçti; [kapsam, kanıt ve yerel test sınırı](plans/P02.md#t07-değişiklik-kayıtları-bakımı--14102026).
 
-14.10.2026 onaylı sidebar/tam genişlik geliştirme/GitHub/ana yerel teslimi `done`: [PR #68](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/68), aynı birleşme commit'i için başarılı main CI ve yedekli 8080 teslimi. 262 web testi, ayrı sentetik ortamda beş genişlikte 82 durum ve ana anonim tarayıcı/paket kontrolü geçti. 32 tablo/hesap/MFA/anahtar/ayar/SMTP korundu; sağlık/restart başarılı. [Kapsam, kanıt ve geri dönüş](plans/P02.md#sidebar-ve-tam-genişlik-önerisi--14102026). T08 başlatılmadı.
+14.10.2026 onaylı sidebar/tam genişlik geliştirme/GitHub/ana yerel teslimi `done`: [PR #68](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/68), aynı birleşme commit'i için başarılı main CI ve yedekli 8080 teslimi. 262 web testi, ayrı sentetik ortamda beş genişlikte 82 durum ve ana anonim tarayıcı/paket kontrolü geçti. 32 tablo/hesap/MFA/anahtar/ayar/SMTP korundu; sağlık/restart başarılı. [Kapsam, kanıt ve geri dönüş](plans/P02.md#sidebar-ve-tam-genişlik-önerisi--14102026).
+
+T08 inceleme ve dört bulgunun yerel düzeltmesi `done` (14.10.2026): %200 metinde taşma giderildi, iki checkbox hedefi 44 px, yeni MFA kodlarının yenileme uyarısı gerçek Chrome'da çalışıyor; giriş fotoğrafı mobilde 54 KB/masaüstünde 130 KB. 262 web testi, frontend kapıları, ayrı gerçek API turu ve 71 durum/235 görüntü-ölçüm kaydı geçti. [İnceleme](plans/P02.md#t08-tutarlılık-ve-erişilebilirlik-incelemesi--14102026), [düzeltme ve kabul sınırları](plans/P02.md#t08-dört-bulgunun-düzeltmesi--14102026). GitHub teslimi PR'ın aynı head CI kaydından izlenir; ana 8080 teslimi yapılmadı. Sonraki tek iş başarılı GitHub kontrolü sonrası kontrollü ana teslimdir; P03 başlamadı.
 
 ## Gelecek plan kaydı — destek ve işletim ekranı (02.10.2026)
 
