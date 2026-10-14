@@ -106,6 +106,11 @@
         "section": "layout",
         "name": "Ortak kimlik formu ölçüleri",
         "body": "Kimlik marka 48px, başlık32px, gövde16px, alan48px, form aralığı8px. Ortak işlem14px/600 ve en az44px; ilk giriş ana işlem18px/700 ve48px, yardımcı metin16px/500 istisnası korunur."
+      },
+      {
+        "section": "layout",
+        "name": "Doğrudan gezinme ve tam genişlik",
+        "body": "Yönetim menüsü 15rem, ikon şeridi 4.5rem; yetkili sayfalar başlıklar altında doğrudan görünür. İçerik alanında form ve listeler tam genişliktedir. Hesap/erişim ilk paneli tam satır, sonraki iki panel 54rem içerikten itibaren eşit sütundur. Profil/özet 54rem üzerinde eşit sütun, dar alanda tek sütundur."
       }
     ],
     "overview": "Beyaza yakın açık gri zeminde dolu hafif pastel mavi ana işlemler, lacivert yardımcı işlemler ve krem içermeyen beyaz/açık gri salon fotoğrafı. Ortak palet giriş, MFA, diğer kimlik işlemleri ve mevcut yönetim ekranlarının tamamına uygulanır; ekranların ayrıntılı dönüşümü T01–T08 kapsamında ayrı ilerler. Dark mode uygulanmadı.",

@@ -1,4 +1,4 @@
-.layout { display: grid; grid-template-columns: minmax(var(--management-form-min), 1fr) minmax(0, var(--management-summary)); gap: var(--auth-space-7); }
+.layout { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--auth-space-6); }
 .editor { min-width: 0; }
 .editor form { gap: var(--auth-space-5); }
 .field { display: grid; gap: var(--auth-space-2); }
@@ -20,10 +20,9 @@
 .screenReaderOnly { position: absolute; width: var(--auth-rule); height: var(--auth-rule); padding: 0; margin: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .skeleton { display: grid; gap: var(--auth-space-5); }
 .skeleton span { display: block; height: var(--auth-control-height); border: var(--auth-rule) solid var(--border); border-radius: var(--auth-radius); background: var(--primary-soft); }
-@media (max-width: 1280px) {
+@container management-content (max-width: 54rem) {
   .layout { grid-template-columns: minmax(0, 1fr); }
   .summary { border-left: 0; border-top: var(--auth-rule) solid var(--border); padding: var(--auth-space-5) 0 0; }
-  .summary img { max-width: var(--management-summary); }
 }
 @media (max-width: 900px) {
   .actions { align-items: flex-start; }
