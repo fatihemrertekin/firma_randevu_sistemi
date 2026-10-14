@@ -1,6 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
-using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -9,7 +8,7 @@ using Server.Infrastructure;
 
 namespace Server.Features.Business;
 
-public static partial class BusinessProfileEndpoints
+public static class BusinessProfileEndpoints
 {
     public sealed record ProfileResponse(string Name, string? Phone, string? Email, string? Address, Guid Version);
     public sealed record UpdateRequest(string Name, string? Phone, string? Email, string? Address, Guid Version);
@@ -41,19 +40,8 @@ public static partial class BusinessProfileEndpoints
         var address = Optional(request.Address);
         if (name is not { Length: >= 2 and <= 150 } || name.Any(char.IsControl))
             return Results.Problem(statusCode: 400, title: "İşletme adı 2–150 karakter olmalı.");
-        if (phone is not null)
-        {
-            if (phone.Length > 32 || !PhoneCharacters().IsMatch(phone))
-                return Results.Problem(statusCode: 400, title: "Geçerli bir Türkiye telefon numarası girin.");
-            var digits = new string(phone.Where(char.IsAsciiDigit).ToArray());
-            if (phone.StartsWith('+') && (digits.Length != 12 || !digits.StartsWith("90", StringComparison.Ordinal)))
-                return Results.Problem(statusCode: 400, title: "Uluslararası telefon numarası +90 ile başlamalı.");
-            if (digits.Length == 11 && digits[0] == '0') digits = digits[1..];
-            if (digits.Length == 12 && digits.StartsWith("90", StringComparison.Ordinal)) digits = digits[2..];
-            if (!TurkishNumber().IsMatch(digits))
-                return Results.Problem(statusCode: 400, title: "Geçerli bir Türkiye cep veya sabit telefon numarası girin.");
-            phone = "+90" + digits;
-        }
+        if (phone is not null && !TurkishPhone.TryNormalize(phone, out phone, out var phoneError))
+            return Results.Problem(statusCode: 400, title: phoneError);
         if (email is not null && (email.Length > 254 || email.Any(char.IsControl) || !new EmailAddressAttribute().IsValid(email)))
             return Results.Problem(statusCode: 400, title: "Geçerli bir iletişim e-postası girin.");
         if (address is not null && (address.Length > 500 || address.Any(character => char.IsControl(character) && character is not '\r' and not '\n')))
@@ -99,8 +87,4 @@ public static partial class BusinessProfileEndpoints
     private static IResult Conflict() => Results.Problem(statusCode: 409,
         title: "İşletme profili başka bir işlemde değişti. Güncel bilgileri yükleyip yeniden düzenleyin.");
 
-    [GeneratedRegex(@"\A\+?[0-9 ()-]+\z")]
-    private static partial Regex PhoneCharacters();
-    [GeneratedRegex(@"\A[2345][0-9]{9}\z")]
-    private static partial Regex TurkishNumber();
 }

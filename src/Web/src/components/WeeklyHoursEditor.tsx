@@ -75,8 +75,9 @@ export default function WeeklyHoursEditor({ endpoint, heading, formLabel, subjec
       setSnapshot(saved); setDays(hoursDraft(saved)); onDirtyChange(false); setNotice(`${subject} kaydedildi.`); onSaved?.()
     } catch (problem: unknown) {
       const status = problem instanceof HoursError ? problem.status : 500
-      setError(hoursFailure(status, subject))
-      setLocked(status === 401 || status === 403 || status === 404 || status === 409 || status >= 500)
+      const appointmentsOutsideHours = problem instanceof HoursError && problem.appointmentsOutsideHours
+      setError(appointmentsOutsideHours ? problem.message : hoursFailure(status, subject))
+      setLocked(status === 401 || status === 403 || status === 404 || (status === 409 && !appointmentsOutsideHours) || status >= 500)
     } finally { sending.current = false; setBusy(false) }
   }
   function cancel() {

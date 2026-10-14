@@ -74,3 +74,7 @@ Liste/form/saat/personel/hizmet yüzeyleri içerik genişliğini doldurur; içte
 ## Profil görselinin kaldırılması — 14.10.2026
 
 Kullanıcı mevcut İşletme bilgileri ekranındaki fotoğrafı gereksiz bulup yalnız onu kaldırmayı istedi. Bu dar doğrudan talep, önceki fotoğraflı profil özeti kararını bu ekran için geçersiz kılar: özet aynı yerde doğrudan başlar, form/özet/işlemler korunur. Giriş görseli ve ortak raster dosyası korunur; yeni taslak, ekran veya T08 başlatılmaz. Masaüstü ve mobil son ekranlar incelendi; gereksiz görsel boşluğu yok, mevcut iki/tek sütun düzeni korunuyor.
+
+## P03-02 mesai-randevu hata davranışı — 14.10.2026
+
+Mevcut işletme/personel haftalık saat formu, mevcut API'nin 409 appointments_outside_hours kodunda randevuları kapsayan saat seçmeyi açıklar; reddedilen taslak/sürüm korunur ve alanlar düzeltilebilir kalır. Diğer/bozuk 409, yetki, ağ/busy/CSRF ve yeniden yükleme kilidi korunur. Yeni ekran, görsel sistem/layout değişimi veya randevu formu yoktur. İki gerçek API hata/düzeltme akışı dört genişlikte yakalanıp mobil/masaüstü görüntüleri DESIGN ile değerlendirildi; ayrıntılı kanıt P03 planındadır. Native finish iddia edilmez.

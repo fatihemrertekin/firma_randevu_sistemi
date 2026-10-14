@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Server.Features.Business;
 using Server.Features.Identity;
 using Server.Infrastructure;
+using Server.Features.Scheduling;
 
 namespace Server.Features.Staff;
 
@@ -55,6 +56,9 @@ public static class StaffHoursEndpoints
         var current = await db.StaffWorkingDays.Where(item => item.StaffMemberId == id).OrderBy(item => item.Day).ToArrayAsync(timeout.Token);
         if (current.Length == 7 && current.Zip(desired).All(pair => pair.First.Day == pair.Second.Day && pair.First.IsClosed == pair.Second.IsClosed && pair.First.OpensAtMinute == pair.Second.Start && pair.First.ClosesAtMinute == pair.Second.End))
             return Results.Ok(Response(member, current));
+        if (!await AppointmentRules.FitsWeekAsync(db, desired, clock.GetUtcNow().UtcDateTime, member.Id, timeout.Token))
+            return Results.Problem(statusCode: 409, title: "Yeni personel saatleri mevcut randevuları dışarıda bırakıyor.",
+                extensions: new Dictionary<string, object?> { ["code"] = "appointments_outside_hours" });
         foreach (var item in desired)
         {
             var day = current.SingleOrDefault(value => value.Day == item.Day);

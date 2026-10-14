@@ -61,6 +61,20 @@ describe('Haftalık işletme saatleri', () => {
     const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false); await reload(); expect(field('day0OpensAt').value).toBe('09:00')
     confirm.mockReturnValue(true); await reload(); expect(field('day0Closed').checked).toBe(true); expect(document.activeElement).toBe(field('day0Closed'))
   })
+  it('randevuyu dışarıda bırakan saatlerde açıklama verir ve aynı sürümle düzeltmeye izin verir', async () => {
+    const post = vi.fn<HoursPost>().mockResolvedValueOnce(Response.json({ code: 'appointments_outside_hours' }, { status: 409 }))
+      .mockImplementationOnce(async () => Response.json({ ...saved, days: saved.days.map(day => day.day === 0 ? { ...day, isClosed: false, opensAt: '08:00', closesAt: '19:00' } : day) }))
+    await render(post); await monday(); await submit()
+    expect(container.textContent).toContain('Randevuları kapsayan saatler seçin.'); expect(field('day0OpensAt').disabled).toBe(false)
+    expect(container.textContent).not.toContain('İşletme saatleri kaydedildi.')
+    await fill('day0OpensAt', '08:00'); await submit(); expect(post).toHaveBeenCalledTimes(2)
+    expect(post.mock.calls[1][1]).toMatchObject({ version: initial.version }); expect(container.textContent).toContain('İşletme saatleri kaydedildi.')
+  })
+  it.each(['unknown', 'malformed'])('%s 409 gövdesinde yeniden gönderim kilidini korur', async kind => {
+    const response = kind === 'unknown' ? Response.json({ code: 'unknown' }, { status: 409 }) : new Response('bozuk', { status: 409 })
+    const post = vi.fn<HoursPost>(async () => response); await render(post); await monday(); await submit(); await submit()
+    expect(post).toHaveBeenCalledOnce(); expect(field('day0OpensAt').closest('fieldset')?.disabled).toBe(true)
+  })
   it('400 sunucu hatasını alan yanında gösterir ve taslağı/odağı korur', async () => {
     await render(vi.fn<HoursPost>(async () => Response.json({ errors: { day0ClosesAt: ['Geçersiz kapanış'] } }, { status: 400 })))
     await monday(); await submit(); expect(field('day0ClosesAt').getAttribute('aria-invalid')).toBe('true')

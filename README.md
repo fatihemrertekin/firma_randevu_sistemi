@@ -288,3 +288,11 @@ MFA Owner, **Değişiklik kayıtları** bölümünde mevcut tanım, çalışan e
 `GET /api/audit-log/` yalnız MFA Owner içindir; no-store, 30/IP/dakika ve kategoriye bağlı cursor kullanır. Varsayılan sayfa 20 kayıt; sunucu sınırı 1–50'dir. `AuditLogIndexes` migration'ı yalnız 12 mevcut audit tablosuna sıralama indeksi ekler. Uygulama DB yetkileri değişmez; Down yalnız bu indeksleri kaldırır, kayıt silmez. Kontrollü yedek/migration ve kabul ayrıntıları [P02 planında](docs/plans/P02.md#p02-23--değişiklik-kayıtlarını-görüntüleme).
 
 İlgili kontroller: kökten `dotnet test FirmaRandevu.slnx --no-restore --filter FullyQualifiedName~AuditLogTests`; web dizininde `npm.cmd test -- AuditLog.test.tsx`. Yayında yukarıdaki tüm kalite kapıları çalıştırılır.
+
+## Randevu motorunun ilk API'si (P03-02)
+
+MFA Owner için tek hizmet/çalışan: `GET /api/appointments/availability?serviceId&staffMemberId&date`, `POST /api/appointments/` ve `GET /api/appointments/{id}`. Slot sorgusu tek gün içindir; müşteri bilgisi içermez. Oluşturmada mevcut CSRF sözleşmesi, UUID requestKey, serviceId/serviceVersion, staffMemberId, saat dilimli startsAt ve asgari customerName/customerPhone gerekir. Fiyat/süre/durum sunucudan gelir; aynı anahtar/içerik aynı kaydı, farklı içerik veya zaman çakışması 409 döndürür. Başlangıç politikası 60 dakika ön süre/30 gün ufuk/15 dakika saat adımıdır. Müşteri rezervasyon ekranı/anonim API, SMS, taşıma/iptal bu ilk işte yoktur.
+
+`AppointmentEngine` eklemeli migration'ı randevu/blok/audit/politika tablolarını ve GiST/btree_gist korumasını ekler; yukarıdaki kontrollü migration komutu kısıtlı app_user yetkilerini uygular. Mesai daraltması mevcut randevuyu dışarıda bırakırsa iki saat formu açıklama gösterir ve daha geniş saatlerle düzeltmeye izin verir. Randevu verisi oluştuktan sonra eski imaj mesai güvencesini bilmez: otomatik Down/restore/uyumsuz imaj dönüşü yapmayın. [Kabul ve geri dönüş sınırları](docs/plans/P03.md#p03-02-yerel-geliştirme-kabulü--14102026).
+
+İlgili regresyon komutu: kökten `dotnet test FirmaRandevu.slnx --no-restore --filter "FullyQualifiedName~AppointmentTests|FullyQualifiedName~AppointmentStorageTests|FullyQualifiedName~BusinessHoursTests|FullyQualifiedName~StaffHoursTests"`; web dizininde `npm.cmd test -- BusinessHours.test.tsx StaffHoursEditor.test.tsx`. Yayında mevcut tam CI kapıları korunur.
