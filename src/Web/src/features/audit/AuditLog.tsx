@@ -7,7 +7,7 @@ import Pagination from '../../components/Pagination'
 
 export default function AuditLog() {
   const [category, setCategory] = useState<Category>('all'), [history, setHistory] = useState<(string | null)[]>([null])
-  const [revision, setRevision] = useState(0), [data, setData] = useState<AuditPage | null>(null)
+  const [revision, setRevision] = useState(0), [data, setData] = useState<(AuditPage & { page: number }) | null>(null)
   const [loading, setLoading] = useState(true), [error, setError] = useState(''), [retry, setRetry] = useState(0)
   const [locked, setLocked] = useState(false)
   const [pageSize, setPageSize] = useState(20)
@@ -25,7 +25,7 @@ export default function AuditLog() {
     if (cursor) query.set('cursor', cursor)
     void fetch(`${auditEndpoint}?${query}`, { cache: 'no-store', signal: AbortSignal.any([controller.signal, AbortSignal.timeout(15000)]) })
       .then(response => readAuditPage(response, category, pageSize)).then(value => {
-        if (!controller.signal.aborted) { setData(value); setError(''); setLocked(false) }
+        if (!controller.signal.aborted) { setData({ ...value, page: history.length }); setError(''); setLocked(false) }
       }).catch((problem: unknown) => {
         if (controller.signal.aborted) return
         const status = problem instanceof AuditError ? problem.status : 500
@@ -37,7 +37,7 @@ export default function AuditLog() {
         if (focusAfterPage.current) { focusAfterPage.current = false; heading.current?.focus() }
       })
     return () => controller.abort()
-  }, [category, cursor, pageSize, revision])
+  }, [category, cursor, pageSize, revision, history.length])
   function reload() {
     if (loading || retry) return
     setLoading(true); setError(''); setHistory([null]); setRevision(value => value + 1)
@@ -61,13 +61,14 @@ export default function AuditLog() {
   return <section className={styles.surface} aria-labelledby="audit-title" aria-busy={loading}>
     <h2 id="audit-title" ref={heading} className={styles.heading} tabIndex={-1}>İşlem geçmişi</h2>
     <p>Tanım, çalışan erişimi ve kurtarma kayıtları. Adlar ve hesap adresleri güncel kayıtlardan gösterilir.</p>
+    <p>Yeni işlemler, listeyi yenilediğinizde görünür.</p>
     <div className={styles.filters}>
       <div><label htmlFor="audit-category">Kayıt kategorisi</label>
         <select id="audit-category" className={styles.select} disabled={retry > 0 || locked} value={category} onChange={event => filter(event.target.value)}>
           <option value="all">Tümü</option><option value="definitions">Tanımlar</option><option value="security">Hesap ve güvenlik</option>
         </select>
       </div>
-      {(error || (data?.items.length ?? 0) > 0) && <button type="button" className={styles.primary} disabled={loading || retry > 0} onClick={reload}>Listeyi yenile</button>}
+      <button type="button" className={styles.primary} disabled={loading || retry > 0} onClick={reload}>Listeyi yenile</button>
     </div>
     {loading && <p role="status">Kayıtlar yükleniyor…</p>}
     <ErrorMessage message={error} />
@@ -83,7 +84,7 @@ export default function AuditLog() {
         </dl></div>
       </li>)}
     </ol>}
-    <Pagination label="Kayıt sayfaları" page={history.length} pageSize={pageSize} itemCount={data?.items.length ?? 0} knownPages={history.length}
+    <Pagination label="Kayıt sayfaları" page={data?.page ?? history.length} pageSize={pageSize} itemCount={data?.items.length ?? 0} knownPages={Math.max(history.length, data?.page ?? 1)}
       hasNext={!!data?.nextCursor} disabled={loading || locked || retry > 0} onPageChange={turnPage} onPageSizeChange={size => {
         setPageSize(size); setHistory([null]); setData(null); setError(''); setLoading(true); setRevision(value => value + 1)
       }} />

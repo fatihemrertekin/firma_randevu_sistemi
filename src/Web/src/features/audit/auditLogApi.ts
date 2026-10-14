@@ -10,7 +10,7 @@ export class AuditError extends Error {
 function isEntry(value: unknown): value is AuditEntry {
   if (typeof value !== 'object' || value === null) return false
   const fields = value as Record<string, unknown>
-  return 'id' in value && typeof value.id === 'string' && /^(?:[1-9]|1[0-2]):[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/iu.test(value.id) &&
+  return 'id' in value && typeof value.id === 'string' && /^(?:[1-9]|1[0-3]):[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/iu.test(value.id) &&
     'occurredAt' in value && typeof value.occurredAt === 'string' && /^\d{4}-\d{2}-\d{2}T.*(?:Z|\+00:00)$/u.test(value.occurredAt) && Number.isFinite(Date.parse(value.occurredAt)) &&
     ['module', 'action', 'actor', 'target'].every(key => { const field = fields[key]; return typeof field === 'string' && field.length > 0 && field.length <= 512 })
 }

@@ -58,3 +58,7 @@ Kullanıcı bu mevcut yüzey için önizleme/taslak üretmeden doğrudan kod uyg
 ## Çalışan erişimleri kararı — 13.10.2026
 
 T06 mevcut yüzey bakımı kullanıcı tarafından doğrudan kodla onaylandı; önizleme/taslak üretilmez. Mevcut hesap/davet/parola sıfırlama görev grupları, açık palet, iki sütun masaüstü ve tek sütun mobil korunur. Sağlıklı listelerde yenileme düğmeleri yerine sayfaya dönüşte kontrollü GET kullanılır; hata halinde yeniden deneme görünür. Kod yanıtı tamamlanana kadar gezinme ve diğer erişim işlemleri kilitlenir. Maskeli göster/seç/gizle/temizle ve süre bilgisi korunur; ortak kod bölümü formdan mevcut boşluk tokenıyla ayrılır. Gerçek kabul/teslim P02 planındaki T06 kaydındadır.
+
+## Değişiklik kayıtları kararı — 14.10.2026
+
+T07 mevcut yüzey bakımı doğrudan kodla onaylandı; önizleme üretilmez. Açık palet, masaüstünde zaman/işlem/hesap/hedef sütunları ve mobilde tek sütun korunur. Sunucunun yeniden etkinleştirme kaydı (kaynak 13) mevcut listeye dahil edilir. Yenileme hatasında önceki kayıtların sayfa/aralık bilgisi korunur ve önceki sonuç oldukları belirtilir. Cursor ile okunan liste yeni olaylar geldikçe kaydırılmaz; yeni kayıtlar için gerekli yenileme işlemi boş listede de bulunur ve amacı açıklanır. Kabul ve teslim P02 planındaki T07 kaydındadır.
