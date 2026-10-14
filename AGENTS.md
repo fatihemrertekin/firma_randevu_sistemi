@@ -28,6 +28,7 @@ Türkiye'deki küçük hizmet işletmelerine markalı randevu/yönetim yazılım
 ## 2. Agent'ın çalışma biçimi
 
 1. Talebi, geçerli talimatları, git durumunu ve varsa docs/STATUS.md'yi oku. Kullanıcı değişikliklerini koru; aramada rg kullan; ilgisiz dizinleri tarama.
+   Varsayılan çalışma yeri kullanıcının VS Code'da açtığı ana proje klasörüdür; geliştirme dalını burada aç. Ayrı Git worktree'sine yalnız kullanıcı açıkça isterse geç; ana klasördeki değişiklikleri korumak tek başına çalışma yerini değiştirme yetkisi değildir.
 2. Mevcut aşamada küçük bir uçtan uca iş seç: veri, kural, API, gerekli arayüz ve test. Tek oturumda bütün ürünü üretme.
 3. Yetkili yerel, geri alınabilir işleri sürdür; rutin düzenleme/test için izin isteme. Düşük riskli varsayımı kaydet; yalnız kapsam/maliyet/güvenliği değiştiren belirsizliği sor.
 4. Yetki yoksa para harcama, canlı mesaj/tahsilat, üretim silme ve geri dönüşü belirsiz migration öncesinde somut değişikliği/maliyeti/geri dönüşü hazırla, sonra onay iste. Engellenen dış işlem bağımsız yerel işleri durdurmaz.
