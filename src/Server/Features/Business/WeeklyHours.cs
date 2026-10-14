@@ -9,7 +9,7 @@ public static class WeeklyHours
     public sealed record DayResponse(int Day, bool IsClosed, string? OpensAt, string? ClosesAt);
     internal sealed record DayValue(int Day, bool IsClosed, int? Start, int? End);
     internal static string? Hour(int? minute) => minute is null ? null : new TimeOnly(minute.Value / 60, minute.Value % 60).ToString("HH:mm", CultureInfo.InvariantCulture);
-    private static int? Minute(string? text) => text is { Length: 5 } &&
+    internal static int? Minute(string? text) => text is { Length: 5 } &&
         TimeOnly.TryParseExact(text, "HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.None, out var value) ? value.Hour * 60 + value.Minute : null;
     internal static DayValue[] Validate(Guid version, DayRequest[]? input, out Dictionary<string, string[]> errors)
     {

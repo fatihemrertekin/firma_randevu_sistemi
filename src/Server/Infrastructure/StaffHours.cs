@@ -12,6 +12,7 @@ public sealed class StaffWorkingDay
 
 public sealed class StaffHoursAudit
 {
+    public string Kind { get; set; } = "Hours";
     public Guid Id { get; set; }
     public Guid StaffMemberId { get; set; }
     public Guid ActorId { get; set; }

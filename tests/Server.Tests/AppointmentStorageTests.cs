@@ -170,6 +170,18 @@ public sealed class AppointmentStorageTests
         });
         using var owner = limited.CreateClient(); await PasswordStepAsync(owner); await CompleteMfaAsync(owner, seed.Key);
         var member = await db.StaffMembers.OrderBy(item => item.Id).FirstAsync(Token); var service = await db.ServiceDefinitions.SingleAsync(Token);
+        foreach (var endpoint in new[] { "/api/business-hours/breaks", $"/api/staff-members/{member.Id}/breaks" })
+        {
+            using var readBreaks = await owner.GetAsync(endpoint, Token);
+            Assert.Equal(HttpStatusCode.OK, readBreaks.StatusCode);
+            var week = Assert.IsType<Server.Features.Business.WeeklyBreaks.Response>(await readBreaks.Content.ReadFromJsonAsync<Server.Features.Business.WeeklyBreaks.Response>(Token));
+            using var saveBreaks = await PostAsync(owner, endpoint, new
+            {
+                version = week.Version,
+                days = Enumerable.Range(0, 7).Select(day => new { day, breaks = day == 3 ? new[] { new { startsAt = "12:00", endsAt = "13:00" } } : [] }).ToArray()
+            }, await GetCsrfAsync(owner));
+            Assert.Equal(HttpStatusCode.OK, saveBreaks.StatusCode);
+        }
         using var buffersWrite = await PostAsync(owner, $"/api/services/{service.Id}/buffers", new { version = service.Version, bufferBeforeMinutes = 5, bufferAfterMinutes = 10 }, await GetCsrfAsync(owner));
         Assert.Equal(HttpStatusCode.OK, buffersWrite.StatusCode);
         var buffers = Assert.IsType<Server.Features.Services.ServiceDefinitionEndpoints.BuffersResponse>(await buffersWrite.Content.ReadFromJsonAsync<Server.Features.Services.ServiceDefinitionEndpoints.BuffersResponse>(Token));
@@ -187,7 +199,7 @@ public sealed class AppointmentStorageTests
         Assert.NotNull(await response.Content.ReadFromJsonAsync<AppointmentEndpoints.AppointmentResponse>(Token));
         var saved = await db.AppointmentTimeBlocks.AsNoTracking().SingleAsync(Token); Assert.Equal(5, saved.BufferBeforeMinutes); Assert.Equal(10, saved.BufferAfterMinutes);
         await using var connection = new NpgsqlConnection(limitedConnection); await connection.OpenAsync(Token);
-        foreach (var sql in new[] { "UPDATE \"AppointmentAudits\" SET \"ActorId\"=\"ActorId\"", "DELETE FROM \"Appointments\"", "UPDATE \"BookingPolicies\" SET \"LeadMinutes\"=0" })
+        foreach (var sql in new[] { "UPDATE \"AppointmentAudits\" SET \"ActorId\"=\"ActorId\"", "DELETE FROM \"Appointments\"", "UPDATE \"BookingPolicies\" SET \"LeadMinutes\"=0", "TRUNCATE \"BusinessWeeklyBreaks\"", "TRUNCATE \"StaffWeeklyBreaks\"", "UPDATE \"BusinessHoursAudits\" SET \"Kind\"='Hours'", "DELETE FROM \"StaffHoursAudits\"" })
         {
             await using var command = new NpgsqlCommand(sql, connection);
             var failure = await Assert.ThrowsAsync<PostgresException>(() => command.ExecuteNonQueryAsync(Token)); Assert.Equal("42501", failure.SqlState);

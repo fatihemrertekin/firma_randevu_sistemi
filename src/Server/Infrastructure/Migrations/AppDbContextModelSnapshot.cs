@@ -436,6 +436,13 @@ namespace Server.Infrastructure.Migrations
                     b.Property<Guid>("ActorId")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(8)
+                        .HasColumnType("character varying(8)")
+                        .HasDefaultValue("Hours");
+
                     b.Property<DateTimeOffset>("OccurredAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -452,7 +459,10 @@ namespace Server.Infrastructure.Migrations
                     b.HasIndex("OccurredAt", "Id")
                         .IsDescending();
 
-                    b.ToTable("BusinessHoursAudits");
+                    b.ToTable("BusinessHoursAudits", t =>
+                        {
+                            t.HasCheckConstraint("CK_BusinessHoursAudits_Kind", "\"Kind\" IN ('Hours','Breaks')");
+                        });
                 });
 
             modelBuilder.Entity("Server.Infrastructure.BusinessHoursSchedule", b =>
@@ -606,6 +616,31 @@ namespace Server.Infrastructure.Migrations
                         .IsDescending();
 
                     b.ToTable("BusinessProfileAudits");
+                });
+
+            modelBuilder.Entity("Server.Infrastructure.BusinessWeeklyBreak", b =>
+                {
+                    b.Property<int>("ScheduleId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Day")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("EndsAtMinute")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("StartsAtMinute")
+                        .HasColumnType("integer");
+
+                    b.HasKey("ScheduleId", "Day", "Position");
+
+                    b.ToTable("BusinessWeeklyBreaks", t =>
+                        {
+                            t.HasCheckConstraint("CK_BusinessWeeklyBreaks_Time", "\"Day\" BETWEEN 0 AND 6 AND \"Position\" BETWEEN 1 AND 8 AND \"StartsAtMinute\" BETWEEN 0 AND 1439 AND \"EndsAtMinute\" BETWEEN 0 AND 1439 AND \"StartsAtMinute\" < \"EndsAtMinute\"");
+                        });
                 });
 
             modelBuilder.Entity("Server.Infrastructure.IdentityEmailQuota", b =>
@@ -969,6 +1004,13 @@ namespace Server.Infrastructure.Migrations
                     b.Property<Guid>("ActorId")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(8)
+                        .HasColumnType("character varying(8)")
+                        .HasDefaultValue("Hours");
+
                     b.Property<Guid>("MemberVersion")
                         .HasColumnType("uuid");
 
@@ -988,7 +1030,10 @@ namespace Server.Infrastructure.Migrations
                     b.HasIndex("StaffMemberId", "MemberVersion")
                         .IsUnique();
 
-                    b.ToTable("StaffHoursAudits");
+                    b.ToTable("StaffHoursAudits", t =>
+                        {
+                            t.HasCheckConstraint("CK_StaffHoursAudits_Kind", "\"Kind\" IN ('Hours','Breaks')");
+                        });
                 });
 
             modelBuilder.Entity("Server.Infrastructure.StaffInvitation", b =>
@@ -1252,6 +1297,31 @@ namespace Server.Infrastructure.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Server.Infrastructure.StaffWeeklyBreak", b =>
+                {
+                    b.Property<Guid>("StaffMemberId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Day")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("EndsAtMinute")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("StartsAtMinute")
+                        .HasColumnType("integer");
+
+                    b.HasKey("StaffMemberId", "Day", "Position");
+
+                    b.ToTable("StaffWeeklyBreaks", t =>
+                        {
+                            t.HasCheckConstraint("CK_StaffWeeklyBreaks_Time", "\"Day\" BETWEEN 0 AND 6 AND \"Position\" BETWEEN 1 AND 8 AND \"StartsAtMinute\" BETWEEN 0 AND 1439 AND \"EndsAtMinute\" BETWEEN 0 AND 1439 AND \"StartsAtMinute\" < \"EndsAtMinute\"");
+                        });
+                });
+
             modelBuilder.Entity("Server.Infrastructure.StaffWorkingDay", b =>
                 {
                     b.Property<Guid>("StaffMemberId")
@@ -1411,6 +1481,15 @@ namespace Server.Infrastructure.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Server.Infrastructure.BusinessWeeklyBreak", b =>
+                {
+                    b.HasOne("Server.Infrastructure.BusinessOpeningDay", null)
+                        .WithMany()
+                        .HasForeignKey("ScheduleId", "Day")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Server.Infrastructure.OwnerRecoveryEmail", b =>
                 {
                     b.HasOne("Server.Infrastructure.AppUser", null)
@@ -1560,6 +1639,15 @@ namespace Server.Infrastructure.Migrations
                     b.HasOne("Server.Infrastructure.StaffMember", null)
                         .WithMany()
                         .HasForeignKey("StaffMemberId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Server.Infrastructure.StaffWeeklyBreak", b =>
+                {
+                    b.HasOne("Server.Infrastructure.StaffWorkingDay", null)
+                        .WithMany()
+                        .HasForeignKey("StaffMemberId", "Day")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

@@ -18,6 +18,7 @@ public static class StaffHoursEndpoints
         // Çağıran personel grubu MFA Owner ve staff-management limitini uygular.
         members.MapGet("/{id:guid}/hours", ReadAsync);
         members.MapPost("/{id:guid}/hours", UpdateAsync);
+        members.MapStaffBreaks();
     }
     private static CancellationTokenSource Timeout(HttpContext context)
     {
@@ -59,6 +60,8 @@ public static class StaffHoursEndpoints
         if (!await AppointmentRules.FitsWeekAsync(db, desired, clock.GetUtcNow().UtcDateTime, member.Id, timeout.Token))
             return Results.Problem(statusCode: 409, title: "Yeni personel saatleri mevcut randevuları dışarıda bırakıyor.",
                 extensions: new Dictionary<string, object?> { ["code"] = "appointments_outside_hours" });
+        if (!WeeklyBreaks.WithinHours(await WeeklyBreaks.LoadAsync(db, member.Id, timeout.Token), desired))
+            return Results.Problem(statusCode: 409, title: "Yeni mesai saatleri mevcut molaları dışarıda bırakıyor.", extensions: new Dictionary<string, object?> { ["code"] = "breaks_outside_hours" });
         foreach (var item in desired)
         {
             var day = current.SingleOrDefault(value => value.Day == item.Day);

@@ -18,11 +18,11 @@ internal static class AuditLogQuery
         WITH events AS (
           SELECT "Id", "OccurredAt", 1 AS "Source", '' AS "Kind", "ActorId", NULL::uuid AS "TargetId", NULL::uuid AS "ExtraId" FROM "BusinessProfileAudits"
           UNION ALL SELECT "Id", "OccurredAt", 2, '', "ActorId", NULL::uuid, NULL::uuid FROM "BusinessLogoAudits"
-          UNION ALL SELECT "Id", "OccurredAt", 3, '', "ActorId", NULL::uuid, NULL::uuid FROM "BusinessHoursAudits"
+          UNION ALL SELECT "Id", "OccurredAt", 3, "Kind", "ActorId", NULL::uuid, NULL::uuid FROM "BusinessHoursAudits"
           UNION ALL SELECT "Id", "OccurredAt", 4, "Kind", "ActorId", "StaffMemberId", NULL::uuid FROM "StaffMemberAudits"
           UNION ALL SELECT "Id", "OccurredAt", 5, "Kind", "ActorId", "ServiceDefinitionId", NULL::uuid FROM "ServiceDefinitionAudits"
           UNION ALL SELECT "Id", "OccurredAt", 6, "Kind", "ActorId", "StaffMemberId", "ServiceDefinitionId" FROM "StaffServiceAssignmentAudits"
-          UNION ALL SELECT "Id", "OccurredAt", 7, '', "ActorId", "StaffMemberId", NULL::uuid FROM "StaffHoursAudits"
+          UNION ALL SELECT "Id", "OccurredAt", 7, "Kind", "ActorId", "StaffMemberId", NULL::uuid FROM "StaffHoursAudits"
           UNION ALL SELECT "Id", "OccurredAt", 8, "Kind", "ActorId", "InvitationId", NULL::uuid FROM "StaffInvitationAudits"
           UNION ALL SELECT "Id", "OccurredAt", 9, "Kind", "ActorId", "StaffId", NULL::uuid FROM "StaffPasswordResetAudits"
           UNION ALL SELECT "Id", "OccurredAt", 10, '', "ActorId", "StaffId", NULL::uuid FROM "StaffDeactivationAudits"

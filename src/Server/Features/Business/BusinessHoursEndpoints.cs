@@ -18,6 +18,7 @@ public static class BusinessHoursEndpoints
         var hours = app.MapGroup("/api/business-hours").RequireAuthorization("Owner").RequireRateLimiting("business-hours");
         hours.MapGet("/", ReadAsync);
         hours.MapPost("/", UpdateAsync);
+        hours.MapBusinessBreaks();
     }
 
     private static CancellationTokenSource Timeout(HttpContext context)
@@ -60,6 +61,8 @@ public static class BusinessHoursEndpoints
         if (!await AppointmentRules.FitsWeekAsync(db, validated, clock.GetUtcNow().UtcDateTime, null, timeout.Token))
             return Results.Problem(statusCode: 409, title: "Yeni işletme saatleri mevcut randevuları dışarıda bırakıyor.",
                 extensions: new Dictionary<string, object?> { ["code"] = "appointments_outside_hours" });
+        if (!WeeklyBreaks.WithinHours(await WeeklyBreaks.LoadAsync(db, null, timeout.Token), validated))
+            return Results.Problem(statusCode: 409, title: "Yeni mesai saatleri mevcut molaları dışarıda bırakıyor.", extensions: new Dictionary<string, object?> { ["code"] = "breaks_outside_hours" });
         foreach (var item in desired)
         {
             var existing = current.SingleOrDefault(day => day.Day == item.Day);

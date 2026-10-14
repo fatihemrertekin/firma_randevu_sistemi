@@ -304,3 +304,11 @@ MFA Owner `GET /api/services/{id}/buffers` ile hizmet sürümü ve ön/arka tamp
 Randevunun hizmet başlangıcı/bitişi değişmez; iki tampon snapshot'ı ile genişleyen dolu aralık uygunluk, mesai ve PostgreSQL GiST kontrolünde kullanılır. Yeni ayar geçmiş kaydı büyütmez; randevu okuması snapshot'ları ve dolu anları içerir. `AppointmentBuffers` migration'ı önceki blokları 0 tamponla korur. Tampon şeması eklendikten sonra eski P03-02 imajı yeni blok kolonlarını yazamaz; otomatik eski imaj/Down/restore kullanılmaz. Sıfır dışı tampon varsa Down ayrıca DB'de reddedilir.
 
 İlgili regresyon: `dotnet test FirmaRandevu.slnx --no-restore --filter "FullyQualifiedName~AppointmentBufferTests|FullyQualifiedName~AppointmentStorageTests|FullyQualifiedName~AppointmentTests"`. [Kabul ve teslim](docs/plans/P03.md#p03-03a-hizmet-tamponu-kabulü--14102026).
+
+## Haftalık mola API'si (P03-03B)
+
+MFA Owner için GET/POST `/api/business-hours/breaks` ve `/api/staff-members/{id}/breaks`; POST `{version,days:[{day,breaks:[{startsAt,endsAt}]}]}` ile yedi günü birlikte gönderir. Saatlerle aynı parent sürümü kullanılır. Her gün en fazla 8 sıralı, kesişmeyen, aynı gün mesai içinde mola; boş liste o gün molayı kaldırır. Kapalı günde mola yoktur. CSRF ve mevcut Owner yetkisi gerekir; sürüm veya mevcut randevu/tampon kesişimi 409. Aynı değer yan etkisiz 200'dür.
+
+Uygun saatler ve kayıt, işletme/personel molalarını tampon dahil aralıktan çıkarır. Mesai daraltması mevcut molayı dışarıda bırakırsa `breaks_outside_hours` ile 409; mevcut saat formları açıklama gösterir ve düzeltilebilir kalır. Bu teslim mola düzenleme ekranı, tarihli izin/istisna veya müşteri rezervasyon ekranı içermez.
+
+`WeeklyBreaks` eklemeli migration'ı iki boş tablo ve eski saat audit'lerine başlangıç `Hours` türü ekler. Mola yapılandırması veya `Breaks` audit'i varken Down reddedilir. Eski imaj yeni molaları uygulamadığından yeni şemada otomatik eski imaj/Down/restore kullanılmaz. İlgili regresyon: `dotnet test FirmaRandevu.slnx --no-restore --filter "FullyQualifiedName~WeeklyBreakTests|FullyQualifiedName~AppointmentStorageTests"`. [Kabul ve sınırlar](docs/plans/P03.md#p03-03b-haftalık-mola-kabulü--14102026).
