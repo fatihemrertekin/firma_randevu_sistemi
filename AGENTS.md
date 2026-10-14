@@ -134,6 +134,7 @@ Akış: endpoint/controller → gerektiğinde iş servisi → EF DbContext. Basi
 
 ## 9. Test ve bitirme
 
+- Test kapsamını değişen kod ve bağlı çağrılara göre seç; yeni değişiklik, hata veya açık belirsizlik yoksa başarılı kontrolleri tekrarlama. Güvenlik/yetki, veri, transaction, migration ve dağıtım etkisinde ilgili gerçek PostgreSQL, kritik akış ve geri dönüş kontrollerini koru; kapsam belirsizse geniş kontrol çalıştır. Yayın kapıları ve son commit için başarılı CI zorunludur; eski commit'in sonucu yeni kodun kanıtı değildir. Yalnız belge değişikliği için uygulama/DB testini yerelde tekrarlama; mevcut CI kapılarını doğrulanmış yapılandırma değişikliği olmadan atlama.
 - Kural için birim; transaction/constraint/yetki için gerçek PostgreSQL; kritik akış için E2E. SQLite/EF InMemory DB doğruluğunun kanıtı değildir. Sahte saat/sağlayıcı; gerçek mesaj/çekim yok. Hata için regresyon testi; sırf oran için test yok.
 - Yayın: kabul testleri geçti; kritik/yüksek bulgu çözülmüş veya somut risk değerlendirmesi var; sır/bağımlılık taraması, migration/rollback, izolasyon/restore kanıtı, güncel belge ve lisans bildirimleri tamam. Test geçmesi sıfır hata garantisi değildir.
 
