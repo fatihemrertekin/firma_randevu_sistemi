@@ -17,7 +17,7 @@ Sade menü ve ortak sayfalama `done`: [PR #57](https://github.com/fatihemrerteki
 | P00 — İş ve ürün tanımı | `done` | [P00 planı](plans/P00.md) ve [ürün kararları](PRODUCT.md#2-ürün-kararları); işletme görüşmeleri ve gerçek pilot yapılmış sayılmaz. |
 | P01 — Temel ve CI | `done` | [P01 kanıtı](plans/P01.md#kanıt); PR #1 birleşme commit'i `10527c1`. |
 | P02 — Kimlik ve tanımlar | `done` | P02-01–P02-23 ve onaylanan yerel kapanış kontrolü tamamlandı; [kapanış kanıtı ve P03 sınırı](plans/P02.md#p02-kapanış-kontrolü--04102026). Üretim/pilot ve tam restore kabulü değildir. |
-| P03 — Randevu motoru | `in_progress` | P03-02 randevu API ve P03-03A/B/C tampon/haftalık mola/tarihli takvim ana uygulamaya teslim edildi; [kabul](plans/P03.md#p03-02-yerel-geliştirme-kabulü--14102026), [ADR](adr/005-appointment-time-blocks.md). Kalan motor işleri ve müşteri ekranı teslim edilmedi. |
+| P03 — Randevu motoru | `in_progress` | P03-02 ve P03-03 A–D tamamlandı. P03-04A iptal/durum yerel kabulü tamamlandı; [alt işler ve teslim](plans/P03.md#p03-04a-owner-iptal-ve-durum--15102026), [ADR](adr/005-appointment-time-blocks.md). Taşıma/Pending/politika ve müşteri ekranı teslim edilmedi. |
 | P04–P17 | `planned` | Yalnız [ROADMAP](ROADMAP.md) düzeyinde; yeni uygulama yetkisi veya kabul kanıtı yok. |
 
 ## Son doğrulanan teslim ve sınırlar
@@ -92,7 +92,9 @@ P03-03B haftalık mola geliştirme/GitHub/ana yerel teslimi `done` (15.10.2026):
 
 P03-03C tarihli izin ve istisna geliştirme/GitHub/ana yerel teslimi `done` (15.10.2026): [PR #83](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/83), aynı son head ve birleşme main CI başarılı. Owner tarihli gün/izin API, ortak tamponlu uygunluk/kayıt/mesai ve yarış/rollback koruması; 19 yeni ve 58 etkilenen PostgreSQL senaryosu, son imajda gerçek sentetik HTTP/Chrome geçti. Şifreli yedek sonrası 38 eski tablo/kolon/Kind, hesap/MFA/anahtar/ayar/SMTP korundu; beş boş tablo, health/restart ve ana anonim kabul başarılı. [Kanıt ve geri dönüş sınırı](plans/P03.md#p03-03c-github-ve-ana-yerel-teslim--15102026). Çalışma ana proje klasöründe. P03-03D birleşik kabul aşağıda tamamlandı.
 
-P03-03D birleşik yerel kabulü `done` (15.10.2026): [PR #85](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/85) son head kontrolleri GitHub teslim kapısıdır. Dokuz yeni vaka dahil 32 farklı PostgreSQL senaryosu, dört kuralın birlikte gerçek HTTP/Chrome kabulü ve 43 tabloyla sentetik restore/restart karşılaştırması geçti. Ana uygulama kaynağı aynı; 8080 health, dört genişlik, 14 anonim 401 ve paket eşitliği doğrulandı. [Kanıt ve sınırlar](plans/P03.md#p03-03d-birleşik-kabul--15102026). P03-03 A–D tamamlandı; sonraki tek iş **P03-04 taşıma/iptal/durum/Pending süresi**, `planned`; başlamadı.
+P03-03D birleşik kabulü `done` (15.10.2026): [PR #85](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/85) başarılı son head CI ile birleşti; [aynı main CI](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/38651014927) başarılı. Dokuz yeni vaka dahil 32 farklı PostgreSQL senaryosu, dört kuralın birlikte gerçek HTTP/Chrome kabulü ve 43 tabloyla sentetik restore/restart karşılaştırması geçti. Ana uygulama kaynağı aynı; 8080 health, dört genişlik, 14 anonim 401 ve paket eşitliği doğrulandı. [Kanıt ve sınırlar](plans/P03.md#p03-03d-birleşik-kabul--15102026). P03-03 A–D tamamlandı; kullanıcı sonraki P03-04A işini aşağıda başlattı.
+
+P03-04A Owner iptal/durum `in_progress` (15.10.2026): 12 yeni ve 20 bağlı PostgreSQL senaryosu, gerçek sentetik MFA Owner HTTP/Chrome ve restart kabulü geçti. Son head CI/birleşme ve yedekli ana uygulama teslimi kalır. [Kapsam/kanıt/geri dönüş](plans/P03.md#p03-04a-owner-iptal-ve-durum--15102026). Sonraki tek aday **P03-04B atomik taşıma**, `planned`; başlamadı. P03-04'ün tamamı done değildir.
 
 ## Gelecek plan kaydı — destek ve işletim ekranı (02.10.2026)
 

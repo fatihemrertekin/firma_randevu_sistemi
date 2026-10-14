@@ -25,6 +25,10 @@ REVOKE TRUNCATE ON TABLE "BusinessDateExceptions", "StaffDateExceptions", "Busin
 GRANT SELECT, INSERT, UPDATE ON TABLE "StaffLeaves" TO app_user;
 REVOKE DELETE, TRUNCATE ON TABLE "StaffLeaves" FROM app_user;
 REVOKE UPDATE, DELETE, TRUNCATE ON TABLE "Appointments", "AppointmentTimeBlocks", "AppointmentAudits" FROM app_user;
+GRANT UPDATE ("Version") ON TABLE "Appointments" TO app_user;
+GRANT UPDATE ("Status") ON TABLE "AppointmentTimeBlocks" TO app_user;
+GRANT SELECT, INSERT ON TABLE "AppointmentStatusCommands" TO app_user;
+REVOKE UPDATE, DELETE, TRUNCATE ON TABLE "AppointmentStatusCommands" FROM app_user;
 GRANT SELECT ON TABLE "BookingPolicies" TO app_user;
 REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON TABLE "BookingPolicies" FROM app_user;
 -- FOR SHARE politika değerlerini sabitler; tekil Id yalnız 1 kalabilir.

@@ -56,7 +56,7 @@ Pilot kapsamı [PRODUCT](PRODUCT.md#2-ürün-kararları) ile kararlaştırıldı
 
 ### P03 — Randevu motoru (P02)
 
-- İş: Uygunluk, mola/izin/istisna/tampon; oluştur/taşı/iptal/durum; constraint, concurrency, idempotency. [P03 planı ve P03-02/P03-03A/B/C/D kabulü](plans/P03.md) ile [ADR-005](adr/005-appointment-time-blocks.md) tek hizmet/personel Owner API'sini ve zaman bloğu modelini tanımlar. Hizmet tamponu, haftalık mola, tarihli izin/istisna ve birleşik kabul tamamlandı; taşıma/iptal/Pending, politika ve son motor kabulü henüz tamamlanmadı.
+- İş: Uygunluk, mola/izin/istisna/tampon; oluştur/taşı/iptal/durum; constraint, concurrency, idempotency. [P03 planı ve kabulü](plans/P03.md) ile [ADR-005](adr/005-appointment-time-blocks.md) tek hizmet/personel Owner API'sini ve zaman bloğu modelini tanımlar. P03-03 A–D tamamlandı; P03-04A Owner iptal/durum yerel kabulü tamamlandı, GitHub/ana teslimi izlenir. Taşıma/Pending, politika ve son motor kabulü henüz tamamlanmadı.
 - Çıkış: Gerçek PostgreSQL'de aynı çalışan/zamana 20 farklı anahtarlı paralel istekten biri kaydolur. Bitişik slot, farklı çalışan, iptal sonrası boşalma, tampon, fiyat snapshot'ı, atomik taşıma ve izin ekleme yarışı testlidir. Pasif hizmet/personel yeni rezervasyonda seçilemez; mevcut P02 saat/yetkinlik tanımları uygunlukta uygulanır, geçmiş randevunun hizmet/fiyat/süre bilgisi korunur. Bunlar P02 tanım kabulüyle doğrulanmış sayılmaz.
 
 ### P04 — Rezervasyon ve panel (P03)

@@ -210,9 +210,17 @@ public sealed class AppointmentStorageTests
             customerPhone = "05000000001"
         }, await GetCsrfAsync(owner));
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
-        Assert.NotNull(await response.Content.ReadFromJsonAsync<AppointmentEndpoints.AppointmentResponse>(Token));
+        var booked = Assert.IsType<AppointmentEndpoints.AppointmentResponse>(await response.Content.ReadFromJsonAsync<AppointmentEndpoints.AppointmentResponse>(Token));
         var saved = await db.AppointmentTimeBlocks.AsNoTracking().SingleAsync(Token); Assert.Equal(5, saved.BufferBeforeMinutes); Assert.Equal(10, saved.BufferAfterMinutes);
+        using var cancelled = await PostAsync(owner, $"/api/appointments/{booked.Id}/cancel", new AppointmentStatusEndpoints.Request(booked.Version, Guid.NewGuid()), await GetCsrfAsync(owner));
+        Assert.Equal(HttpStatusCode.OK, cancelled.StatusCode);
+        Assert.Equal("Cancelled", Assert.IsType<AppointmentEndpoints.AppointmentResponse>(await cancelled.Content.ReadFromJsonAsync<AppointmentEndpoints.AppointmentResponse>(Token)).Status);
         await using var connection = new NpgsqlConnection(limitedConnection); await connection.OpenAsync(Token);
+        foreach (var sql in new[] { "UPDATE \"Appointments\" SET \"CustomerName\"=\"CustomerName\"", "UPDATE \"AppointmentTimeBlocks\" SET \"Price\"=\"Price\"", "UPDATE \"AppointmentTimeBlocks\" SET \"StartsAt\"=\"StartsAt\"", "UPDATE \"AppointmentStatusCommands\" SET \"Status\"=\"Status\"", "DELETE FROM \"AppointmentStatusCommands\"", "TRUNCATE \"AppointmentStatusCommands\"" })
+        {
+            await using var command = new NpgsqlCommand(sql, connection);
+            var failure = await Assert.ThrowsAsync<PostgresException>(() => command.ExecuteNonQueryAsync(Token)); Assert.Equal("42501", failure.SqlState);
+        }
         foreach (var sql in new[] { "UPDATE \"AppointmentAudits\" SET \"ActorId\"=\"ActorId\"", "DELETE FROM \"Appointments\"", "UPDATE \"BookingPolicies\" SET \"LeadMinutes\"=0", "TRUNCATE \"BusinessWeeklyBreaks\"", "TRUNCATE \"StaffWeeklyBreaks\"", "UPDATE \"BusinessHoursAudits\" SET \"Kind\"='Hours'", "DELETE FROM \"StaffHoursAudits\"", "DELETE FROM \"StaffLeaves\"", "TRUNCATE \"StaffLeaves\"", "TRUNCATE \"BusinessDateExceptions\"", "TRUNCATE \"StaffDateBreaks\"" })
         {
             await using var command = new NpgsqlCommand(sql, connection);
