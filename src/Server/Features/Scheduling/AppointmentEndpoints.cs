@@ -29,9 +29,10 @@ public static class AppointmentEndpoints
         appointments.MapGet("/availability", AvailabilityAsync);
         appointments.MapGet("/{id:guid}", ReadAsync);
         appointments.MapPost("/", CreateAsync);
+        appointments.MapAppointmentStatusEndpoints();
     }
 
-    private static CancellationTokenSource Timeout(HttpContext context)
+    internal static CancellationTokenSource Timeout(HttpContext context)
     {
         context.Response.Headers.CacheControl = "no-store";
         var timeout = CancellationTokenSource.CreateLinkedTokenSource(context.RequestAborted);
@@ -39,7 +40,7 @@ public static class AppointmentEndpoints
         return timeout;
     }
 
-    private static Task<AppointmentResponse?> ResponseAsync(AppDbContext db, Guid id, CancellationToken token) =>
+    internal static Task<AppointmentResponse?> ResponseAsync(AppDbContext db, Guid id, CancellationToken token) =>
         (from appointment in db.Appointments.AsNoTracking()
          join block in db.AppointmentTimeBlocks.AsNoTracking() on appointment.Id equals block.AppointmentId
          where appointment.Id == id

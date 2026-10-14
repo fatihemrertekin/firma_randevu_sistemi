@@ -41,6 +41,17 @@ public sealed class AppointmentAudit
     public Guid ActorId { get; set; }
     public Guid AppointmentVersion { get; set; }
     public DateTime OccurredAt { get; set; }
+    public string Kind { get; set; } = "Created";
+}
+
+public sealed class AppointmentStatusCommand
+{
+    public Guid ActorId { get; set; }
+    public Guid RequestKey { get; set; }
+    public Guid AppointmentId { get; set; }
+    public Guid ExpectedVersion { get; set; }
+    public required string Status { get; set; }
+    public Guid AuditId { get; set; }
 }
 
 public sealed class BookingPolicy

@@ -25,6 +25,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<Appointment> Appointments => Set<Appointment>();
     public DbSet<AppointmentTimeBlock> AppointmentTimeBlocks => Set<AppointmentTimeBlock>();
     public DbSet<AppointmentAudit> AppointmentAudits => Set<AppointmentAudit>();
+    public DbSet<AppointmentStatusCommand> AppointmentStatusCommands => Set<AppointmentStatusCommand>();
     public DbSet<BookingPolicy> BookingPolicies => Set<BookingPolicy>();
     public DbSet<OwnerMfaRecoveryAudit> OwnerMfaRecoveryAudits => Set<OwnerMfaRecoveryAudit>();
     public DbSet<OwnerPasswordResetAudit> OwnerPasswordResetAudits => Set<OwnerPasswordResetAudit>();
@@ -129,6 +130,15 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
         appointmentAudit.HasOne<Appointment>().WithMany().HasForeignKey(item => item.AppointmentId).OnDelete(DeleteBehavior.Restrict);
         appointmentAudit.HasOne<AppUser>().WithMany().HasForeignKey(item => item.ActorId).OnDelete(DeleteBehavior.Restrict);
         appointmentAudit.HasIndex(item => new { item.AppointmentId, item.AppointmentVersion }).IsUnique();
+        appointmentAudit.Property(item => item.Kind).HasMaxLength(16).HasDefaultValue("Created");
+        appointmentAudit.ToTable(table => table.HasCheckConstraint("CK_AppointmentAudits_Kind", "\"Kind\" IN ('Created','Cancelled','Completed','NoShow')"));
+        var statusCommand = builder.Entity<AppointmentStatusCommand>();
+        statusCommand.HasKey(item => new { item.ActorId, item.RequestKey });
+        statusCommand.Property(item => item.Status).HasMaxLength(16);
+        statusCommand.HasOne<AppUser>().WithMany().HasForeignKey(item => item.ActorId).OnDelete(DeleteBehavior.Restrict);
+        statusCommand.HasOne<Appointment>().WithMany().HasForeignKey(item => item.AppointmentId).OnDelete(DeleteBehavior.Restrict);
+        statusCommand.HasOne<AppointmentAudit>().WithMany().HasForeignKey(item => item.AuditId).OnDelete(DeleteBehavior.Restrict);
+        statusCommand.ToTable(table => table.HasCheckConstraint("CK_AppointmentStatusCommands_Request", "\"RequestKey\" <> '00000000-0000-0000-0000-000000000000'::uuid AND \"ExpectedVersion\" <> '00000000-0000-0000-0000-000000000000'::uuid AND \"Status\" IN ('Cancelled','Completed','NoShow')"));
         var policy = builder.Entity<BookingPolicy>();
         policy.Property(item => item.Id).ValueGeneratedNever();
         policy.Property(item => item.Version).IsConcurrencyToken();

@@ -295,6 +295,13 @@ namespace Server.Infrastructure.Migrations
                     b.Property<Guid>("AppointmentVersion")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasDefaultValue("Created");
+
                     b.Property<DateTime>("OccurredAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -305,7 +312,44 @@ namespace Server.Infrastructure.Migrations
                     b.HasIndex("AppointmentId", "AppointmentVersion")
                         .IsUnique();
 
-                    b.ToTable("AppointmentAudits");
+                    b.ToTable("AppointmentAudits", t =>
+                        {
+                            t.HasCheckConstraint("CK_AppointmentAudits_Kind", "\"Kind\" IN ('Created','Cancelled','Completed','NoShow')");
+                        });
+                });
+
+            modelBuilder.Entity("Server.Infrastructure.AppointmentStatusCommand", b =>
+                {
+                    b.Property<Guid>("ActorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("RequestKey")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AppointmentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AuditId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ExpectedVersion")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.HasKey("ActorId", "RequestKey");
+
+                    b.HasIndex("AppointmentId");
+
+                    b.HasIndex("AuditId");
+
+                    b.ToTable("AppointmentStatusCommands", t =>
+                        {
+                            t.HasCheckConstraint("CK_AppointmentStatusCommands_Request", "\"RequestKey\" <> '00000000-0000-0000-0000-000000000000'::uuid AND \"ExpectedVersion\" <> '00000000-0000-0000-0000-000000000000'::uuid AND \"Status\" IN ('Cancelled','Completed','NoShow')");
+                        });
                 });
 
             modelBuilder.Entity("Server.Infrastructure.AppointmentTimeBlock", b =>
@@ -1558,6 +1602,27 @@ namespace Server.Infrastructure.Migrations
                     b.HasOne("Server.Infrastructure.Appointment", null)
                         .WithMany()
                         .HasForeignKey("AppointmentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Server.Infrastructure.AppointmentStatusCommand", b =>
+                {
+                    b.HasOne("Server.Infrastructure.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("ActorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Server.Infrastructure.Appointment", null)
+                        .WithMany()
+                        .HasForeignKey("AppointmentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Server.Infrastructure.AppointmentAudit", null)
+                        .WithMany()
+                        .HasForeignKey("AuditId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
