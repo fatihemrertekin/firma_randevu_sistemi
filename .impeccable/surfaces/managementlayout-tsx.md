@@ -62,3 +62,11 @@ T06 mevcut yüzey bakımı kullanıcı tarafından doğrudan kodla onaylandı; �
 ## Değişiklik kayıtları kararı — 14.10.2026
 
 T07 mevcut yüzey bakımı doğrudan kodla onaylandı; önizleme üretilmez. Açık palet, masaüstünde zaman/işlem/hesap/hedef sütunları ve mobilde tek sütun korunur. Sunucunun yeniden etkinleştirme kaydı (kaynak 13) mevcut listeye dahil edilir. Yenileme hatasında önceki kayıtların sayfa/aralık bilgisi korunur ve önceki sonuç oldukları belirtilir. Cursor ile okunan liste yeni olaylar geldikçe kaydırılmaz; yeni kayıtlar için gerekli yenileme işlemi boş listede de bulunur ve amacı açıklanır. Kabul ve teslim P02 planındaki T07 kaydındadır.
+
+## Onaylı doğrudan menü ve tam genişlik — 14.10.2026
+
+Kullanıcı, sidebarı ve tüm yönetim yüzeylerinin yatay alanı kullanımını gösteren `.impeccable/mocks/sidebar-full-width/index.html`, `services-1280.png` ve `access-1280.png` taslağından sonra “onaylıyorum” dedi. Mode: operate. Bu karar, önceki kapanabilir grup menüsünün yerini alır; ortak açık palet korunur.
+
+Amaç/ana işlem: mevcut yetkili sayfalara doğrudan erişmek. Bilgi sırası: mevcut marka/hesap, solda grup başlıkları altında sayfalar, sağda görev/içerik. Mobilde menü kapalı başlar, açık menü Escape ile kapanıp odağı Menü düğmesine döndürür; dar masaüstünde ikonların adları hover/odakta görünür. URL, rol, CSRF, taslak ve bekleyen istek korumaları sürer. Boş/hata/yükleme/başarı mevcut API yanıtlarına bağlıdır; yeni API veya veri yoktur.
+
+Liste/form/saat/personel/hizmet yüzeyleri içerik genişliğini doldurur; içte dar form sınırları kaldırılır. Profil formu ve özet eşit sütun, hesap/erişimde ilk panel tam satır ve sonraki iki panel eşit sütundur; dar içerikte tek sütun ve DOM sırası korunur. Düğmeler içeriğe göre kalır; kısa sayfalar dikey uzatılmaz. Kimliğin fotoğraflı kompozisyonu bu kapsamda değişmez. Gerçek kabul, kanıt ve teslim sınırı P02 planındaki sidebar kaydındadır.

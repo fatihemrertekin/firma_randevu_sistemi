@@ -115,26 +115,21 @@
 }
 
 .management-theme {
-  --management-rail: 14rem;
+  --management-rail: 15rem;
   --management-rail-narrow: 4.5rem;
   --management-menu-icon: 1.25rem;
-  --management-menu-indent: 2rem;
   --management-menu-popover: 13rem;
   --management-menu-popover-layer: 5;
   --service-choice-min: 17rem;
   --management-header: 5rem;
-  --management-inset: 2.5rem;
+  --management-inset: 2rem;
   --management-brand: 2.75rem;
-  --management-title: 2.75rem;
+  --management-title: 2rem;
   --management-summary: 22rem;
-  --management-form-min: 24rem;
-  --management-work-max: 90rem;
   --management-rail-action: 4.5rem;
   --management-photo-ratio: 410 / 224;
   --management-photo-mobile: 7rem;
   --management-rail-bg: var(--color-surface);
-  --hours-editor-max: 64rem;
-  --personnel-form-max: 48rem;
   --personnel-action-width: 6.5rem;
   --personnel-status-width: 10rem;
   --personnel-identity-size: 1.5rem;
@@ -142,6 +137,5 @@
   --service-price-column: 6rem;
   --service-status-column: 4rem;
   --service-action-column: 5rem;
-  --service-form-max: 35rem;
   --service-section-size: var(--section-title-size);
 }
