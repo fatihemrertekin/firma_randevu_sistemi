@@ -1,0 +1,24 @@
+{
+  "source": "assets/plates/salon-background-neutral.png",
+  "sourceSha256": "53d18165c6f1dfd311ac451a14b60011c63b25e9a454afc63506e1a59a8ebe04",
+  "provenance": "salon-background-neutral.png.json",
+  "transform": "WebP encoding; same approved image, no crop or color changes",
+  "encoder": "Chrome HTMLCanvasElement",
+  "quality": 0.85,
+  "variants": [
+    {
+      "file": "assets/plates/salon-background-neutral-640.webp",
+      "width": 640,
+      "height": 640,
+      "bytes": 53998,
+      "sha256": "7a756088746df0749acb1ff3107501c2b412e8a9116e52ad3c396215e1497bbd"
+    },
+    {
+      "file": "assets/plates/salon-background-neutral-1254.webp",
+      "width": 1254,
+      "height": 1254,
+      "bytes": 129732,
+      "sha256": "90595901dd7423378e379fa8acda68e6566023578af2292498d4644611a98ce8"
+    }
+  ]
+}

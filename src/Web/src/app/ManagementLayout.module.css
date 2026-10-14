@@ -1,8 +1,8 @@
 .page { min-height: 100svh; background: var(--background); color: var(--text); font-size: var(--auth-body-size); }
 .page ::selection { background: var(--auth-selection); color: var(--text); }
 .page :where(input, textarea) { padding: var(--auth-space-3) var(--auth-space-4); }
-.header { min-height: var(--management-header); display: flex; align-items: center; justify-content: space-between; gap: var(--auth-space-5); padding: var(--auth-space-3) var(--auth-space-6); border-bottom: var(--auth-rule) solid var(--border); background: var(--surface); }
-.brand { font-family: 'Unna', serif; font-size: var(--management-brand); line-height: var(--auth-heading-line); font-weight: 700; }
+.header { min-height: var(--management-header); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--auth-space-5); padding: var(--auth-space-3) var(--auth-space-6); border-bottom: var(--auth-rule) solid var(--border); background: var(--surface); }
+.brand { min-width: 0; overflow-wrap: anywhere; font-family: 'Unna', serif; font-size: var(--management-brand); line-height: var(--auth-heading-line); font-weight: 700; }
 .account { display: flex; align-items: center; gap: var(--auth-space-5); min-width: 0; }
 .account > div { min-width: 0; text-align: right; }
 .accountIdentity { display: flex; justify-content: flex-end; align-items: baseline; flex-wrap: wrap; gap: var(--auth-space-2); min-width: 0; }
@@ -50,7 +50,7 @@
   .header { padding: var(--auth-space-4); min-height: auto; }
   .brand { font-size: var(--auth-mobile-title-size); }
   .account { display: none; }
-  .mobileToggle { display: block; }
+  .mobileToggle { display: block; flex-shrink: 0; }
   .layout, .layout[data-navigation-collapsed='true'] { display: block; }
   .navigation { display: none; }
   .layout[data-mobile-open='true'] .navigation { display: block; border-right: 0; border-bottom: var(--auth-rule) solid var(--border); }

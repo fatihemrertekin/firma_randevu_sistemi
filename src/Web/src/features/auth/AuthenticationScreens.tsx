@@ -29,10 +29,10 @@ export default function AuthenticationScreens({ auth }: { auth: ReturnType<typeo
   const blocker = useBlocker(() => busy || childBusy.current)
   useEffect(() => { if (blocker.state === 'blocked') blocker.reset() }, [blocker])
   useEffect(() => {
-    const warn = (event: BeforeUnloadEvent) => { if (busy || childBusy.current) { event.preventDefault(); event.returnValue = '' } }
+    const warn = (event: BeforeUnloadEvent) => { if (busy || childBusy.current || recoveryCodes) { event.preventDefault(); event.returnValue = '' } }
     window.addEventListener('beforeunload', warn)
     return () => window.removeEventListener('beforeunload', warn)
-  }, [busy])
+  }, [busy, recoveryCodes])
   useNavigationChange(() => { setPassword(''); setCode(''); setSetupPassword(''); setSetupInfo(null); clearPasswordFields(); setError('') })
   const title = useEffectEvent(() => {
     if (loading) return

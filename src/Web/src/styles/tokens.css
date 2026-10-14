@@ -107,7 +107,6 @@
   --auth-title-width: 7em;
   --auth-prose-width: 33rem;
   --auth-mobile-photo-height: 16rem;
-  --auth-mobile-brand-top: 9rem;
   --auth-photo-content-layer: 1;
   --auth-photo-wash: linear-gradient(90deg, color-mix(in srgb, var(--color-canvas) 92%, transparent), color-mix(in srgb, var(--color-canvas) 88%, transparent) calc(var(--auth-story-width) + var(--auth-space-6)), transparent);
   --auth-photo-fade: linear-gradient(180deg, transparent 65%, var(--auth-cream));

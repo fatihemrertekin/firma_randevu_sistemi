@@ -2,6 +2,7 @@ import ErrorMessage from '../../components/ErrorMessage'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import ManualDeliveryCode from '../../components/ManualDeliveryCode'
 import { isManualDeliveryCode } from '../../app/manualDeliveryCode'
+import styles from './StaffAccounts.module.css'
 
 type Issued = { token: string; expiresAt: string }
 type Props = { post: (path: string, body: object) => Promise<Response>; disabled: boolean; onBusyChange: (busy: boolean) => void }
@@ -56,7 +57,7 @@ export default function StaffPasswordReset({ post, disabled, onBusyChange }: Pro
       <label htmlFor="staff-reset-email">Parolasını unutan çalışanın e-postası</label>
       <input id="staff-reset-email" type="email" required maxLength={256} autoComplete="off" disabled={disabled || busy}
         value={email} onChange={event => setEmail(event.target.value)} />
-      <label><input type="checkbox" checked={verified} disabled={disabled || busy} onChange={event => setVerified(event.target.checked)} />
+      <label className={styles.recipientConfirmation}><input type="checkbox" checked={verified} disabled={disabled || busy} onChange={event => setVerified(event.target.checked)} />
         Çalışanın kimliğini ve e-postasını doğruladım; sıfırlama kodunu yalnız kendisine teslim edeceğim.</label>
       <button type="submit" disabled={disabled || busy || !verified}>{busy ? 'Kod üretiliyor…' : 'Sıfırlama kodu üret'}</button>
     </form>
