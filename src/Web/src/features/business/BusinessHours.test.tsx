@@ -75,6 +75,15 @@ describe('Haftalık işletme saatleri', () => {
     const post = vi.fn<HoursPost>(async () => response); await render(post); await monday(); await submit(); await submit()
     expect(post).toHaveBeenCalledOnce(); expect(field('day0OpensAt').closest('fieldset')?.disabled).toBe(true)
   })
+  it('molayı dışarıda bırakan saatlerde aynı sürümle düzeltmeye izin verir', async () => {
+    const post = vi.fn<HoursPost>().mockResolvedValueOnce(Response.json({ code: 'breaks_outside_hours' }, { status: 409 }))
+      .mockResolvedValueOnce(Response.json(saved))
+    await render(post); await monday(); await submit()
+    expect(container.textContent).toContain('Molaları kapsayan saatler seçin.'); expect(field('day0OpensAt').closest('fieldset')?.disabled).toBe(false)
+    expect(container.textContent).not.toContain('İşletme saatleri kaydedildi.')
+    await fill('day0OpensAt', '08:00'); await submit(); expect(post).toHaveBeenCalledTimes(2)
+    expect(post.mock.calls[1][1]).toMatchObject({ version: initial.version })
+  })
   it('400 sunucu hatasını alan yanında gösterir ve taslağı/odağı korur', async () => {
     await render(vi.fn<HoursPost>(async () => Response.json({ errors: { day0ClosesAt: ['Geçersiz kapanış'] } }, { status: 400 })))
     await monday(); await submit(); expect(field('day0ClosesAt').getAttribute('aria-invalid')).toBe('true')

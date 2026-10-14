@@ -49,6 +49,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<BusinessHoursAudit> BusinessHoursAudits => Set<BusinessHoursAudit>();
     public DbSet<StaffWorkingDay> StaffWorkingDays => Set<StaffWorkingDay>();
     public DbSet<StaffHoursAudit> StaffHoursAudits => Set<StaffHoursAudit>();
+    public DbSet<BusinessWeeklyBreak> BusinessWeeklyBreaks => Set<BusinessWeeklyBreak>();
+    public DbSet<StaffWeeklyBreak> StaffWeeklyBreaks => Set<StaffWeeklyBreak>();
     public DbSet<BusinessLogoAudit> BusinessLogoAudits => Set<BusinessLogoAudit>();
 
     protected override void OnModelCreating(ModelBuilder builder)
@@ -124,6 +126,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
             table.HasCheckConstraint("CK_StaffWorkingDays_Hours", "(\"IsClosed\" AND \"OpensAtMinute\" IS NULL AND \"ClosesAtMinute\" IS NULL) OR (NOT \"IsClosed\" AND \"OpensAtMinute\" IS NOT NULL AND \"ClosesAtMinute\" IS NOT NULL AND \"OpensAtMinute\" BETWEEN 0 AND 1439 AND \"ClosesAtMinute\" BETWEEN 0 AND 1439 AND \"OpensAtMinute\" < \"ClosesAtMinute\")");
         });
         var staffHoursAudit = builder.Entity<StaffHoursAudit>();
+        staffHoursAudit.Property(item => item.Kind).HasMaxLength(8).HasDefaultValue("Hours");
+        staffHoursAudit.ToTable(table => table.HasCheckConstraint("CK_StaffHoursAudits_Kind", "\"Kind\" IN ('Hours','Breaks')"));
         staffHoursAudit.HasIndex(entry => new { entry.StaffMemberId, entry.MemberVersion }).IsUnique();
         staffHoursAudit.HasOne<StaffMember>().WithMany().HasForeignKey(entry => entry.StaffMemberId).OnDelete(DeleteBehavior.Restrict);
         staffHoursAudit.HasOne<AppUser>().WithMany().HasForeignKey(entry => entry.ActorId).OnDelete(DeleteBehavior.Restrict);
@@ -141,8 +145,18 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
             table.HasCheckConstraint("CK_BusinessOpeningDays_Hours", "(\"IsClosed\" AND \"OpensAtMinute\" IS NULL AND \"ClosesAtMinute\" IS NULL) OR (NOT \"IsClosed\" AND \"OpensAtMinute\" IS NOT NULL AND \"ClosesAtMinute\" IS NOT NULL AND \"OpensAtMinute\" BETWEEN 0 AND 1439 AND \"ClosesAtMinute\" BETWEEN 0 AND 1439 AND \"OpensAtMinute\" < \"ClosesAtMinute\")");
         });
         var hoursAudit = builder.Entity<BusinessHoursAudit>();
+        hoursAudit.Property(item => item.Kind).HasMaxLength(8).HasDefaultValue("Hours");
+        hoursAudit.ToTable(table => table.HasCheckConstraint("CK_BusinessHoursAudits_Kind", "\"Kind\" IN ('Hours','Breaks')"));
         hoursAudit.HasIndex(entry => entry.ScheduleVersion).IsUnique();
         hoursAudit.HasOne<AppUser>().WithMany().HasForeignKey(entry => entry.ActorId).OnDelete(DeleteBehavior.Restrict);
+        var businessBreak = builder.Entity<BusinessWeeklyBreak>();
+        businessBreak.HasKey(item => new { item.ScheduleId, item.Day, item.Position });
+        businessBreak.HasOne<BusinessOpeningDay>().WithMany().HasForeignKey(item => new { item.ScheduleId, item.Day }).OnDelete(DeleteBehavior.Restrict);
+        businessBreak.ToTable(table => table.HasCheckConstraint("CK_BusinessWeeklyBreaks_Time", "\"Day\" BETWEEN 0 AND 6 AND \"Position\" BETWEEN 1 AND 8 AND \"StartsAtMinute\" BETWEEN 0 AND 1439 AND \"EndsAtMinute\" BETWEEN 0 AND 1439 AND \"StartsAtMinute\" < \"EndsAtMinute\""));
+        var staffBreak = builder.Entity<StaffWeeklyBreak>();
+        staffBreak.HasKey(item => new { item.StaffMemberId, item.Day, item.Position });
+        staffBreak.HasOne<StaffWorkingDay>().WithMany().HasForeignKey(item => new { item.StaffMemberId, item.Day }).OnDelete(DeleteBehavior.Restrict);
+        staffBreak.ToTable(table => table.HasCheckConstraint("CK_StaffWeeklyBreaks_Time", "\"Day\" BETWEEN 0 AND 6 AND \"Position\" BETWEEN 1 AND 8 AND \"StartsAtMinute\" BETWEEN 0 AND 1439 AND \"EndsAtMinute\" BETWEEN 0 AND 1439 AND \"StartsAtMinute\" < \"EndsAtMinute\""));
         var assignment = builder.Entity<StaffServiceAssignment>();
         assignment.HasKey(entry => new { entry.StaffMemberId, entry.ServiceDefinitionId });
         assignment.HasOne<StaffMember>().WithMany().HasForeignKey(entry => entry.StaffMemberId).OnDelete(DeleteBehavior.Restrict);

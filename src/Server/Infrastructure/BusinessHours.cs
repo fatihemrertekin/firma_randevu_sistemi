@@ -19,6 +19,7 @@ public sealed class BusinessOpeningDay
 
 public sealed class BusinessHoursAudit
 {
+    public string Kind { get; set; } = "Hours";
     public Guid Id { get; set; }
     public Guid ActorId { get; set; }
     public Guid ScheduleVersion { get; set; }

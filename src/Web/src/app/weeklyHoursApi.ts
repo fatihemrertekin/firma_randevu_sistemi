@@ -16,18 +16,20 @@ export function hoursFailure(status: number, subject = 'İşletme saatleri') {
   return 'Sonuç doğrulanamadı. Güncel saatleri yükleyerek kontrol edin.'
 }
 export class HoursError extends Error {
-  constructor(public status: number, public retryAfter = 0, public appointmentsOutsideHours = false) {
-    super(appointmentsOutsideHours ? 'Bu saat değişikliği mevcut randevuları mesai dışında bırakıyor. Randevuları kapsayan saatler seçin.' : hoursFailure(status))
+  constructor(public status: number, public retryAfter = 0, public appointmentsOutsideHours = false, public breaksOutsideHours = false) {
+    super(appointmentsOutsideHours ? 'Bu saat değişikliği mevcut randevuları mesai dışında bırakıyor. Randevuları kapsayan saatler seçin.' : breaksOutsideHours ? 'Bu saat değişikliği mevcut molaları mesai dışında bırakıyor. Molaları kapsayan saatler seçin.' : hoursFailure(status))
   }
 }
 export async function hoursResponseError(response: Response): Promise<HoursError> {
   let appointmentsOutsideHours = false
+  let breaksOutsideHours = false
   if (response.status === 409) {
     // Tanınmayan/bozuk hata gövdesi genel 409 kilidini kaldırmaz.
     const value: unknown = await response.json().catch(() => null)
     appointmentsOutsideHours = typeof value === 'object' && value !== null && 'code' in value && value.code === 'appointments_outside_hours'
+    breaksOutsideHours = typeof value === 'object' && value !== null && 'code' in value && value.code === 'breaks_outside_hours'
   }
-  return new HoursError(response.status, response.status === 429 ? retrySeconds(response) : 0, appointmentsOutsideHours)
+  return new HoursError(response.status, response.status === 429 ? retrySeconds(response) : 0, appointmentsOutsideHours, breaksOutsideHours)
 }
 export function retrySeconds(response: Response) {
   const value = Number(response.headers.get('Retry-After'))

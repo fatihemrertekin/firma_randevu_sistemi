@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using Server.Features.Identity;
 using Server.Infrastructure;
+using Server.Features.Business;
 
 namespace Server.Features.Scheduling;
 
@@ -86,6 +87,8 @@ public static class AppointmentEndpoints
                 var occupied = await db.AppointmentTimeBlocks.AsNoTracking().Where(item => item.StaffMemberId == member.Id &&
                     item.Status != "Cancelled" && item.OccupiedStartsAt < last && item.OccupiedEndsAt > first)
                     .Select(item => new { item.OccupiedStartsAt, item.OccupiedEndsAt }).ToArrayAsync(timeout.Token);
+                var businessBreaks = await WeeklyBreaks.LoadAsync(db, null, timeout.Token);
+                var staffBreaks = await WeeklyBreaks.LoadAsync(db, member.Id, timeout.Token);
                 for (var minute = 0; minute < 1440; minute += policy.SlotMinutes)
                 {
                     if (!AppointmentRules.TryUtc(day, minute, AppointmentRules.Istanbul, out var start) || !AppointmentRules.InWindow(start, now, policy)) continue;
@@ -94,6 +97,7 @@ public static class AppointmentEndpoints
                     var occupiedEnd = end.AddMinutes(service.BufferAfterMinutes);
                     if (AppointmentRules.FitsDay(occupiedStart, occupiedEnd, businessDay.IsClosed, businessDay.OpensAtMinute, businessDay.ClosesAtMinute) &&
                         AppointmentRules.FitsDay(occupiedStart, occupiedEnd, staffDay.IsClosed, staffDay.OpensAtMinute, staffDay.ClosesAtMinute) &&
+                        WeeklyBreaks.Avoids(occupiedStart, occupiedEnd, businessBreaks) && WeeklyBreaks.Avoids(occupiedStart, occupiedEnd, staffBreaks) &&
                         !occupied.Any(item => item.OccupiedStartsAt < occupiedEnd && occupiedStart < item.OccupiedEndsAt)) starts.Add(start);
                 }
             }
@@ -154,6 +158,9 @@ public static class AppointmentEndpoints
             !AppointmentRules.FitsDay(occupiedStart, occupiedEnd, businessDay.IsClosed, businessDay.OpensAtMinute, businessDay.ClosesAtMinute) ||
             !AppointmentRules.FitsDay(occupiedStart, occupiedEnd, staffDay.IsClosed, staffDay.OpensAtMinute, staffDay.ClosesAtMinute))
             return Conflict("Randevu ve tampon sürelerinin tamamı işletme ve personel mesaisinde olmalı.");
+        if (!WeeklyBreaks.Avoids(occupiedStart, occupiedEnd, await WeeklyBreaks.LoadAsync(db, null, timeout.Token)) ||
+            !WeeklyBreaks.Avoids(occupiedStart, occupiedEnd, await WeeklyBreaks.LoadAsync(db, member.Id, timeout.Token)))
+            return Conflict("Randevu ve tampon süreleri işletme veya personel molasıyla kesişiyor.");
         var appointment = new Appointment
         {
             Id = Guid.NewGuid(),

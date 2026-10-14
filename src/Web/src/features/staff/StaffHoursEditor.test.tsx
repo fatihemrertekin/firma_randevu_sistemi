@@ -36,6 +36,13 @@ it('pasif personelin saatlerini gösterir ve düzenleme/gönderimi engeller', as
   expect(container.querySelector('button[type=submit]')).toBeNull(); expect(checkbox().closest('fieldset')?.disabled).toBe(true)
   await submit(); expect(post).not.toHaveBeenCalled()
 })
+it('molayı dışarıda bırakan saatleri açıklayıp yeniden yüklemeden düzeltmeye izin verir', async () => {
+  const post = vi.fn<StaffPost>().mockResolvedValueOnce(Response.json({ code: 'breaks_outside_hours' }, { status: 409 })).mockResolvedValueOnce(Response.json(saved))
+  await render(post); await submit()
+  expect(container.textContent).toContain('Molaları kapsayan saatler seçin.'); expect(checkbox().closest('fieldset')?.disabled).toBe(false)
+  expect(container.textContent).not.toContain('Personel saatleri kaydedildi.')
+  await submit(); expect(post).toHaveBeenCalledTimes(2); expect(post.mock.calls[1][1]).toMatchObject({ version: member.version })
+})
 it('taslağı onaysız silmez, onayla listeye döner ve temizler', async () => {
   const { dirty, onCancel } = await render(); await act(async () => checkbox().click())
   const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false); await back(); expect(onCancel).not.toHaveBeenCalled()
