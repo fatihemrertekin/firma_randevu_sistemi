@@ -20,6 +20,10 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE
 GRANT SELECT, INSERT ON TABLE "Appointments", "AppointmentTimeBlocks", "AppointmentAudits" TO app_user;
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE "BusinessWeeklyBreaks", "StaffWeeklyBreaks" TO app_user;
 REVOKE TRUNCATE ON TABLE "BusinessWeeklyBreaks", "StaffWeeklyBreaks" FROM app_user;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE "BusinessDateExceptions", "StaffDateExceptions", "BusinessDateBreaks", "StaffDateBreaks" TO app_user;
+REVOKE TRUNCATE ON TABLE "BusinessDateExceptions", "StaffDateExceptions", "BusinessDateBreaks", "StaffDateBreaks" FROM app_user;
+GRANT SELECT, INSERT, UPDATE ON TABLE "StaffLeaves" TO app_user;
+REVOKE DELETE, TRUNCATE ON TABLE "StaffLeaves" FROM app_user;
 REVOKE UPDATE, DELETE, TRUNCATE ON TABLE "Appointments", "AppointmentTimeBlocks", "AppointmentAudits" FROM app_user;
 GRANT SELECT ON TABLE "BookingPolicies" TO app_user;
 REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON TABLE "BookingPolicies" FROM app_user;

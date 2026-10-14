@@ -48,18 +48,7 @@ public static partial class AppointmentRules
     internal static async Task<bool> FitsWeekAsync(AppDbContext db, WeeklyHours.DayValue[] desired,
         DateTime now, Guid? memberId, CancellationToken token, IReadOnlyList<WeeklyBreaks.Value>? desiredBreaks = null)
     {
-        var breaks = desiredBreaks ?? await WeeklyBreaks.LoadAsync(db, memberId, token);
-        // Çağıran saat/personel ana kaydını kilitler; rezervasyon aynı kilidi alır.
-        var blocks = db.AppointmentTimeBlocks.AsNoTracking().Where(block =>
-            (block.Status == "Pending" || block.Status == "Confirmed") && block.OccupiedEndsAt > now);
-        if (memberId is not null) blocks = blocks.Where(block => block.StaffMemberId == memberId);
-        await foreach (var block in blocks.Select(block => new { block.StartsAt, block.OccupiedStartsAt, block.OccupiedEndsAt }).AsAsyncEnumerable().WithCancellation(token))
-        {
-            var day = desired.Single(item => item.Day == WeekDay(block.StartsAt));
-            if (!FitsDay(block.OccupiedStartsAt, block.OccupiedEndsAt, day.IsClosed, day.Start, day.End)) return false;
-            if (!WeeklyBreaks.Avoids(block.OccupiedStartsAt, block.OccupiedEndsAt, breaks)) return false;
-        }
-        return true;
+        return await AppointmentCalendar.FitsAppointmentsAsync(db, memberId, now, token, desired, desiredBreaks);
     }
 
     [GeneratedRegex(@"\A[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\.[0-9]{1,7})?(?:Z|[+-][0-9]{2}:[0-9]{2})\z")]

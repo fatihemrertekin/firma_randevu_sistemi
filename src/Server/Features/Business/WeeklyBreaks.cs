@@ -27,20 +27,27 @@ public static class WeeklyBreaks
         foreach (var day in input)
         {
             var key = $"day{day.Day}Breaks";
-            if (day.Breaks is null || day.Breaks.Length > 8) { errors[key] = ["Mola listesi gerekli; bir günde en fazla 8 mola olabilir."]; continue; }
             var work = hours.SingleOrDefault(item => item.Day == day.Day);
-            var previousEnd = -1;
-            for (var index = 0; index < day.Breaks.Length; index++)
-            {
-                var start = WeeklyHours.Minute(day.Breaks[index]?.StartsAt);
-                var end = WeeklyHours.Minute(day.Breaks[index]?.EndsAt);
-                if (start is null || end is null || start >= end || start < previousEnd || work is null || work.IsClosed || work.Start is null || work.End is null || start < work.Start || end > work.End)
-                    errors[key] = ["Molalar SS:dd biçiminde, aynı gün mesai içinde, başlangıç sırasıyla ve kesişmeden gönderilmeli."];
-                else values.Add(new Value(day.Day.GetValueOrDefault(), index + 1, start.Value, end.Value));
-                previousEnd = end ?? previousEnd;
-            }
+            var validated = ValidateDay(day.Day.GetValueOrDefault(), day.Breaks, work, out var error);
+            if (error is not null) errors[key] = [error]; else values.AddRange(validated);
         }
         return values.OrderBy(item => item.Day).ThenBy(item => item.Position).ToArray();
+    }
+
+    internal static Value[] ValidateDay(int day, BreakRequest[]? input, WeeklyHours.DayValue? hours, out string? error)
+    {
+        error = null;
+        if (input is null || input.Length > 8) { error = "Mola listesi gerekli; bir günde en fazla 8 mola olabilir."; return []; }
+        var values = new List<Value>(); var previousEnd = -1;
+        for (var index = 0; index < input.Length; index++)
+        {
+            var start = WeeklyHours.Minute(input[index]?.StartsAt); var end = WeeklyHours.Minute(input[index]?.EndsAt);
+            if (start is null || end is null || start >= end || start < previousEnd || hours is null || hours.IsClosed || hours.Start is null || hours.End is null || start < hours.Start || end > hours.End)
+                error = "Molalar SS:dd biçiminde, aynı gün mesai içinde, başlangıç sırasıyla ve kesişmeden gönderilmeli.";
+            else values.Add(new Value(day, index + 1, start.Value, end.Value));
+            previousEnd = end ?? previousEnd;
+        }
+        return values.ToArray();
     }
 
     internal static Response Result(bool configured, Guid version, IReadOnlyList<Value> values) => new(configured, "Europe/Istanbul", version,

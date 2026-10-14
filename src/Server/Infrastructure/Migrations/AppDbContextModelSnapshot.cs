@@ -427,6 +427,58 @@ namespace Server.Infrastructure.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Server.Infrastructure.BusinessDateBreak", b =>
+                {
+                    b.Property<int>("ScheduleId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("EndsAtMinute")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("StartsAtMinute")
+                        .HasColumnType("integer");
+
+                    b.HasKey("ScheduleId", "Date", "Position");
+
+                    b.ToTable("BusinessDateBreaks", t =>
+                        {
+                            t.HasCheckConstraint("CK_BusinessDateBreaks_Time", "\"Position\" BETWEEN 1 AND 8 AND \"StartsAtMinute\" BETWEEN 0 AND 1439 AND \"EndsAtMinute\" BETWEEN 0 AND 1439 AND \"StartsAtMinute\" < \"EndsAtMinute\"");
+                        });
+                });
+
+            modelBuilder.Entity("Server.Infrastructure.BusinessDateException", b =>
+                {
+                    b.Property<int>("ScheduleId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<int?>("ClosesAtMinute")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsClosed")
+                        .HasColumnType("boolean");
+
+                    b.Property<int?>("OpensAtMinute")
+                        .HasColumnType("integer");
+
+                    b.HasKey("ScheduleId", "Date");
+
+                    b.ToTable("BusinessDateExceptions", t =>
+                        {
+                            t.HasCheckConstraint("CK_BusinessDateExceptions_Date", "\"Date\" BETWEEN DATE '0001-01-01' AND DATE '9999-12-31'");
+
+                            t.HasCheckConstraint("CK_BusinessDateExceptions_Hours", "(\"IsClosed\" AND \"OpensAtMinute\" IS NULL AND \"ClosesAtMinute\" IS NULL) OR (NOT \"IsClosed\" AND \"OpensAtMinute\" IS NOT NULL AND \"ClosesAtMinute\" IS NOT NULL AND \"OpensAtMinute\" BETWEEN 0 AND 1439 AND \"ClosesAtMinute\" BETWEEN 0 AND 1439 AND \"OpensAtMinute\" < \"ClosesAtMinute\")");
+                        });
+                });
+
             modelBuilder.Entity("Server.Infrastructure.BusinessHoursAudit", b =>
                 {
                     b.Property<Guid>("Id")
@@ -439,8 +491,8 @@ namespace Server.Infrastructure.Migrations
                     b.Property<string>("Kind")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
-                        .HasMaxLength(8)
-                        .HasColumnType("character varying(8)")
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
                         .HasDefaultValue("Hours");
 
                     b.Property<DateTimeOffset>("OccurredAt")
@@ -461,7 +513,7 @@ namespace Server.Infrastructure.Migrations
 
                     b.ToTable("BusinessHoursAudits", t =>
                         {
-                            t.HasCheckConstraint("CK_BusinessHoursAudits_Kind", "\"Kind\" IN ('Hours','Breaks')");
+                            t.HasCheckConstraint("CK_BusinessHoursAudits_Kind", "\"Kind\" IN ('Hours','Breaks','Exception')");
                         });
                 });
 
@@ -968,6 +1020,58 @@ namespace Server.Infrastructure.Migrations
                     b.ToTable("StaffActivationAudits");
                 });
 
+            modelBuilder.Entity("Server.Infrastructure.StaffDateBreak", b =>
+                {
+                    b.Property<Guid>("StaffMemberId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("EndsAtMinute")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("StartsAtMinute")
+                        .HasColumnType("integer");
+
+                    b.HasKey("StaffMemberId", "Date", "Position");
+
+                    b.ToTable("StaffDateBreaks", t =>
+                        {
+                            t.HasCheckConstraint("CK_StaffDateBreaks_Time", "\"Position\" BETWEEN 1 AND 8 AND \"StartsAtMinute\" BETWEEN 0 AND 1439 AND \"EndsAtMinute\" BETWEEN 0 AND 1439 AND \"StartsAtMinute\" < \"EndsAtMinute\"");
+                        });
+                });
+
+            modelBuilder.Entity("Server.Infrastructure.StaffDateException", b =>
+                {
+                    b.Property<Guid>("StaffMemberId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<int?>("ClosesAtMinute")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsClosed")
+                        .HasColumnType("boolean");
+
+                    b.Property<int?>("OpensAtMinute")
+                        .HasColumnType("integer");
+
+                    b.HasKey("StaffMemberId", "Date");
+
+                    b.ToTable("StaffDateExceptions", t =>
+                        {
+                            t.HasCheckConstraint("CK_StaffDateExceptions_Date", "\"Date\" BETWEEN DATE '0001-01-01' AND DATE '9999-12-31'");
+
+                            t.HasCheckConstraint("CK_StaffDateExceptions_Hours", "(\"IsClosed\" AND \"OpensAtMinute\" IS NULL AND \"ClosesAtMinute\" IS NULL) OR (NOT \"IsClosed\" AND \"OpensAtMinute\" IS NOT NULL AND \"ClosesAtMinute\" IS NOT NULL AND \"OpensAtMinute\" BETWEEN 0 AND 1439 AND \"ClosesAtMinute\" BETWEEN 0 AND 1439 AND \"OpensAtMinute\" < \"ClosesAtMinute\")");
+                        });
+                });
+
             modelBuilder.Entity("Server.Infrastructure.StaffDeactivationAudit", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1007,8 +1111,8 @@ namespace Server.Infrastructure.Migrations
                     b.Property<string>("Kind")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
-                        .HasMaxLength(8)
-                        .HasColumnType("character varying(8)")
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
                         .HasDefaultValue("Hours");
 
                     b.Property<Guid>("MemberVersion")
@@ -1032,7 +1136,7 @@ namespace Server.Infrastructure.Migrations
 
                     b.ToTable("StaffHoursAudits", t =>
                         {
-                            t.HasCheckConstraint("CK_StaffHoursAudits_Kind", "\"Kind\" IN ('Hours','Breaks')");
+                            t.HasCheckConstraint("CK_StaffHoursAudits_Kind", "\"Kind\" IN ('Hours','Breaks','Exception','Leave')");
                         });
                 });
 
@@ -1116,6 +1220,40 @@ namespace Server.Infrastructure.Migrations
                         .IsDescending();
 
                     b.ToTable("StaffInvitationAudits");
+                });
+
+            modelBuilder.Entity("Server.Infrastructure.StaffLeave", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("EndsAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsRemoved")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("RequestHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<Guid>("StaffMemberId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("StartsAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StaffMemberId", "StartsAt", "Id");
+
+                    b.ToTable("StaffLeaves", t =>
+                        {
+                            t.HasCheckConstraint("CK_StaffLeaves_RequestHash", "\"RequestHash\" ~ '^[0-9A-F]{64}$'");
+
+                            t.HasCheckConstraint("CK_StaffLeaves_Time", "isfinite(\"StartsAt\") AND isfinite(\"EndsAt\") AND \"StartsAt\" < \"EndsAt\" AND \"EndsAt\" - \"StartsAt\" <= INTERVAL '366 days' AND date_trunc('minute', \"StartsAt\" AT TIME ZONE 'UTC') = \"StartsAt\" AT TIME ZONE 'UTC' AND date_trunc('minute', \"EndsAt\" AT TIME ZONE 'UTC') = \"EndsAt\" AT TIME ZONE 'UTC'");
+                        });
                 });
 
             modelBuilder.Entity("Server.Infrastructure.StaffMember", b =>
@@ -1445,6 +1583,24 @@ namespace Server.Infrastructure.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Server.Infrastructure.BusinessDateBreak", b =>
+                {
+                    b.HasOne("Server.Infrastructure.BusinessDateException", null)
+                        .WithMany()
+                        .HasForeignKey("ScheduleId", "Date")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Server.Infrastructure.BusinessDateException", b =>
+                {
+                    b.HasOne("Server.Infrastructure.BusinessHoursSchedule", null)
+                        .WithMany()
+                        .HasForeignKey("ScheduleId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Server.Infrastructure.BusinessHoursAudit", b =>
                 {
                     b.HasOne("Server.Infrastructure.AppUser", null)
@@ -1538,6 +1694,24 @@ namespace Server.Infrastructure.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Server.Infrastructure.StaffDateBreak", b =>
+                {
+                    b.HasOne("Server.Infrastructure.StaffDateException", null)
+                        .WithMany()
+                        .HasForeignKey("StaffMemberId", "Date")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Server.Infrastructure.StaffDateException", b =>
+                {
+                    b.HasOne("Server.Infrastructure.StaffMember", null)
+                        .WithMany()
+                        .HasForeignKey("StaffMemberId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Server.Infrastructure.StaffDeactivationAudit", b =>
                 {
                     b.HasOne("Server.Infrastructure.AppUser", null)
@@ -1573,6 +1747,15 @@ namespace Server.Infrastructure.Migrations
                     b.HasOne("Server.Infrastructure.StaffInvitation", null)
                         .WithMany()
                         .HasForeignKey("InvitationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Server.Infrastructure.StaffLeave", b =>
+                {
+                    b.HasOne("Server.Infrastructure.StaffMember", null)
+                        .WithMany()
+                        .HasForeignKey("StaffMemberId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

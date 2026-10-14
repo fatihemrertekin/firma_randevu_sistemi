@@ -77,29 +77,18 @@ public static class AppointmentEndpoints
         if (schedule.IsConfigured && member.IsActive && service.IsActive &&
             await db.StaffServiceAssignments.AnyAsync(item => item.StaffMemberId == member.Id && item.ServiceDefinitionId == service.Id, timeout.Token))
         {
-            var weekday = ((int)day.DayOfWeek + 6) % 7;
-            var businessDay = await db.BusinessOpeningDays.AsNoTracking().SingleOrDefaultAsync(item => item.Day == weekday, timeout.Token);
-            var staffDay = await db.StaffWorkingDays.AsNoTracking().SingleOrDefaultAsync(item => item.StaffMemberId == member.Id && item.Day == weekday, timeout.Token);
-            if (businessDay is not null && staffDay is not null)
+            var business = await AppointmentCalendar.LoadAsync(db, null, day, day, timeout.Token);
+            var staff = await AppointmentCalendar.LoadAsync(db, member.Id, day, day, timeout.Token);
+            var first = day.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc).AddDays(-1); var last = first.AddDays(3);
+            var occupied = await db.AppointmentTimeBlocks.AsNoTracking().Where(item => item.StaffMemberId == member.Id &&
+                item.Status != "Cancelled" && item.OccupiedStartsAt < last && item.OccupiedEndsAt > first)
+                .Select(item => new { item.OccupiedStartsAt, item.OccupiedEndsAt }).ToArrayAsync(timeout.Token);
+            for (var minute = 0; minute < 1440; minute += policy.SlotMinutes)
             {
-                var first = day.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc).AddDays(-1);
-                var last = first.AddDays(3);
-                var occupied = await db.AppointmentTimeBlocks.AsNoTracking().Where(item => item.StaffMemberId == member.Id &&
-                    item.Status != "Cancelled" && item.OccupiedStartsAt < last && item.OccupiedEndsAt > first)
-                    .Select(item => new { item.OccupiedStartsAt, item.OccupiedEndsAt }).ToArrayAsync(timeout.Token);
-                var businessBreaks = await WeeklyBreaks.LoadAsync(db, null, timeout.Token);
-                var staffBreaks = await WeeklyBreaks.LoadAsync(db, member.Id, timeout.Token);
-                for (var minute = 0; minute < 1440; minute += policy.SlotMinutes)
-                {
-                    if (!AppointmentRules.TryUtc(day, minute, AppointmentRules.Istanbul, out var start) || !AppointmentRules.InWindow(start, now, policy)) continue;
-                    var end = start.AddMinutes(service.DurationMinutes);
-                    var occupiedStart = start.AddMinutes(-service.BufferBeforeMinutes);
-                    var occupiedEnd = end.AddMinutes(service.BufferAfterMinutes);
-                    if (AppointmentRules.FitsDay(occupiedStart, occupiedEnd, businessDay.IsClosed, businessDay.OpensAtMinute, businessDay.ClosesAtMinute) &&
-                        AppointmentRules.FitsDay(occupiedStart, occupiedEnd, staffDay.IsClosed, staffDay.OpensAtMinute, staffDay.ClosesAtMinute) &&
-                        WeeklyBreaks.Avoids(occupiedStart, occupiedEnd, businessBreaks) && WeeklyBreaks.Avoids(occupiedStart, occupiedEnd, staffBreaks) &&
-                        !occupied.Any(item => item.OccupiedStartsAt < occupiedEnd && occupiedStart < item.OccupiedEndsAt)) starts.Add(start);
-                }
+                if (!AppointmentRules.TryUtc(day, minute, AppointmentRules.Istanbul, out var start) || !AppointmentRules.InWindow(start, now, policy)) continue;
+                var end = start.AddMinutes(service.DurationMinutes); var occupiedStart = start.AddMinutes(-service.BufferBeforeMinutes); var occupiedEnd = end.AddMinutes(service.BufferAfterMinutes);
+                if (business.Fits(occupiedStart, occupiedEnd, start) && staff.Fits(occupiedStart, occupiedEnd, start) &&
+                    !occupied.Any(item => item.OccupiedStartsAt < occupiedEnd && occupiedStart < item.OccupiedEndsAt)) starts.Add(start);
             }
         }
         await transaction.CommitAsync(timeout.Token);
@@ -151,16 +140,11 @@ public static class AppointmentEndpoints
         var end = start.AddMinutes(service.DurationMinutes);
         var occupiedStart = start.AddMinutes(-service.BufferBeforeMinutes);
         var occupiedEnd = end.AddMinutes(service.BufferAfterMinutes);
-        var weekday = AppointmentRules.WeekDay(start);
-        var businessDay = await db.BusinessOpeningDays.SingleOrDefaultAsync(item => item.Day == weekday, timeout.Token);
-        var staffDay = await db.StaffWorkingDays.SingleOrDefaultAsync(item => item.StaffMemberId == member.Id && item.Day == weekday, timeout.Token);
-        if (businessDay is null || staffDay is null ||
-            !AppointmentRules.FitsDay(occupiedStart, occupiedEnd, businessDay.IsClosed, businessDay.OpensAtMinute, businessDay.ClosesAtMinute) ||
-            !AppointmentRules.FitsDay(occupiedStart, occupiedEnd, staffDay.IsClosed, staffDay.OpensAtMinute, staffDay.ClosesAtMinute))
-            return Conflict("Randevu ve tampon sürelerinin tamamı işletme ve personel mesaisinde olmalı.");
-        if (!WeeklyBreaks.Avoids(occupiedStart, occupiedEnd, await WeeklyBreaks.LoadAsync(db, null, timeout.Token)) ||
-            !WeeklyBreaks.Avoids(occupiedStart, occupiedEnd, await WeeklyBreaks.LoadAsync(db, member.Id, timeout.Token)))
-            return Conflict("Randevu ve tampon süreleri işletme veya personel molasıyla kesişiyor.");
+        var date = AppointmentCalendar.LocalDate(start);
+        var business = await AppointmentCalendar.LoadAsync(db, null, date, date, timeout.Token);
+        var staff = await AppointmentCalendar.LoadAsync(db, member.Id, date, date, timeout.Token);
+        if (!business.Fits(occupiedStart, occupiedEnd, start) || !staff.Fits(occupiedStart, occupiedEnd, start))
+            return Conflict("Randevu ve tampon sürelerinin tamamı etkin mesai içinde, mola ve izin dışında olmalı.");
         var appointment = new Appointment
         {
             Id = Guid.NewGuid(),
