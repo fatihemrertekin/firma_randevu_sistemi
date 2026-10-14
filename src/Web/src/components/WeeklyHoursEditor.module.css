@@ -1,4 +1,4 @@
-.editor { container: weekly-hours / inline-size; max-width: var(--hours-editor-max); min-width: 0; }
+.editor { container: weekly-hours / inline-size; width: 100%; min-width: 0; }
 .heading { margin-bottom: var(--auth-space-2); }
 .identity { min-width: 0; overflow-wrap: anywhere; }
 .description { margin-block: 0 var(--auth-space-5); color: var(--auth-petrol); }
@@ -21,7 +21,7 @@
 .draft { color: var(--auth-brown); margin-top: var(--auth-space-5); }
 .notice { padding: var(--auth-space-3) var(--auth-space-4); color: var(--auth-petrol); border: var(--auth-rule) solid var(--border); border-radius: var(--auth-radius); }
 .actions { display: flex; flex-wrap: wrap; gap: var(--auth-space-4); margin-top: var(--auth-space-5); }
-.actions button { flex: 1; min-width: 0; }
+.actions button { flex: 0 1 auto; min-width: var(--target-min); }
 .editor .actions button[type='submit'] { background: var(--button-primary-bg); color: var(--button-primary-text); border-color: var(--button-primary-bg); }
 .editor .actions button[type='submit']:hover:enabled { background: var(--button-primary-hover); }
 .screenReaderOnly { position: absolute; width: var(--auth-rule); height: var(--auth-rule); padding: 0; margin: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }

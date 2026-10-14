@@ -1,4 +1,4 @@
-.surface { container: personnel / inline-size; min-width: 0; max-width: var(--management-work-max); }
+.surface { container: personnel / inline-size; min-width: 0; width: 100%; }
 .toolbar, .pagination, .pagination > div, .detailIdentity { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--auth-space-4); }
 .toolbar { margin-bottom: var(--auth-space-6); }
 .toolbar p { margin: 0; min-width: 0; }
@@ -19,7 +19,7 @@
 .surface .tasks :is(button, a[data-navigation]) { flex: 0 1 auto; border: 0; border-radius: 0; background: var(--button-navigation-bg); color: var(--auth-petrol); border-bottom: var(--auth-focus-width) solid transparent; }
 .surface .tasks :is(button, a[data-navigation])[aria-current='page'], .surface .tasks :is(button, a[data-navigation]):hover:not(:disabled):not([aria-disabled='true']) { background: var(--button-navigation-selected-bg); border-bottom-color: var(--auth-petrol); font-weight: var(--button-font-weight); }
 .task { min-width: 0; }
-.surface .taskForm { max-width: var(--personnel-form-max); margin-block: 0; }
+.surface .taskForm { width: 100%; margin-block: 0; }
 .surface .taskForm input[type='text'], .surface .taskForm input:not([type]) { min-height: var(--auth-control-height); }
 .surface .taskForm :is(button, a[data-navigation])[type='submit'] { color: var(--button-primary-text); }
 .surface .taskForm > h3 { margin-top: 0; }
