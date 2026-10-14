@@ -77,7 +77,7 @@ Program.cs bakımı `done`: başlangıç 265 satırdan 69 satıra indi; önce/so
 
 ## Sıradaki iş
 
-Aktif iş T07 Değişiklik kayıtları bakımıdır. Yerel kabul tamamlandı; GitHub ve yedekli ana 8080 teslimi sürüyor. Sonraki tek aday T08 mevcut yüzeylerin tutarlılık ve erişilebilirlik değerlendirmesidir; henüz başlatılmadı.
+T07 Değişiklik kayıtları bakımı ve güvenli bağımlılık yaması `done`: [PR #67](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/67), aynı head/main CI ve yedekli ana 8080 kabulü geçti; [kapsam, kanıt ve yerel test sınırı](plans/P02.md#t07-değişiklik-kayıtları-bakımı--14102026). Sonraki tek aday T08 mevcut yüzeylerin tutarlılık ve erişilebilirlik değerlendirmesidir; henüz başlatılmadı.
 
 14.10.2026 onaylı sidebar/tam genişlik geliştirme ve yerel kabulü `done`: doğrudan sayfa menüsü, tüm yönetim formları/listeleri ve eşit sütunlar uygulandı. 262 web testi/kalite kapıları ve ayrı sentetik ortamda beş genişlikte 82 ekran durumu geçti. [Kapsam, kanıt ve teslim sınırı](plans/P02.md#sidebar-ve-tam-genişlik-önerisi--14102026). `codex/sidebar-full-width` dalında; GitHub/ana 8080 teslimi yapılmadı. Mevcut T07 teslim kaydı değişmez.
 
