@@ -141,6 +141,7 @@ Akış: endpoint/controller → gerektiğinde iş servisi → EF DbContext. Basi
 
 - Bir commit bir amaç; mesaj emir kipinde ve kısa. Sır/PII/üretim verisi commit'lenmez.
 - Ana dal korumalı; CI yeşil olmadan birleştirme yok. Kullanıcının başka değişikliklerini geri alma.
+- Her geliştirmede başarılı CI/birleşme ve gerekli yedek, veri koruma, geri dönüş kontrollerinden sonra ana yerel uygulamayı da güncelle; yalnız kod veya PR teslimiyle durma. Sağlık/gerçek tarayıcı kabulünü ve sonucu STATUS'a kaydet. Bu teslim için yeniden onay isteme; kapsam dışı veya geri dönüşü belirsiz işlemler için bölüm 2'deki sınırlar geçerlidir.
 - PR açıklaması: ne değişti, neden, hangi testler çalıştı, riskler, migration varsa geri dönüş notu.
 
 ## 11. Frontend ve deneyim sözleşmesi
