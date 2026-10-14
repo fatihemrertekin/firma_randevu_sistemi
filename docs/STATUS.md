@@ -86,7 +86,7 @@ T08 dört bulgunun geliştirme/GitHub/ana yerel teslimi `done` (14.10.2026): [PR
 
 P03-02 geliştirme/GitHub/ana yerel teslimi done (14.10.2026): [PR #76](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/76), aynı son commit ve birleşme main CI başarılı. Uygunluk/tek Confirmed kayıt/okuma, snapshot/idempotency/GiST ve mesai koruması; ilgili testler ve sentetik gerçek HTTP/Chrome geçti. Şifreli yedek/migration sonrası 32 mevcut tablo, hesap/MFA/anahtar/ayar/SMTP korundu; sağlık/restart ve ana anonim kabul başarılı. [Kabul ve teslim](plans/P03.md#p03-02-github-ve-ana-yerel-teslim--14102026).
 
-P03-03 kapsam planı hazır (14.10.2026): [tampon, mola, izin ve tarihli istisna önerisi](plans/P03.md#p03-03-kapsam-planı--14102026) kural önceliğini, Owner API'lerini, rezervasyon yarışını ve kabul/geri dönüş sınırını tanımlar. Kod/migration/yeni ekran yok; P03-03 uygulaması `planned`. Çalışma ana proje klasöründedir. Sonraki tek kod işi P03-03A hizmet tamponu ve dolu aralık güvencesidir; müşteri ekranı/SMS/P03-04 başlamaz.
+P03-03A hizmet tamponu `in_progress` (14.10.2026): Owner API, snapshot/dolu aralık, GiST/mesai ve migration koruması uygulandı; [yerel kabul](plans/P03.md#p03-03a-hizmet-tamponu-kabulü--14102026) geçti. GitHub ve ana yerel teslim henüz tamamlandı sayılmaz. Çalışma ana proje klasöründedir. [P03-03 kapsam planı](plans/P03.md#p03-03-kapsam-planı--14102026) geçerlidir; sonraki tek aday P03-03B haftalık mola, bu tur başlamaz. Müşteri ekranı/SMS/P03-04 yoktur.
 
 ## Gelecek plan kaydı — destek ve işletim ekranı (02.10.2026)
 

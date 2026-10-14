@@ -313,6 +313,16 @@ namespace Server.Infrastructure.Migrations
                     b.Property<Guid>("AppointmentId")
                         .HasColumnType("uuid");
 
+                    b.Property<int>("BufferAfterMinutes")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
+
+                    b.Property<int>("BufferBeforeMinutes")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
+
                     b.Property<string>("Currency")
                         .IsRequired()
                         .HasMaxLength(3)
@@ -327,7 +337,13 @@ namespace Server.Infrastructure.Migrations
                     b.Property<NpgsqlRange<DateTime>>("Occupied")
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("tstzrange")
-                        .HasComputedColumnSql("tstzrange(\"StartsAt\", \"EndsAt\", '[)')", true);
+                        .HasComputedColumnSql("tstzrange(\"OccupiedStartsAt\", \"OccupiedEndsAt\", '[)')", true);
+
+                    b.Property<DateTime>("OccupiedEndsAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("OccupiedStartsAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<decimal>("Price")
                         .HasPrecision(8, 2)
@@ -361,10 +377,12 @@ namespace Server.Infrastructure.Migrations
 
                     b.HasIndex("ServiceDefinitionId");
 
-                    b.HasIndex("StaffMemberId", "StartsAt");
+                    b.HasIndex("StaffMemberId", "OccupiedStartsAt");
 
                     b.ToTable("AppointmentTimeBlocks", t =>
                         {
+                            t.HasCheckConstraint("CK_AppointmentTimeBlocks_Buffers", "\"BufferBeforeMinutes\" BETWEEN 0 AND 120 AND \"BufferAfterMinutes\" BETWEEN 0 AND 120 AND isfinite(\"OccupiedStartsAt\") AND isfinite(\"OccupiedEndsAt\") AND (\"OccupiedStartsAt\" AT TIME ZONE 'UTC') = (\"StartsAt\" AT TIME ZONE 'UTC') - \"BufferBeforeMinutes\" * INTERVAL '1 minute' AND (\"OccupiedEndsAt\" AT TIME ZONE 'UTC') = (\"EndsAt\" AT TIME ZONE 'UTC') + \"BufferAfterMinutes\" * INTERVAL '1 minute'");
+
                             t.HasCheckConstraint("CK_AppointmentTimeBlocks_Snapshot", "length(btrim(\"StaffName\")) > 0 AND length(btrim(\"ServiceName\")) > 0 AND \"Price\" BETWEEN 0 AND 999999.99 AND \"Currency\" = 'TRY'");
 
                             t.HasCheckConstraint("CK_AppointmentTimeBlocks_Status", "\"Status\" IN ('Pending','Confirmed','Completed','NoShow','Cancelled')");
@@ -790,6 +808,16 @@ namespace Server.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<int>("BufferAfterMinutes")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
+
+                    b.Property<int>("BufferBeforeMinutes")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
+
                     b.Property<string>("Currency")
                         .IsRequired()
                         .HasMaxLength(3)
@@ -825,6 +853,8 @@ namespace Server.Infrastructure.Migrations
 
                     b.ToTable("ServiceDefinitions", t =>
                         {
+                            t.HasCheckConstraint("CK_ServiceDefinitions_Buffers", "\"BufferBeforeMinutes\" BETWEEN 0 AND 120 AND \"BufferAfterMinutes\" BETWEEN 0 AND 120");
+
                             t.HasCheckConstraint("CK_ServiceDefinitions_Currency", "\"Currency\" = 'TRY'");
 
                             t.HasCheckConstraint("CK_ServiceDefinitions_DeletedInactive", "NOT \"IsDeleted\" OR NOT \"IsActive\"");

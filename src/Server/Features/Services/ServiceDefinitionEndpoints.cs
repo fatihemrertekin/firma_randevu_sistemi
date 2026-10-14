@@ -18,6 +18,8 @@ public static class ServiceDefinitionEndpoints
     public sealed record UpdateRequest(string Name, int DurationMinutes, string Price, Guid Version);
     public sealed record StatusRequest(bool? IsActive, Guid Version);
     public sealed record DeleteRequest(Guid Version);
+    public sealed record BuffersRequest(Guid Version, int? BufferBeforeMinutes, int? BufferAfterMinutes);
+    public sealed record BuffersResponse(Guid Id, Guid Version, int BufferBeforeMinutes, int BufferAfterMinutes);
     private sealed record Definition(string Name, int DurationMinutes, decimal Price);
 
     public static void MapServiceDefinitionEndpoints(this IEndpointRouteBuilder app)
@@ -29,10 +31,45 @@ public static class ServiceDefinitionEndpoints
         services.MapPost("/{id:guid}", UpdateAsync);
         services.MapPost("/{id:guid}/status", StatusAsync);
         services.MapPost("/{id:guid}/delete", DeleteAsync);
+        services.MapGet("/{id:guid}/buffers", ReadBuffersAsync);
+        services.MapPost("/{id:guid}/buffers", UpdateBuffersAsync);
     }
     internal static ServiceResponse Response(ServiceDefinition item) => new(item.Id, item.Name, item.DurationMinutes,
         item.Price.ToString("0.00", CultureInfo.InvariantCulture), item.Currency, item.IsActive, item.Version);
     private static IResult Conflict() => Results.Problem(statusCode: 409, title: "Hizmet kaydı değişti. Güncel kaydı yükleyin.");
+    private static BuffersResponse Buffers(ServiceDefinition item) => new(item.Id, item.Version, item.BufferBeforeMinutes, item.BufferAfterMinutes);
+    private static async Task<IResult> ReadBuffersAsync(Guid id, HttpContext context, AppDbContext db)
+    {
+        using var timeout = Timeout(context);
+        var item = await db.ServiceDefinitions.AsNoTracking().SingleOrDefaultAsync(item => item.Id == id && !item.IsDeleted, timeout.Token);
+        return item is null ? Results.NotFound() : Results.Ok(Buffers(item));
+    }
+    private static async Task<IResult> UpdateBuffersAsync(Guid id, BuffersRequest request, HttpContext context,
+        IAntiforgery antiforgery, AppDbContext db, UserManager<AppUser> users, TimeProvider clock)
+    {
+        using var timeout = Timeout(context);
+        if (!await AuthEndpoints.HasValidCsrfAsync(antiforgery, context)) return Results.Problem(statusCode: 400, title: "Geçersiz istek doğrulaması.");
+        var errors = new Dictionary<string, string[]>();
+        if (request.Version == Guid.Empty) errors["version"] = ["Güncel hizmet sürümü gerekli."];
+        if (request.BufferBeforeMinutes is null or < 0 or > 120) errors["bufferBeforeMinutes"] = ["Ön tampon 0–120 arasında tam dakika olmalı."];
+        if (request.BufferAfterMinutes is null or < 0 or > 120) errors["bufferAfterMinutes"] = ["Arka tampon 0–120 arasında tam dakika olmalı."];
+        if (errors.Count > 0) return Results.ValidationProblem(errors);
+        await using var transaction = await db.Database.BeginTransactionAsync(timeout.Token);
+        var owner = await OwnerMutationAuthorization.LockAsync(context, db, users, timeout.Token);
+        if (owner is null) return Results.Unauthorized();
+        // Rezervasyon personel → hizmet sırasındadır; burada hizmetten sonra başka kaynak kilitlenmez.
+        var item = await db.ServiceDefinitions.FromSqlInterpolated($"SELECT * FROM \"ServiceDefinitions\" WHERE \"Id\" = {id} FOR UPDATE").SingleOrDefaultAsync(timeout.Token);
+        if (item is null || item.IsDeleted) return Results.NotFound();
+        if (item.Version != request.Version) return Conflict();
+        if (item.BufferBeforeMinutes == request.BufferBeforeMinutes && item.BufferAfterMinutes == request.BufferAfterMinutes) return Results.Ok(Buffers(item));
+        item.BufferBeforeMinutes = request.BufferBeforeMinutes.GetValueOrDefault();
+        item.BufferAfterMinutes = request.BufferAfterMinutes.GetValueOrDefault();
+        item.Version = Guid.NewGuid();
+        Audit(db, item, owner.Id, "Updated", clock);
+        await db.SaveChangesAsync(timeout.Token);
+        await transaction.CommitAsync(timeout.Token);
+        return Results.Ok(Buffers(item));
+    }
     private static CancellationTokenSource Timeout(HttpContext context)
     {
         context.Response.Headers.CacheControl = "no-store";
