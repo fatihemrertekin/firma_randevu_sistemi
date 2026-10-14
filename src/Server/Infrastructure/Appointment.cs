@@ -1,0 +1,49 @@
+using NpgsqlTypes;
+
+namespace Server.Infrastructure;
+
+public sealed class Appointment
+{
+    public Guid Id { get; set; }
+    public Guid ActorId { get; set; }
+    public Guid RequestKey { get; set; }
+    public required string RequestHash { get; set; }
+    public required string CustomerName { get; set; }
+    public required string CustomerPhone { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public Guid Version { get; set; }
+}
+
+public sealed class AppointmentTimeBlock
+{
+    public Guid AppointmentId { get; set; }
+    public Guid StaffMemberId { get; set; }
+    public Guid ServiceDefinitionId { get; set; }
+    public required string StaffName { get; set; }
+    public required string ServiceName { get; set; }
+    public int DurationMinutes { get; set; }
+    public decimal Price { get; set; }
+    public required string Currency { get; set; }
+    public DateTime StartsAt { get; set; }
+    public DateTime EndsAt { get; set; }
+    public NpgsqlRange<DateTime> Occupied { get; set; }
+    public required string Status { get; set; }
+}
+
+public sealed class AppointmentAudit
+{
+    public Guid Id { get; set; }
+    public Guid AppointmentId { get; set; }
+    public Guid ActorId { get; set; }
+    public Guid AppointmentVersion { get; set; }
+    public DateTime OccurredAt { get; set; }
+}
+
+public sealed class BookingPolicy
+{
+    public int Id { get; set; }
+    public int LeadMinutes { get; set; }
+    public int HorizonDays { get; set; }
+    public int SlotMinutes { get; set; }
+    public Guid Version { get; set; }
+}

@@ -45,6 +45,12 @@ it.each([401, 403, 404, 409, 500])('%i sonucu başarı saymaz ve ikinci gönderi
   const { post, onSaved } = await render(vi.fn<StaffPost>(async () => new Response(null, { status })))
   await submit(); await submit(); expect(post).toHaveBeenCalledOnce(); expect(onSaved).not.toHaveBeenCalled(); expect(container.querySelector('[role=alert]')).not.toBeNull()
 })
+it('randevu-mesai hatasını personel formunda gösterir ve düzeltme sonrası kaydedebilir', async () => {
+  const post = vi.fn<StaffPost>().mockResolvedValueOnce(Response.json({ code: 'appointments_outside_hours' }, { status: 409 })).mockResolvedValueOnce(Response.json(saved))
+  const { onSaved } = await render(post); await submit()
+  expect(container.textContent).toContain('Randevuları kapsayan saatler seçin.'); expect(checkbox().closest('fieldset')?.disabled).toBe(false)
+  expect(onSaved).not.toHaveBeenCalled(); await submit(); expect(post).toHaveBeenCalledTimes(2); expect(onSaved).toHaveBeenCalledOnce()
+})
 it('başka personel veya uyuşmayan sürüm yanıtını kabul etmez', async () => {
   vi.mocked(fetch).mockResolvedValueOnce(Response.json({ ...initial, member: { ...member, id: 'başka-personel' } }))
   const { post, onSaved } = await render(); expect(container.querySelector('form')).toBeNull(); expect(container.textContent).toContain('Saatler yüklenemedi.')

@@ -1,6 +1,6 @@
 # ADR-005 — Randevu ve çalışan zaman bloğu
 
-Durum: **öneri**, 14.10.2026. [P03 başlangıç planı](../plans/P03.md) kapsamında hazırlanmıştır; kod/migration veya mimari kararın kabul edildiği anlamına gelmez.
+Durum: **kabul edildi**, 14.10.2026. Kullanıcı önerilen model ve P03-02 kapsamıyla kod işini başlattı. [P03 yerel kabulü](../plans/P03.md#p03-02-yerel-geliştirme-kabulü--14102026) DB çakışma, yarış, idempotency ve migration kanıtını tutar; GitHub/ana teslim ayrı kaydedilir.
 
 ## İhtiyaç
 
@@ -14,7 +14,7 @@ MVP tek hizmet/personel; aynı kişinin dolu zamanı tampon dahil korunmalı, ip
 | Appointments + AppointmentTimeBlocks | MVP'de fazladan tablo/join; şimdiden mevcut çalışan zamanını somut olarak modeller, ileride çok blok eklerken aynı GiST güvencesi korunabilir. |
 | Genel kaynak/takvim blok motoru | Henüz ihtiyaç olmayan kaynak türleri ve soyutlamalar; kapsam dışında. |
 
-Öneri ikinci seçenektir. Appointments müşteri/oluşturucu/işlem anahtarı/sürümü tutar; AppointmentTimeBlocks hizmet/personel snapshot'ı, UTC başlangıç/bitiş/tampon, bloke aralık ve durumu tutar. MVP randevu başına tek blok UNIQUE kuralıyla sınırlıdır. Üst tabloda ikinci durum kopyası yoktur; tek blok durumu API'nin randevu durumudur. Blok, üst kayıt ve audit aynı transaction'da yazılır. Çoklu hizmet/sıralama/şube tabloları veya API'si bugünden eklenmez.
+Karar ikinci seçenektir. Appointments müşteri/oluşturucu/işlem anahtarı/sürümü tutar; AppointmentTimeBlocks hizmet/personel snapshot'ı, UTC başlangıç/bitiş/tampon, bloke aralık ve durumu tutar. MVP randevu başına tek blok UNIQUE kuralıyla sınırlıdır. Üst tabloda ikinci durum kopyası yoktur; tek blok durumu API'nin randevu durumudur. Blok, üst kayıt ve audit aynı transaction'da yazılır. Çoklu hizmet/sıralama/şube tabloları veya API'si bugünden eklenmez.
 
 Personel FK + tstzrange için GiST exclusion constraint; sadece Cancelled hariç, diğer dört durum kapsamda. `[başlangıç, bitiş)` tamponla genişletilir; `now()` partial predicate'i yerine açık süre sonu geçişi yapılır. Çoklu blok aşamasında MVP UNIQUE kuralını kaldırmak mümkündür; ancak aggregate durum/atomik çoklu işlem/yetki politikası o aşamada ayrıca tasarlanır. Bu öneri gelecekte migration gerekmeyeceği sözü değildir.
 

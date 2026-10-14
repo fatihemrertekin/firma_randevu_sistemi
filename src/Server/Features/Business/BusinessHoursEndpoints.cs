@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Server.Features.Identity;
 using Server.Infrastructure;
+using Server.Features.Scheduling;
 
 namespace Server.Features.Business;
 
@@ -44,7 +45,8 @@ public static class BusinessHoursEndpoints
     {
         using var timeout = Timeout(context);
         if (!await AuthEndpoints.HasValidCsrfAsync(antiforgery, context)) return Results.Problem(statusCode: 400, title: "Geçersiz istek doğrulaması.");
-        var desired = WeeklyHours.Validate(request.Version, request.Days, out var errors).Select(item => new BusinessOpeningDay { ScheduleId = 1, Day = item.Day, IsClosed = item.IsClosed, OpensAtMinute = item.Start, ClosesAtMinute = item.End }).ToArray();
+        var validated = WeeklyHours.Validate(request.Version, request.Days, out var errors);
+        var desired = validated.Select(item => new BusinessOpeningDay { ScheduleId = 1, Day = item.Day, IsClosed = item.IsClosed, OpensAtMinute = item.Start, ClosesAtMinute = item.End }).ToArray();
         if (errors.Count != 0) return Results.ValidationProblem(errors);
         await using var transaction = await db.Database.BeginTransactionAsync(timeout.Token);
         var owner = await OwnerMutationAuthorization.LockAsync(context, db, users, timeout.Token);
@@ -55,6 +57,9 @@ public static class BusinessHoursEndpoints
         if (schedule.IsConfigured && current.Length == 7 && current.Zip(desired).All(pair =>
             pair.First.Day == pair.Second.Day && pair.First.IsClosed == pair.Second.IsClosed && pair.First.OpensAtMinute == pair.Second.OpensAtMinute && pair.First.ClosesAtMinute == pair.Second.ClosesAtMinute))
             return Results.Ok(Response(schedule, current));
+        if (!await AppointmentRules.FitsWeekAsync(db, validated, clock.GetUtcNow().UtcDateTime, null, timeout.Token))
+            return Results.Problem(statusCode: 409, title: "Yeni işletme saatleri mevcut randevuları dışarıda bırakıyor.",
+                extensions: new Dictionary<string, object?> { ["code"] = "appointments_outside_hours" });
         foreach (var item in desired)
         {
             var existing = current.SingleOrDefault(day => day.Day == item.Day);

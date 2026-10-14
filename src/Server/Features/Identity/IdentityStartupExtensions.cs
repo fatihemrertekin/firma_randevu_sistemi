@@ -200,11 +200,11 @@ public static class IdentityStartupExtensions
                         PermitLimit = 10,
                         Window = TimeSpan.FromMinutes(5)
                     }));
-            foreach (var policy in new[] { "staff-management", "service-management", "business-hours", "audit-log" })
+            foreach (var policy in new[] { "staff-management", "service-management", "business-hours", "audit-log", "appointments" })
                 options.AddPolicy(policy, context => RateLimitPartition.GetFixedWindowLimiter(
                 context.Connection.RemoteIpAddress?.ToString() ?? "unknown", _ => new FixedWindowRateLimiterOptions
                 {
-                    PermitLimit = 30,
+                    PermitLimit = policy == "appointments" ? 60 : 30,
                     Window = TimeSpan.FromMinutes(1)
                 }));
         });

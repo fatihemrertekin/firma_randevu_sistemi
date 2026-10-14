@@ -5,6 +5,7 @@ using Server.Features.Audit;
 using Server.Features.Identity;
 using Server.Features.Staff;
 using Server.Features.Services;
+using Server.Features.Scheduling;
 using Server.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -39,6 +40,7 @@ app.MapBusinessHoursEndpoints();
 app.MapAuditLogEndpoints();
 app.MapStaffMemberEndpoints();
 app.MapServiceDefinitionEndpoints();
+app.MapAppointmentEndpoints();
 
 app.MapGet("/health/live", () => Results.Ok(new { status = "ok" }));
 

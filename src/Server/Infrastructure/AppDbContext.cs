@@ -22,6 +22,10 @@ public sealed class OwnerMfaRecoveryAudit
 public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     : IdentityDbContext<AppUser, IdentityRole<Guid>, Guid>(options)
 {
+    public DbSet<Appointment> Appointments => Set<Appointment>();
+    public DbSet<AppointmentTimeBlock> AppointmentTimeBlocks => Set<AppointmentTimeBlock>();
+    public DbSet<AppointmentAudit> AppointmentAudits => Set<AppointmentAudit>();
+    public DbSet<BookingPolicy> BookingPolicies => Set<BookingPolicy>();
     public DbSet<OwnerMfaRecoveryAudit> OwnerMfaRecoveryAudits => Set<OwnerMfaRecoveryAudit>();
     public DbSet<OwnerPasswordResetAudit> OwnerPasswordResetAudits => Set<OwnerPasswordResetAudit>();
     public DbSet<StaffInvitation> StaffInvitations => Set<StaffInvitation>();
@@ -50,6 +54,46 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
+        builder.HasPostgresExtension("btree_gist");
+        var appointment = builder.Entity<Appointment>();
+        appointment.Property(item => item.RequestHash).HasMaxLength(64);
+        appointment.Property(item => item.CustomerName).HasMaxLength(100);
+        appointment.Property(item => item.CustomerPhone).HasMaxLength(13);
+        appointment.Property(item => item.Version).IsConcurrencyToken();
+        appointment.HasIndex(item => new { item.ActorId, item.RequestKey }).IsUnique();
+        appointment.HasOne<AppUser>().WithMany().HasForeignKey(item => item.ActorId).OnDelete(DeleteBehavior.Restrict);
+        appointment.ToTable(table =>
+        {
+            table.HasCheckConstraint("CK_Appointments_Request", "\"RequestKey\" <> '00000000-0000-0000-0000-000000000000'::uuid AND \"RequestHash\" ~ '^[0-9A-F]{64}$'");
+            table.HasCheckConstraint("CK_Appointments_Customer", "length(btrim(\"CustomerName\")) BETWEEN 2 AND 100 AND \"CustomerPhone\" ~ '^\\+90[2345][0-9]{9}$'");
+        });
+        var block = builder.Entity<AppointmentTimeBlock>();
+        block.HasKey(item => item.AppointmentId);
+        block.HasOne<Appointment>().WithOne().HasForeignKey<AppointmentTimeBlock>(item => item.AppointmentId).OnDelete(DeleteBehavior.Restrict);
+        block.HasOne<StaffMember>().WithMany().HasForeignKey(item => item.StaffMemberId).OnDelete(DeleteBehavior.Restrict);
+        block.HasOne<ServiceDefinition>().WithMany().HasForeignKey(item => item.ServiceDefinitionId).OnDelete(DeleteBehavior.Restrict);
+        block.Property(item => item.StaffName).HasMaxLength(100);
+        block.Property(item => item.ServiceName).HasMaxLength(100);
+        block.Property(item => item.Currency).HasMaxLength(3);
+        block.Property(item => item.Price).HasPrecision(8, 2);
+        block.Property(item => item.Status).HasMaxLength(16);
+        block.Property(item => item.Occupied).HasColumnType("tstzrange").HasComputedColumnSql("tstzrange(\"StartsAt\", \"EndsAt\", '[)')", stored: true);
+        block.HasIndex(item => new { item.StaffMemberId, item.StartsAt });
+        block.ToTable(table =>
+        {
+            table.HasCheckConstraint("CK_AppointmentTimeBlocks_Time", "isfinite(\"StartsAt\") AND isfinite(\"EndsAt\") AND \"EndsAt\" > \"StartsAt\" AND \"DurationMinutes\" BETWEEN 1 AND 1440 AND \"EndsAt\" = \"StartsAt\" + \"DurationMinutes\" * INTERVAL '1 minute'");
+            table.HasCheckConstraint("CK_AppointmentTimeBlocks_Snapshot", "length(btrim(\"StaffName\")) > 0 AND length(btrim(\"ServiceName\")) > 0 AND \"Price\" BETWEEN 0 AND 999999.99 AND \"Currency\" = 'TRY'");
+            table.HasCheckConstraint("CK_AppointmentTimeBlocks_Status", "\"Status\" IN ('Pending','Confirmed','Completed','NoShow','Cancelled')");
+        });
+        var appointmentAudit = builder.Entity<AppointmentAudit>();
+        appointmentAudit.HasOne<Appointment>().WithMany().HasForeignKey(item => item.AppointmentId).OnDelete(DeleteBehavior.Restrict);
+        appointmentAudit.HasOne<AppUser>().WithMany().HasForeignKey(item => item.ActorId).OnDelete(DeleteBehavior.Restrict);
+        appointmentAudit.HasIndex(item => new { item.AppointmentId, item.AppointmentVersion }).IsUnique();
+        var policy = builder.Entity<BookingPolicy>();
+        policy.Property(item => item.Id).ValueGeneratedNever();
+        policy.Property(item => item.Version).IsConcurrencyToken();
+        policy.ToTable(table => table.HasCheckConstraint("CK_BookingPolicies_Values", "\"Id\" = 1 AND \"LeadMinutes\" BETWEEN 0 AND 43200 AND \"HorizonDays\" BETWEEN 1 AND 365 AND \"SlotMinutes\" BETWEEN 1 AND 60"));
+        policy.HasData(new BookingPolicy { Id = 1, LeadMinutes = 60, HorizonDays = 30, SlotMinutes = 15, Version = Guid.Parse("4928211e-eaba-4086-8a82-f2ca1a83908e") });
         // Tek zaman çizelgesinin her kaynağında anahtarlı sayfalama: eski kayıt/veri değişmez.
         builder.Entity<BusinessProfileAudit>().HasIndex(entry => new { entry.OccurredAt, entry.Id }).IsDescending(true, true);
         builder.Entity<BusinessLogoAudit>().HasIndex(entry => new { entry.OccurredAt, entry.Id }).IsDescending(true, true);

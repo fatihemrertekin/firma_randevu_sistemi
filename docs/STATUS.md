@@ -17,7 +17,7 @@ Sade menü ve ortak sayfalama `done`: [PR #57](https://github.com/fatihemrerteki
 | P00 — İş ve ürün tanımı | `done` | [P00 planı](plans/P00.md) ve [ürün kararları](PRODUCT.md#2-ürün-kararları); işletme görüşmeleri ve gerçek pilot yapılmış sayılmaz. |
 | P01 — Temel ve CI | `done` | [P01 kanıtı](plans/P01.md#kanıt); PR #1 birleşme commit'i `10527c1`. |
 | P02 — Kimlik ve tanımlar | `done` | P02-01–P02-23 ve onaylanan yerel kapanış kontrolü tamamlandı; [kapanış kanıtı ve P03 sınırı](plans/P02.md#p02-kapanış-kontrolü--04102026). Üretim/pilot ve tam restore kabulü değildir. |
-| P03 — Randevu motoru | `planned` | [Başlangıç planı](plans/P03.md) ve [ADR önerisi](adr/005-appointment-time-blocks.md) hazır; P03-02 kodu/migration/kabulü yok. |
+| P03 — Randevu motoru | `in_progress` | P03-02 Owner API/çakışma/tekrar/mesai koruması yerel kabulde; [kabul](plans/P03.md#p03-02-yerel-geliştirme-kabulü--14102026), [ADR](adr/005-appointment-time-blocks.md). Kalan motor işleri ve müşteri ekranı teslim edilmedi. |
 | P04–P17 | `planned` | Yalnız [ROADMAP](ROADMAP.md) düzeyinde; yeni uygulama yetkisi veya kabul kanıtı yok. |
 
 ## Son doğrulanan teslim ve sınırlar
@@ -84,7 +84,7 @@ T07 Değişiklik kayıtları bakımı ve güvenli bağımlılık yaması `done`:
 
 T08 dört bulgunun geliştirme/GitHub/ana yerel teslimi `done` (14.10.2026): [PR #72](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/72) `d73729e` ile birleşti; aynı commit için [main CI](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/38578300443) başarılı. 262 web testi, sentetik 71 durum/235 kayıt ve ana anonim 56 görüntü/paket kabulü geçti. Şifreli yedek sonrası 32 tablo/hesap/MFA/anahtar/ayar/SMTP korundu; 8080 sağlık/restart başarılı. [Düzeltme](plans/P02.md#t08-dört-bulgunun-düzeltmesi--14102026), [ana teslim ve sınırlar](plans/P02.md#t08-ana-yerel-teslim--14102026). Her geliştirmede ana uygulamayı güncelleme kuralı kök AGENTS.md'ye eklendi. P02 son kabul kontrolü tamamlandı; P03 başlangıç planı aşağıdadır. P03 uygulaması başlamadı.
 
-P03 başlangıç planı hazırlığı `done`, motor geliştirmesi `planned` (14.10.2026): kullanıcı rezervasyon için 60 dakika ön süre/30 gün ufuk/15 dakika başlangıç adımı seçti. [P03 planı](plans/P03.md), [ADR-005 önerisi](adr/005-appointment-time-blocks.md). Sonraki tek iş önerilen model ve P03-02 kapsamıyla MFA Owner için uygunluk/tek randevu oluşturma API'sini geliştirmektir; müşteri ekranı/OTP P04/P05'tedir. Kod, migration veya ana uygulama değişikliği yapılmadı; mimari karar öneri durumundadır.
+P03-02 geliştirme ve yerel kabul done; GitHub/ana teslim in_progress (14.10.2026): tek hizmet/personel uygunluğu, Confirmed oluştur/oku, snapshot/idempotency, GiST ve mesai daraltma koruması. 19 yeni PostgreSQL senaryosu, 39 ilgili regresyon, 26 web testi ve gerçek HTTP/Chrome 16 görüntü kabulü geçti. [Kapsam/kanıt/geri dönüş](plans/P03.md#p03-02-yerel-geliştirme-kabulü--14102026). İlk 60 dakika/30 gün/15 dakika değerleri uygulanır. Sonraki tek aday P03-03 kapsamını hazırlamaktır; geliştirmesi başlamadı.
 
 ## Gelecek plan kaydı — destek ve işletim ekranı (02.10.2026)
 

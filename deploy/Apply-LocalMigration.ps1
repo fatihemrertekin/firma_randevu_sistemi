@@ -17,6 +17,12 @@ if ($LASTEXITCODE -ne 0) {
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE
   "AspNetRoles", "AspNetRoleClaims", "AspNetUsers", "AspNetUserClaims",
   "AspNetUserLogins", "AspNetUserRoles", "AspNetUserTokens" TO app_user;
+GRANT SELECT, INSERT ON TABLE "Appointments", "AppointmentTimeBlocks", "AppointmentAudits" TO app_user;
+REVOKE UPDATE, DELETE, TRUNCATE ON TABLE "Appointments", "AppointmentTimeBlocks", "AppointmentAudits" FROM app_user;
+GRANT SELECT ON TABLE "BookingPolicies" TO app_user;
+REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON TABLE "BookingPolicies" FROM app_user;
+-- FOR SHARE politika değerlerini sabitler; tekil Id yalnız 1 kalabilir.
+GRANT UPDATE ("Id") ON TABLE "BookingPolicies" TO app_user;
 GRANT SELECT, INSERT ON TABLE "OwnerMfaRecoveryAudits" TO app_user;
 REVOKE UPDATE, DELETE, TRUNCATE ON TABLE "OwnerMfaRecoveryAudits" FROM app_user;
 GRANT SELECT, INSERT ON TABLE "OwnerPasswordResetAudits" TO app_user;

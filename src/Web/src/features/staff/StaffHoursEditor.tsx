@@ -1,10 +1,10 @@
 import { useCallback } from 'react'
 import WeeklyHoursEditor, { type HoursSnapshot } from '../../components/WeeklyHoursEditor'
-import { HoursError, parseHours, retrySeconds } from '../../app/weeklyHoursApi'
+import { HoursError, hoursResponseError, parseHours } from '../../app/weeklyHoursApi'
 import { isMember, type StaffMember, type StaffPost } from './staffMembersApi'
 
 async function readStaffHours(response: Response, memberId: string, onMemberRead?: (member: StaffMember) => void): Promise<HoursSnapshot> {
-  if (!response.ok) throw new HoursError(response.status, response.status === 429 ? retrySeconds(response) : 0)
+  if (!response.ok) throw await hoursResponseError(response)
   const value: unknown = await response.json()
   const hours = parseHours(value)
   if (typeof value !== 'object' || value === null || !('member' in value) || !isMember(value.member) || value.member.id !== memberId || value.member.version !== hours.version) throw new HoursError(500)
