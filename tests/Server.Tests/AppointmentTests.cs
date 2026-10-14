@@ -46,7 +46,7 @@ public sealed class AppointmentTests
         Assert.True(response.Headers.CacheControl?.NoStore);
         return Assert.IsType<AppointmentEndpoints.AppointmentResponse>(await response.Content.ReadFromJsonAsync<AppointmentEndpoints.AppointmentResponse>(Token));
     }
-    private static async Task<HttpClient> OtherOwnerAsync(RecoverySeed seed)
+    internal static async Task<HttpClient> OtherOwnerAsync(RecoverySeed seed)
     {
         using var scope = seed.App.Services.CreateScope();
         var users = scope.ServiceProvider.GetRequiredService<UserManager<AppUser>>();

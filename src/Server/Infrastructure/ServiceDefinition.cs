@@ -5,6 +5,8 @@ public sealed class ServiceDefinition
     public Guid Id { get; set; }
     public required string Name { get; set; }
     public int DurationMinutes { get; set; }
+    public int BufferBeforeMinutes { get; set; }
+    public int BufferAfterMinutes { get; set; }
     public decimal Price { get; set; }
     public required string Currency { get; set; }
     public bool IsActive { get; set; } = true;

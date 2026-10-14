@@ -77,13 +77,16 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
         block.Property(item => item.Currency).HasMaxLength(3);
         block.Property(item => item.Price).HasPrecision(8, 2);
         block.Property(item => item.Status).HasMaxLength(16);
-        block.Property(item => item.Occupied).HasColumnType("tstzrange").HasComputedColumnSql("tstzrange(\"StartsAt\", \"EndsAt\", '[)')", stored: true);
-        block.HasIndex(item => new { item.StaffMemberId, item.StartsAt });
+        block.Property(item => item.BufferBeforeMinutes).HasDefaultValue(0);
+        block.Property(item => item.BufferAfterMinutes).HasDefaultValue(0);
+        block.Property(item => item.Occupied).HasColumnType("tstzrange").HasComputedColumnSql("tstzrange(\"OccupiedStartsAt\", \"OccupiedEndsAt\", '[)')", stored: true);
+        block.HasIndex(item => new { item.StaffMemberId, item.OccupiedStartsAt });
         block.ToTable(table =>
         {
             table.HasCheckConstraint("CK_AppointmentTimeBlocks_Time", "isfinite(\"StartsAt\") AND isfinite(\"EndsAt\") AND \"EndsAt\" > \"StartsAt\" AND \"DurationMinutes\" BETWEEN 1 AND 1440 AND \"EndsAt\" = \"StartsAt\" + \"DurationMinutes\" * INTERVAL '1 minute'");
             table.HasCheckConstraint("CK_AppointmentTimeBlocks_Snapshot", "length(btrim(\"StaffName\")) > 0 AND length(btrim(\"ServiceName\")) > 0 AND \"Price\" BETWEEN 0 AND 999999.99 AND \"Currency\" = 'TRY'");
             table.HasCheckConstraint("CK_AppointmentTimeBlocks_Status", "\"Status\" IN ('Pending','Confirmed','Completed','NoShow','Cancelled')");
+            table.HasCheckConstraint("CK_AppointmentTimeBlocks_Buffers", "\"BufferBeforeMinutes\" BETWEEN 0 AND 120 AND \"BufferAfterMinutes\" BETWEEN 0 AND 120 AND isfinite(\"OccupiedStartsAt\") AND isfinite(\"OccupiedEndsAt\") AND (\"OccupiedStartsAt\" AT TIME ZONE 'UTC') = (\"StartsAt\" AT TIME ZONE 'UTC') - \"BufferBeforeMinutes\" * INTERVAL '1 minute' AND (\"OccupiedEndsAt\" AT TIME ZONE 'UTC') = (\"EndsAt\" AT TIME ZONE 'UTC') + \"BufferAfterMinutes\" * INTERVAL '1 minute'");
         });
         var appointmentAudit = builder.Entity<AppointmentAudit>();
         appointmentAudit.HasOne<Appointment>().WithMany().HasForeignKey(item => item.AppointmentId).OnDelete(DeleteBehavior.Restrict);
@@ -157,11 +160,14 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
         service.Property(entry => entry.Price).HasPrecision(8, 2);
         service.Property(entry => entry.Version).IsConcurrencyToken();
         service.Property(entry => entry.IsDeleted).HasDefaultValue(false);
+        service.Property(entry => entry.BufferBeforeMinutes).HasDefaultValue(0);
+        service.Property(entry => entry.BufferAfterMinutes).HasDefaultValue(0);
         service.HasIndex(entry => new { entry.Name, entry.Id });
         service.ToTable(table =>
         {
             table.HasCheckConstraint("CK_ServiceDefinitions_Name", "length(btrim(\"Name\")) > 0");
             table.HasCheckConstraint("CK_ServiceDefinitions_Duration", "\"DurationMinutes\" BETWEEN 1 AND 1440");
+            table.HasCheckConstraint("CK_ServiceDefinitions_Buffers", "\"BufferBeforeMinutes\" BETWEEN 0 AND 120 AND \"BufferAfterMinutes\" BETWEEN 0 AND 120");
             table.HasCheckConstraint("CK_ServiceDefinitions_Price", "\"Price\" BETWEEN 0 AND 999999.99");
             table.HasCheckConstraint("CK_ServiceDefinitions_Currency", "\"Currency\" = 'TRY'");
             table.HasCheckConstraint("CK_ServiceDefinitions_DeletedInactive", "NOT \"IsDeleted\" OR NOT \"IsActive\"");

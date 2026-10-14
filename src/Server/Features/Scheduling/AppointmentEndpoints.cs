@@ -18,7 +18,8 @@ public static class AppointmentEndpoints
         string? StartsAt, string? CustomerName, string? CustomerPhone);
     public sealed record AppointmentResponse(Guid Id, Guid Version, Guid StaffMemberId, string StaffName,
         Guid ServiceId, string ServiceName, int DurationMinutes, decimal Price, string Currency,
-        DateTime StartsAt, DateTime EndsAt, string Status, string CustomerName, string CustomerPhone);
+        DateTime StartsAt, DateTime EndsAt, string Status, string CustomerName, string CustomerPhone,
+        int BufferBeforeMinutes, int BufferAfterMinutes, DateTime OccupiedStartsAt, DateTime OccupiedEndsAt);
     public sealed record AvailabilityResponse(string TimeZone, Guid ServiceVersion, DateTime[] StartsAt);
 
     public static void MapAppointmentEndpoints(this IEndpointRouteBuilder app)
@@ -43,7 +44,8 @@ public static class AppointmentEndpoints
          where appointment.Id == id
          select new AppointmentResponse(appointment.Id, appointment.Version, block.StaffMemberId, block.StaffName,
              block.ServiceDefinitionId, block.ServiceName, block.DurationMinutes, block.Price, block.Currency,
-             block.StartsAt, block.EndsAt, block.Status, appointment.CustomerName, appointment.CustomerPhone)).SingleOrDefaultAsync(token);
+             block.StartsAt, block.EndsAt, block.Status, appointment.CustomerName, appointment.CustomerPhone,
+             block.BufferBeforeMinutes, block.BufferAfterMinutes, block.OccupiedStartsAt, block.OccupiedEndsAt)).SingleOrDefaultAsync(token);
 
     private static async Task<IResult> ReadAsync(Guid id, HttpContext context, AppDbContext db)
     {
@@ -82,15 +84,17 @@ public static class AppointmentEndpoints
                 var first = day.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc).AddDays(-1);
                 var last = first.AddDays(3);
                 var occupied = await db.AppointmentTimeBlocks.AsNoTracking().Where(item => item.StaffMemberId == member.Id &&
-                    item.Status != "Cancelled" && item.StartsAt < last && item.EndsAt > first)
-                    .Select(item => new { item.StartsAt, item.EndsAt }).ToArrayAsync(timeout.Token);
+                    item.Status != "Cancelled" && item.OccupiedStartsAt < last && item.OccupiedEndsAt > first)
+                    .Select(item => new { item.OccupiedStartsAt, item.OccupiedEndsAt }).ToArrayAsync(timeout.Token);
                 for (var minute = 0; minute < 1440; minute += policy.SlotMinutes)
                 {
                     if (!AppointmentRules.TryUtc(day, minute, AppointmentRules.Istanbul, out var start) || !AppointmentRules.InWindow(start, now, policy)) continue;
                     var end = start.AddMinutes(service.DurationMinutes);
-                    if (AppointmentRules.FitsDay(start, end, businessDay.IsClosed, businessDay.OpensAtMinute, businessDay.ClosesAtMinute) &&
-                        AppointmentRules.FitsDay(start, end, staffDay.IsClosed, staffDay.OpensAtMinute, staffDay.ClosesAtMinute) &&
-                        !occupied.Any(item => item.StartsAt < end && start < item.EndsAt)) starts.Add(start);
+                    var occupiedStart = start.AddMinutes(-service.BufferBeforeMinutes);
+                    var occupiedEnd = end.AddMinutes(service.BufferAfterMinutes);
+                    if (AppointmentRules.FitsDay(occupiedStart, occupiedEnd, businessDay.IsClosed, businessDay.OpensAtMinute, businessDay.ClosesAtMinute) &&
+                        AppointmentRules.FitsDay(occupiedStart, occupiedEnd, staffDay.IsClosed, staffDay.OpensAtMinute, staffDay.ClosesAtMinute) &&
+                        !occupied.Any(item => item.OccupiedStartsAt < occupiedEnd && occupiedStart < item.OccupiedEndsAt)) starts.Add(start);
                 }
             }
         }
@@ -141,13 +145,15 @@ public static class AppointmentEndpoints
         var now = clock.GetUtcNow().UtcDateTime;
         if (!AppointmentRules.InWindow(start, now, policy)) return Conflict("Başlangıç rezervasyon aralığına ve saat adımına uygun değil.");
         var end = start.AddMinutes(service.DurationMinutes);
+        var occupiedStart = start.AddMinutes(-service.BufferBeforeMinutes);
+        var occupiedEnd = end.AddMinutes(service.BufferAfterMinutes);
         var weekday = AppointmentRules.WeekDay(start);
         var businessDay = await db.BusinessOpeningDays.SingleOrDefaultAsync(item => item.Day == weekday, timeout.Token);
         var staffDay = await db.StaffWorkingDays.SingleOrDefaultAsync(item => item.StaffMemberId == member.Id && item.Day == weekday, timeout.Token);
         if (businessDay is null || staffDay is null ||
-            !AppointmentRules.FitsDay(start, end, businessDay.IsClosed, businessDay.OpensAtMinute, businessDay.ClosesAtMinute) ||
-            !AppointmentRules.FitsDay(start, end, staffDay.IsClosed, staffDay.OpensAtMinute, staffDay.ClosesAtMinute))
-            return Conflict("Randevunun tamamı işletme ve personel mesaisinde olmalı.");
+            !AppointmentRules.FitsDay(occupiedStart, occupiedEnd, businessDay.IsClosed, businessDay.OpensAtMinute, businessDay.ClosesAtMinute) ||
+            !AppointmentRules.FitsDay(occupiedStart, occupiedEnd, staffDay.IsClosed, staffDay.OpensAtMinute, staffDay.ClosesAtMinute))
+            return Conflict("Randevu ve tampon sürelerinin tamamı işletme ve personel mesaisinde olmalı.");
         var appointment = new Appointment
         {
             Id = Guid.NewGuid(),
@@ -167,6 +173,10 @@ public static class AppointmentEndpoints
             StaffName = member.Name,
             ServiceName = service.Name,
             DurationMinutes = service.DurationMinutes,
+            BufferBeforeMinutes = service.BufferBeforeMinutes,
+            BufferAfterMinutes = service.BufferAfterMinutes,
+            OccupiedStartsAt = occupiedStart,
+            OccupiedEndsAt = occupiedEnd,
             Price = service.Price,
             Currency = service.Currency,
             StartsAt = start,
@@ -195,7 +205,8 @@ public static class AppointmentEndpoints
         }
         return Results.Created($"/api/appointments/{appointment.Id}", new AppointmentResponse(appointment.Id, appointment.Version,
             member.Id, block.StaffName, service.Id, block.ServiceName, block.DurationMinutes, block.Price, block.Currency,
-            start, end, block.Status, appointment.CustomerName, appointment.CustomerPhone));
+            start, end, block.Status, appointment.CustomerName, appointment.CustomerPhone,
+            block.BufferBeforeMinutes, block.BufferAfterMinutes, block.OccupiedStartsAt, block.OccupiedEndsAt));
     }
 
     private static IResult Conflict(string title) => Results.Problem(statusCode: 409, title: title);

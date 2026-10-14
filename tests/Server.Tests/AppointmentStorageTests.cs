@@ -27,15 +27,16 @@ public sealed class AppointmentStorageTests
     }
 
     private static async Task<string> InsertAsync(string connectionString, Guid owner, Guid member, Guid service,
-        DateTime start, string status = "Confirmed", int duration = 20)
+        DateTime start, string status = "Confirmed", int duration = 20, int before = 0, int after = 0, string zone = "UTC")
     {
         await using var connection = new NpgsqlConnection(connectionString); await connection.OpenAsync(Token);
         await using var transaction = await connection.BeginTransactionAsync(Token);
         await using var command = new NpgsqlCommand("""
+            SELECT set_config('TimeZone', @zone, true);
             INSERT INTO "Appointments" ("Id","ActorId","RequestKey","RequestHash","CustomerName","CustomerPhone","CreatedAt","Version")
             VALUES (@id,@owner,@key,@hash,'Sentetik müşteri','+905000000001',@start,@version);
-            INSERT INTO "AppointmentTimeBlocks" ("AppointmentId","StaffMemberId","ServiceDefinitionId","StaffName","ServiceName","DurationMinutes","Price","Currency","StartsAt","EndsAt","Status")
-            VALUES (@id,@member,@service,'Sentetik personel','Sentetik hizmet',@duration,123.45,'TRY',@start,@end,@status);
+            INSERT INTO "AppointmentTimeBlocks" ("AppointmentId","StaffMemberId","ServiceDefinitionId","StaffName","ServiceName","DurationMinutes","Price","Currency","StartsAt","EndsAt","BufferBeforeMinutes","BufferAfterMinutes","OccupiedStartsAt","OccupiedEndsAt","Status")
+            VALUES (@id,@member,@service,'Sentetik personel','Sentetik hizmet',@duration,123.45,'TRY',@start,@end,@before,@after,@occupiedStart,@occupiedEnd,@status);
             INSERT INTO "AppointmentAudits" ("Id","AppointmentId","ActorId","AppointmentVersion","OccurredAt")
             VALUES (@audit,@id,@owner,@version,@start);
             """, connection, transaction);
@@ -45,6 +46,9 @@ public sealed class AppointmentStorageTests
         command.Parameters.AddWithValue("member", member); command.Parameters.AddWithValue("service", service);
         command.Parameters.AddWithValue("start", start); command.Parameters.AddWithValue("end", start.AddMinutes(duration));
         command.Parameters.AddWithValue("duration", duration); command.Parameters.AddWithValue("status", status);
+        command.Parameters.AddWithValue("before", before); command.Parameters.AddWithValue("after", after);
+        command.Parameters.AddWithValue("zone", zone);
+        command.Parameters.AddWithValue("occupiedStart", start.AddMinutes(-before)); command.Parameters.AddWithValue("occupiedEnd", start.AddMinutes(duration + after));
         try
         {
             await command.ExecuteNonQueryAsync(Token); await transaction.CommitAsync(Token); return "created";
@@ -53,6 +57,37 @@ public sealed class AppointmentStorageTests
         {
             await transaction.RollbackAsync(Token); return exception.SqlState;
         }
+    }
+
+    [Fact]
+    public async Task BufferMigrationBackfillsExistingBlocksAndProtectsExpandedIntervalsAndDown()
+    {
+        await using var database = RecoveryDatabase(); await database.StartAsync(Token);
+        var seed = await CreateRecoveryAppAsync(database.GetConnectionString()); await using var app = seed.App;
+        await AppointmentTests.ConfigureAsync(app);
+        using var scope = app.Services.CreateScope(); var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var member = await db.StaffMembers.OrderBy(item => item.Id).FirstAsync(Token); var service = await db.ServiceDefinitions.SingleAsync(Token);
+        Assert.Equal("created", await InsertAsync(database.GetConnectionString(), seed.OwnerId, member.Id, service.Id, Start));
+        var original = await db.Appointments.AsNoTracking().SingleAsync(Token);
+        var migrator = db.GetService<IMigrator>(); await migrator.MigrateAsync("20261014154014_AppointmentEngine", Token);
+        await migrator.MigrateAsync(cancellationToken: Token); await migrator.MigrateAsync(cancellationToken: Token);
+        var retained = await db.AppointmentTimeBlocks.AsNoTracking().SingleAsync(Token);
+        Assert.Equal(original.Version, (await db.Appointments.AsNoTracking().SingleAsync(Token)).Version);
+        Assert.Equal(Start, retained.OccupiedStartsAt); Assert.Equal(Start.AddMinutes(20), retained.OccupiedEndsAt); Assert.Equal(0, retained.BufferBeforeMinutes);
+        Assert.Equal(service.Price, await db.ServiceDefinitions.Select(item => item.Price).SingleAsync(Token)); Assert.Single(await db.AppointmentAudits.ToArrayAsync(Token));
+        Assert.False(db.Database.HasPendingModelChanges()); await AssertOriginalStateAsync(app, seed);
+        Assert.Equal("created", await InsertAsync(database.GetConnectionString(), seed.OwnerId, member.Id, service.Id, Start.AddHours(2), before: 5, after: 10));
+        Assert.Equal("23P01", await InsertAsync(database.GetConnectionString(), seed.OwnerId, member.Id, service.Id, Start.AddHours(2).AddMinutes(30), before: 5, after: 10));
+        Assert.Equal("created", await InsertAsync(database.GetConnectionString(), seed.OwnerId, member.Id, service.Id, Start.AddHours(2).AddMinutes(35), before: 5, after: 10));
+        var results = await Task.WhenAll(Enumerable.Range(0, 20).Select(_ => InsertAsync(database.GetConnectionString(), seed.OwnerId, member.Id, service.Id, Start.AddHours(4), before: 7, after: 11)));
+        Assert.Single(results, item => item == "created"); Assert.Equal(19, results.Count(item => item == "23P01"));
+        foreach (var sql in new[] { "UPDATE \"ServiceDefinitions\" SET \"BufferBeforeMinutes\"=-1", "UPDATE \"AppointmentTimeBlocks\" SET \"OccupiedEndsAt\"=\"EndsAt\" WHERE \"BufferAfterMinutes\">0", "UPDATE \"AppointmentTimeBlocks\" SET \"BufferAfterMinutes\"=121", "UPDATE \"AppointmentTimeBlocks\" SET \"OccupiedStartsAt\"='-infinity'" })
+        {
+            var failure = await Assert.ThrowsAsync<PostgresException>(() => db.Database.ExecuteSqlRawAsync(sql, Token)); Assert.Equal("23514", failure.SqlState);
+        }
+        Assert.Equal("created", await InsertAsync(database.GetConnectionString(), seed.OwnerId, member.Id, service.Id, Start.AddHours(6), before: 5, after: 10, zone: "America/New_York"));
+        var refusal = await Assert.ThrowsAsync<PostgresException>(() => migrator.MigrateAsync("20261014154014_AppointmentEngine", Token)); Assert.Equal("P0001", refusal.SqlState);
+        Assert.Equal(5, await db.Appointments.CountAsync(Token)); Assert.Equal(5, await db.AppointmentAudits.CountAsync(Token));
     }
 
     [Fact]
@@ -106,7 +141,7 @@ public sealed class AppointmentStorageTests
         Assert.False(db.Database.HasPendingModelChanges());
         var migrator = db.GetService<IMigrator>(); await migrator.MigrateAsync("20261005005021_DefinitionDeletion", Token);
         Assert.Equal(2, await db.StaffMembers.CountAsync(Token)); Assert.Equal(14, await db.StaffWorkingDays.CountAsync(Token));
-        Assert.Equal(service.Price, (await db.ServiceDefinitions.SingleAsync(Token)).Price); await AssertOriginalStateAsync(app, seed);
+        Assert.Equal(service.Price, await db.ServiceDefinitions.Select(item => item.Price).SingleAsync(Token)); await AssertOriginalStateAsync(app, seed);
         await migrator.MigrateAsync(cancellationToken: Token); await migrator.MigrateAsync(cancellationToken: Token);
         Assert.Empty(await db.Appointments.ToArrayAsync(Token)); Assert.Empty(await db.AppointmentAudits.ToArrayAsync(Token));
         Assert.Equal(15, (await db.BookingPolicies.AsNoTracking().SingleAsync(Token)).SlotMinutes);
@@ -135,11 +170,14 @@ public sealed class AppointmentStorageTests
         });
         using var owner = limited.CreateClient(); await PasswordStepAsync(owner); await CompleteMfaAsync(owner, seed.Key);
         var member = await db.StaffMembers.OrderBy(item => item.Id).FirstAsync(Token); var service = await db.ServiceDefinitions.SingleAsync(Token);
+        using var buffersWrite = await PostAsync(owner, $"/api/services/{service.Id}/buffers", new { version = service.Version, bufferBeforeMinutes = 5, bufferAfterMinutes = 10 }, await GetCsrfAsync(owner));
+        Assert.Equal(HttpStatusCode.OK, buffersWrite.StatusCode);
+        var buffers = Assert.IsType<Server.Features.Services.ServiceDefinitionEndpoints.BuffersResponse>(await buffersWrite.Content.ReadFromJsonAsync<Server.Features.Services.ServiceDefinitionEndpoints.BuffersResponse>(Token));
         using var response = await PostAsync(owner, "/api/appointments/", new
         {
             requestKey = Guid.NewGuid(),
             serviceId = service.Id,
-            serviceVersion = service.Version,
+            serviceVersion = buffers.Version,
             staffMemberId = member.Id,
             startsAt = "2026-10-15T10:00:00+03:00",
             customerName = "Sentetik müşteri",
@@ -147,6 +185,7 @@ public sealed class AppointmentStorageTests
         }, await GetCsrfAsync(owner));
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
         Assert.NotNull(await response.Content.ReadFromJsonAsync<AppointmentEndpoints.AppointmentResponse>(Token));
+        var saved = await db.AppointmentTimeBlocks.AsNoTracking().SingleAsync(Token); Assert.Equal(5, saved.BufferBeforeMinutes); Assert.Equal(10, saved.BufferAfterMinutes);
         await using var connection = new NpgsqlConnection(limitedConnection); await connection.OpenAsync(Token);
         foreach (var sql in new[] { "UPDATE \"AppointmentAudits\" SET \"ActorId\"=\"ActorId\"", "DELETE FROM \"Appointments\"", "UPDATE \"BookingPolicies\" SET \"LeadMinutes\"=0" })
         {

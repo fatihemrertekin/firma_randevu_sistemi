@@ -22,10 +22,14 @@ public sealed class AppointmentTimeBlock
     public required string StaffName { get; set; }
     public required string ServiceName { get; set; }
     public int DurationMinutes { get; set; }
+    public int BufferBeforeMinutes { get; set; }
+    public int BufferAfterMinutes { get; set; }
     public decimal Price { get; set; }
     public required string Currency { get; set; }
     public DateTime StartsAt { get; set; }
     public DateTime EndsAt { get; set; }
+    public DateTime OccupiedStartsAt { get; set; }
+    public DateTime OccupiedEndsAt { get; set; }
     public NpgsqlRange<DateTime> Occupied { get; set; }
     public required string Status { get; set; }
 }

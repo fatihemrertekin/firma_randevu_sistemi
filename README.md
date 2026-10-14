@@ -296,3 +296,11 @@ MFA Owner için tek hizmet/çalışan: `GET /api/appointments/availability?servi
 `AppointmentEngine` eklemeli migration'ı randevu/blok/audit/politika tablolarını ve GiST/btree_gist korumasını ekler; yukarıdaki kontrollü migration komutu kısıtlı app_user yetkilerini uygular. Mesai daraltması mevcut randevuyu dışarıda bırakırsa iki saat formu açıklama gösterir ve daha geniş saatlerle düzeltmeye izin verir. Randevu verisi oluştuktan sonra eski imaj mesai güvencesini bilmez: otomatik Down/restore/uyumsuz imaj dönüşü yapmayın. [Kabul ve geri dönüş sınırları](docs/plans/P03.md#p03-02-yerel-geliştirme-kabulü--14102026).
 
 İlgili regresyon komutu: kökten `dotnet test FirmaRandevu.slnx --no-restore --filter "FullyQualifiedName~AppointmentTests|FullyQualifiedName~AppointmentStorageTests|FullyQualifiedName~BusinessHoursTests|FullyQualifiedName~StaffHoursTests"`; web dizininde `npm.cmd test -- BusinessHours.test.tsx StaffHoursEditor.test.tsx`. Yayında mevcut tam CI kapıları korunur.
+
+## Hizmet tamponu API'si (P03-03A)
+
+MFA Owner `GET /api/services/{id}/buffers` ile hizmet sürümü ve ön/arka tamponu okur; CSRF ile aynı yolun POST'u `version`, `bufferBeforeMinutes` ve `bufferAfterMinutes` alır. İki süre 0–120 tam dakikadır, eksik alan 400 ve eski sürüm 409'dur. Mevcut/yeni hizmette başlangıç 0; mevcut hizmet formu tampon ayarını sıfırlamaz. Tampon editörü veya yeni ekran bu işte yoktur.
+
+Randevunun hizmet başlangıcı/bitişi değişmez; iki tampon snapshot'ı ile genişleyen dolu aralık uygunluk, mesai ve PostgreSQL GiST kontrolünde kullanılır. Yeni ayar geçmiş kaydı büyütmez; randevu okuması snapshot'ları ve dolu anları içerir. `AppointmentBuffers` migration'ı önceki blokları 0 tamponla korur. Tampon şeması eklendikten sonra eski P03-02 imajı yeni blok kolonlarını yazamaz; otomatik eski imaj/Down/restore kullanılmaz. Sıfır dışı tampon varsa Down ayrıca DB'de reddedilir.
+
+İlgili regresyon: `dotnet test FirmaRandevu.slnx --no-restore --filter "FullyQualifiedName~AppointmentBufferTests|FullyQualifiedName~AppointmentStorageTests|FullyQualifiedName~AppointmentTests"`. [Kabul ve teslim](docs/plans/P03.md#p03-03a-hizmet-tamponu-kabulü--14102026).

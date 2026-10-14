@@ -50,12 +50,12 @@ public static partial class AppointmentRules
     {
         // Çağıran saat/personel ana kaydını kilitler; rezervasyon aynı kilidi alır.
         var blocks = db.AppointmentTimeBlocks.AsNoTracking().Where(block =>
-            (block.Status == "Pending" || block.Status == "Confirmed") && block.EndsAt > now);
+            (block.Status == "Pending" || block.Status == "Confirmed") && block.OccupiedEndsAt > now);
         if (memberId is not null) blocks = blocks.Where(block => block.StaffMemberId == memberId);
-        await foreach (var block in blocks.Select(block => new { block.StartsAt, block.EndsAt }).AsAsyncEnumerable().WithCancellation(token))
+        await foreach (var block in blocks.Select(block => new { block.StartsAt, block.OccupiedStartsAt, block.OccupiedEndsAt }).AsAsyncEnumerable().WithCancellation(token))
         {
             var day = desired.Single(item => item.Day == WeekDay(block.StartsAt));
-            if (!FitsDay(block.StartsAt, block.EndsAt, day.IsClosed, day.Start, day.End)) return false;
+            if (!FitsDay(block.OccupiedStartsAt, block.OccupiedEndsAt, day.IsClosed, day.Start, day.End)) return false;
         }
         return true;
     }
