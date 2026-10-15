@@ -53,8 +53,8 @@ describe('Rezervasyon ayarları', () => {
     await fill('horizonDays', '31'); await submit()
     expect(post.mock.calls[1]?.[1]).toEqual({ version: saved.version, leadMinutes: 90, horizonDays: 31, slotMinutes: 15 })
   })
-  it('15 dışındaki adımı kabul eder ve saat örneğini gece yarısına hizalar', async () => {
-    const { post } = await render(); await fill('slotMinutes', '7')
+  it.each(['7', '007'])('%s adımını kabul eder ve saat örneğini gece yarısına hizalar', async value => {
+    const { post } = await render(); await fill('slotMinutes', value)
     expect(container.textContent).toContain('09.06 · 09.13 · 09.20')
     await submit(); expect(post.mock.calls[0]?.[1]).toMatchObject({ slotMinutes: 7 })
   })
