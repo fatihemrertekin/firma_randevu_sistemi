@@ -286,7 +286,7 @@ namespace Server.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("ActorId")
+                    b.Property<Guid?>("ActorId")
                         .HasColumnType("uuid");
 
                     b.Property<Guid>("AppointmentId")
@@ -314,7 +314,9 @@ namespace Server.Infrastructure.Migrations
 
                     b.ToTable("AppointmentAudits", t =>
                         {
-                            t.HasCheckConstraint("CK_AppointmentAudits_Kind", "\"Kind\" IN ('Created','Cancelled','Completed','NoShow','Moved')");
+                            t.HasCheckConstraint("CK_AppointmentAudits_Actor", "(\"Kind\" = 'Expired' AND \"ActorId\" IS NULL) OR (\"Kind\" <> 'Expired' AND \"ActorId\" IS NOT NULL)");
+
+                            t.HasCheckConstraint("CK_AppointmentAudits_Kind", "\"Kind\" IN ('Created','Cancelled','Completed','NoShow','Moved','Confirmed','Expired')");
                         });
                 });
 
@@ -385,7 +387,7 @@ namespace Server.Infrastructure.Migrations
 
                     b.ToTable("AppointmentStatusCommands", t =>
                         {
-                            t.HasCheckConstraint("CK_AppointmentStatusCommands_Request", "\"RequestKey\" <> '00000000-0000-0000-0000-000000000000'::uuid AND \"ExpectedVersion\" <> '00000000-0000-0000-0000-000000000000'::uuid AND \"Status\" IN ('Cancelled','Completed','NoShow')");
+                            t.HasCheckConstraint("CK_AppointmentStatusCommands_Request", "\"RequestKey\" <> '00000000-0000-0000-0000-000000000000'::uuid AND \"ExpectedVersion\" <> '00000000-0000-0000-0000-000000000000'::uuid AND \"Status\" IN ('Cancelled','Completed','NoShow','Confirmed')");
                         });
                 });
 
@@ -426,6 +428,9 @@ namespace Server.Infrastructure.Migrations
                     b.Property<DateTime>("OccupiedStartsAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<DateTime?>("PendingExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<decimal>("Price")
                         .HasPrecision(8, 2)
                         .HasColumnType("numeric(8,2)");
@@ -458,11 +463,16 @@ namespace Server.Infrastructure.Migrations
 
                     b.HasIndex("ServiceDefinitionId");
 
+                    b.HasIndex("PendingExpiresAt", "AppointmentId")
+                        .HasFilter("\"Status\" = 'Pending'");
+
                     b.HasIndex("StaffMemberId", "OccupiedStartsAt");
 
                     b.ToTable("AppointmentTimeBlocks", t =>
                         {
                             t.HasCheckConstraint("CK_AppointmentTimeBlocks_Buffers", "\"BufferBeforeMinutes\" BETWEEN 0 AND 120 AND \"BufferAfterMinutes\" BETWEEN 0 AND 120 AND isfinite(\"OccupiedStartsAt\") AND isfinite(\"OccupiedEndsAt\") AND (\"OccupiedStartsAt\" AT TIME ZONE 'UTC') = (\"StartsAt\" AT TIME ZONE 'UTC') - \"BufferBeforeMinutes\" * INTERVAL '1 minute' AND (\"OccupiedEndsAt\" AT TIME ZONE 'UTC') = (\"EndsAt\" AT TIME ZONE 'UTC') + \"BufferAfterMinutes\" * INTERVAL '1 minute'");
+
+                            t.HasCheckConstraint("CK_AppointmentTimeBlocks_Pending", "(\"PendingExpiresAt\" IS NULL OR isfinite(\"PendingExpiresAt\")) AND (\"Status\" <> 'Pending' OR (\"PendingExpiresAt\" IS NOT NULL AND \"PendingExpiresAt\" <= \"StartsAt\"))");
 
                             t.HasCheckConstraint("CK_AppointmentTimeBlocks_Snapshot", "length(btrim(\"StaffName\")) > 0 AND length(btrim(\"ServiceName\")) > 0 AND \"Price\" BETWEEN 0 AND 999999.99 AND \"Currency\" = 'TRY'");
 
@@ -1633,8 +1643,7 @@ namespace Server.Infrastructure.Migrations
                     b.HasOne("Server.Infrastructure.AppUser", null)
                         .WithMany()
                         .HasForeignKey("ActorId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("Server.Infrastructure.Appointment", null)
                         .WithMany()
