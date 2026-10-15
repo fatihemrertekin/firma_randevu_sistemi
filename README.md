@@ -358,3 +358,13 @@ Politika/audit aynı transaction'da yazılır; işlem mevcut “Değişiklik kay
 MFA Owner, İşletme → Rezervasyon ayarları üzerinden mevcut ön süre, ileri rezervasyon süresi ve başlangıç aralığını düzenler. Sayfa `/yonetim/rezervasyon-ayarlari`; mevcut GET/POST kullanılır. Çakışmada veya belirsiz kayıt sonucunda taslak korunur ve yeniden kaydetmeden önce güncel ayarlar yüklenir. Staff menüsü/API yetkisi genişletilmez. İptal/onay tercihleri ve anonim müşteri rezervasyonu bu ekranın kapsamında değildir; yeni migration yoktur.
 
 İlgili frontend kontrolü `src/Web` içinde `npm.cmd test -- BookingPolicy.test.tsx URLNavigation.test.tsx ManagementLayout.test.tsx`; ayrıca typecheck/lint/tüm web testleri/build. [Onaylı taslak ve gerçek kabul](docs/plans/P03.md#p03-05c-rezervasyon-ayarları-görsel-taslağı--15102026).
+
+### Son motor kabulü (P03-06)
+
+Locked restore/build sonrasında depo kökünde mevcut motor ve bağlı mesai/hizmet testleri:
+
+```powershell
+dotnet run --project tests/Server.Tests/Server.Tests.csproj --no-build -- -class 'Server.Tests.Appointment*' -class Server.Tests.BookingPolicyTests -class Server.Tests.DateCalendarTests -class Server.Tests.WeeklyBreakTests -class Server.Tests.BusinessHoursTests -class Server.Tests.StaffHoursTests -class Server.Tests.StaffServiceAssignmentTests -class Server.Tests.ServiceDefinitionTests
+```
+
+Bu komut gerçek PostgreSQL/Testcontainers için çalışan Docker ister. Paralel API/DB yazımları, snapshot/idempotency, takvim/politika yarışları, durum/Pending, yetki ve migration korumaları [P03-06 kabul kaydında](docs/plans/P03.md#p03-06-son-motor-kabulü--16102026) izlenir. Yeni müşteri ekranı veya anonim rezervasyon kabulü değildir; yayın için son commit'in tam CI kapıları da zorunludur.
