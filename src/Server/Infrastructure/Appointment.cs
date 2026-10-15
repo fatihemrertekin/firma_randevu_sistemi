@@ -62,3 +62,14 @@ public sealed class BookingPolicy
     public int SlotMinutes { get; set; }
     public Guid Version { get; set; }
 }
+
+public sealed class AppointmentMoveCommand
+{
+    public Guid ActorId { get; set; }
+    public Guid RequestKey { get; set; }
+    public Guid AppointmentId { get; set; }
+    public Guid ExpectedVersion { get; set; }
+    public Guid StaffMemberId { get; set; }
+    public DateTime StartsAt { get; set; }
+    public Guid AuditId { get; set; }
+}

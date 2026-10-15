@@ -26,6 +26,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<AppointmentTimeBlock> AppointmentTimeBlocks => Set<AppointmentTimeBlock>();
     public DbSet<AppointmentAudit> AppointmentAudits => Set<AppointmentAudit>();
     public DbSet<AppointmentStatusCommand> AppointmentStatusCommands => Set<AppointmentStatusCommand>();
+    public DbSet<AppointmentMoveCommand> AppointmentMoveCommands => Set<AppointmentMoveCommand>();
     public DbSet<BookingPolicy> BookingPolicies => Set<BookingPolicy>();
     public DbSet<OwnerMfaRecoveryAudit> OwnerMfaRecoveryAudits => Set<OwnerMfaRecoveryAudit>();
     public DbSet<OwnerPasswordResetAudit> OwnerPasswordResetAudits => Set<OwnerPasswordResetAudit>();
@@ -131,7 +132,14 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
         appointmentAudit.HasOne<AppUser>().WithMany().HasForeignKey(item => item.ActorId).OnDelete(DeleteBehavior.Restrict);
         appointmentAudit.HasIndex(item => new { item.AppointmentId, item.AppointmentVersion }).IsUnique();
         appointmentAudit.Property(item => item.Kind).HasMaxLength(16).HasDefaultValue("Created");
-        appointmentAudit.ToTable(table => table.HasCheckConstraint("CK_AppointmentAudits_Kind", "\"Kind\" IN ('Created','Cancelled','Completed','NoShow')"));
+        appointmentAudit.ToTable(table => table.HasCheckConstraint("CK_AppointmentAudits_Kind", "\"Kind\" IN ('Created','Cancelled','Completed','NoShow','Moved')"));
+        var moveCommand = builder.Entity<AppointmentMoveCommand>();
+        moveCommand.HasKey(item => new { item.ActorId, item.RequestKey });
+        moveCommand.HasOne<AppUser>().WithMany().HasForeignKey(item => item.ActorId).OnDelete(DeleteBehavior.Restrict);
+        moveCommand.HasOne<Appointment>().WithMany().HasForeignKey(item => item.AppointmentId).OnDelete(DeleteBehavior.Restrict);
+        moveCommand.HasOne<StaffMember>().WithMany().HasForeignKey(item => item.StaffMemberId).OnDelete(DeleteBehavior.Restrict);
+        moveCommand.HasOne<AppointmentAudit>().WithMany().HasForeignKey(item => item.AuditId).OnDelete(DeleteBehavior.Restrict);
+        moveCommand.ToTable(table => table.HasCheckConstraint("CK_AppointmentMoveCommands_Request", "\"RequestKey\" <> '00000000-0000-0000-0000-000000000000'::uuid AND \"ExpectedVersion\" <> '00000000-0000-0000-0000-000000000000'::uuid AND isfinite(\"StartsAt\") AND date_trunc('minute', \"StartsAt\" AT TIME ZONE 'UTC') = (\"StartsAt\" AT TIME ZONE 'UTC')"));
         var statusCommand = builder.Entity<AppointmentStatusCommand>();
         statusCommand.HasKey(item => new { item.ActorId, item.RequestKey });
         statusCommand.Property(item => item.Status).HasMaxLength(16);

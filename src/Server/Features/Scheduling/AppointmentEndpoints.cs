@@ -30,6 +30,7 @@ public static class AppointmentEndpoints
         appointments.MapGet("/{id:guid}", ReadAsync);
         appointments.MapPost("/", CreateAsync);
         appointments.MapAppointmentStatusEndpoints();
+        appointments.MapAppointmentMoveEndpoints();
     }
 
     internal static CancellationTokenSource Timeout(HttpContext context)
@@ -78,22 +79,30 @@ public static class AppointmentEndpoints
         if (schedule.IsConfigured && member.IsActive && service.IsActive &&
             await db.StaffServiceAssignments.AnyAsync(item => item.StaffMemberId == member.Id && item.ServiceDefinitionId == service.Id, timeout.Token))
         {
-            var business = await AppointmentCalendar.LoadAsync(db, null, day, day, timeout.Token);
-            var staff = await AppointmentCalendar.LoadAsync(db, member.Id, day, day, timeout.Token);
-            var first = day.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc).AddDays(-1); var last = first.AddDays(3);
-            var occupied = await db.AppointmentTimeBlocks.AsNoTracking().Where(item => item.StaffMemberId == member.Id &&
-                item.Status != "Cancelled" && item.OccupiedStartsAt < last && item.OccupiedEndsAt > first)
-                .Select(item => new { item.OccupiedStartsAt, item.OccupiedEndsAt }).ToArrayAsync(timeout.Token);
-            for (var minute = 0; minute < 1440; minute += policy.SlotMinutes)
-            {
-                if (!AppointmentRules.TryUtc(day, minute, AppointmentRules.Istanbul, out var start) || !AppointmentRules.InWindow(start, now, policy)) continue;
-                var end = start.AddMinutes(service.DurationMinutes); var occupiedStart = start.AddMinutes(-service.BufferBeforeMinutes); var occupiedEnd = end.AddMinutes(service.BufferAfterMinutes);
-                if (business.Fits(occupiedStart, occupiedEnd, start) && staff.Fits(occupiedStart, occupiedEnd, start) &&
-                    !occupied.Any(item => item.OccupiedStartsAt < occupiedEnd && occupiedStart < item.OccupiedEndsAt)) starts.Add(start);
-            }
+            starts.AddRange(await FindStartsAsync(db, member.Id, day, now, policy, service.DurationMinutes, service.BufferBeforeMinutes, service.BufferAfterMinutes, null, timeout.Token));
         }
         await transaction.CommitAsync(timeout.Token);
         return Results.Ok(new AvailabilityResponse("Europe/Istanbul", service.Version, starts.ToArray()));
+    }
+
+    internal static async Task<DateTime[]> FindStartsAsync(AppDbContext db, Guid memberId, DateOnly day, DateTime now,
+        BookingPolicy policy, int duration, int before, int after, Guid? exclude, CancellationToken token)
+    {
+        var business = await AppointmentCalendar.LoadAsync(db, null, day, day, token);
+        var staff = await AppointmentCalendar.LoadAsync(db, memberId, day, day, token);
+        var first = day.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc).AddDays(-1); var last = first.AddDays(3);
+        var occupied = await db.AppointmentTimeBlocks.AsNoTracking().Where(item => item.StaffMemberId == memberId &&
+            (exclude == null || item.AppointmentId != exclude) && item.Status != "Cancelled" && item.OccupiedStartsAt < last && item.OccupiedEndsAt > first)
+            .Select(item => new { item.OccupiedStartsAt, item.OccupiedEndsAt }).ToArrayAsync(token);
+        var starts = new List<DateTime>();
+        for (var minute = 0; minute < 1440; minute += policy.SlotMinutes)
+        {
+            if (!AppointmentRules.TryUtc(day, minute, AppointmentRules.Istanbul, out var start) || !AppointmentRules.InWindow(start, now, policy)) continue;
+            var occupiedStart = start.AddMinutes(-before); var occupiedEnd = start.AddMinutes(duration + after);
+            if (business.Fits(occupiedStart, occupiedEnd, start) && staff.Fits(occupiedStart, occupiedEnd, start) &&
+                !occupied.Any(item => item.OccupiedStartsAt < occupiedEnd && occupiedStart < item.OccupiedEndsAt)) starts.Add(start);
+        }
+        return starts.ToArray();
     }
 
     private static async Task<IResult> CreateAsync(CreateRequest request, HttpContext context, IAntiforgery antiforgery,

@@ -212,11 +212,14 @@ public sealed class AppointmentStorageTests
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
         var booked = Assert.IsType<AppointmentEndpoints.AppointmentResponse>(await response.Content.ReadFromJsonAsync<AppointmentEndpoints.AppointmentResponse>(Token));
         var saved = await db.AppointmentTimeBlocks.AsNoTracking().SingleAsync(Token); Assert.Equal(5, saved.BufferBeforeMinutes); Assert.Equal(10, saved.BufferAfterMinutes);
+        using var moved = await PostAsync(owner, $"/api/appointments/{booked.Id}/move", new AppointmentMoveEndpoints.Request(booked.Version, Guid.NewGuid(), booked.StaffMemberId, "2026-10-15T11:00:00+03:00"), await GetCsrfAsync(owner));
+        Assert.Equal(HttpStatusCode.OK, moved.StatusCode);
+        booked = Assert.IsType<AppointmentEndpoints.AppointmentResponse>(await moved.Content.ReadFromJsonAsync<AppointmentEndpoints.AppointmentResponse>(Token));
         using var cancelled = await PostAsync(owner, $"/api/appointments/{booked.Id}/cancel", new AppointmentStatusEndpoints.Request(booked.Version, Guid.NewGuid()), await GetCsrfAsync(owner));
         Assert.Equal(HttpStatusCode.OK, cancelled.StatusCode);
         Assert.Equal("Cancelled", Assert.IsType<AppointmentEndpoints.AppointmentResponse>(await cancelled.Content.ReadFromJsonAsync<AppointmentEndpoints.AppointmentResponse>(Token)).Status);
         await using var connection = new NpgsqlConnection(limitedConnection); await connection.OpenAsync(Token);
-        foreach (var sql in new[] { "UPDATE \"Appointments\" SET \"CustomerName\"=\"CustomerName\"", "UPDATE \"AppointmentTimeBlocks\" SET \"Price\"=\"Price\"", "UPDATE \"AppointmentTimeBlocks\" SET \"StartsAt\"=\"StartsAt\"", "UPDATE \"AppointmentStatusCommands\" SET \"Status\"=\"Status\"", "DELETE FROM \"AppointmentStatusCommands\"", "TRUNCATE \"AppointmentStatusCommands\"" })
+        foreach (var sql in new[] { "UPDATE \"Appointments\" SET \"CustomerName\"=\"CustomerName\"", "UPDATE \"AppointmentTimeBlocks\" SET \"Price\"=\"Price\"", "UPDATE \"AppointmentTimeBlocks\" SET \"DurationMinutes\"=\"DurationMinutes\"", "UPDATE \"AppointmentTimeBlocks\" SET \"BufferBeforeMinutes\"=\"BufferBeforeMinutes\"", "UPDATE \"AppointmentMoveCommands\" SET \"StartsAt\"=\"StartsAt\"", "DELETE FROM \"AppointmentMoveCommands\"", "TRUNCATE \"AppointmentMoveCommands\"", "UPDATE \"AppointmentStatusCommands\" SET \"Status\"=\"Status\"", "DELETE FROM \"AppointmentStatusCommands\"", "TRUNCATE \"AppointmentStatusCommands\"" })
         {
             await using var command = new NpgsqlCommand(sql, connection);
             var failure = await Assert.ThrowsAsync<PostgresException>(() => command.ExecuteNonQueryAsync(Token)); Assert.Equal("42501", failure.SqlState);
