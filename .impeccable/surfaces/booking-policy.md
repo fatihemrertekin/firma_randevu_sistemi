@@ -1,6 +1,6 @@
 # Rezervasyon ayarları — P03-05C görsel taslağı
 
-Durum: kullanıcı 15.10.2026'da “onaylıyorum” yanıtıyla gösterilen görsel taslağı onayladı; ekranın yerel uygulama kabulü aşağıdadır, GitHub/ana teslimi henüz tamamlanmadı. P03-05C `in_progress`. Mode: **Operate**. Ürün yetkisi [PRODUCT](../../docs/PRODUCT.md), görsel yetki [DESIGN](../../DESIGN.md) ve güncel `ManagementLayout`/`tokens.css` dosyalarıdır. Mevcut açık palet ve doğrudan sol menü genişletilir; yeni görsel sistem kurulmaz.
+Durum: geliştirme/GitHub/ana 8080 teslimi `done` (16.10.2026); [teslim kanıtı](../../docs/plans/P03.md#p03-05c-github-ve-ana-yerel-teslim--16102026). Kullanıcı 15.10.2026'da “onaylıyorum” yanıtıyla gösterilen görsel taslağı onayladı. Mode: **Operate**. Ürün yetkisi [PRODUCT](../../docs/PRODUCT.md), görsel yetki [DESIGN](../../DESIGN.md) ve güncel `ManagementLayout`/`tokens.css` dosyalarıdır. Mevcut açık palet ve doğrudan sol menü genişletilir; yeni görsel sistem kurulmaz.
 
 ## Amaç ve düzen
 
@@ -48,4 +48,4 @@ Mevcut GET/POST ve ortak CSRF, ErrorMessage, taslak/URL koruması kullanıldı; 
 
 Son non-root imaj ayrı sentetik PostgreSQL/MFA Owner kurulumunda gerçek Chrome/API ile doğrulandı: kayıt/yenileme, 7 dakikalık örnek, tek POST, alan hatası/odak, kirli gezinme reddi, gerçek 409 ve yükleme onayı, gerçek CSRF 400, sunucuda commit sonrası kesilen yanıtın belirsiz sonucu ve GET ile toparlanması, Staff GET/POST 403 ve menü yokluğu, anonim 401/giriş dönüşü, gerçek 429. Sekiz durum × dört genişlikte 32 görüntü, yatay taşma ve script hatası sıfır; beş asset HTTP hash'i derlemeyle eşit. Dört normal genişlik ve temsilci alan/çatışma/belirsiz/başarı görüntüleri onaylı taslak ve DESIGN ile incelendi: ana hiyerarşi, tam genişlik, birim hizası, mobil sarma ve görünür alan odağı korunuyor. Genel hata ve başarı mevcut ortak bileşenlerin görünümünü kullanır; yeni tasarım varyasyonu eklenmedi.
 
-Kanıt `.local/p03-05c/` altındadır. Gerçek ana Owner girişi/POST veya SMTP kullanılmadı; ana teslim henüz bu kabulün parçası değildir. Müşteri iptal/onay ayarları ve native Impeccable finish veya tam WCAG sertifikası uygulanmış sayılmaz. GitHub/ana teslimden sonra P03-06 yalnız sonraki adaydır; başlamaz.
+Kanıt `.local/p03-05c/` altındadır. Son head/main CI ve şifreli yedekli ana teslim geçti; 46 tablonun bütün verileri, hesap/MFA/anahtar/ayar/SMTP korundu. Ana anonim dört genişlik, 16 API 401, yeni URL'nin giriş dönüşü, beş asset hash'i ve sağlık/restart başarılı. Gerçek ana Owner girişi/POST veya SMTP kullanılmadı. Müşteri iptal/onay ayarları ve native Impeccable finish veya tam WCAG sertifikası uygulanmış sayılmaz. Sonraki tek aday P03-06; planlı ve başlamadı.

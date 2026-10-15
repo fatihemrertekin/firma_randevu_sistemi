@@ -1,6 +1,6 @@
 # STATUS — Güncel durum ve sıradaki iş
 
-Güncelleme: 2026-10-15. Güncel özet burada; kapsam ve kanıt bağlantıları [P02 planında](plans/P02.md), önceki oturum kayıtları [arşivde](archive/2026-10-02/STATUS.md). Arşivdeki eski durum ve onay bekleme ifadeleri güncel yönlendirme değildir.
+Güncelleme: 2026-10-16. Güncel özet burada; kapsam ve kanıt bağlantıları [P02 planında](plans/P02.md), önceki oturum kayıtları [arşivde](archive/2026-10-02/STATUS.md). Arşivdeki eski durum ve onay bekleme ifadeleri güncel yönlendirme değildir.
 
 `source-map-js` güvenlik bakımı geliştirme/GitHub/ana yerel teslimi `done`: [PR #62](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/62) birleşti; yalnız geçişli paket 1.2.1 → 1.2.2. İlk yerel kabul 247 web testi ve audit 0 açık; güncel main tam CI ve T08 kabul imajı bu bakımı içerir. [Kapsam](plans/P02.md#source-map-js-güvenlik-bakımı--13102026), [güncel kabul](plans/P02.md#p02-son-kabul-kontrolü--14102026).
 
@@ -17,7 +17,7 @@ Sade menü ve ortak sayfalama `done`: [PR #57](https://github.com/fatihemrerteki
 | P00 — İş ve ürün tanımı | `done` | [P00 planı](plans/P00.md) ve [ürün kararları](PRODUCT.md#2-ürün-kararları); işletme görüşmeleri ve gerçek pilot yapılmış sayılmaz. |
 | P01 — Temel ve CI | `done` | [P01 kanıtı](plans/P01.md#kanıt); PR #1 birleşme commit'i `10527c1`. |
 | P02 — Kimlik ve tanımlar | `done` | P02-01–P02-23 ve onaylanan yerel kapanış kontrolü tamamlandı; [kapanış kanıtı ve P03 sınırı](plans/P02.md#p02-kapanış-kontrolü--04102026). Üretim/pilot ve tam restore kabulü değildir. |
-| P03 — Randevu motoru | `in_progress` | P03-02 ve P03-03 A–D tamamlandı. P03-04 A–C iptal/durum, atomik taşıma ve Pending ana uygulamaya teslim edildi; [son teslim](plans/P03.md#p03-05a-github-ve-ana-yerel-teslim--15102026), [ADR](adr/005-appointment-time-blocks.md). P03-05A politika API'si aşağıda teslim edildi; müşteri politika kararları B kaydındadır; ayar ekranı ve son motor kabulü planlıdır. |
+| P03 — Randevu motoru | `in_progress` | P03-02 ve P03-03 A–D tamamlandı. P03-04 A–C iptal/durum, atomik taşıma ve Pending ana uygulamaya teslim edildi; [son teslim](plans/P03.md#p03-05c-github-ve-ana-yerel-teslim--16102026), [ADR](adr/005-appointment-time-blocks.md). P03-05A politika API'si ve C ekranı teslim edildi; son motor kabulü planlıdır. Müşteri iptal/onay tercihlerinin uygulanması P04/P05 akışına bağlı açık iştir. |
 | P04–P17 | `planned` | Yalnız [ROADMAP](ROADMAP.md) düzeyinde; yeni uygulama yetkisi veya kabul kanıtı yok. |
 
 ## Son doğrulanan teslim ve sınırlar
@@ -108,4 +108,4 @@ P03-05A ön süre/ufuk/adım Owner API'si geliştirme/GitHub/ana teslimi `done` 
 
 P03-05B müşteri politikaları kararı ve yerel belge `done` (15.10.2026): ürün sahibi iptal sınırını ve işletme onayını seçti; [karar, kabul ve GitHub teslim şartı](plans/P03.md#p03-05b-müşteri-politikaları-kararı--15102026). P03-05C görsel taslak aşağıda başlatıldı. Müşteri iptal/onay tercihi henüz uygulanmadı; uygulama/veri değişikliği yoktur.
 
-P03-05C rezervasyon ayarları `in_progress` (16.10.2026): kullanıcı taslağı onayladı; [ekran ve son kaynak kabulü](plans/P03.md#p03-05c-rezervasyon-ayarları-görsel-taslağı--15102026) hazır. İlk PR #95 birleşti; ana teslim öncesi sıfırlı dakika girdisinin saat örneği düzeltildi. Son kaynakta 312 web testi, gerçek sentetik MFA Owner/API ve dört genişlik/32 görüntü geçti. Sonraki tek işlem son kaynak GitHub/ana 8080 teslimidir; henüz tamamlanmadı. İptal/onay alanları ve anonim rezervasyon yoktur.
+P03-05C rezervasyon ayarları geliştirme/GitHub/ana 8080 teslimi `done` (16.10.2026): [PR #95](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/95) ve [dar düzeltme #96](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/96), son head/main CI başarılı. 312 web testi ve dört genişlik/32 sentetik gerçek API görüntüsü geçti; şifreli yedekli ana teslimde 46 tablonun tüm verileri, hesap/MFA/anahtar/SMTP/ayarlar korundu. Sağlık/restart, dört genişlik ve 16 anonim API kabulü başarılı. [Kanıt ve geri dönüş](plans/P03.md#p03-05c-github-ve-ana-yerel-teslim--16102026). Sonraki tek aday **P03-06 son motor kabulü**, `planned`; başlamadı. İptal/onay alanları ve anonim rezervasyon yoktur.
