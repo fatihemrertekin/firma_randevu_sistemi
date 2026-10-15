@@ -314,7 +314,44 @@ namespace Server.Infrastructure.Migrations
 
                     b.ToTable("AppointmentAudits", t =>
                         {
-                            t.HasCheckConstraint("CK_AppointmentAudits_Kind", "\"Kind\" IN ('Created','Cancelled','Completed','NoShow')");
+                            t.HasCheckConstraint("CK_AppointmentAudits_Kind", "\"Kind\" IN ('Created','Cancelled','Completed','NoShow','Moved')");
+                        });
+                });
+
+            modelBuilder.Entity("Server.Infrastructure.AppointmentMoveCommand", b =>
+                {
+                    b.Property<Guid>("ActorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("RequestKey")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AppointmentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AuditId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ExpectedVersion")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("StaffMemberId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("StartsAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("ActorId", "RequestKey");
+
+                    b.HasIndex("AppointmentId");
+
+                    b.HasIndex("AuditId");
+
+                    b.HasIndex("StaffMemberId");
+
+                    b.ToTable("AppointmentMoveCommands", t =>
+                        {
+                            t.HasCheckConstraint("CK_AppointmentMoveCommands_Request", "\"RequestKey\" <> '00000000-0000-0000-0000-000000000000'::uuid AND \"ExpectedVersion\" <> '00000000-0000-0000-0000-000000000000'::uuid AND isfinite(\"StartsAt\") AND date_trunc('minute', \"StartsAt\" AT TIME ZONE 'UTC') = (\"StartsAt\" AT TIME ZONE 'UTC')");
                         });
                 });
 
@@ -1602,6 +1639,33 @@ namespace Server.Infrastructure.Migrations
                     b.HasOne("Server.Infrastructure.Appointment", null)
                         .WithMany()
                         .HasForeignKey("AppointmentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Server.Infrastructure.AppointmentMoveCommand", b =>
+                {
+                    b.HasOne("Server.Infrastructure.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("ActorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Server.Infrastructure.Appointment", null)
+                        .WithMany()
+                        .HasForeignKey("AppointmentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Server.Infrastructure.AppointmentAudit", null)
+                        .WithMany()
+                        .HasForeignKey("AuditId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Server.Infrastructure.StaffMember", null)
+                        .WithMany()
+                        .HasForeignKey("StaffMemberId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

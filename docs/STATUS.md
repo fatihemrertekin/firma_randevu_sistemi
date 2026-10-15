@@ -99,3 +99,5 @@ P03-04A Owner iptal/durum geliştirme/GitHub/ana teslimi `done` (15.10.2026): [P
 ## Gelecek plan kaydı — destek ve işletim ekranı (02.10.2026)
 
 Özel destek ekranı `planned`: ürün sahibi kurulum/bakım/destek işlemlerini ileride komut yazmadan yürütmek istiyor. [Ürün kararı](PRODUCT.md#satış-sonrası-destek-ekranı-kararı-02102026), [P06/P07 sırası](ROADMAP.md#p06--izolasyondeploykurtarma-p05) ve [işlem/güvenlik/kabul envanteri](OPERATIONS.md#5-planlanan-destek-ve-işletim-ekranı) tek kaynaklarıdır. Destek ekranı veya başka aşama uygulaması onaylanmadı; Staff hesap işlemi yalnız ayrı P02-16 onayıdır.
+
+P03-04B atomik taşıma `in_progress` (15.10.2026): API/DB, 20 yeni taşıma + 4 storage PostgreSQL senaryosu, gerçek sentetik Chrome/HTTP, restart ve 45 tabloyla sentetik restore kabulü geçti. Son head/main CI ve yedekli ana 8080 teslimi bekleniyor. [Sözleşme ve kanıt](plans/P03.md#p03-04b-atomik-taşıma--15102026). Yeni ekran/Pending işçisi yok; P03-04 bütünü done değildir.
