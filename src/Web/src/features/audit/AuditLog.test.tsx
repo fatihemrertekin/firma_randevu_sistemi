@@ -37,6 +37,13 @@ describe('Değişiklik kayıtları', () => {
     await act(async () => finish?.(Response.json({ ...initial, items: [] }))); expect(container.textContent).toContain('Bu kategoride işlem kaydı yok.')
     expect(button('Listeyi yenile').disabled).toBe(false)
   })
+  it('rezervasyon ayarını sunucunun 14. kaynağıyla gösterir', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(Response.json({ ...initial, items: [{ ...entry,
+      id: '14:f1111111-1111-4111-8111-111111111111', module: 'Rezervasyon ayarları', target: 'Rezervasyon ayarları' }] }))
+    await render()
+    expect(container.textContent).toContain('Rezervasyon ayarları · Güncellendi')
+    expect(container.querySelector('[role="alert"]')).toBeNull()
+  })
   it('sonraki/önceki sayfa özgün cursoru kullanır, çift geçişi engeller ve başlığa odaklanır', async () => {
     const full = Array.from({ length: 20 }, (_, index) => ({ ...entry, id: `1:${index.toString(16).padStart(8, '0')}-1111-4111-8111-111111111111` }))
     vi.mocked(fetch).mockResolvedValueOnce(Response.json({ ...initial, items: full, nextCursor: 'second' }))
@@ -79,7 +86,7 @@ describe('Değişiklik kayıtları', () => {
     await click('Listeyi yenile'); expect(fetch).toHaveBeenCalledTimes(3)
   })
   it('yanlış kategori, saat bölgesi, yinelenen kimlik ve geçersiz devam bilgisini reddeder', async () => {
-    for (const body of [{ ...initial, category: 'security' }, { ...initial, timeZone: 'UTC' }, { ...initial, items: [entry, entry] }, { ...initial, cursor: '' }, { ...initial, nextCursor: 'first' }, { ...initial, items: [{ ...entry, occurredAt: 'invalid' }] }, { ...initial, items: [{ ...entry, id: '13:invalid' }] }, { ...initial, items: [{ ...entry, id: '14:f1111111-1111-4111-8111-111111111111' }] }])
+    for (const body of [{ ...initial, category: 'security' }, { ...initial, timeZone: 'UTC' }, { ...initial, items: [entry, entry] }, { ...initial, cursor: '' }, { ...initial, nextCursor: 'first' }, { ...initial, items: [{ ...entry, occurredAt: 'invalid' }] }, { ...initial, items: [{ ...entry, id: '13:invalid' }] }, { ...initial, items: [{ ...entry, id: '15:f1111111-1111-4111-8111-111111111111' }] }])
       await expect(readAuditPage(Response.json(body), 'all')).rejects.toThrow()
   })
 })

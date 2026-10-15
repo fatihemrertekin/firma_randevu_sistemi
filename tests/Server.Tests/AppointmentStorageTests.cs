@@ -148,7 +148,7 @@ public sealed class AppointmentStorageTests
     }
 
     [Fact]
-    public async Task RestrictedApplicationRoleCanBookButCannotAlterAuditOrPolicyValues()
+    public async Task RestrictedApplicationRoleCanBookButCannotRewriteHistoryOrDeletePolicy()
     {
         await using var database = RecoveryDatabase(); await database.StartAsync(Token);
         var seed = await CreateRecoveryAppAsync(database.GetConnectionString(), new BookingClock()); await using var app = seed.App;
@@ -224,7 +224,7 @@ public sealed class AppointmentStorageTests
             await using var command = new NpgsqlCommand(sql, connection);
             var failure = await Assert.ThrowsAsync<PostgresException>(() => command.ExecuteNonQueryAsync(Token)); Assert.Equal("42501", failure.SqlState);
         }
-        foreach (var sql in new[] { "UPDATE \"AppointmentAudits\" SET \"ActorId\"=\"ActorId\"", "DELETE FROM \"Appointments\"", "UPDATE \"BookingPolicies\" SET \"LeadMinutes\"=0", "TRUNCATE \"BusinessWeeklyBreaks\"", "TRUNCATE \"StaffWeeklyBreaks\"", "UPDATE \"BusinessHoursAudits\" SET \"Kind\"='Hours'", "DELETE FROM \"StaffHoursAudits\"", "DELETE FROM \"StaffLeaves\"", "TRUNCATE \"StaffLeaves\"", "TRUNCATE \"BusinessDateExceptions\"", "TRUNCATE \"StaffDateBreaks\"" })
+        foreach (var sql in new[] { "UPDATE \"AppointmentAudits\" SET \"ActorId\"=\"ActorId\"", "DELETE FROM \"Appointments\"", "DELETE FROM \"BookingPolicies\"", "TRUNCATE \"BusinessWeeklyBreaks\"", "TRUNCATE \"StaffWeeklyBreaks\"", "UPDATE \"BusinessHoursAudits\" SET \"Kind\"='Hours'", "DELETE FROM \"StaffHoursAudits\"", "DELETE FROM \"StaffLeaves\"", "TRUNCATE \"StaffLeaves\"", "TRUNCATE \"BusinessDateExceptions\"", "TRUNCATE \"StaffDateBreaks\"" })
         {
             await using var command = new NpgsqlCommand(sql, connection);
             var failure = await Assert.ThrowsAsync<PostgresException>(() => command.ExecuteNonQueryAsync(Token)); Assert.Equal("42501", failure.SqlState);
