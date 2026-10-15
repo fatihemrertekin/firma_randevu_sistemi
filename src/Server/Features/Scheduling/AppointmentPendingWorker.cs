@@ -4,11 +4,12 @@ using Server.Infrastructure;
 
 namespace Server.Features.Scheduling;
 
-public sealed class AppointmentPendingWorker(IServiceScopeFactory scopes, TimeProvider clock,
+public sealed class AppointmentPendingWorker(IServiceScopeFactory scopes, TimeProvider clock, IConfiguration configuration,
     ILogger<AppointmentPendingWorker> logger) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        if (string.IsNullOrWhiteSpace(configuration.GetConnectionString("AppDatabase"))) return;
         while (!stoppingToken.IsCancellationRequested)
         {
             var delay = TimeSpan.FromSeconds(5);
