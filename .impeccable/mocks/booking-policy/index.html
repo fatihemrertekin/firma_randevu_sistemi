@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rezervasyon ayarları — görsel taslak</title>
+<link rel="stylesheet" href="../../../src/Web/src/styles/global.css">
+<style>
+@font-face { font-family: Unna; src: url('../../../src/Web/src/assets/fonts/Unna-Bold.ttf'); font-weight:700; }
+.preview { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:var(--auth-space-3); padding:var(--auth-space-3) var(--auth-space-6); background:var(--primary-soft); font-size:var(--button-font-size); color:var(--muted); }
+.preview p { margin:0; font-size:inherit; }
+.preview label { display:flex; align-items:center; gap:var(--auth-space-2); font-weight:500; }
+select { min-height:var(--target-min); max-width:100%; padding:var(--auth-space-2); font:inherit; color:var(--text); background:var(--surface); border:var(--auth-rule) solid var(--border); border-radius:var(--auth-radius); }
+select:focus-visible { outline:var(--auth-focus-width) solid var(--focus); outline-offset:var(--auth-focus-offset); }
+header { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:var(--auth-space-4); min-height:var(--management-header); padding:var(--auth-space-3) var(--auth-space-6); border-bottom:var(--auth-rule) solid var(--border); background:var(--surface); }
+.brand { font-family:Unna,serif; font-weight:700; font-size:var(--management-brand); line-height:var(--auth-heading-line); }
+.account { display:flex; align-items:center; gap:var(--auth-space-5); text-align:right; }
+.account p { margin:0; font-size:var(--button-font-size); }
+.account strong { color:var(--text); display:block; }
+.shell { display:grid; grid-template-columns:var(--management-rail) minmax(0,1fr); min-height:calc(100svh - var(--management-header)); }
+aside { background:var(--surface); border-right:var(--auth-rule) solid var(--border); min-width:0; padding:var(--auth-space-4) var(--auth-space-3); }
+.tools { display:flex; justify-content:space-between; align-items:center; gap:var(--auth-space-2); padding-inline:var(--auth-space-3); margin-bottom:var(--auth-space-5); font-size:var(--button-font-size); color:var(--muted); }
+.tools button { padding:var(--auth-space-2); background:var(--surface); border-color:var(--border); color:var(--text); }
+svg { width:var(--management-menu-icon); height:var(--management-menu-icon); flex-shrink:0; fill:none; stroke:currentColor; stroke-width:1.75; stroke-linecap:round; stroke-linejoin:round; }
+nav section { display:grid; gap:var(--auth-space-1); margin-bottom:var(--auth-space-5); }
+nav h2 { margin:0 0 var(--auth-space-2); padding-inline:var(--auth-space-3); font-size:var(--button-font-size); font-weight:500; color:var(--muted); }
+nav a { display:flex; align-items:center; gap:var(--auth-space-3); min-height:var(--target-min); padding:var(--auth-space-3); border-radius:var(--auth-radius); color:var(--text); font-size:var(--button-font-size); text-decoration:none; }
+nav a:hover { background:var(--button-navigation-bg); }
+nav a[aria-current] { background:var(--primary-soft); color:var(--muted); font-weight:600; }
+nav .audit { border-top:var(--auth-rule) solid var(--border); padding-top:var(--auth-space-5); }
+main { min-width:0; padding:var(--management-inset); container: policy / inline-size; }
+h1 { font-size:var(--management-title); margin:0 0 var(--auth-space-2); line-height:var(--auth-heading-line); overflow-wrap:anywhere; }
+.intro { font-size:var(--auth-story-body-size); color:var(--text); margin-bottom:var(--auth-space-6); }
+.paper { border:var(--auth-rule) solid var(--border); border-radius:var(--auth-radius); padding:var(--auth-space-5); background:var(--surface); }
+.context { margin:0 0 var(--auth-space-5); }
+.policy-form { gap:0; }
+.setting { display:grid; grid-template-columns:minmax(0,1.4fr) minmax(0,1fr); align-items:start; gap:var(--auth-space-6); padding-block:var(--auth-space-5); border-top:var(--auth-rule) solid var(--border); }
+.setting > div { min-width:0; }
+.setting label { display:block; margin-bottom:var(--auth-space-2); }
+.setting p { margin:0; }
+.input-group { display:flex; align-items:center; gap:var(--auth-space-3); }
+.input-group input { flex:1; text-align:left; font-variant-numeric:tabular-nums; }
+.unit { color:var(--muted); flex-shrink:0; width:var(--auth-control-height); }
+.field-error { color:var(--error); margin-top:var(--auth-space-2) !important; }
+.example { margin-top:var(--auth-space-2) !important; font-size:var(--button-font-size); font-variant-numeric:tabular-nums; }
+.footer { border-top:var(--auth-rule) solid var(--border); padding-top:var(--auth-space-5); }
+.footer > p { margin:0 0 var(--auth-space-4); }
+.actions { display:flex; flex-wrap:wrap; align-items:center; gap:var(--action-row-gap); }
+.actions span { font-size:var(--button-font-size); color:var(--muted); }
+.feedback { margin:0 0 var(--auth-space-5); padding:var(--auth-space-4); border:var(--auth-rule) solid var(--border); border-radius:var(--auth-radius); background:var(--background); }
+.feedback.error { color:var(--error); border-color:var(--error); background:var(--feedback-bg); }
+.feedback h2 { margin:0 0 var(--auth-space-2); font-size:var(--auth-body-size); }
+.feedback p { margin:0; color:inherit; }
+.feedback button { margin-top:var(--action-row-gap); }
+.mobile { display:none; }
+.shell.collapsed { grid-template-columns:var(--management-rail-narrow) minmax(0,1fr); }
+.collapsed .nav-label,.collapsed nav h2,.collapsed .tools span { display:none; }
+.collapsed nav a,.collapsed .tools { justify-content:center; padding-inline:var(--auth-space-2); }
+.skip { position:absolute; transform:translateY(-200%); padding:var(--auth-space-3); background:var(--surface); color:var(--text); }
+.skip:focus { transform:none; }
+@container policy (max-width:40rem) { .setting { grid-template-columns:minmax(0,1fr); gap:var(--auth-space-4); } }
+@media (max-width:900px) {
+ .preview,header { padding:var(--auth-space-3) var(--auth-space-4); }
+ .preview label { flex-wrap:wrap; }
+ .brand { font-size:var(--auth-mobile-title-size); }
+ .account { display:none; } .mobile { display:block; }
+ .shell,.shell.collapsed { display:block; }
+ aside { display:none; border-right:0; border-bottom:var(--auth-rule) solid var(--border); }
+ .shell.open aside { display:block; }
+ .tools { display:none; }
+ .collapsed .nav-label,.collapsed nav h2 { display:block; }
+ .collapsed nav a { justify-content:flex-start; }
+ main { padding:var(--auth-space-5) var(--auth-space-4); }
+ .intro { font-size:var(--auth-body-size); }
+ .paper { padding:var(--auth-space-4); }
+}
+</style>
+</head>
+<body class="management-theme">
+<a class="skip" href="#main">İçeriğe geç</a>
+<div class="preview"><p>Görsel taslak · Örnek değerler · Veriler kaydedilmez</p><label for="state">Önizleme durumu <select id="state"><option value="ready">Düzenleme</option><option value="dirty">Kaydedilmemiş değişiklik</option><option value="saving">Kaydediliyor</option><option value="success">Kaydedildi</option><option value="invalid">Alan hatası</option><option value="conflict">Ayarlar değişti</option><option value="uncertain">Kayıt sonucu belirsiz</option><option value="loading">Yükleniyor</option><option value="load-error">Yükleme hatası</option><option value="missing">Ayar bulunamadı</option><option value="session">Oturum sona erdi</option><option value="forbidden">Erişim yok</option><option value="limited">İstek sınırı</option></select></label></div>
+<header><span class="brand">Randevu</span><button class="mobile" id="mobile" type="button" aria-controls="navigation" aria-expanded="false">Menü</button><div class="account"><p><strong>Örnek işletme · İşletme Sahibi</strong>örnek hesap</p><button type="button" disabled>Çıkış yap</button></div></header>
+<div class="shell" id="shell"><aside id="navigation"><div class="tools"><span>Yönetim</span><button id="collapse" type="button" aria-label="Menüyü daralt" aria-expanded="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3v18M4 3h16v18H4z"/></svg></button></div><nav aria-label="Yönetim"><section><h2>İşletme</h2>
+<a href="#" aria-disabled="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10h18M5 10v11h14V10M3 10l2-7h14l2 7M9 21v-7h6v7"/></svg><span class="nav-label">İşletme bilgileri</span></a>
+<a href="#" aria-disabled="true"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span class="nav-label">İşletme saatleri</span></a>
+<a href="#" aria-disabled="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h12M9 12h12M9 18h12M3 6h2M3 12h2M3 18h2"/></svg><span class="nav-label">Hizmetler</span></a>
+<a href="#main" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 11h18M8 15h3M8 18h6"/></svg><span class="nav-label">Rezervasyon ayarları</span></a>
+</section><section><h2>Ekip</h2><a href="#" aria-disabled="true"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="7" r="4"/><path d="M2 21v-2a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4v2M16 3a4 4 0 0 1 0 8M22 21v-2a4 4 0 0 0-3-4"/></svg><span class="nav-label">Personel</span></a><a href="#" aria-disabled="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 3v6c0 5-8 9-8 9s-8-4-8-9V6zM8 12l3 3 5-6"/></svg><span class="nav-label">Çalışan erişimleri</span></a></section><section><h2>Hesap</h2><a href="#" aria-disabled="true"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg><span class="nav-label">Hesap ve güvenlik</span></a></section><div class="audit"><a href="#" aria-disabled="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h9l4 4v16H6zM14 2v5h5M9 11h7M9 15h7M9 19h4"/></svg><span class="nav-label">Değişiklik kayıtları</span></a></div></nav></aside>
+<main id="main"><h1>Rezervasyon ayarları</h1><p class="intro">Randevuların ne kadar önceden ve hangi aralıklarla alınabileceğini belirleyin.</p>
+<div id="feedback" class="feedback" hidden role="status" aria-live="polite"></div>
+<section class="paper" id="paper" aria-label="Rezervasyon kuralları"><p class="context">Bu ayarlar yeni randevularda ve randevu taşımalarında uygulanır. Mevcut randevular değişmez.</p>
+<form id="form" class="policy-form" novalidate>
+<div class="setting"><div><label for="lead">En az kaç dakika önce?</label><p id="lead-help">Randevu başlangıcına kalan en kısa süre.</p></div><div><div class="input-group"><input id="lead" name="leadMinutes" type="number" inputmode="numeric" min="0" max="43200" step="1" value="60" required aria-describedby="lead-help lead-error"><span class="unit">dakika</span></div><p id="lead-error" class="field-error" hidden></p></div></div>
+<div class="setting"><div><label for="horizon">En fazla kaç gün ileriye?</label><p id="horizon-help">Bugünden itibaren randevu alınabilecek süre.</p></div><div><div class="input-group"><input id="horizon" name="horizonDays" type="number" inputmode="numeric" min="1" max="365" step="1" value="30" required aria-describedby="horizon-help horizon-error"><span class="unit">gün</span></div><p id="horizon-error" class="field-error" hidden></p></div></div>
+<div class="setting"><div><label for="slot">Başlangıç saatleri aralığı</label><p id="slot-help">Randevular bu aralıklarla başlar. Hizmet süresi değişmez.</p></div><div><div class="input-group"><input id="slot" name="slotMinutes" type="number" inputmode="numeric" min="1" max="60" step="1" value="15" required aria-describedby="slot-help slot-example slot-error"><span class="unit">dakika</span></div><p class="example" id="slot-example">Aralık örneği: 09.00 · 09.15 · 09.30</p><p id="slot-error" class="field-error" hidden></p></div></div>
+<div class="footer"><p>Saatler İstanbul saatine göre değerlendirilir.</p><div class="actions"><button type="submit" id="save" disabled>Ayarları kaydet</button><span id="dirty">Kaydedilmemiş değişiklik yok.</span></div></div>
+</form></section></main></div>
+<script>
+const $=id=>document.getElementById(id), fields=['lead','horizon','slot'];
+let baseline=[60,30,15], blocked=false;
+function message(title,text,error=false,action){
+ const box=$('feedback');box.hidden=false;box.className='feedback'+(error?' error':'');box.setAttribute('role',error?'alert':'status');box.replaceChildren();
+ const heading=document.createElement('h2'),body=document.createElement('p');heading.textContent=title;body.textContent=text;box.append(heading,body);
+ if(action){const button=document.createElement('button');button.type='button';button.textContent=action;button.onclick=()=>{if(['lead','horizon','slot'].some((id,i)=>Number($(id).value)!==baseline[i])&&!confirm('Kaydedilmemiş değişiklikler silinsin mi?'))return;show('ready')};box.append(button)}
+}
+function clearErrors(){for(const id of fields){$(id).removeAttribute('aria-invalid');$(id+'-error').hidden=true}}
+function error(id,text){$(id).setAttribute('aria-invalid','true');$(id+'-error').textContent=text;$(id+'-error').hidden=false}
+function change(){
+ const dirty=fields.some((id,i)=>$(id).value===''||Number($(id).value)!==baseline[i]);
+ $('save').disabled=blocked||!dirty;$('dirty').textContent=dirty?'Kaydedilmemiş değişiklikler var.':'Kaydedilmemiş değişiklik yok.';
+ const step=Number($('slot').value);
+ if(Number.isInteger(step)&&step>=1&&step<=60){const start=Math.ceil(540/step)*step;const fmt=n=>String(Math.floor(n/60)).padStart(2,'0')+'.'+String(n%60).padStart(2,'0');$('slot-example').textContent='Aralık örneği: '+[start,start+step,start+2*step].map(fmt).join(' · ')}else $('slot-example').textContent='Aralık örneği için 1–60 dakika girin.';
+}
+function show(state){
+ $('state').value=state;baseline=[60,30,15];fields.forEach((id,i)=>{$(id).value=baseline[i];$(id).disabled=false});blocked=false;clearErrors();$('feedback').hidden=true;$('paper').hidden=false;$('save').textContent='Ayarları kaydet';$('form').removeAttribute('aria-busy');
+ if(['dirty','saving','success','conflict','uncertain','limited'].includes(state))$('lead').value=90;
+ if(state==='saving'){blocked=true;fields.forEach(id=>$(id).disabled=true);$('save').textContent='Kaydediliyor…';$('form').setAttribute('aria-busy','true')}
+ if(state==='success'){baseline=[90,30,15];message('Rezervasyon ayarları kaydedildi.','Yeni kurallar sonraki randevu ve taşımalarda uygulanacak.')}
+ if(state==='invalid'){$('lead').value=1440;$('horizon').value=1;error('lead','Ön süre ileri rezervasyon süresinden kısa olmalı.')}
+ if(state==='conflict'){blocked=true;message('Ayarlar başka bir işlemde değişti.','Taslağınız korundu. Devam etmeden önce güncel ayarları yükleyin.',true,'Güncel ayarları yükle')}
+ if(state==='uncertain'){blocked=true;message('Kayıt sonucu doğrulanamadı.','Ayarlar kaydedilmiş olabilir. Tekrar kaydetmeden önce güncel ayarları kontrol edin.',true,'Güncel ayarları yükle')}
+ if(state==='limited'){blocked=true;message('Biraz bekleyin.','Kısa sürede çok fazla işlem yapıldı. Taslağınız korundu; yeniden denemeden önce güncel ayarları yükleyin.',true,'Güncel ayarları yükle')}
+ if(['loading','load-error','missing','session','forbidden'].includes(state)){
+  $('paper').hidden=true;
+  if(state==='loading')message('Rezervasyon ayarları yükleniyor…','Ayarlar geldiğinde düzenleyebilirsiniz.');
+  if(state==='load-error')message('Ayarlar yüklenemedi.','Bağlantınızı kontrol edip yeniden deneyin.',true,'Yeniden dene');
+  if(state==='missing')message('Rezervasyon ayarları alınamadı.','Düzenleme başlatılamadı. Yeniden deneyin; sorun sürerse destek alın.',true,'Yeniden dene');
+  if(state==='session')message('Oturumunuz sona erdi.','Bu ayarları değiştirmek için yeniden giriş yapın.',true);
+  if(state==='forbidden')message('Bu sayfaya erişiminiz yok.','Rezervasyon ayarlarını yalnız işletme sahibi değiştirebilir.',true);
+ }
+ change();
+}
+$('state').onchange=event=>show(event.target.value);
+for(const id of fields)$(id).oninput=()=>{if(!blocked)$('feedback').hidden=true;clearErrors();change()};
+$('form').onsubmit=event=>{
+ event.preventDefault();if(blocked)return;clearErrors();let valid=true;
+ for(const id of fields){if(!$(id).checkValidity()){error(id,'Geçerli bir tam sayı girin ('+$(id).min+'–'+$(id).max+').');valid=false}}
+ if(valid&&Number($('lead').value)>=Number($('horizon').value)*1440){error('lead','Ön süre ileri rezervasyon süresinden kısa olmalı.');valid=false}
+ if(!valid){document.querySelector('[aria-invalid=true]').focus();return}
+ baseline=fields.map(id=>Number($(id).value));message('Rezervasyon ayarları kaydedildi.','Yeni kurallar sonraki randevu ve taşımalarda uygulanacak.');change();
+};
+$('mobile').onclick=()=>{const open=$('shell').classList.toggle('open');$('mobile').setAttribute('aria-expanded',String(open))};
+$('collapse').onclick=()=>{const collapsed=$('shell').classList.toggle('collapsed');$('collapse').setAttribute('aria-expanded',String(!collapsed));$('collapse').setAttribute('aria-label',collapsed?'Menüyü genişlet':'Menüyü daralt')};
+document.addEventListener('keydown',event=>{if(event.key==='Escape'&&$('shell').classList.contains('open')){$('shell').classList.remove('open');$('mobile').setAttribute('aria-expanded','false');$('mobile').focus()}});
+document.querySelectorAll('a[aria-disabled]').forEach(link=>link.onclick=event=>event.preventDefault());
+show(new URLSearchParams(location.search).get('state')||'ready');
+</script>
+</body></html>

@@ -73,7 +73,7 @@ describe('Yönetim gezinmesi', () => {
     await click(title)
     expect(container.querySelector('h1')?.textContent).toBe(title)
     expect(container.querySelector('#management-navigation a[aria-current="page"]')?.textContent).toBe(title)
-    expect(container.querySelectorAll('#management-navigation a[data-navigation]')).toHaveLength(7)
+    expect(container.querySelectorAll('#management-navigation a[data-navigation]')).toHaveLength(8)
   })
   it('başlıkta sunucudan gelen işletme adını gösterir; taslak ve başarısız kayıt başlığı değiştirmez', async () => {
     await render()
@@ -307,7 +307,7 @@ describe('Yönetim gezinmesi', () => {
     const navigationText = Array.from(container.querySelectorAll('nav')).map(nav => nav.textContent).join(' ')
     expect(navigationText).toContain('Hesap')
     expect(navigationText).toContain('Hesap ve güvenlik')
-    for (const label of ['İşletme', 'Ekip', 'Personel', 'Hizmetler', 'Çalışan erişimleri', 'Değişiklik kayıtları']) {
+    for (const label of ['İşletme', 'Ekip', 'Personel', 'Hizmetler', 'Rezervasyon ayarları', 'Çalışan erişimleri', 'Değişiklik kayıtları']) {
       expect(navigationText).not.toContain(label)
     }
     expect(container.querySelector('#business-name')).toBeNull()

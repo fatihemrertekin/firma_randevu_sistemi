@@ -1,0 +1,116 @@
+import { useEffect, useRef, useState, type FormEvent } from 'react'
+import type { postWithCsrf } from '../../app/api'
+import useUnsavedChanges from '../../app/useUnsavedChanges'
+import ErrorMessage from '../../components/ErrorMessage'
+import { BookingPolicyError, bookingPolicyEndpoint, bookingPolicyFailure, policyFieldErrors, policyFields, policyLimits, readBookingPolicy, type BookingPolicy as Policy, type PolicyField } from './bookingPolicyApi'
+import styles from './BookingPolicy.module.css'
+
+type Props = { post: typeof postWithCsrf; onDirtyChange: (dirty: boolean) => void; onBusyChange: (busy: boolean) => void }
+const labels = {
+  leadMinutes: { title: 'En az kaç dakika önce?', help: 'Randevu başlangıcına kalan en kısa süre.', unit: 'dakika' },
+  horizonDays: { title: 'En fazla kaç gün ileriye?', help: 'Bugünden itibaren randevu alınabilecek süre.', unit: 'gün' },
+  slotMinutes: { title: 'Başlangıç saatleri aralığı', help: 'Randevular bu aralıklarla başlar. Hizmet süresi değişmez.', unit: 'dakika' },
+}
+type Draft = Record<PolicyField, string>
+function draftOf(value: Policy): Draft { return { leadMinutes: String(value.leadMinutes), horizonDays: String(value.horizonDays), slotMinutes: String(value.slotMinutes) } }
+function slotExample(value: string) {
+  if (!/^\d{1,2}$/u.test(value) || Number(value) < 1 || Number(value) > 60) return 'Aralık örneği için 1–60 dakika girin.'
+  const step = Number(value), start = Math.ceil(540 / step) * step
+  return 'Aralık örneği: ' + [start, start + step, start + 2 * step].map(minutes => `${String(Math.floor(minutes / 60)).padStart(2, '0')}.${String(minutes % 60).padStart(2, '0')}`).join(' · ')
+}
+export default function BookingPolicy({ post, onDirtyChange, onBusyChange }: Props) {
+  const [original, setOriginal] = useState<Policy | null>(null)
+  const [draft, setDraft] = useState<Draft>({ leadMinutes: '', horizonDays: '', slotMinutes: '' })
+  const [loading, setLoading] = useState(true), [busy, setBusy] = useState(false), [revision, setRevision] = useState(0)
+  const [locked, setLocked] = useState(false), [denied, setDenied] = useState(false)
+  const [error, setError] = useState(''), [notice, setNotice] = useState('')
+  const [errors, setErrors] = useState<Partial<Record<PolicyField, string>>>({}), [retryUntil, setRetryUntil] = useState(0)
+  const form = useRef<HTMLFormElement>(null), sending = useRef(false)
+  const dirty = original !== null && policyFields.some(key => draft[key] !== String(original[key]))
+  useUnsavedChanges(dirty, onDirtyChange)
+  useEffect(() => { onBusyChange(loading || busy); return () => onBusyChange(false) }, [loading, busy, onBusyChange])
+  useEffect(() => {
+    if (!retryUntil) return
+    const timer = setTimeout(() => setRetryUntil(0), Math.max(0, retryUntil - Date.now()))
+    return () => clearTimeout(timer)
+  }, [retryUntil])
+  function respectRetry(response: Response) {
+    const header = response.headers.get('Retry-After')
+    if (!header) return
+    const until = /^\d{1,5}$/u.test(header) ? Date.now() + Number(header) * 1000 : Date.parse(header)
+    if (Number.isFinite(until) && until > Date.now() && until - Date.now() <= 86400000) setRetryUntil(until)
+  }
+  useEffect(() => {
+    const controller = new AbortController()
+    void fetch(bookingPolicyEndpoint, { cache: 'no-store', signal: AbortSignal.any([controller.signal, AbortSignal.timeout(15000)]) })
+      .then(response => { if (!controller.signal.aborted && response.status === 429) respectRetry(response); return readBookingPolicy(response) })
+      .then(value => {
+        if (controller.signal.aborted) return
+        setOriginal(value); setDraft(draftOf(value)); setLocked(false); setDenied(false); setError(''); setErrors({})
+      }).catch((problem: unknown) => {
+        if (controller.signal.aborted) return
+        const status = problem instanceof BookingPolicyError ? problem.status : 500
+        setDenied(status === 401 || status === 403)
+        setError(status >= 500 ? 'Ayarlar yüklenemedi. Bağlantınızı kontrol edip yeniden deneyin. Ekranda kalan değerler güncel olarak doğrulanmadı.' : bookingPolicyFailure(status))
+      }).finally(() => { if (!controller.signal.aborted) setLoading(false) })
+    return () => controller.abort()
+  }, [revision])
+  useEffect(() => {
+    if (loading || busy) return
+    const key = policyFields.find(field => errors[field])
+    if (key) form.current?.querySelector<HTMLInputElement>(`[name="${key}"]`)?.focus()
+  }, [errors, loading, busy])
+  function reload() {
+    if (sending.current || loading || retryUntil || (dirty && !window.confirm('Güncel ayarlar yüklensin ve kaydedilmemiş değişiklikler silinsin mi?'))) return
+    setLoading(true); setLocked(true); setError(''); setNotice(''); setRevision(value => value + 1)
+  }
+  async function save(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (!original || !dirty || sending.current || loading || locked || denied || retryUntil) return
+    const fields: Partial<Record<PolicyField, string>> = {}
+    for (const key of policyFields) {
+      const [min, max] = policyLimits[key]
+      if (!/^\d{1,5}$/u.test(draft[key]) || Number(draft[key]) < min || Number(draft[key]) > max) fields[key] = `Geçerli bir tam sayı girin (${min}–${max}).`
+    }
+    if (!fields.leadMinutes && !fields.horizonDays && Number(draft.leadMinutes) >= Number(draft.horizonDays) * 1440) fields.leadMinutes = 'Ön süre ileri rezervasyon süresinden kısa olmalı.'
+    if (Object.keys(fields).length) { setErrors(fields); return }
+    sending.current = true; setBusy(true); setError(''); setNotice(''); setErrors({})
+    try {
+      const response = await post(bookingPolicyEndpoint, { version: original.version, leadMinutes: Number(draft.leadMinutes), horizonDays: Number(draft.horizonDays), slotMinutes: Number(draft.slotMinutes) }, AbortSignal.timeout(15000))
+      if (response.status === 400) {
+        const fields = await policyFieldErrors(response)
+        if (Object.keys(fields).length) { setErrors(fields); return }
+      }
+      if (response.status === 429) respectRetry(response)
+      const saved = await readBookingPolicy(response)
+      setOriginal(saved); setDraft(draftOf(saved)); onDirtyChange(false); setNotice('Rezervasyon ayarları kaydedildi.')
+    } catch (problem: unknown) {
+      const status = problem instanceof BookingPolicyError ? problem.status : 500
+      setError(bookingPolicyFailure(status)); setLocked(true); setDenied(status === 401 || status === 403)
+    } finally { sending.current = false; setBusy(false) }
+  }
+  return <div className={styles.editor}>
+    {loading && <p role="status">Rezervasyon ayarları yükleniyor…</p>}
+    <ErrorMessage message={error} />
+    {!loading && error && !denied && <button type="button" className={styles.reload} disabled={busy || !!retryUntil} onClick={reload}>{original ? 'Güncel ayarları yükle' : 'Yeniden dene'}</button>}
+    {notice && <p role="status">{notice}</p>}
+    {original && !denied && <section className={styles.paper} aria-label="Rezervasyon kuralları">
+      <p className={styles.context}>Bu ayarlar yeni randevularda ve randevu taşımalarında uygulanır. Mevcut randevular değişmez.</p>
+      <form ref={form} className={styles.form} aria-label="Rezervasyon ayarlarını düzenle" aria-busy={loading || busy} noValidate onSubmit={event => { void save(event) }}>
+        {policyFields.map(key => <div className={styles.setting} key={key}>
+          <div><label htmlFor={`policy-${key}`}>{labels[key].title}</label><p id={`policy-${key}-help`}>{labels[key].help}</p></div>
+          <div><div className={styles.inputGroup}><input id={`policy-${key}`} name={key} type="number" inputMode="numeric" min={policyLimits[key][0]} max={policyLimits[key][1]} step="1" required value={draft[key]} disabled={busy || loading}
+            aria-invalid={!!errors[key] || undefined} aria-describedby={`policy-${key}-help${key === 'slotMinutes' ? ' policy-example' : ''}${errors[key] ? ` policy-${key}-error` : ''}`}
+            onChange={event => { setDraft(current => ({ ...current, [key]: event.target.value })); setErrors({}); setNotice('') }} /><span className={styles.unit}>{labels[key].unit}</span></div>
+            {key === 'slotMinutes' && <p className={styles.example} id="policy-example">{slotExample(draft.slotMinutes)}</p>}
+            {errors[key] && <p className={styles.fieldError} id={`policy-${key}-error`}>{errors[key]}</p>}
+          </div>
+        </div>)}
+        <div className={styles.footer}><p>Saatler İstanbul saatine göre değerlendirilir.</p><div className={styles.actions}>
+          <button type="submit" disabled={busy || loading || locked || !!retryUntil || !dirty}>{busy ? 'Kaydediliyor…' : 'Ayarları kaydet'}</button>
+          <span>{dirty ? 'Kaydedilmemiş değişiklikler var.' : 'Kaydedilmemiş değişiklik yok.'}</span>
+        </div></div>
+      </form>
+    </section>}
+  </div>
+}

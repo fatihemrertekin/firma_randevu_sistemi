@@ -21,6 +21,7 @@ import ErrorMessage from '../components/ErrorMessage'
 import OwnerRecoveryEmail from '../features/auth/OwnerRecoveryEmail'
 import MfaRecoveryCodes from '../features/auth/MfaRecoveryCodes'
 import AuditLog from '../features/audit/AuditLog'
+import BookingPolicy from '../features/booking-policy/BookingPolicy'
 
 type Group = 'business' | 'team' | 'account'
 const groups = [
@@ -29,7 +30,7 @@ const groups = [
   { id: 'account', title: 'Hesap' },
 ] as const
 const sectionGroups: Record<Exclude<Section, 'audit'>, Group> = {
-  business: 'business', hours: 'business', services: 'business', personnel: 'team', access: 'team', security: 'account',
+  business: 'business', hours: 'business', services: 'business', bookingPolicy: 'business', personnel: 'team', access: 'team', security: 'account',
 }
 
 function NavigationIcon({ kind }: { kind: Section }) {
@@ -41,6 +42,7 @@ function NavigationIcon({ kind }: { kind: Section }) {
     access: 'M12 3l8 3v6c0 5-8 9-8 9s-8-4-8-9V6zM8 12l3 3 5-6',
     security: 'M5 10h14v11H5zM8 10V7a4 4 0 0 1 8 0v3M12 14v3',
     audit: 'M6 2h9l4 4v16H6zM14 2v5h5M9 11h7M9 15h7M9 19h4',
+    bookingPolicy: 'M3 5h18v16H3zM7 3v4M17 3v4M3 11h18M8 15h3M8 18h6',
   }
   return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={paths[kind]} /></svg>
 }
@@ -49,6 +51,7 @@ const sections = [
   { id: 'hours', title: 'İşletme saatleri', description: 'Haftalık açılış, kapanış ve kapalı günleri belirleyin.' },
   { id: 'personnel', title: 'Personel', description: 'İşletmede hizmet veren kişilerin adını ve aktiflik durumunu yönetin.' },
   { id: 'services', title: 'Hizmetler', description: 'Hizmetlerin adını, süresini ve fiyatını yönetin.' },
+  { id: 'bookingPolicy', title: 'Rezervasyon ayarları', description: 'Randevuların ne kadar önceden ve hangi aralıklarla alınabileceğini belirleyin.' },
   { id: 'security', title: 'Hesap ve güvenlik', description: 'Hesabınızı koruyun ve parolanızı değiştirin.' },
   { id: 'access', title: 'Çalışan erişimleri', description: 'Çalışan hesaplarını, davetleri ve parola sıfırlama işlemlerini yönetin.' },
   { id: 'audit', title: 'Değişiklik kayıtları', description: 'Yapılan işlemlerin zamanını, yapan hesabı ve ilgili kaydı görüntüleyin.' },
@@ -176,6 +179,7 @@ export default function ManagementLayout({ auth, account }: Props) {
         {owner && section === 'hours' && <div className={styles.profilePanel}>
           <BusinessHours post={post} onDirtyChange={setDefinitionDirty} onBusyChange={setDefinitionBusy} />
         </div>}
+        {owner && section === 'bookingPolicy' && <BookingPolicy post={post} onDirtyChange={setDefinitionDirty} onBusyChange={setDefinitionBusy} />}
         {owner && section === 'services' && <div className={styles.profilePanel}>
           <Services post={post} onDirtyChange={setDefinitionDirty} onBusyChange={setDefinitionBusy} headingRef={heading} />
         </div>}

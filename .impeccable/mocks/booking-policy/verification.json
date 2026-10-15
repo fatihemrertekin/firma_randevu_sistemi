@@ -1,0 +1,24 @@
+{
+  "pass": true,
+  "scope": "static mock only; no API or real save",
+  "widths": [
+    1280,
+    768,
+    390,
+    320
+  ],
+  "states": 13,
+  "captures": [
+    "ready-1280.png",
+    "ready-768.png",
+    "ready-390.png",
+    "success-390.png",
+    "invalid-390.png",
+    "conflict-390.png",
+    "uncertain-390.png",
+    "load-error-390.png",
+    "ready-320.png"
+  ],
+  "errors": [],
+  "externalRequests": []
+}
