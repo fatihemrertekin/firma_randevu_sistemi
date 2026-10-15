@@ -14,7 +14,7 @@ const labels = {
 type Draft = Record<PolicyField, string>
 function draftOf(value: Policy): Draft { return { leadMinutes: String(value.leadMinutes), horizonDays: String(value.horizonDays), slotMinutes: String(value.slotMinutes) } }
 function slotExample(value: string) {
-  if (!/^\d{1,2}$/u.test(value) || Number(value) < 1 || Number(value) > 60) return 'Aralık örneği için 1–60 dakika girin.'
+  if (!/^\d{1,5}$/u.test(value) || Number(value) < 1 || Number(value) > 60) return 'Aralık örneği için 1–60 dakika girin.'
   const step = Number(value), start = Math.ceil(540 / step) * step
   return 'Aralık örneği: ' + [start, start + step, start + 2 * step].map(minutes => `${String(Math.floor(minutes / 60)).padStart(2, '0')}.${String(minutes % 60).padStart(2, '0')}`).join(' · ')
 }
