@@ -120,11 +120,13 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
         block.Property(item => item.BufferAfterMinutes).HasDefaultValue(0);
         block.Property(item => item.Occupied).HasColumnType("tstzrange").HasComputedColumnSql("tstzrange(\"OccupiedStartsAt\", \"OccupiedEndsAt\", '[)')", stored: true);
         block.HasIndex(item => new { item.StaffMemberId, item.OccupiedStartsAt });
+        block.HasIndex(item => new { item.PendingExpiresAt, item.AppointmentId }).HasFilter("\"Status\" = 'Pending'");
         block.ToTable(table =>
         {
             table.HasCheckConstraint("CK_AppointmentTimeBlocks_Time", "isfinite(\"StartsAt\") AND isfinite(\"EndsAt\") AND \"EndsAt\" > \"StartsAt\" AND \"DurationMinutes\" BETWEEN 1 AND 1440 AND \"EndsAt\" = \"StartsAt\" + \"DurationMinutes\" * INTERVAL '1 minute'");
             table.HasCheckConstraint("CK_AppointmentTimeBlocks_Snapshot", "length(btrim(\"StaffName\")) > 0 AND length(btrim(\"ServiceName\")) > 0 AND \"Price\" BETWEEN 0 AND 999999.99 AND \"Currency\" = 'TRY'");
             table.HasCheckConstraint("CK_AppointmentTimeBlocks_Status", "\"Status\" IN ('Pending','Confirmed','Completed','NoShow','Cancelled')");
+            table.HasCheckConstraint("CK_AppointmentTimeBlocks_Pending", "(\"PendingExpiresAt\" IS NULL OR isfinite(\"PendingExpiresAt\")) AND (\"Status\" <> 'Pending' OR (\"PendingExpiresAt\" IS NOT NULL AND \"PendingExpiresAt\" <= \"StartsAt\"))");
             table.HasCheckConstraint("CK_AppointmentTimeBlocks_Buffers", "\"BufferBeforeMinutes\" BETWEEN 0 AND 120 AND \"BufferAfterMinutes\" BETWEEN 0 AND 120 AND isfinite(\"OccupiedStartsAt\") AND isfinite(\"OccupiedEndsAt\") AND (\"OccupiedStartsAt\" AT TIME ZONE 'UTC') = (\"StartsAt\" AT TIME ZONE 'UTC') - \"BufferBeforeMinutes\" * INTERVAL '1 minute' AND (\"OccupiedEndsAt\" AT TIME ZONE 'UTC') = (\"EndsAt\" AT TIME ZONE 'UTC') + \"BufferAfterMinutes\" * INTERVAL '1 minute'");
         });
         var appointmentAudit = builder.Entity<AppointmentAudit>();
@@ -132,7 +134,11 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
         appointmentAudit.HasOne<AppUser>().WithMany().HasForeignKey(item => item.ActorId).OnDelete(DeleteBehavior.Restrict);
         appointmentAudit.HasIndex(item => new { item.AppointmentId, item.AppointmentVersion }).IsUnique();
         appointmentAudit.Property(item => item.Kind).HasMaxLength(16).HasDefaultValue("Created");
-        appointmentAudit.ToTable(table => table.HasCheckConstraint("CK_AppointmentAudits_Kind", "\"Kind\" IN ('Created','Cancelled','Completed','NoShow','Moved')"));
+        appointmentAudit.ToTable(table =>
+        {
+            table.HasCheckConstraint("CK_AppointmentAudits_Kind", "\"Kind\" IN ('Created','Cancelled','Completed','NoShow','Moved','Confirmed','Expired')");
+            table.HasCheckConstraint("CK_AppointmentAudits_Actor", "(\"Kind\" = 'Expired' AND \"ActorId\" IS NULL) OR (\"Kind\" <> 'Expired' AND \"ActorId\" IS NOT NULL)");
+        });
         var moveCommand = builder.Entity<AppointmentMoveCommand>();
         moveCommand.HasKey(item => new { item.ActorId, item.RequestKey });
         moveCommand.HasOne<AppUser>().WithMany().HasForeignKey(item => item.ActorId).OnDelete(DeleteBehavior.Restrict);
@@ -146,7 +152,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
         statusCommand.HasOne<AppUser>().WithMany().HasForeignKey(item => item.ActorId).OnDelete(DeleteBehavior.Restrict);
         statusCommand.HasOne<Appointment>().WithMany().HasForeignKey(item => item.AppointmentId).OnDelete(DeleteBehavior.Restrict);
         statusCommand.HasOne<AppointmentAudit>().WithMany().HasForeignKey(item => item.AuditId).OnDelete(DeleteBehavior.Restrict);
-        statusCommand.ToTable(table => table.HasCheckConstraint("CK_AppointmentStatusCommands_Request", "\"RequestKey\" <> '00000000-0000-0000-0000-000000000000'::uuid AND \"ExpectedVersion\" <> '00000000-0000-0000-0000-000000000000'::uuid AND \"Status\" IN ('Cancelled','Completed','NoShow')"));
+        statusCommand.ToTable(table => table.HasCheckConstraint("CK_AppointmentStatusCommands_Request", "\"RequestKey\" <> '00000000-0000-0000-0000-000000000000'::uuid AND \"ExpectedVersion\" <> '00000000-0000-0000-0000-000000000000'::uuid AND \"Status\" IN ('Cancelled','Completed','NoShow','Confirmed')"));
         var policy = builder.Entity<BookingPolicy>();
         policy.Property(item => item.Id).ValueGeneratedNever();
         policy.Property(item => item.Version).IsConcurrencyToken();

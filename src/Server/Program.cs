@@ -15,6 +15,7 @@ builder.Services.AddDbContext<AppDbContext>((services, options) =>
 builder.Services.AddProblemDetails();
 
 builder.AddApplicationIdentity();
+builder.Services.AddHostedService<AppointmentPendingWorker>();
 
 var app = builder.Build();
 // İstekler ve teslim işçisi başlamadan son yapılandırmayı doğrula.

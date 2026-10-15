@@ -106,7 +106,7 @@ public sealed class AppointmentStorageTests
         Assert.Equal("created", await InsertAsync(database.GetConnectionString(), seed.OwnerId, members[1], service.Id, Start));
         foreach (var status in new[] { "Pending", "Completed", "NoShow" })
         {
-            await db.Database.ExecuteSqlInterpolatedAsync($"UPDATE \"AppointmentTimeBlocks\" SET \"Status\" = {status} WHERE \"StaffMemberId\" = {members[0]} AND \"StartsAt\" = {Start}", Token);
+            await db.Database.ExecuteSqlInterpolatedAsync($"UPDATE \"AppointmentTimeBlocks\" SET \"Status\" = {status}, \"PendingExpiresAt\" = {Start} WHERE \"StaffMemberId\" = {members[0]} AND \"StartsAt\" = {Start}", Token);
             Assert.Equal("23P01", await InsertAsync(database.GetConnectionString(), seed.OwnerId, members[0], service.Id, Start));
         }
         await db.Database.ExecuteSqlInterpolatedAsync($"UPDATE \"AppointmentTimeBlocks\" SET \"Status\" = 'Cancelled' WHERE \"StaffMemberId\" = {members[0]} AND \"StartsAt\" = {Start}", Token);

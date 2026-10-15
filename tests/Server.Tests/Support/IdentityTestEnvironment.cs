@@ -4,7 +4,9 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Server.Infrastructure;
+using Server.Features.Scheduling;
 using Testcontainers.PostgreSql;
 using Xunit;
 using static Server.Tests.Support.TestAccounts;
@@ -30,6 +32,11 @@ internal static class IdentityTestEnvironment
         var app = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
         {
             builder.UseEnvironment("Development");
+            // API/DB yarışlarında saati test yönetir; işçinin gerçek yaşam döngüsü ayrıca doğrulanır.
+            builder.ConfigureServices(services =>
+            {
+                foreach (var descriptor in services.Where(item => item.ServiceType == typeof(IHostedService) && item.ImplementationType == typeof(AppointmentPendingWorker)).ToArray()) services.Remove(descriptor);
+            });
             if (clock is not null) builder.ConfigureServices(services => services.AddSingleton(clock));
             builder.ConfigureAppConfiguration((_, configuration) =>
                 configuration.AddInMemoryCollection(new Dictionary<string, string?>

@@ -20,7 +20,7 @@ public static class AppointmentEndpoints
     public sealed record AppointmentResponse(Guid Id, Guid Version, Guid StaffMemberId, string StaffName,
         Guid ServiceId, string ServiceName, int DurationMinutes, decimal Price, string Currency,
         DateTime StartsAt, DateTime EndsAt, string Status, string CustomerName, string CustomerPhone,
-        int BufferBeforeMinutes, int BufferAfterMinutes, DateTime OccupiedStartsAt, DateTime OccupiedEndsAt);
+        int BufferBeforeMinutes, int BufferAfterMinutes, DateTime OccupiedStartsAt, DateTime OccupiedEndsAt, DateTime? PendingExpiresAt = null);
     public sealed record AvailabilityResponse(string TimeZone, Guid ServiceVersion, DateTime[] StartsAt);
 
     public static void MapAppointmentEndpoints(this IEndpointRouteBuilder app)
@@ -28,7 +28,8 @@ public static class AppointmentEndpoints
         var appointments = app.MapGroup("/api/appointments").RequireAuthorization("Owner").RequireRateLimiting("appointments");
         appointments.MapGet("/availability", AvailabilityAsync);
         appointments.MapGet("/{id:guid}", ReadAsync);
-        appointments.MapPost("/", CreateAsync);
+        appointments.MapPost("/", (CreateRequest request, HttpContext context, IAntiforgery csrf, AppDbContext db, UserManager<AppUser> users, TimeProvider clock) => CreateAsync(request, false, context, csrf, db, users, clock));
+        appointments.MapPost("/pending", (CreateRequest request, HttpContext context, IAntiforgery csrf, AppDbContext db, UserManager<AppUser> users, TimeProvider clock) => CreateAsync(request, true, context, csrf, db, users, clock));
         appointments.MapAppointmentStatusEndpoints();
         appointments.MapAppointmentMoveEndpoints();
     }
@@ -48,7 +49,7 @@ public static class AppointmentEndpoints
          select new AppointmentResponse(appointment.Id, appointment.Version, block.StaffMemberId, block.StaffName,
              block.ServiceDefinitionId, block.ServiceName, block.DurationMinutes, block.Price, block.Currency,
              block.StartsAt, block.EndsAt, block.Status, appointment.CustomerName, appointment.CustomerPhone,
-             block.BufferBeforeMinutes, block.BufferAfterMinutes, block.OccupiedStartsAt, block.OccupiedEndsAt)).SingleOrDefaultAsync(token);
+             block.BufferBeforeMinutes, block.BufferAfterMinutes, block.OccupiedStartsAt, block.OccupiedEndsAt, block.PendingExpiresAt)).SingleOrDefaultAsync(token);
 
     private static async Task<IResult> ReadAsync(Guid id, HttpContext context, AppDbContext db)
     {
@@ -105,7 +106,7 @@ public static class AppointmentEndpoints
         return starts.ToArray();
     }
 
-    private static async Task<IResult> CreateAsync(CreateRequest request, HttpContext context, IAntiforgery antiforgery,
+    private static async Task<IResult> CreateAsync(CreateRequest request, bool pending, HttpContext context, IAntiforgery antiforgery,
         AppDbContext db, UserManager<AppUser> users, TimeProvider clock)
     {
         using var timeout = Timeout(context);
@@ -129,6 +130,8 @@ public static class AppointmentEndpoints
             CustomerName = name,
             CustomerPhone = phone
         }))));
+        // Confirmed isteklerinin önceki özetleri aynı kalır; diğer uç aynı anahtarla durum değiştiremez.
+        if (pending) hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes("Pending:" + hash)));
         await using var transaction = await db.Database.BeginTransactionAsync(timeout.Token);
         var owner = await OwnerMutationAuthorization.LockAsync(context, db, users, timeout.Token);
         if (owner is null) return Results.Unauthorized();
@@ -146,7 +149,7 @@ public static class AppointmentEndpoints
             !await db.StaffServiceAssignments.AnyAsync(item => item.StaffMemberId == member.Id && item.ServiceDefinitionId == service.Id, timeout.Token))
             return Conflict("Personel, hizmet veya çalışma saatleri rezervasyona uygun değil.");
         var now = clock.GetUtcNow().UtcDateTime;
-        if (!AppointmentRules.InWindow(start, now, policy)) return Conflict("Başlangıç rezervasyon aralığına ve saat adımına uygun değil.");
+        if (!AppointmentRules.InWindow(start, now, policy) || pending && start <= now) return Conflict("Başlangıç rezervasyon aralığına ve saat adımına uygun değil.");
         var end = start.AddMinutes(service.DurationMinutes);
         var occupiedStart = start.AddMinutes(-service.BufferBeforeMinutes);
         var occupiedEnd = end.AddMinutes(service.BufferAfterMinutes);
@@ -182,7 +185,8 @@ public static class AppointmentEndpoints
             Currency = service.Currency,
             StartsAt = start,
             EndsAt = end,
-            Status = "Confirmed"
+            Status = pending ? "Pending" : "Confirmed",
+            PendingExpiresAt = pending ? (now.AddMinutes(30) < start ? now.AddMinutes(30) : start) : null
         };
         db.Appointments.Add(appointment);
         db.AppointmentTimeBlocks.Add(block);
@@ -204,10 +208,8 @@ public static class AppointmentEndpoints
         {
             return Conflict("Bu saat başka bir randevu tarafından alındı. Uygun saatleri yeniden yükleyin.");
         }
-        return Results.Created($"/api/appointments/{appointment.Id}", new AppointmentResponse(appointment.Id, appointment.Version,
-            member.Id, block.StaffName, service.Id, block.ServiceName, block.DurationMinutes, block.Price, block.Currency,
-            start, end, block.Status, appointment.CustomerName, appointment.CustomerPhone,
-            block.BufferBeforeMinutes, block.BufferAfterMinutes, block.OccupiedStartsAt, block.OccupiedEndsAt));
+        // PostgreSQL zaman hassasiyetini kullan; ilk yanıt ve tekrar aynı son anı döndürür.
+        return Results.Created($"/api/appointments/{appointment.Id}", await ResponseAsync(db, appointment.Id, timeout.Token));
     }
 
     private static IResult Conflict(string title) => Results.Problem(statusCode: 409, title: title);

@@ -32,13 +32,14 @@ public sealed class AppointmentTimeBlock
     public DateTime OccupiedEndsAt { get; set; }
     public NpgsqlRange<DateTime> Occupied { get; set; }
     public required string Status { get; set; }
+    public DateTime? PendingExpiresAt { get; set; }
 }
 
 public sealed class AppointmentAudit
 {
     public Guid Id { get; set; }
     public Guid AppointmentId { get; set; }
-    public Guid ActorId { get; set; }
+    public Guid? ActorId { get; set; }
     public Guid AppointmentVersion { get; set; }
     public DateTime OccurredAt { get; set; }
     public string Kind { get; set; } = "Created";

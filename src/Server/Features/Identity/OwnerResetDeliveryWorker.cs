@@ -17,7 +17,7 @@ public sealed class OwnerResetDeliveryWorker(IServiceScopeFactory scopes, OwnerS
         {
             try { await ProcessOneAsync(stoppingToken); }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested) { break; }
-            catch (Exception exception) when (exception is NpgsqlException or DbUpdateException or OperationCanceledException)
+            catch (Exception exception) when (exception is NpgsqlException or DbUpdateException or OperationCanceledException or InvalidOperationException { InnerException: NpgsqlException })
             {
                 // Do not log exception text: it may include connection data or delivery secrets.
                 logger.LogWarning("Owner sıfırlama kuyruğu işlenemedi; sonraki çevrimde yeniden denenecek.");

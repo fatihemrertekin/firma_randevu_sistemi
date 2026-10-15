@@ -12,6 +12,7 @@ public static class AppointmentStatusEndpoints
 
     internal static void MapAppointmentStatusEndpoints(this RouteGroupBuilder appointments)
     {
+        appointments.MapPost("/{id:guid}/confirm", (Guid id, Request request, HttpContext context, IAntiforgery csrf, AppDbContext db, UserManager<AppUser> users, TimeProvider clock) => ChangeAsync(id, request, "Confirmed", context, csrf, db, users, clock));
         appointments.MapPost("/{id:guid}/cancel", (Guid id, Request request, HttpContext context, IAntiforgery csrf, AppDbContext db, UserManager<AppUser> users, TimeProvider clock) => ChangeAsync(id, request, "Cancelled", context, csrf, db, users, clock));
         appointments.MapPost("/{id:guid}/complete", (Guid id, Request request, HttpContext context, IAntiforgery csrf, AppDbContext db, UserManager<AppUser> users, TimeProvider clock) => ChangeAsync(id, request, "Completed", context, csrf, db, users, clock));
         appointments.MapPost("/{id:guid}/no-show", (Guid id, Request request, HttpContext context, IAntiforgery csrf, AppDbContext db, UserManager<AppUser> users, TimeProvider clock) => ChangeAsync(id, request, "NoShow", context, csrf, db, users, clock));
@@ -42,8 +43,13 @@ public static class AppointmentStatusEndpoints
         var block = await db.AppointmentTimeBlocks.SingleAsync(item => item.AppointmentId == id, token);
         if (block.StaffMemberId != memberId || appointment.Version != request.Version) return Conflict("Randevu değişti. Güncel kaydı yükleyin.");
         var now = clock.GetUtcNow().UtcDateTime;
-        if (block.Status != "Confirmed") return Conflict("Bu durumdaki randevu için bu işlem uygulanamaz.");
-        if (status == "Cancelled" ? now >= block.StartsAt : now < block.StartsAt)
+        if (block.Status == "Pending")
+        {
+            if (block.PendingExpiresAt is not { } deadline || deadline <= now || now >= block.StartsAt) return Conflict("Bekleme süresi doldu; randevu onaylanamaz veya yeniden açılamaz.");
+            if (status is not ("Confirmed" or "Cancelled")) return Conflict("Bekleyen randevu yalnız onaylanabilir veya iptal edilebilir.");
+        }
+        else if (block.Status != "Confirmed" || status == "Confirmed") return Conflict("Bu durumdaki randevu için bu işlem uygulanamaz.");
+        if (block.Status == "Confirmed" && (status == "Cancelled" ? now >= block.StartsAt : now < block.StartsAt))
             return Conflict(status == "Cancelled" ? "Başlayan randevu sıradan iptalle açılmaz." : "Randevu başlamadan tamamlandı veya gelmedi olarak işaretlenemez.");
         block.Status = status; appointment.Version = Guid.NewGuid();
         var audit = new AppointmentAudit { Id = Guid.NewGuid(), AppointmentId = id, ActorId = owner.Id, AppointmentVersion = appointment.Version, OccurredAt = now, Kind = status };
