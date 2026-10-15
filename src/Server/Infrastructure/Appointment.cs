@@ -74,3 +74,15 @@ public sealed class AppointmentMoveCommand
     public DateTime StartsAt { get; set; }
     public Guid AuditId { get; set; }
 }
+
+public sealed class BookingPolicyAudit
+{
+    public Guid Id { get; set; }
+    public Guid ActorId { get; set; }
+    public Guid PreviousVersion { get; set; }
+    public Guid PolicyVersion { get; set; }
+    public DateTimeOffset OccurredAt { get; set; }
+    public int LeadMinutes { get; set; }
+    public int HorizonDays { get; set; }
+    public int SlotMinutes { get; set; }
+}

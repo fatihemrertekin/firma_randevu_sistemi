@@ -34,7 +34,10 @@ GRANT SELECT, INSERT ON TABLE "AppointmentStatusCommands" TO app_user;
 REVOKE UPDATE, DELETE, TRUNCATE ON TABLE "AppointmentStatusCommands" FROM app_user;
 GRANT SELECT ON TABLE "BookingPolicies" TO app_user;
 REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON TABLE "BookingPolicies" FROM app_user;
--- FOR SHARE politika değerlerini sabitler; tekil Id yalnız 1 kalabilir.
+  GRANT SELECT, INSERT ON TABLE "BookingPolicyAudits" TO app_user;
+  REVOKE UPDATE, DELETE, TRUNCATE ON TABLE "BookingPolicyAudits" FROM app_user;
+  GRANT UPDATE ("LeadMinutes", "HorizonDays", "SlotMinutes", "Version") ON TABLE "BookingPolicies" TO app_user;
+  -- FOR SHARE politika değerlerini sabitler; tekil Id yalnız 1 kalabilir.
 GRANT UPDATE ("Id") ON TABLE "BookingPolicies" TO app_user;
 GRANT SELECT, INSERT ON TABLE "OwnerMfaRecoveryAudits" TO app_user;
 REVOKE UPDATE, DELETE, TRUNCATE ON TABLE "OwnerMfaRecoveryAudits" FROM app_user;

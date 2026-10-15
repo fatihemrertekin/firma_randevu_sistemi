@@ -29,10 +29,11 @@ internal static class AuditLogQuery
           UNION ALL SELECT "Id", "OccurredAt", 11, "Kind", CASE WHEN "Kind" = 'Completed' THEN "OwnerId" ELSE NULL::uuid END, "OwnerId", NULL::uuid FROM "OwnerPasswordResetAudits"
           UNION ALL SELECT "Id", "OccurredAt", 12, '', NULL::uuid, "OwnerId", NULL::uuid FROM "OwnerMfaRecoveryAudits"
           UNION ALL SELECT "Id", "OccurredAt", 13, '', "ActorId", "StaffId", NULL::uuid FROM "StaffActivationAudits"
+          UNION ALL SELECT "Id", "OccurredAt", 14, '', "ActorId", NULL::uuid, NULL::uuid FROM "BookingPolicyAudits"
         ), page AS (
           SELECT * FROM events
           WHERE "OccurredAt" <= @asOf
-            AND (@category = 'all' OR (@category = 'definitions' AND "Source" <= 7) OR (@category = 'security' AND "Source" >= 8))
+            AND (@category = 'all' OR (@category = 'definitions' AND ("Source" <= 7 OR "Source" = 14)) OR (@category = 'security' AND "Source" BETWEEN 8 AND 13))
             AND (NOT @hasCursor OR ("OccurredAt", "Source", "Id") < (@beforeAt, @source, @id))
           ORDER BY "OccurredAt" DESC, "Source" DESC, "Id" DESC LIMIT @limit
         )
@@ -40,6 +41,7 @@ internal static class AuditLogQuery
           CASE WHEN p."Source" = 11 AND p."Kind" = 'SelfIssued' THEN 'Oturum açılmadan'
                WHEN p."ActorId" IS NULL THEN 'Yerel bakım' ELSE COALESCE(actor."Email", 'Hesap kaydı') END AS "Actor",
           CASE WHEN p."Source" <= 3 THEN 'İşletme'
+               WHEN p."Source" = 14 THEN 'Rezervasyon ayarları'
                WHEN p."Source" = 6 THEN COALESCE(member."Name", 'Personel kaydı') || ' · ' || COALESCE(service."Name", 'Hizmet kaydı')
                WHEN p."Source" IN (4,7) THEN COALESCE(member."Name", 'Personel kaydı')
                WHEN p."Source" = 5 THEN COALESCE(service."Name", 'Hizmet kaydı')

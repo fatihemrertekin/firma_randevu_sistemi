@@ -28,6 +28,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<AppointmentStatusCommand> AppointmentStatusCommands => Set<AppointmentStatusCommand>();
     public DbSet<AppointmentMoveCommand> AppointmentMoveCommands => Set<AppointmentMoveCommand>();
     public DbSet<BookingPolicy> BookingPolicies => Set<BookingPolicy>();
+    public DbSet<BookingPolicyAudit> BookingPolicyAudits => Set<BookingPolicyAudit>();
     public DbSet<OwnerMfaRecoveryAudit> OwnerMfaRecoveryAudits => Set<OwnerMfaRecoveryAudit>();
     public DbSet<OwnerPasswordResetAudit> OwnerPasswordResetAudits => Set<OwnerPasswordResetAudit>();
     public DbSet<StaffInvitation> StaffInvitations => Set<StaffInvitation>();
@@ -156,8 +157,17 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
         var policy = builder.Entity<BookingPolicy>();
         policy.Property(item => item.Id).ValueGeneratedNever();
         policy.Property(item => item.Version).IsConcurrencyToken();
-        policy.ToTable(table => table.HasCheckConstraint("CK_BookingPolicies_Values", "\"Id\" = 1 AND \"LeadMinutes\" BETWEEN 0 AND 43200 AND \"HorizonDays\" BETWEEN 1 AND 365 AND \"SlotMinutes\" BETWEEN 1 AND 60"));
+        policy.ToTable(table =>
+        {
+            table.HasCheckConstraint("CK_BookingPolicies_Values", "\"Id\" = 1 AND \"LeadMinutes\" BETWEEN 0 AND 43200 AND \"HorizonDays\" BETWEEN 1 AND 365 AND \"SlotMinutes\" BETWEEN 1 AND 60");
+            table.HasCheckConstraint("CK_BookingPolicies_Window", "\"LeadMinutes\" < \"HorizonDays\" * 1440");
+        });
         policy.HasData(new BookingPolicy { Id = 1, LeadMinutes = 60, HorizonDays = 30, SlotMinutes = 15, Version = Guid.Parse("4928211e-eaba-4086-8a82-f2ca1a83908e") });
+        var policyAudit = builder.Entity<BookingPolicyAudit>();
+        policyAudit.HasOne<AppUser>().WithMany().HasForeignKey(item => item.ActorId).OnDelete(DeleteBehavior.Restrict);
+        policyAudit.HasIndex(item => item.PolicyVersion).IsUnique();
+        policyAudit.HasIndex(item => new { item.OccurredAt, item.Id }).IsDescending(true, true);
+        policyAudit.ToTable(table => table.HasCheckConstraint("CK_BookingPolicyAudits_Values", "\"PreviousVersion\" <> '00000000-0000-0000-0000-000000000000'::uuid AND \"PolicyVersion\" <> '00000000-0000-0000-0000-000000000000'::uuid AND \"PreviousVersion\" <> \"PolicyVersion\" AND \"LeadMinutes\" BETWEEN 0 AND 43200 AND \"HorizonDays\" BETWEEN 1 AND 365 AND \"LeadMinutes\" < \"HorizonDays\" * 1440 AND \"SlotMinutes\" BETWEEN 1 AND 60"));
         // Tek zaman çizelgesinin her kaynağında anahtarlı sayfalama: eski kayıt/veri değişmez.
         builder.Entity<BusinessProfileAudit>().HasIndex(entry => new { entry.OccurredAt, entry.Id }).IsDescending(true, true);
         builder.Entity<BusinessLogoAudit>().HasIndex(entry => new { entry.OccurredAt, entry.Id }).IsDescending(true, true);

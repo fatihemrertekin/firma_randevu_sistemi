@@ -505,6 +505,8 @@ namespace Server.Infrastructure.Migrations
                     b.ToTable("BookingPolicies", t =>
                         {
                             t.HasCheckConstraint("CK_BookingPolicies_Values", "\"Id\" = 1 AND \"LeadMinutes\" BETWEEN 0 AND 43200 AND \"HorizonDays\" BETWEEN 1 AND 365 AND \"SlotMinutes\" BETWEEN 1 AND 60");
+
+                            t.HasCheckConstraint("CK_BookingPolicies_Window", "\"LeadMinutes\" < \"HorizonDays\" * 1440");
                         });
 
                     b.HasData(
@@ -515,6 +517,49 @@ namespace Server.Infrastructure.Migrations
                             LeadMinutes = 60,
                             SlotMinutes = 15,
                             Version = new Guid("4928211e-eaba-4086-8a82-f2ca1a83908e")
+                        });
+                });
+
+            modelBuilder.Entity("Server.Infrastructure.BookingPolicyAudit", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ActorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("HorizonDays")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("LeadMinutes")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("OccurredAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("PolicyVersion")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("PreviousVersion")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("SlotMinutes")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ActorId");
+
+                    b.HasIndex("PolicyVersion")
+                        .IsUnique();
+
+                    b.HasIndex("OccurredAt", "Id")
+                        .IsDescending();
+
+                    b.ToTable("BookingPolicyAudits", t =>
+                        {
+                            t.HasCheckConstraint("CK_BookingPolicyAudits_Values", "\"PreviousVersion\" <> '00000000-0000-0000-0000-000000000000'::uuid AND \"PolicyVersion\" <> '00000000-0000-0000-0000-000000000000'::uuid AND \"PreviousVersion\" <> \"PolicyVersion\" AND \"LeadMinutes\" BETWEEN 0 AND 43200 AND \"HorizonDays\" BETWEEN 1 AND 365 AND \"LeadMinutes\" < \"HorizonDays\" * 1440 AND \"SlotMinutes\" BETWEEN 1 AND 60");
                         });
                 });
 
@@ -1717,6 +1762,15 @@ namespace Server.Infrastructure.Migrations
                     b.HasOne("Server.Infrastructure.StaffMember", null)
                         .WithMany()
                         .HasForeignKey("StaffMemberId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Server.Infrastructure.BookingPolicyAudit", b =>
+                {
+                    b.HasOne("Server.Infrastructure.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("ActorId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

@@ -95,7 +95,7 @@ public sealed class AuditLogTests
         var seed = await CreateRecoveryAppAsync(database.GetConnectionString()); await using var app = seed.App;
         using var owner = await InviteOwnerAsync(seed);
         var current = await Read(owner);
-        var partial = WebEncoders.Base64UrlEncode(JsonSerializer.SerializeToUtf8Bytes(new { Category = "all", AsOf = DateTimeOffset.UtcNow, BeforeAt = DateTimeOffset.UtcNow, Source = 14, Id = Guid.NewGuid() }));
+        var partial = WebEncoders.Base64UrlEncode(JsonSerializer.SerializeToUtf8Bytes(new { Category = "all", AsOf = DateTimeOffset.UtcNow, BeforeAt = DateTimeOffset.UtcNow, Source = 15, Id = Guid.NewGuid() }));
         foreach (var query in new[] { "?category=other", "?pageSize=0", "?pageSize=51", "?cursor=invalid", "?cursor=" + new string('a', 513), "?cursor=" + partial, "?category=security&cursor=" + current.Cursor })
         { using var result = await owner.GetAsync(Path + query, Token); Assert.Equal(HttpStatusCode.BadRequest, result.StatusCode); }
         Assert.Empty((await Read(owner)).Items);
@@ -115,7 +115,8 @@ public sealed class AuditLogTests
         Assert.Equal(before, await FingerprintAsync(db)); Assert.Equal(13, (await Read(owner)).Items.Length);
         await migrator.MigrateAsync(cancellationToken: Token); await migrator.MigrateAsync(cancellationToken: Token);
         Assert.Equal(before, await FingerprintAsync(db));
-        Assert.Equal(13, await db.Database.SqlQueryRaw<int>("SELECT count(*)::int AS \"Value\" FROM pg_indexes WHERE schemaname='public' AND indexname LIKE '%Audits_OccurredAt_Id'").SingleAsync(Token));
+        Assert.Equal(14, await db.Database.SqlQueryRaw<int>("SELECT count(*)::int AS \"Value\" FROM pg_indexes WHERE schemaname='public' AND indexname LIKE '%Audits_OccurredAt_Id'").SingleAsync(Token));
+        Assert.Equal(1, await db.Database.SqlQueryRaw<int>("SELECT count(*)::int AS \"Value\" FROM pg_indexes WHERE schemaname='public' AND indexname='IX_BookingPolicyAudits_OccurredAt_Id'").SingleAsync(Token));
     }
 
     [Fact]
