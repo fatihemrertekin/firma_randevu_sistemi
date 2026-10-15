@@ -15,7 +15,7 @@ public sealed class AppointmentPendingWorker(IServiceScopeFactory scopes, TimePr
             var delay = TimeSpan.FromSeconds(5);
             try { await ProcessBatchAsync(stoppingToken); }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested) { break; }
-            catch (Exception error) when (error is NpgsqlException or DbUpdateException or OperationCanceledException)
+            catch (Exception error) when (error is NpgsqlException or DbUpdateException or OperationCanceledException or InvalidOperationException { InnerException: NpgsqlException })
             {
                 logger.LogWarning("Bekleyen randevular okunamadı; sonraki çevrimde yeniden denenecek.");
                 delay = TimeSpan.FromSeconds(30);
@@ -41,7 +41,7 @@ public sealed class AppointmentPendingWorker(IServiceScopeFactory scopes, TimePr
         {
             cancellationToken.ThrowIfCancellationRequested();
             try { if (await ExpireAsync(id, token)) changed++; }
-            catch (Exception error) when (error is NpgsqlException or DbUpdateException or OperationCanceledException)
+            catch (Exception error) when (error is NpgsqlException or DbUpdateException or OperationCanceledException or InvalidOperationException { InnerException: NpgsqlException })
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 // Hata metni bağlantı veya kişi verisi içerebilir; başarısız kayıt DB'de yeniden seçilebilir kalır.

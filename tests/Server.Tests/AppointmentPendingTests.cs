@@ -186,6 +186,37 @@ public sealed class AppointmentPendingTests
     }
 
     [Fact]
+    public async Task HostedWorkerSurvivesDatabaseOutageAndResumesExpiry()
+    {
+        await using var database = RecoveryDatabase(); await database.StartAsync(Token); var clock = new Clock();
+        var connectionString = new NpgsqlConnectionStringBuilder(database.GetConnectionString()) { Timeout = 1, CommandTimeout = 1 }.ConnectionString;
+        var seed = await CreateRecoveryAppAsync(database.GetConnectionString(), clock); await using var app = seed.App;
+        await AppointmentTests.ConfigureAsync(app); using var owner = await InviteOwnerAsync(seed);
+        using var scope = app.Services.CreateScope(); var db = scope.ServiceProvider.GetRequiredService<AppDbContext>(); var original = await Book(owner, db); clock.Now = clock.Now.AddMinutes(30);
+        await database.PauseAsync(Token);
+        await using var restarted = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+        {
+            builder.UseEnvironment("Development");
+            builder.ConfigureAppConfiguration((_, configuration) => configuration.AddInMemoryCollection(new Dictionary<string, string?> { ["ConnectionStrings:AppDatabase"] = connectionString, ["Auth:InstanceId"] = "pending-outage-test", ["OwnerPasswordReset:LocalEnabled"] = "true" }));
+            builder.ConfigureServices(services => services.AddSingleton<TimeProvider>(clock));
+        }); using var client = restarted.CreateClient();
+        try
+        {
+            Assert.True(restarted.Services.GetRequiredService<Server.Features.Identity.OwnerSelfServiceResetFlow>().Enabled);
+            using var unavailable = await client.GetAsync("/health/ready", Token); Assert.Equal(HttpStatusCode.ServiceUnavailable, unavailable.StatusCode);
+            await Task.Delay(TimeSpan.FromSeconds(5), Token);
+            using var live = await client.GetAsync("/health/live", Token); Assert.Equal(HttpStatusCode.OK, live.StatusCode);
+            Assert.False(restarted.Services.GetRequiredService<IHostApplicationLifetime>().ApplicationStopping.IsCancellationRequested);
+        }
+        finally { await database.UnpauseAsync(Token); }
+        using var wait = new CancellationTokenSource(TimeSpan.FromSeconds(45));
+        while (await db.AppointmentTimeBlocks.AsNoTracking().Where(item => item.AppointmentId == original.Id).Select(item => item.Status).SingleAsync(wait.Token) == "Pending") await Task.Delay(100, wait.Token);
+        var audit = await db.AppointmentAudits.AsNoTracking().SingleAsync(item => item.Kind == "Expired", Token); Assert.Null(audit.ActorId); Assert.Equal(2, await db.AppointmentAudits.CountAsync(Token));
+        using var ready = await client.GetAsync("/health/ready", Token); Assert.Equal(HttpStatusCode.OK, ready.StatusCode);
+        await AssertOriginalStateAsync(app, seed);
+    }
+
+    [Fact]
     public async Task MigrationPreservesOldRowsRefusesUnreviewedPendingAndProtectsNewHistory()
     {
         await using var database = RecoveryDatabase(); await database.StartAsync(Token);
