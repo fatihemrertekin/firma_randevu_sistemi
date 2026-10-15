@@ -2,6 +2,7 @@ import { matchPath } from 'react-router'
 
 export const sectionPaths = {
   business: '/yonetim/isletme', hours: '/yonetim/isletme/saatler',
+  bookingPolicy: '/yonetim/rezervasyon-ayarlari',
   personnel: '/yonetim/personel', services: '/yonetim/hizmetler',
   access: '/yonetim/calisan-erisimleri', security: '/yonetim/hesap', audit: '/yonetim/degisiklik-kayitlari',
 } as const

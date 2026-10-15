@@ -22,6 +22,7 @@ beforeEach(() => {
     if (input === '/api/business-profile/') return Response.json({ name: 'Sentetik salon', phone: null, email: null, address: null, version: 'v1' })
     if (input === '/api/auth/mfa/recovery-codes') return Response.json({ remaining: 8 })
     if (input === '/api/auth/recovery-email/') return Response.json({ email: owner.email, verifiedAt: null, deliveryAvailable: false })
+    if (input === '/api/booking-policy/') return Response.json({ version: 'e662d654-471a-4c80-941f-f8f1073fd00a', leadMinutes: 60, horizonDays: 30, slotMinutes: 15, timeZone: 'Europe/Istanbul' })
     if (input.startsWith('/api/staff-members/?')) return Response.json({ items: [member], page: Number(new URLSearchParams(input.split('?')[1]).get('page')), hasMore: true, pageSize: 20, totalCount: ((Number(new URLSearchParams(input.split('?')[1]).get('page'))) - 1) * 20 + ((21)) })
     if (input === '/api/staff-members/member-1') return Response.json(member)
     if (input === '/api/staff-members/member-1/services?page=1&pageSize=10') return Response.json({ member, selected: [], items: [], page: 1, hasMore: false, pageSize: 10, totalCount: 0 })
@@ -56,6 +57,52 @@ async function history(direction: 'back' | 'forward') {
   // A confirmed POP queues a second native history event after the blocker effect.
   await act(async () => { await new Promise(resolve => setTimeout(resolve, 80)) })
 }
+
+describe('Rezervasyon ayarları rotası', () => {
+  it('derin bağlantıyı açar ve kirli formdan ayrılmayı onaylatır', async () => {
+    await render(sectionPaths.bookingPolicy)
+    expect(container.querySelector('h1')?.textContent).toBe('Rezervasyon ayarları')
+    expect(container.querySelector('nav a[aria-current="page"]')?.getAttribute('href')).toBe(sectionPaths.bookingPolicy)
+    expect(Array.from(container.querySelectorAll('section[aria-labelledby="management-group-business"] a')).map(link => link.getAttribute('aria-label')))
+      .toEqual(['İşletme bilgileri', 'İşletme saatleri', 'Hizmetler', 'Rezervasyon ayarları'])
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false)
+    await fill('policy-leadMinutes', '90'); await click('Personel')
+    expect(window.location.pathname).toBe(sectionPaths.bookingPolicy)
+    expect(container.querySelector<HTMLInputElement>('#policy-leadMinutes')?.value).toBe('90')
+    confirm.mockReturnValue(true); await click('Personel')
+    expect(window.location.pathname).toBe(sectionPaths.personnel)
+    await history('back'); expect(container.querySelector<HTMLInputElement>('#policy-leadMinutes')?.value).toBe('60')
+  })
+  it('çalışana ayar menüsü veya API isteği sunmaz', async () => {
+    account = staff; await render(sectionPaths.bookingPolicy)
+    expect(container.querySelector('h1')?.textContent).toBe('Erişim izni yok')
+    expect(container.querySelector('nav a[aria-label="Rezervasyon ayarları"]')).toBeNull()
+    expect(vi.mocked(fetch).mock.calls.some(([path]) => path === '/api/booking-policy/')).toBe(false)
+  })
+  it('anonim derin bağlantının giriş dönüş adresini korur', async () => {
+    account = null; await render(sectionPaths.bookingPolicy)
+    expect(window.location.pathname).toBe(authPaths.login)
+    expect(new URLSearchParams(window.location.search).get('donus')).toBe(sectionPaths.bookingPolicy)
+  })
+  it('POST gövdesi tamamlanmadan menü ve çıkış kilidini açmaz', async () => {
+    const implementation = vi.mocked(fetch).getMockImplementation()
+    let finish: (value: unknown) => void = () => { throw new Error('Bekleyen gövde yok') }
+    vi.mocked(fetch).mockImplementation(async (input, options) => {
+      if (input === '/api/booking-policy/' && options?.method === 'POST') {
+        const response = Response.json({})
+        vi.spyOn(response, 'json').mockImplementation(() => new Promise(resolve => { finish = resolve }))
+        return response
+      }
+      if (!implementation) throw new Error('Test GET yok')
+      return implementation(input, options)
+    })
+    await render(sectionPaths.bookingPolicy); await fill('policy-leadMinutes', '90'); await submit('Rezervasyon ayarlarını düzenle')
+    await click('Personel'); expect(window.location.pathname).toBe(sectionPaths.bookingPolicy)
+    expect(Array.from(container.querySelectorAll('header button')).every(button => button.matches(':disabled'))).toBe(true)
+    await act(async () => finish({ version: 'b3391166-03f1-4f58-8ed3-a7b5a98c52f1', leadMinutes: 90, horizonDays: 30, slotMinutes: 15, timeZone: 'Europe/Istanbul' }))
+    await click('Personel'); expect(window.location.pathname).toBe(sectionPaths.personnel)
+  })
+})
 
 describe('Ekran URL ve geçmiş kabulü', () => {
   it('profil okunurken sunucunun onayladığı hesap sayfasına URL ile döner', async () => {
