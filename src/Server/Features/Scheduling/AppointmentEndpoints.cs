@@ -26,6 +26,7 @@ public static class AppointmentEndpoints
     public static void MapAppointmentEndpoints(this IEndpointRouteBuilder app)
     {
         var appointments = app.MapGroup("/api/appointments").RequireAuthorization("Owner").RequireRateLimiting("appointments");
+        appointments.MapAppointmentListEndpoints();
         appointments.MapGet("/availability", AvailabilityAsync);
         appointments.MapGet("/{id:guid}", ReadAsync);
         appointments.MapPost("/", (CreateRequest request, HttpContext context, IAntiforgery csrf, AppDbContext db, UserManager<AppUser> users, TimeProvider clock) => CreateAsync(request, false, context, csrf, db, users, clock));

@@ -1,0 +1,15 @@
+{
+  "date": "2026-10-16",
+  "approved": true,
+  "reference": "p04-forms.html",
+  "forms": [
+    "create",
+    "detail",
+    "move"
+  ],
+  "syntheticData": true,
+  "answer": "Üç formu da bu düzenle uygula",
+  "source": "human structured reply",
+  "apiConnected": false,
+  "questionItemId": "[\"request_user_input_async\",\"call_3c67017b52114d6d863900e1e7ce2cd4\",0]"
+}

@@ -137,4 +137,7 @@
   --service-status-column: 4rem;
   --service-action-column: 5rem;
   --service-section-size: var(--section-title-size);
+  --appointment-time-width: 4.5rem;
+  --appointment-date-width: 12rem;
+  --appointment-filter-width: 14rem;
 }

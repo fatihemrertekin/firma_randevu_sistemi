@@ -1,6 +1,7 @@
 import { matchPath } from 'react-router'
 
 export const sectionPaths = {
+  appointments: '/yonetim/randevular',
   business: '/yonetim/isletme', hours: '/yonetim/isletme/saatler',
   bookingPolicy: '/yonetim/rezervasyon-ayarlari',
   personnel: '/yonetim/personel', services: '/yonetim/hizmetler',
@@ -13,7 +14,7 @@ export const authPaths = {
   staffReset: '/calisan/parola-yenile', invitation: '/calisan/davet-kabul', verify: '/eposta-dogrula',
 } as const
 export type AuthPage = keyof typeof authPaths
-export type ManagementRoute = { kind: 'management'; section: Section; create?: boolean; id?: string; task?: PersonnelTask }
+export type ManagementRoute = { kind: 'management'; section: Section; create?: boolean; id?: string; task?: PersonnelTask; move?: boolean }
 export type AppRoute = ManagementRoute | { kind: 'auth'; page: AuthPage } | { kind: 'home' } | { kind: 'missing' }
 
 export function resolveRoute(pathname: string): AppRoute {
@@ -27,6 +28,12 @@ export function resolveRoute(pathname: string): AppRoute {
   }
   if (path === sectionPaths.personnel + '/yeni') return { kind: 'management', section: 'personnel', create: true }
   if (path === sectionPaths.services + '/yeni') return { kind: 'management', section: 'services', create: true }
+  if (path === sectionPaths.appointments + '/yeni') return { kind: 'management', section: 'appointments', create: true }
+  const appointment = matchPath('/yonetim/randevular/:id/:action?', path)
+  if (appointment?.params.id && /^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/iu.test(appointment.params.id) &&
+      (!appointment.params.action || appointment.params.action === 'tasi')) return {
+    kind: 'management', section: 'appointments', id: appointment.params.id, move: appointment.params.action === 'tasi',
+  }
   const personnel = matchPath('/yonetim/personel/:id/:task?', path)
   if (personnel?.params.id && /^[a-zA-Z0-9-]+$/.test(personnel.params.id)) {
     const task = personnel.params.task
@@ -67,6 +74,11 @@ export function safeReturnPath(value: string | null) {
     const page = readPage('?' + search, 'hizmetSayfa'), size = readPageSize('?' + search, 10, 'hizmetBoyut')
     if (page > 1) query.set('hizmetSayfa', String(page))
     if (size !== 10) query.set('hizmetBoyut', String(size))
+  }
+  if (route.section === 'appointments') {
+    const source = new URLSearchParams(search), day = source.get('tarih'), staff = source.get('calisan')
+    if (day && /^\d{4}-\d{2}-\d{2}$/u.test(day)) query.set('tarih', day)
+    if (staff && /^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/iu.test(staff)) query.set('calisan', staff)
   }
   return pathname + (query.size ? `?${query}` : '')
 }
