@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Globalization;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -192,6 +193,15 @@ public static class IdentityStartupExtensions
         builder.Services.AddRateLimiter(options =>
         {
             options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+            options.OnRejected = async (rejection, _) =>
+            {
+                if (!rejection.HttpContext.Request.Path.StartsWithSegments("/api/public-booking")) return;
+                rejection.HttpContext.Response.Headers.CacheControl = "no-store";
+                if (rejection.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
+                    rejection.HttpContext.Response.Headers.RetryAfter = Math.Max(1, Math.Ceiling(retryAfter.TotalSeconds)).ToString(CultureInfo.InvariantCulture);
+                await Results.Problem(statusCode: 429, title: "Çok fazla istek. Belirtilen bekleme süresinden sonra yeniden deneyin.")
+                    .ExecuteAsync(rejection.HttpContext);
+            };
             options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(_ =>
                 RateLimitPartition.GetFixedWindowLimiter("all-requests", _ => new FixedWindowRateLimiterOptions
                 {
@@ -206,11 +216,11 @@ public static class IdentityStartupExtensions
                         PermitLimit = 10,
                         Window = TimeSpan.FromMinutes(5)
                     }));
-            foreach (var policy in new[] { "staff-management", "service-management", "business-hours", "audit-log", "appointments", "booking-policy" })
+            foreach (var policy in new[] { "staff-management", "service-management", "business-hours", "audit-log", "appointments", "booking-policy", "public-booking" })
                 options.AddPolicy(policy, context => RateLimitPartition.GetFixedWindowLimiter(
                 context.Connection.RemoteIpAddress?.ToString() ?? "unknown", _ => new FixedWindowRateLimiterOptions
                 {
-                    PermitLimit = policy == "appointments" ? 60 : 30,
+                    PermitLimit = policy is "appointments" or "public-booking" ? 60 : 30,
                     Window = TimeSpan.FromMinutes(1)
                 }));
         });
