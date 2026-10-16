@@ -1,6 +1,6 @@
 # STATUS — Güncel durum ve sıradaki iş
 
-U01 uyarı/işlem açıklamaları `in_progress` (16.10.2026): 2/7/8/9 bulguları için yerel 337 web testi ve 72 sentetik Chrome görüntüsü geçti; GitHub ve ana 8080 teslimi bekliyor. [Kapsam ve kanıt](plans/P04.md#u01--uyarı-ve-işlem-açıklamaları--16102026). U02 başlamadı.
+U01 uyarı/işlem açıklamaları geliştirme/GitHub/ana 8080 teslimi `done` (16.10.2026): [PR #105](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/105), başarılı son head/main CI, 337 web testi ve 72 sentetik Chrome görüntüsü; yedekli teslimde 46 tablo/hesap/MFA/anahtar/ayar/SMTP korundu. Sağlık/restart ve ana anonim dört genişlik/beş asset kabulü geçti. [Kanıt ve sınır](plans/P04.md#u01--uyarı-ve-işlem-açıklamaları--16102026). U02 başlamadı.
 
 Güncelleme: 2026-10-16. Güncel özet burada; kapsam ve kanıt bağlantıları [P02](plans/P02.md) ve [P03](plans/P03.md) planlarında, önceki oturum kayıtları [arşivde](archive/2026-10-02/STATUS.md). Arşivdeki eski durum ve onay bekleme ifadeleri güncel yönlendirme değildir.
 
