@@ -1,5 +1,7 @@
 # STATUS — Güncel durum ve sıradaki iş
 
+U01 uyarı/işlem açıklamaları `in_progress` (16.10.2026): 2/7/8/9 bulguları için yerel 337 web testi ve 72 sentetik Chrome görüntüsü geçti; GitHub ve ana 8080 teslimi bekliyor. [Kapsam ve kanıt](plans/P04.md#u01--uyarı-ve-işlem-açıklamaları--16102026). U02 başlamadı.
+
 Güncelleme: 2026-10-16. Güncel özet burada; kapsam ve kanıt bağlantıları [P02](plans/P02.md) ve [P03](plans/P03.md) planlarında, önceki oturum kayıtları [arşivde](archive/2026-10-02/STATUS.md). Arşivdeki eski durum ve onay bekleme ifadeleri güncel yönlendirme değildir.
 
 Beni hatırla bakımı geliştirme/GitHub/ana 8080 teslimi `done` (16.10.2026): [PR #101](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/101), son head ve birleşme/ortak main CI başarılı. Varsayılan kapalı seçim parola/MFA/kurtarma kodunda mevcut 8 saatlik süre boyunca tarayıcı yeniden açılışını destekler; MFA atlanmaz. 328 web/10 yeni PostgreSQL testi, gerçek sentetik Chrome kapat/aç ve ortak yedekli 46 tablo/anahtar/ayar/SMTP koruması ile ana anonim dört genişlik/paket kabulü geçti. [Kanıt ve geri dönüş](plans/P02.md#beni-hatırla-bakımı--16102026).

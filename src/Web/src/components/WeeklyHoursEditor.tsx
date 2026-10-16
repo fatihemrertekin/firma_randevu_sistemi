@@ -89,6 +89,7 @@ export default function WeeklyHoursEditor({ endpoint, heading, formLabel, subjec
     <Heading id="hours-title" className={onCancel && !embedded ? styles.heading : styles.screenReaderOnly}>{heading}</Heading>
     {snapshot?.caption && !embedded && <p className={styles.identity}><strong>{snapshot.caption}</strong></p>}
     <p className={styles.description}>Türkiye saati (Europe/Istanbul) · Her gün tek aralık.</p>
+    <p>Randevu ve hizmetin öncesine/sonrasına ayrılan ek süreler hem işletmenin hem çalışanın mesaisine sığmalı. İşletme saatlerini değiştirmek çalışan saatlerini değiştirmez; çalışan mesaisini Personel → Saatler bölümünden ayrıca düzenleyin.</p>
     {loading && <p role="status">{subject} yükleniyor…</p>}
     {!loading && !snapshot && <p>Saatler yüklenemedi. Yeniden deneyebilirsiniz.</p>}
     {snapshot && <form id="weekly-hours-form" ref={form} className={styles.form} aria-label={formLabel} aria-busy={busy || loading} noValidate onSubmit={event => { void save(event) }}>

@@ -9,3 +9,6 @@
 - Mobil işlemler mevcut flex düzeniyle sarılır, hedefler en az 44 px; renk ve boşluk yalnız tokenlardan. Başarı, iptal, hata, boş liste ve onay 320/390/768/1280 genişliklerinde gerçek sentetik API ile doğrulanır.
 
 Durum: `done`. Web 209 test/kalite kapıları, sunucu 140 test kapsamı ve son commit CI, gerçek sentetik API/Chrome dokuz durum × dört genişlik, yedekli ana 8080 teslimi/sağlık/restart geçti. Kanıt [P02 planında](../../docs/plans/P02.md#tanım-silme-ve-çalışan-hesabını-etkinleştirme--05102026). Randevu/P03, hesap silme ve yeni tasarım ekranı kapsam dışıdır.
+
+
+U01 (16.10.2026): personel/hizmet pasifleştirme açıklaması yeni randevu ve taşıma etkisini, mevcut randevuların iptal edilmediğini söyler. Personel giriş hesabının ayrı olduğu korunur; pasif personelden aktif personele uygun taşıma engellenmiş gibi anlatılmaz. Silme davranışı/API/yerleşim değişmez; kabul ve teslim P04 U01 kaydındadır.
