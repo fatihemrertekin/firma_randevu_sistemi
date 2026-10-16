@@ -54,7 +54,7 @@ const sections = [
   { id: 'hours', title: 'İşletme saatleri', description: 'Haftalık açılış, kapanış ve kapalı günleri belirleyin.' },
   { id: 'personnel', title: 'Personel', description: 'İşletmede hizmet veren kişilerin adını ve aktiflik durumunu yönetin.' },
   { id: 'services', title: 'Hizmetler', description: 'Hizmetlerin adını, süresini ve fiyatını yönetin.' },
-  { id: 'bookingPolicy', title: 'Rezervasyon ayarları', description: 'Randevuların ne kadar önceden ve hangi aralıklarla alınabileceğini belirleyin.' },
+  { id: 'bookingPolicy', title: 'Rezervasyon ayarları', description: 'Randevu zamanlarını ve çevrim içi rezervasyon koşullarını belirleyin.' },
   { id: 'security', title: 'Hesap ve güvenlik', description: 'Hesabınızı koruyun ve parolanızı değiştirin.' },
   { id: 'access', title: 'Çalışan erişimleri', description: 'Çalışan hesaplarını, davetleri ve parola sıfırlama işlemlerini yönetin.' },
   { id: 'audit', title: 'Değişiklik kayıtları', description: 'Yapılan işlemlerin zamanını, yapan hesabı ve ilgili kaydı görüntüleyin.' },

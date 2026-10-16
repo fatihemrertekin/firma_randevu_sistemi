@@ -6,7 +6,7 @@ import BookingPolicy from './BookingPolicy'
 import { readBookingPolicy, type BookingPolicy as Policy } from './bookingPolicyApi'
 import type { postWithCsrf } from '../../app/api'
 
-const original: Policy = { version: 'e662d654-471a-4c80-941f-f8f1073fd00a', leadMinutes: 60, horizonDays: 30, slotMinutes: 15, timeZone: 'Europe/Istanbul' }
+const original: Policy = { version: 'e662d654-471a-4c80-941f-f8f1073fd00a', leadMinutes: 60, horizonDays: 30, slotMinutes: 15, timeZone: 'Europe/Istanbul', customerCancellationLeadMinutes: 120, requiresBusinessApproval: true }
 const saved: Policy = { ...original, version: 'b3391166-03f1-4f58-8ed3-a7b5a98c52f1', leadMinutes: 90 }
 let container: HTMLDivElement, root: Root
 beforeEach(() => {
@@ -45,13 +45,13 @@ describe('Rezervasyon ayarları', () => {
     expect(field().value).toBe('60'); expect(saveButton()?.disabled).toBe(true); expect(busy).toHaveBeenLastCalledWith(false)
     expect(fetch).toHaveBeenCalledWith('/api/booking-policy/', expect.objectContaining({ cache: 'no-store', signal: expect.any(AbortSignal) }))
   })
-  it('üç ayarı ve güncel sürümü gönderir; sunucu onayından sonra yeni temel değerleri kullanır', async () => {
+  it('beş ayarı ve güncel sürümü gönderir; sunucu onayından sonra yeni temel değerleri kullanır', async () => {
     const { post, dirty } = await render(); await fill('leadMinutes', '90'); await submit()
-    expect(post).toHaveBeenCalledWith('/api/booking-policy/', { version: original.version, leadMinutes: 90, horizonDays: 30, slotMinutes: 15 }, expect.any(AbortSignal))
+    expect(post).toHaveBeenCalledWith('/api/booking-policy/', { version: original.version, leadMinutes: 90, horizonDays: 30, slotMinutes: 15, customerCancellationLeadMinutes: 120, requiresBusinessApproval: true }, expect.any(AbortSignal))
     expect(container.textContent).toContain('Rezervasyon ayarları kaydedildi.')
     expect(dirty).toHaveBeenLastCalledWith(false); expect(saveButton()?.disabled).toBe(true)
     await fill('horizonDays', '31'); await submit()
-    expect(post.mock.calls[1]?.[1]).toEqual({ version: saved.version, leadMinutes: 90, horizonDays: 31, slotMinutes: 15 })
+    expect(post.mock.calls[1]?.[1]).toEqual({ version: saved.version, leadMinutes: 90, horizonDays: 31, slotMinutes: 15, customerCancellationLeadMinutes: 120, requiresBusinessApproval: true })
   })
   it.each(['7', '007'])('%s adımını kabul eder ve saat örneğini gece yarısına hizalar', async value => {
     const { post } = await render(); await fill('slotMinutes', value)
@@ -137,7 +137,44 @@ describe('Rezervasyon ayarları', () => {
     null, [], { ...original, version: '' }, { ...original, version: '00000000-0000-0000-0000-000000000000' },
     { ...original, leadMinutes: '60' }, { ...original, horizonDays: 0 }, { ...original, slotMinutes: 61 },
     { ...original, leadMinutes: 1440, horizonDays: 1 }, { ...original, timeZone: 'UTC' },
+    { ...original, customerCancellationLeadMinutes: undefined }, { ...original, customerCancellationLeadMinutes: -1 },
+    { ...original, customerCancellationLeadMinutes: 43201 }, { ...original, requiresBusinessApproval: undefined },
+    { ...original, requiresBusinessApproval: 'false' },
   ])('bozuk API sözleşmesini form değeri kabul etmez: %j', async value => {
     await expect(readBookingPolicy(Response.json(value))).rejects.toThrow()
+  })
+  it('yeni koşulları tek istekte false/0 olarak kaydeder; dönüşte temiz forma geçer', async () => {
+    const changed = { ...saved, customerCancellationLeadMinutes: 0, requiresBusinessApproval: false }
+    const { post, dirty } = await render(vi.fn(async () => Response.json(changed)))
+    const automatic = container.querySelector<HTMLInputElement>('input[name="requiresBusinessApproval"][value="false"]')
+    if (!automatic) throw new Error('Onay seçeneği yok')
+    await act(async () => automatic.click()); expect(dirty).toHaveBeenLastCalledWith(true)
+    await fill('customerCancellationLeadMinutes', '0'); expect(container.textContent).toContain('Müşteri randevu başlamadan iptal edebilir.')
+    await submit(); expect(post).toHaveBeenCalledWith('/api/booking-policy/', expect.objectContaining({ customerCancellationLeadMinutes: 0, requiresBusinessApproval: false }), expect.any(AbortSignal))
+    expect(automatic.checked).toBe(true); expect(saveButton()?.disabled).toBe(true)
+    expect(await readBookingPolicy(Response.json(changed))).toEqual(changed)
+  })
+  it('iptal örneğini tam dakikadan hesaplar ve geçersiz süreyi göndermez', async () => {
+    const { post } = await render(); expect(container.textContent).toContain('120 dakika = 2 saat.')
+    await fill('customerCancellationLeadMinutes', '125'); expect(container.textContent).toContain('125 dakika = 2 saat 5 dakika.')
+    await fill('customerCancellationLeadMinutes', '43201'); await submit()
+    expect(post).not.toHaveBeenCalled(); expect(document.activeElement).toBe(field('customerCancellationLeadMinutes'))
+    expect(field('customerCancellationLeadMinutes').getAttribute('aria-invalid')).toBe('true')
+  })
+  it('boolean sunucu hatasını adlandırılmış radio grubuna bağlar ve ilk seçeneğe odaklar', async () => {
+    await render(vi.fn(async () => Response.json({ errors: { requiresBusinessApproval: ['Rezervasyon onay tercihini seçin.'] } }, { status: 400 })))
+    await fill('customerCancellationLeadMinutes', '180'); await submit()
+    expect(container.querySelector('fieldset')?.getAttribute('aria-invalid')).toBe('true')
+    expect(document.activeElement).toBe(container.querySelector('input[name="requiresBusinessApproval"]'))
+    expect(container.textContent).toContain('Rezervasyon onay tercihini seçin.')
+  })
+  it('yeni ayar değişikliği eski haline dönünce temizdir; kayıt sırasında radio da kilitlidir', async () => {
+    let finish: (value: Response) => void = () => { throw new Error('Bekleyen POST yok') }
+    const { dirty } = await render(vi.fn(() => new Promise(resolve => { finish = resolve })))
+    const options = container.querySelectorAll<HTMLInputElement>('input[name="requiresBusinessApproval"]')
+    await act(async () => options[1]?.click()); await act(async () => options[0]?.click()); expect(dirty).toHaveBeenLastCalledWith(false)
+    await act(async () => options[1]?.click()); await submit(); expect(container.querySelector('fieldset')?.disabled).toBe(true)
+    await act(async () => finish(Response.json({ ...original, requiresBusinessApproval: false })))
+    expect(container.querySelector('fieldset')?.disabled).toBe(false); expect(dirty).toHaveBeenLastCalledWith(false)
   })
 })
