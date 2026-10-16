@@ -43,6 +43,7 @@ app.MapStaffMemberEndpoints();
 app.MapServiceDefinitionEndpoints();
 app.MapAppointmentEndpoints();
 app.MapBookingPolicyEndpoints();
+app.MapPublicBookingEndpoints();
 
 app.MapGet("/health/live", () => Results.Ok(new { status = "ok" }));
 

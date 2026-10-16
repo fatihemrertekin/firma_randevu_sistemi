@@ -16,6 +16,14 @@ Yönetim ekranları ayrı adresler kullanır: `/yonetim/isletme`, `/yonetim/isle
 
 E-posta doğrulama/sıfırlama bağlantısının kanıtı açılışta adres çubuğundan kaldırılır, yalnız bellekte tutulur ve ekran terk edildiğinde silinir. Tekrar yenilemede e-postadaki bağlantının yeniden açılması gerekir. [Mimari karar](docs/adr/004-url-navigation.md) ve [gerçek API gezinme testi](tests/Web.E2E/README.md) ayrıntıları içerir. React Router ve bağımlılıklarının [lisansları](docs/navigation-licenses.txt) imajda `/app/navigation-licenses.txt` olarak bulunur.
 
+## Müşteriye açık okuma API'leri
+
+P04-06 yalnız okuma sunar: `GET /api/public-booking/catalog?page=1&pageSize=20`, `GET /api/public-booking/staff?serviceId=<UUID>&page=1&pageSize=20` ve `GET /api/public-booking/availability?serviceId=<UUID>&staffMemberId=<UUID>&date=yyyy-MM-dd`. Oturum gerekmez. Katalog işletmenin adı/telefonu/adresi, mevcut ön süre/ufuk/adım politikası ve aktif hizmetleri; çalışan listesi yalnız seçili hizmete atanmış aktif personelin kimlik/adını döndürür. Listeler 1–50 sayfa boyutu ve gerçek toplamla sınırlıdır; sayfa aralığı 1–10000, son sayfayı aşan istek son sayfaya çekilir. Fiyat mevcut hizmet API'sindeki gibi iki ondalıklı TRY metnidir.
+
+Uygunluk aynı mesai/mola/izin/tampon/doluluk motorundan hesaplanan UTC `startsAt`, `timeZone`, `serviceVersion`, `policyVersion` taşır. Pasif/silinmiş/atanmamış seçim 404, geçersiz parametre veya İstanbul günü/rezervasyon ufku dışındaki tarih 400, geçerli fakat boş gün 200 ve boş dizidir. Müşteri/randevu bilgisi veya çalışan izin/mola gerekçeleri dönmez. Yanıtlar `no-store`, işlemler 15 saniye timeout; üç uç aynı gerçek IP için toplam 60/dakika ve mevcut 600/dakika uygulama limiti altındadır. Kamu 429 yanıtı ProblemDetails ve gerçek `Retry-After` taşır; istemci `X-Forwarded-For` yazarak limiti değiştiremez.
+
+Kayıt/OTP/iptal ucu veya müşteri ekranı bu adımda yoktur; saat sorgusu randevu oluşturmaz ve saat tutmaz. Owner API'lerinin MFA/yetki sınırı değişmez. Gerçek PostgreSQL regresyonu: `dotnet run --project tests/Server.Tests/Server.Tests.csproj --no-build -- -class Server.Tests.PublicBookingTests` (önce `dotnet build FirmaRandevu.slnx --no-restore`). [Kapsam ve teslim kanıtı](docs/plans/P04.md#p04-06--müşteriye-açık-okuma-apileri--16102026).
+
 ## Gerekenler
 
 - .NET SDK 10.0.401 (`global.json`)
