@@ -61,7 +61,7 @@ Pilot kapsamı [PRODUCT](PRODUCT.md#2-ürün-kararları) ile kararlaştırıldı
 
 ### P04 — Rezervasyon ve panel (P03)
 
-- İlk kapsam: 16.10.2026 onaylı çalışanlara göre günlük Owner yönetimi ve Yeni randevu/Ayrıntı/Taşıma formları. Günlük liste API ve arayüz yerel kabulü geçti; GitHub/ana teslim kapıları [P04 planında](plans/P04.md). P04 bütünü ve müşteri politikaları açık kalır.
+- İlk kapsam: 16.10.2026 onaylı çalışanlara göre günlük Owner yönetimi ve Yeni randevu/Ayrıntı/Taşıma formları. Günlük liste API ve dört yüzey geliştirme/GitHub/ana 8080 teslimi tamamlandı; [kanıt ve sınırlar](plans/P04.md#github-ve-ana-yerel-teslim). P04 bütünü ve müşteri politikaları açık kalır.
 - İş: Markalı misafir sayfası/token yönetimi; gün/hafta/ay takvimi, çalışan filtresi, form/sürükleme ile taşıma; müşteri kartı/geçmişi ve günlük özet.
 - Çıkış: Mobil rezervasyon panelde yönetilir; çift tıklama çoğaltmaz; çakışan taşıma eski kaydı kaybettirmez. Telefon/ID tahmini geçmişi açmaz. Playwright akışı geçer.
 
