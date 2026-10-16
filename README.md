@@ -361,15 +361,23 @@ Bekleme son anı oluşturma +30 dakika, daha yakın başlangıç varsa başlang�
 
 ### Rezervasyon ayarları Owner API'si (P03-05A)
 
-MFA Owner `GET /api/booking-policy/` ile sürüm, ön süre (dakika), ileri rezervasyon süresi (gün), başlangıç adımı (dakika) ve saat bölgesini okur. CSRF korumalı `POST /api/booking-policy/` gövdesi `{version,leadMinutes,horizonDays,slotMinutes}` alanlarının tümünü ister. Ön süre 0–43200 dakika, ufuk 1–365 gün, adım 1–60 dakika; ön süre ufuktan kısa olmalıdır. Varsayılan 60/30/15 korunur. Güncel aynı değer no-op, eski sürüm 409; belirsiz sonuçta GET ile güncel kayıt okunur. Ayarlar yeni oluşturma/taşıma ve uygunluğu etkiler; mevcut randevu ve Pending son anı değiştirilmez.
+MFA Owner `GET /api/booking-policy/` ile sürüm, ön süre (dakika), ileri rezervasyon süresi (gün), başlangıç adımı (dakika), saat bölgesi ve P04-07A'nın `customerCancellationLeadMinutes`/`requiresBusinessApproval` alanlarını okur. CSRF korumalı `POST /api/booking-policy/` sürüm ve beş ayarın tamamını ister; eksik boolean dahil 400 olur. Ön süre 0–43200 dakika, ufuk 1–365 gün, adım 1–60 dakika; ön süre ufuktan kısa olmalıdır. İptal süresi 0–43200 tam dakikadır; 0, randevu başlamadan iptal sınırını ifade eder. Başlangıç 60/30/15 ve 120 dakika/işletme onayıdır. Güncel aynı değer no-op, eski sürüm 409; belirsiz sonuçta GET ile güncel kayıt okunur. Zaman ayarları yeni oluşturma/taşıma ve uygunluğu etkiler; mevcut randevu ve Pending son anı değiştirilmez.
 
 Politika/audit aynı transaction'da yazılır; işlem mevcut “Değişiklik kayıtları” ekranının Tanımlar kategorisinde görünür. Yeni `BookingPolicyAudits` tarihçesi varken migration Down reddedilir; uyumlu ileri düzeltme gerekir. Yeni ayar ekranı, müşteri iptal sınırı/onay tercihi veya anonim rezervasyon bu alt işte yoktur. Build sonrasında ilgili kontroller: `dotnet run --project tests/Server.Tests/Server.Tests.csproj --no-build -- -class Server.Tests.BookingPolicyTests -class Server.Tests.AppointmentStorageTests -class Server.Tests.AuditLogTests`; web dizininde `npm.cmd test -- AuditLog.test.tsx`. [Kapsam ve kabul](docs/plans/P03.md#p03-05a-mevcut-rezervasyon-ayarları--15102026).
 
 ### Rezervasyon ayarları ekranı (P03-05C)
 
-MFA Owner, İşletme → Rezervasyon ayarları üzerinden mevcut ön süre, ileri rezervasyon süresi ve başlangıç aralığını düzenler. Sayfa `/yonetim/rezervasyon-ayarlari`; mevcut GET/POST kullanılır. Çakışmada veya belirsiz kayıt sonucunda taslak korunur ve yeniden kaydetmeden önce güncel ayarlar yüklenir. Staff menüsü/API yetkisi genişletilmez. İptal/onay tercihleri ve anonim müşteri rezervasyonu bu ekranın kapsamında değildir; yeni migration yoktur.
+MFA Owner, İşletme → Rezervasyon ayarları üzerinden ön süre, ileri rezervasyon süresi ve başlangıç aralığını düzenler. P04-07A genişletmesi iptal süresini ve iki açıklamalı onay seçeneğini aynı forma/tek Kaydet işlemine ekler. Sayfa `/yonetim/rezervasyon-ayarlari`; mevcut GET/POST kullanılır. Çakışmada veya belirsiz kayıt sonucunda taslak korunur ve yeniden kaydetmeden önce güncel ayarlar yüklenir. Staff menüsü/API yetkisi genişletilmez.
 
 İlgili frontend kontrolü `src/Web` içinde `npm.cmd test -- BookingPolicy.test.tsx URLNavigation.test.tsx ManagementLayout.test.tsx`; ayrıca typecheck/lint/tüm web testleri/build. [Onaylı taslak ve gerçek kabul](docs/plans/P03.md#p03-05c-rezervasyon-ayarları-görsel-taslağı--15102026).
+
+### Müşteri politika ayarları (P04-07A)
+
+`customerCancellationLeadMinutes` ve `requiresBusinessApproval` kamu katalog `policy` görünümünde de döner. Bu ayar teslimi müşteri rezervasyon yazımını, OTP/SMS'i veya iptal bağlantısını açmaz; Owner Confirmed/Pending oluşturma davranışı ve mevcut randevular korunur. Müşteriye gösterilen koşulun randevuda snapshot olarak saklanması sonraki müşteri yazma dilimidir.
+
+`20261016222045_CustomerBookingPolicy` yalnız iki mevcut tabloya alan/CHECK ekler. `BookingPolicies` başlangıcı 120/true, eski `BookingPolicyAudits` yeni alanları null kalır; geçmiş koşul uydurulmaz. Yeni kayıtlar audit'e iki değeri birlikte yazar. `app_user` yalnız izinli politika kolonlarını günceller; audit append-only kalır. Yeni politika değeri veya yeni alanlı audit varsa Down reddedilir. Geri dönüşte şema Down kullanılmaz; eski imaj uyumu önce sentetik olarak doğrulanmalı, tercihler/tarihçe korunmalıdır.
+
+Backend kapısı: `dotnet run --project tests/Server.Tests/Server.Tests.csproj --no-build -- -class Server.Tests.CustomerBookingPolicyTests -class Server.Tests.BookingPolicyTests -class Server.Tests.PublicBookingTests` (önce kilitli restore/build). [Kapsam, kabul ve ana teslim kaydı](docs/plans/P04.md#p04-07a--rezervasyon-ayarları-brief-ve-görsel-taslağı--17102026).
 
 ### Son motor kabulü (P03-06)
 

@@ -16,5 +16,13 @@
 .actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--action-row-gap); }
 .actions span { font-size: var(--button-font-size); color: var(--muted); }
 .reload { margin-bottom: var(--auth-space-5); }
+.groupTitle { display: block; font-weight: 600; margin-bottom: var(--auth-space-2); }
+.approval { min-width: 0; margin: 0; padding: 0; border: 0; display: grid; gap: var(--auth-space-4); }
+.setting .approvalOption { display: flex; align-items: flex-start; gap: var(--auth-space-3); min-height: var(--target-min); margin: 0; font-weight: 400; cursor: pointer; }
+.approvalOption input { width: var(--auth-body-size); height: var(--auth-body-size); min-height: 0; padding: 0; flex: 0 0 var(--auth-body-size); margin: var(--auth-space-1) 0 0; accent-color: var(--primary); }
+.approvalOption strong { display: block; font-weight: 600; margin-bottom: var(--auth-space-1); }
+.approvalOption span { min-width: 0; }
+.approvalOption > span > span { color: var(--muted); line-height: var(--prose-line); }
+.cancellationNote { border-top: var(--auth-rule) solid var(--border); padding-block: var(--auth-space-5); margin: 0; }
 @container policy (max-width: 40rem) { .setting { grid-template-columns: minmax(0, 1fr); gap: var(--auth-space-4); } }
 @media (max-width: 900px) { .paper { padding: var(--auth-space-4); } }

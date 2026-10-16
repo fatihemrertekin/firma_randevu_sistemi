@@ -61,6 +61,8 @@ public sealed class BookingPolicy
     public int LeadMinutes { get; set; }
     public int HorizonDays { get; set; }
     public int SlotMinutes { get; set; }
+    public int CustomerCancellationLeadMinutes { get; set; } = 120;
+    public bool RequiresBusinessApproval { get; set; } = true;
     public Guid Version { get; set; }
 }
 
@@ -85,4 +87,7 @@ public sealed class BookingPolicyAudit
     public int LeadMinutes { get; set; }
     public int HorizonDays { get; set; }
     public int SlotMinutes { get; set; }
+    // Eski audit kayıtlarında müşteriye gösterilmemiş bir koşul üretilmez.
+    public int? CustomerCancellationLeadMinutes { get; set; }
+    public bool? RequiresBusinessApproval { get; set; }
 }
