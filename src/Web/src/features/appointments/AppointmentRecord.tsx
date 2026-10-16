@@ -11,7 +11,13 @@ import styles from './Appointments.module.css'
 type Props = { id: string; moving: boolean; initialDay: string; search: string; post: typeof postWithCsrf;
   onDirtyChange: (value: boolean) => void; onBusyChange: (value: boolean) => void; onUnauthorized: () => void;
   onSaved: (value: Appointment) => void; onCancel: () => void; headingRef?: RefObject<HTMLHeadingElement | null> }
-type Action = { endpoint: string; label: string; target: AppointmentStatus }
+type Action = { endpoint: string; label: string; target: Exclude<AppointmentStatus, 'Pending'> }
+const actionDetails = {
+  Confirmed: { label: 'Randevuyu onayla', message: 'Randevu onaylanacak. Ayrılan saat dolu kalır.' },
+  Cancelled: { label: 'Randevuyu iptal et', message: 'Randevu iptal edilecek ve ayırdığı saat serbest kalacak. İptal edilen randevu yeniden açılamaz.' },
+  Completed: { label: 'Tamamlandı olarak kaydet', message: 'Randevu tamamlandı olarak kaydedilecek. Geçmişteki zaman kaydı korunur; bu ekrandan durum yeniden değiştirilemez.' },
+  NoShow: { label: 'Gelmedi olarak kaydet', message: 'Randevu gelmedi olarak kaydedilecek. Geçmişteki zaman kaydı korunur; bu ekrandan durum yeniden değiştirilemez.' },
+}
 type Attempt = { action: Action; payload: { version: string; requestKey: string } }
 export default function AppointmentRecord({ id, moving, initialDay, search, post, onDirtyChange, onBusyChange, onUnauthorized, onSaved, onCancel, headingRef }: Props) {
   const [data, setData] = useState<Appointment | null>(null), [loading, setLoading] = useState(true), [revision, setRevision] = useState(0)
@@ -83,10 +89,11 @@ export default function AppointmentRecord({ id, moving, initialDay, search, post
             disabled={busy || loading || locked || !!selected || !!attempt || !!retryUntil} onClick={() => setSelected(action)}>{action.label}</button>)}
         </div>
         {selected && !attempt && <div className={styles.confirmation}><p>{data.customerName} · {formatTime(data.startsAt)} randevusu “{statusLabels[selected.target]}” olarak kaydedilsin mi?</p>
+          <p>{actionDetails[selected.target].message}</p>
           <div className={styles.actions}><button type="button" className={selected.endpoint === 'cancel' ? styles.danger : styles.primary} disabled={busy || locked || loading || !!retryUntil}
-            onClick={() => { void change({ action: selected, payload: { version: data.version, requestKey: crypto.randomUUID() } }) }}>İşlemi onayla</button>
+            onClick={() => { void change({ action: selected, payload: { version: data.version, requestKey: crypto.randomUUID() } }) }}>{actionDetails[selected.target].label}</button>
             <button type="button" disabled={busy} onClick={() => setSelected(null)}>Vazgeç</button></div></div>}
-        {attempt && !busy && <div className={styles.confirmation}><p>İşlemin sonucu belirsiz. Aynı işlem anahtarıyla yeniden deneyin veya güncel randevuyu yükleyin.</p>
+        {attempt && !busy && <div className={styles.confirmation}><p>İşlemin sonucu belirsiz. Durum değişikliği kaydedilmiş olabilir. “Aynı işlemi yeniden dene” düğmesi aynı işlemi ikinci kez uygulamaz. İsterseniz “Güncel randevuyu yükle” ile sonucu kontrol edin.</p>
           <button type="button" disabled={!!retryUntil || busy} onClick={() => { void change(attempt) }}>Aynı işlemi yeniden dene</button></div>}
       </section>
     </div>}

@@ -39,3 +39,6 @@ Hafta/ay, sürükle-bırak, anonim rezervasyon/OTP/SMS/token, tahsilat, müşter
 ## Uygunluk nedeni — mevcut yüzey iyileştirmesi
 
 16.10.2026 kullanıcı isteği: saat bulunamadığında gerçek neden saat bölümünde gösterilir. Yeni bir ekran veya tasarım yönü değildir. `availability` ve `move-availability` GET'lerinin `unavailableReasons` alanı sunucu tarafından hesaplanır; tek veya çoklu nedenler mevcut tokenlardan açık mavi, ince çerçeveli bilgi alanında, “Bu seçimle uygun saat bulunamıyor” başlığı altında görünür. Hata/400 tarih bilgisi “Uygun saatler alınamadı” durumuyla ayrıdır. Seçim değişince eski neden kaldırılır; saat bulununca panel kalkar. POST/ayar veya randevu kendiliğinden değiştirilmez.
+
+
+U01 (16.10.2026): mevcut onay/iptal/tamamlandı/gelmedi alanı işlem sonucunu ve zaman korumasını açıklar; düğmeler gerçek işlemi adlandırır. Belirsiz kayıt, taşıma ve durum metinleri mevcut güvenli tekrar düğmesini anlatır; idempotency ve izin verilen geçişler değişmez. Yeni ekran/yerleşim/API yoktur. Kabul ve teslim P04 U01 kaydındadır.

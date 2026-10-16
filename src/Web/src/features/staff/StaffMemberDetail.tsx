@@ -100,7 +100,7 @@ export default function StaffMemberDetail({ memberId, task, listPath, post, init
         </>}
         {!loading && task === 'information' && <section className={styles.stateSection} aria-labelledby="member-state-title">
           <h3 id="member-state-title">Personel durumu</h3>
-          <p>{member.isActive ? 'Pasifleştirme kaydı silmez.' : 'Aktifleştirme personel kaydını yeniden kullanılabilir yapar.'} Giriş hesapları etkilenmez.</p>
+          <p>{member.isActive ? 'Pasif personele yeni randevu verilemez veya başka randevu taşınamaz. Mevcut randevular iptal edilmez; personel kaydı korunur.' : 'Aktifleştirme personel kaydını yeniden kullanılabilir yapar; randevu için hizmet ataması ve uygun mesai de gerekir.'} Giriş hesapları etkilenmez.</p>
           {!confirmStatus && <div className={styles.actions}><button ref={statusButton} type="button" disabled={blocked} onClick={() => {
             if (discard()) { setDeleting(false); setConfirmStatus(true); setNotice(''); refresh() }
           }}>{member.isActive ? 'Pasifleştir' : 'Aktifleştir'}</button>
@@ -110,7 +110,7 @@ export default function StaffMemberDetail({ memberId, task, listPath, post, init
           {confirmStatus && <fieldset className={styles.confirmation} disabled={statusBusy} aria-label={deleting ? 'Personel silme onayı' : 'Personel durum değişikliği onayı'}>
             <legend>Personeli {deleting ? 'sil' : member.isActive ? 'pasifleştir' : 'aktifleştir'}</legend>
             {deleting ? <p><strong>{member.name}</strong> personel listesinden kaldırılacak ve yeniden kullanılamayacak. Hizmet ve saat bağlantıları ile değişiklik geçmişi korunur. Giriş hesabı ve açık oturumlar etkilenmez.</p>
-              : <p><strong>{member.name}</strong> {member.isActive ? 'pasif' : 'aktif'} olarak işaretlenecek. Kayıt silinmez. Giriş hesabı ve açık oturumlar etkilenmez.</p>}
+              : <p><strong>{member.name}</strong> {member.isActive ? 'pasif' : 'aktif'} olarak işaretlenecek. {member.isActive ? 'Bu personele yeni randevu verilemeyecek veya başka randevu taşınamayacak. Mevcut randevular iptal edilmez.' : 'Hizmet ataması ve diğer rezervasyon koşulları da uygunsa bu personele yeniden randevu verilebilir.'} Kayıt silinmez. Giriş hesabı ve açık oturumlar etkilenmez.</p>}
             <div className={styles.actions}><button ref={confirm} type="button" className={deleting ? styles.danger : undefined} disabled={stale} onClick={() => { void changeStatus() }}>{statusBusy ? 'İşlem sürüyor…' : deleting ? 'Personeli sil' : 'Durumu değiştir'}</button>
               <button type="button" onClick={() => { restoreStatus.current = true; setConfirmStatus(false); setError(''); refresh() }}>Vazgeç</button>
               {stale && <button type="button" onClick={reload}>Güncel kaydı yükle</button>}</div>

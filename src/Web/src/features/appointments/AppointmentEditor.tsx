@@ -97,7 +97,7 @@ export default function AppointmentEditor({ appointment, initialDay, post, onSav
   const fieldError = (key: string) => fields[key] && <p className={styles.fieldError} id={`appointment-${key}-error`}>{fields[key]}</p>
   return <>
     <ErrorMessage message={error} />
-    {attempt && !busy && <div className={styles.confirmation}><p>İşlemin sonucu belirsiz. Yeni randevu göndermeyin. Taslağı değiştirmeden aynı işlem anahtarıyla sonucu doğrulayın. Bu sayfayı kapatırsanız tekrar göndermeden önce günlük listeyi kontrol edin.</p>
+    {attempt && !busy && <div className={styles.confirmation}><p>İşlemin sonucu belirsiz. {moving ? 'Taşıma tamamlanmış olabilir. “Aynı işlemi yeniden dene” düğmesini kullanın; aynı işlem ikinci bir taşıma oluşturmaz. Sayfayı kapatırsanız tekrar taşımadan önce günlük listeden randevunun güncel saatini kontrol edin.' : 'Randevu kaydedilmiş olabilir. Bilgileri değiştirmeden “Aynı işlemi yeniden dene” düğmesini kullanın; aynı işlem ikinci bir randevu oluşturmaz. Sayfayı kapatırsanız yeniden kayıt oluşturmadan önce günlük listeyi kontrol edin.'}</p>
       <button type="button" disabled={busy || !!retryUntil} onClick={() => { void send(attempt) }}>Aynı işlemi yeniden dene</button></div>}
     {(error || availabilityError) && !attempt && <button type="button" disabled={busy || !!retryUntil} onClick={() => { void reload() }}>Güncel bilgileri ve saatleri yükle</button>}
     <div className={styles.columns}>

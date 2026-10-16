@@ -157,6 +157,8 @@ describe('İşletmenin günlük randevu akışı', () => {
     const post = vi.fn<typeof postWithCsrf>().mockRejectedValueOnce(new TypeError('network')).mockResolvedValueOnce(Response.json(appointment))
     await render('/yonetim/randevular/yeni?tarih=2026-10-16', post); await fillCreation(); await submit()
     expect(container.textContent).toContain('İşlemin sonucu belirsiz')
+    expect(container.textContent).toContain('Randevu kaydedilmiş olabilir.')
+    expect(container.textContent).not.toContain('işlem anahtarı')
     expect(container.querySelector<HTMLInputElement>('#appointment-customerName')?.closest('fieldset')?.disabled).toBe(true)
     await click('Aynı işlemi yeniden dene')
     expect(post).toHaveBeenCalledTimes(2); expect(post.mock.calls[0]?.[1]).toEqual(post.mock.calls[1]?.[1])
@@ -180,7 +182,9 @@ describe('İşletmenin günlük randevu akışı', () => {
   it('iptali ayrı onayla ve sürümle gönderir; idempotent yanıtın güncel durumunu gösterir', async () => {
     const post = vi.fn<typeof postWithCsrf>(async () => Response.json({ ...appointment, status: 'Cancelled', version: service.version }))
     await render('/yonetim/randevular/' + appointment.id + '?tarih=2026-10-16', post)
-    await click('İptal et'); expect(post).not.toHaveBeenCalled(); await click('İşlemi onayla')
+    await click('İptal et'); expect(post).not.toHaveBeenCalled()
+    expect(container.textContent).toContain('ayırdığı saat serbest kalacak')
+    await click('Randevuyu iptal et')
     expect(post.mock.calls[0]?.[0]).toBe('/api/appointments/' + appointment.id + '/cancel')
     expect(post.mock.calls[0]?.[1]).toMatchObject({ version: appointment.version })
     expect(container.textContent).toContain('Güncel durum: İptal edildi')
@@ -192,5 +196,37 @@ describe('İşletmenin günlük randevu akışı', () => {
     expect(post.mock.calls[0]?.[0]).toBe('/api/appointments/' + appointment.id + '/move')
     expect(post.mock.calls[0]?.[1]).toMatchObject({ version: appointment.version, startsAt: '2026-10-16T08:00:00Z' })
     expect(container.textContent).toContain('09.30–09.55'); expect(container.textContent).toContain('mevcut randevu korunur')
+  })
+  it.each([
+    ['Pending', 'Onayla', 'Randevuyu onayla', 'confirm', 'Confirmed', 'Ayrılan saat dolu kalır.'],
+    ['Confirmed', 'Tamamlandı', 'Tamamlandı olarak kaydet', 'complete', 'Completed', 'Geçmişteki zaman kaydı korunur'],
+    ['Confirmed', 'Gelmedi', 'Gelmedi olarak kaydet', 'no-show', 'NoShow', 'Geçmişteki zaman kaydı korunur'],
+  ] as const)('%s için %s açıklaması işlemden önce gösterilir ve doğru komut gönderilir', async (status, label, confirmation, endpoint, target, explanation) => {
+    vi.spyOn(Date, 'now').mockReturnValue(Date.parse(status === 'Pending' ? '2026-10-16T06:00:00Z' : '2026-10-16T07:00:00Z'))
+    vi.mocked(fetch).mockImplementation(input => String(input) === '/api/appointments/' + appointment.id
+      ? Promise.resolve(Response.json({ ...appointment, status, pendingExpiresAt: status === 'Pending' ? '2026-10-16T06:20:00Z' : null })) : api(input))
+    const post = vi.fn<typeof postWithCsrf>(async () => Response.json({ ...appointment, status: target }))
+    await render('/yonetim/randevular/' + appointment.id, post); await click(label)
+    expect(container.textContent).toContain(explanation); expect(post).not.toHaveBeenCalled()
+    await click(confirmation)
+    expect(post.mock.calls[0]?.[0]).toBe('/api/appointments/' + appointment.id + '/' + endpoint)
+    expect(post.mock.calls[0]?.[1]).toMatchObject({ version: appointment.version })
+  })
+  it('belirsiz taşımayı ayrı açıklar ve tekrar aynı taşıma isteğini gönderir', async () => {
+    const post = vi.fn<typeof postWithCsrf>().mockRejectedValueOnce(new TypeError('network')).mockResolvedValueOnce(Response.json(appointment))
+    await render('/yonetim/randevular/' + appointment.id + '/tasi?tarih=2026-10-16', post)
+    await slot('2026-10-16T08:00:00Z'); await submit()
+    expect(container.textContent).toContain('Taşıma tamamlanmış olabilir.')
+    expect(container.textContent).not.toContain('ikinci bir randevu'); expect(container.textContent).not.toContain('işlem anahtarı')
+    await click('Aynı işlemi yeniden dene')
+    expect(post).toHaveBeenCalledTimes(2); expect(post.mock.calls[0]?.slice(0, 2)).toEqual(post.mock.calls[1]?.slice(0, 2))
+  })
+  it('belirsiz durum değişikliğini ikinci kez uygulamadan aynı istekle doğrular', async () => {
+    const post = vi.fn<typeof postWithCsrf>().mockRejectedValueOnce(new TypeError('network')).mockResolvedValueOnce(Response.json({ ...appointment, status: 'Cancelled' }))
+    await render('/yonetim/randevular/' + appointment.id, post); await click('İptal et'); await click('Randevuyu iptal et')
+    expect(container.textContent).toContain('Durum değişikliği kaydedilmiş olabilir.')
+    expect(container.textContent).not.toContain('işlem anahtarı')
+    await click('Aynı işlemi yeniden dene')
+    expect(post).toHaveBeenCalledTimes(2); expect(post.mock.calls[0]?.slice(0, 2)).toEqual(post.mock.calls[1]?.slice(0, 2))
   })
 })

@@ -39,7 +39,7 @@ export default function ServiceActions({ service, post, blocked, dirty, onBusyCh
   }
   return <section className={styles.definitionActions} aria-labelledby="service-actions-title">
     <h2 id="service-actions-title">Durum ve silme</h2>
-    <p>Pasifleştirme kaydı korur. Silme listeden kaldırır; değişiklik geçmişi korunur.</p>
+    <p>Pasif hizmet için yeni randevu alınamaz ve mevcut randevu bu hizmetle başka zamana taşınamaz. Mevcut randevular iptal edilmez. Pasifleştirme kaydı korur; silme listeden kaldırır, değişiklik geçmişi korunur.</p>
     {dirty && <p>Durumu değiştirmek veya silmek için önce değişiklikleri kaydedin ya da vazgeçin.</p>}
     <ErrorMessage message={error} />
     <div className={styles.actions}>
@@ -49,7 +49,7 @@ export default function ServiceActions({ service, post, blocked, dirty, onBusyCh
     {target && <fieldset className={styles.confirmation} disabled={busy} aria-label={target === 'delete' ? 'Hizmet silme onayı' : 'Hizmet durum değişikliği onayı'}>
       <legend>Hizmeti {target === 'delete' ? 'sil' : service.isActive ? 'pasifleştir' : 'aktifleştir'}</legend>
       {target === 'delete' ? <p><strong>{service.name}</strong> hizmet listesinden ve personelin hizmet seçimlerinden kaldırılacak; yeniden kullanılamayacak. Önceki bağlantılar ve değişiklik geçmişi korunur.</p>
-        : <p><strong>{service.name}</strong> {service.isActive ? 'pasif' : 'aktif'} olarak işaretlenecek. Kayıt silinmez; hizmetin adı, süresi ve fiyatı korunur.</p>}
+        : <p><strong>{service.name}</strong> {service.isActive ? 'pasif' : 'aktif'} olarak işaretlenecek. {service.isActive ? 'Bu hizmet için yeni randevu alınamayacak ve mevcut randevu bu hizmetle başka zamana taşınamayacak. Mevcut randevular iptal edilmez.' : 'Diğer rezervasyon koşulları da uygunsa bu hizmet için yeniden randevu alınabilir.'} Kayıt silinmez; hizmetin adı, süresi ve fiyatı korunur.</p>}
       <div className={styles.actions}>
         <button type="button" ref={confirm} className={target === 'delete' ? styles.danger : styles.primary} disabled={blocked}
           onClick={() => { void change() }}>{busy ? 'İşlem sürüyor…' : target === 'delete' ? 'Hizmeti sil' : 'Durumu değiştir'}</button>
