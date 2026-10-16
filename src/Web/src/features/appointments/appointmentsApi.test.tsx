@@ -13,4 +13,11 @@ describe('Randevu veri sınırı', () => {
     await expect(readAvailability(Response.json({ startsAt: ['2026-10-16T09:00:00'], timeZone: 'Europe/Istanbul', serviceVersion: '00000001-0000-0000-0000-000000000001' }), false)).rejects.toMatchObject({ status: 500 })
     await expect(readAvailability(Response.json({ startsAt: [], timeZone: 'Europe/Istanbul', serviceVersion: '00000001-0000-0000-0000-000000000001' }), true)).rejects.toMatchObject({ status: 500 })
   })
+  it('eksik veya saatlerle çelişen nedenleri reddeder; sunucu nedenlerini korur', async () => {
+    const data = { startsAt: [], unavailableReasons: [{ code: 'StaffClosed', message: 'Çalışan seçili gün kapalı.' }], timeZone: 'Europe/Istanbul', serviceVersion: '00000001-0000-0000-0000-000000000001' }
+    expect((await readAvailability(Response.json(data), false)).unavailableReasons).toEqual(data.unavailableReasons)
+    for (const invalid of [{ ...data, unavailableReasons: [] }, { ...data, unavailableReasons: [{ code: 'Closed', message: '' }] }, { ...data, startsAt: ['2026-10-16T09:00:00Z'] }]) {
+      await expect(readAvailability(Response.json(invalid), false)).rejects.toMatchObject({ status: 500 })
+    }
+  })
 })

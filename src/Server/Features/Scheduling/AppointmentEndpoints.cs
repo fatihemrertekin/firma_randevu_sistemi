@@ -21,7 +21,8 @@ public static class AppointmentEndpoints
         Guid ServiceId, string ServiceName, int DurationMinutes, decimal Price, string Currency,
         DateTime StartsAt, DateTime EndsAt, string Status, string CustomerName, string CustomerPhone,
         int BufferBeforeMinutes, int BufferAfterMinutes, DateTime OccupiedStartsAt, DateTime OccupiedEndsAt, DateTime? PendingExpiresAt = null);
-    public sealed record AvailabilityResponse(string TimeZone, Guid ServiceVersion, DateTime[] StartsAt);
+    public sealed record UnavailableReason(string Code, string Message);
+    public sealed record AvailabilityResponse(string TimeZone, Guid ServiceVersion, DateTime[] StartsAt, UnavailableReason[] UnavailableReasons);
 
     public static void MapAppointmentEndpoints(this IEndpointRouteBuilder app)
     {
@@ -76,35 +77,11 @@ public static class AppointmentEndpoints
         var now = clock.GetUtcNow().UtcDateTime;
         var localNow = DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(now, AppointmentRules.Istanbul));
         if (day < localNow || day > localNow.AddDays(policy.HorizonDays))
-            return Results.Problem(statusCode: 400, title: "Tarih rezervasyon aralığında olmalı.");
-        var starts = new List<DateTime>();
-        if (schedule.IsConfigured && member.IsActive && service.IsActive &&
-            await db.StaffServiceAssignments.AnyAsync(item => item.StaffMemberId == member.Id && item.ServiceDefinitionId == service.Id, timeout.Token))
-        {
-            starts.AddRange(await FindStartsAsync(db, member.Id, day, now, policy, service.DurationMinutes, service.BufferBeforeMinutes, service.BufferAfterMinutes, null, timeout.Token));
-        }
+            return Results.ValidationProblem(new Dictionary<string, string[]> { ["date"] = [$"Geçmiş bir gün veya {policy.HorizonDays} günlük rezervasyon ufkunun dışı seçilemez. Tarihi değiştirin."] });
+        var availability = await AppointmentAvailability.FindAsync(db, member, service, schedule.IsConfigured, day, now, policy,
+            service.DurationMinutes, service.BufferBeforeMinutes, service.BufferAfterMinutes, null, timeout.Token);
         await transaction.CommitAsync(timeout.Token);
-        return Results.Ok(new AvailabilityResponse("Europe/Istanbul", service.Version, starts.ToArray()));
-    }
-
-    internal static async Task<DateTime[]> FindStartsAsync(AppDbContext db, Guid memberId, DateOnly day, DateTime now,
-        BookingPolicy policy, int duration, int before, int after, Guid? exclude, CancellationToken token)
-    {
-        var business = await AppointmentCalendar.LoadAsync(db, null, day, day, token);
-        var staff = await AppointmentCalendar.LoadAsync(db, memberId, day, day, token);
-        var first = day.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc).AddDays(-1); var last = first.AddDays(3);
-        var occupied = await db.AppointmentTimeBlocks.AsNoTracking().Where(item => item.StaffMemberId == memberId &&
-            (exclude == null || item.AppointmentId != exclude) && item.Status != "Cancelled" && item.OccupiedStartsAt < last && item.OccupiedEndsAt > first)
-            .Select(item => new { item.OccupiedStartsAt, item.OccupiedEndsAt }).ToArrayAsync(token);
-        var starts = new List<DateTime>();
-        for (var minute = 0; minute < 1440; minute += policy.SlotMinutes)
-        {
-            if (!AppointmentRules.TryUtc(day, minute, AppointmentRules.Istanbul, out var start) || !AppointmentRules.InWindow(start, now, policy)) continue;
-            var occupiedStart = start.AddMinutes(-before); var occupiedEnd = start.AddMinutes(duration + after);
-            if (business.Fits(occupiedStart, occupiedEnd, start) && staff.Fits(occupiedStart, occupiedEnd, start) &&
-                !occupied.Any(item => item.OccupiedStartsAt < occupiedEnd && occupiedStart < item.OccupiedEndsAt)) starts.Add(start);
-        }
-        return starts.ToArray();
+        return Results.Ok(new AvailabilityResponse("Europe/Istanbul", service.Version, availability.StartsAt, availability.UnavailableReasons));
     }
 
     private static async Task<IResult> CreateAsync(CreateRequest request, bool pending, HttpContext context, IAntiforgery antiforgery,

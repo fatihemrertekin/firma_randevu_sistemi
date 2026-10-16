@@ -18,16 +18,22 @@ internal sealed class AppointmentCalendar(WeeklyHours.DayValue[] week, IReadOnly
     {
         if (day is null) exceptions.Remove(date); else exceptions[date] = day;
     }
-    internal bool Fits(DateTime start, DateTime end, DateTime serviceStart)
+    internal Day? DayAt(DateOnly date)
     {
-        if (week.Length != 7 || LocalDate(start) != LocalDate(serviceStart)) return false;
-        var date = LocalDate(serviceStart); var weekday = Weekday(date);
+        if (week.Length != 7) return null;
+        var weekday = Weekday(date);
         var weekly = week.SingleOrDefault(item => item.Day == weekday);
-        if (weekly is null) return false;
-        var day = exceptions.GetValueOrDefault(date) ?? new Day(weekly.IsClosed, weekly.Start, weekly.End, weeklyBreaks.Where(item => item.Day == weekday).ToArray());
-        return AppointmentRules.FitsDay(start, end, day.IsClosed, day.Start, day.End) && WeeklyBreaks.Avoids(start, end, day.Breaks) &&
-            !leave.Any(item => start < item.End && item.Start < end);
+        return weekly is null ? null : exceptions.GetValueOrDefault(date) ??
+            new Day(weekly.IsClosed, weekly.Start, weekly.End, weeklyBreaks.Where(item => item.Day == weekday).ToArray());
     }
+    internal bool FitsHours(DateTime start, DateTime end, DateTime serviceStart) =>
+        LocalDate(start) == LocalDate(serviceStart) && DayAt(LocalDate(serviceStart)) is { } day &&
+        AppointmentRules.FitsDay(start, end, day.IsClosed, day.Start, day.End);
+    internal bool AvoidsBreaks(DateTime start, DateTime end, DateTime serviceStart) =>
+        DayAt(LocalDate(serviceStart)) is { } day && WeeklyBreaks.Avoids(start, end, day.Breaks);
+    internal bool AvoidsLeave(DateTime start, DateTime end) => !leave.Any(item => start < item.End && item.Start < end);
+    internal bool Fits(DateTime start, DateTime end, DateTime serviceStart) =>
+        FitsHours(start, end, serviceStart) && AvoidsBreaks(start, end, serviceStart) && AvoidsLeave(start, end);
     internal static async Task<AppointmentCalendar> LoadAsync(AppDbContext db, Guid? memberId, DateOnly from, DateOnly to,
         CancellationToken token, WeeklyHours.DayValue[]? desiredWeek = null, IReadOnlyList<WeeklyBreaks.Value>? desiredBreaks = null)
     {

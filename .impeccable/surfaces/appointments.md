@@ -35,3 +35,7 @@ Yeni kayıt/taşıma formunda solda etiketli alanlar, sağda seçili verinin öz
 ## Kabul sınırı
 
 Hafta/ay, sürükle-bırak, anonim rezervasyon/OTP/SMS/token, tahsilat, müşteri geçmişi ve Staff yönetimi yoktur. Gerçek API/tarayıcı, GitHub ve ana 8080 kabulü [P04 planında](../../docs/plans/P04.md) ayrı kaydedilir. Taslak/değerlendirme üretim veya WCAG sertifikası değildir. Yerel kanıt `.local/p04-02/` altındadır. Kapatılmamış native Impeccable araç kapısı tamamlandı diye raporlanmaz.
+
+## Uygunluk nedeni — mevcut yüzey iyileştirmesi
+
+16.10.2026 kullanıcı isteği: saat bulunamadığında gerçek neden saat bölümünde gösterilir. Yeni bir ekran veya tasarım yönü değildir. `availability` ve `move-availability` GET'lerinin `unavailableReasons` alanı sunucu tarafından hesaplanır; tek veya çoklu nedenler mevcut tokenlardan açık mavi, ince çerçeveli bilgi alanında, “Bu seçimle uygun saat bulunamıyor” başlığı altında görünür. Hata/400 tarih bilgisi “Uygun saatler alınamadı” durumuyla ayrıdır. Seçim değişince eski neden kaldırılır; saat bulununca panel kalkar. POST/ayar veya randevu kendiliğinden değiştirilmez.

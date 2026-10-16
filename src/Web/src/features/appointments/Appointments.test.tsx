@@ -23,8 +23,8 @@ function api(input: RequestInfo | URL): Promise<Response> {
   if (path === '/api/staff-members/') return Promise.resolve(Response.json(pageOf([member, other])))
   if (path === '/api/services/') return Promise.resolve(Response.json(pageOf([service])))
   if (path === '/api/services/' + service.id) return Promise.resolve(Response.json(service))
-  if (path === '/api/appointments/availability') return Promise.resolve(Response.json({ startsAt: [appointment.startsAt, '2026-10-16T07:00:00Z'], serviceVersion: service.version, timeZone: 'Europe/Istanbul' }))
-  if (path.endsWith('/move-availability')) return Promise.resolve(Response.json({ startsAt: ['2026-10-16T08:00:00Z'], version: appointment.version, timeZone: 'Europe/Istanbul' }))
+  if (path === '/api/appointments/availability') return Promise.resolve(Response.json({ startsAt: [appointment.startsAt, '2026-10-16T07:00:00Z'], unavailableReasons: [], serviceVersion: service.version, timeZone: 'Europe/Istanbul' }))
+  if (path.endsWith('/move-availability')) return Promise.resolve(Response.json({ startsAt: ['2026-10-16T08:00:00Z'], unavailableReasons: [], version: appointment.version, timeZone: 'Europe/Istanbul' }))
   if (path === '/api/appointments/') return Promise.resolve(Response.json({ ...list(), date: url.searchParams.get('date') ?? '2026-10-16' }))
   if (path === '/api/appointments/' + appointment.id) return Promise.resolve(Response.json(appointment))
   throw new Error('Beklenmeyen istek: ' + input)
@@ -69,6 +69,41 @@ async function fillCreation() {
 }
 
 describe('İşletmenin günlük randevu akışı', () => {
+  it('aynı seçimdeki nedenleri saat alanında gösterir, yeni seçimde eski uyarıyı kaldırır', async () => {
+    vi.mocked(fetch).mockImplementation(input => String(input).includes('/api/appointments/availability?') ? Promise.resolve(Response.json({
+      startsAt: [], unavailableReasons: [{ code: 'ServiceNotAssigned', message: 'Bu hizmet seçili çalışana atanmamış.' }, { code: 'BusinessClosed', message: 'İşletme seçili tarihte kapalı.' }],
+      serviceVersion: service.version, timeZone: 'Europe/Istanbul',
+    })) : api(input))
+    await render('/yonetim/randevular/yeni?tarih=2026-10-16')
+    await choose('appointment-serviceId', service.id); await choose('appointment-staffMemberId', member.id)
+    const notice = [...container.querySelectorAll('fieldset')].find(item => item.querySelector('legend')?.textContent === 'Uygun başlangıç saati')?.querySelector('[role=status]')
+    expect(notice?.textContent).toContain('Bu hizmet seçili çalışana atanmamış.')
+    expect(notice?.textContent).toContain('İşletme seçili tarihte kapalı.')
+    expect(container.querySelectorAll('input[type=radio]')).toHaveLength(0)
+    expect(container.querySelector<HTMLButtonElement>('button[type=submit]')?.disabled).toBe(true)
+    vi.mocked(fetch).mockImplementation(api); await choose('appointment-staffMemberId', other.id)
+    expect(container.textContent).not.toContain('çalışana atanmamış')
+    expect(container.querySelectorAll('input[type=radio]')).toHaveLength(2)
+  })
+  it('tarih aralığı hatasını boş gün gibi sunmaz, nedeni saat alanında gösterir', async () => {
+    vi.mocked(fetch).mockImplementation(input => String(input).includes('/api/appointments/availability?') ? Promise.resolve(Response.json({
+      errors: { date: ['Geçmiş bir gün seçilemez. Tarihi değiştirin.'] },
+    }, { status: 400 })) : api(input))
+    await render('/yonetim/randevular/yeni?tarih=2026-10-16')
+    await choose('appointment-serviceId', service.id); await choose('appointment-staffMemberId', member.id)
+    expect(container.textContent).toContain('Uygun saatler alınamadı')
+    expect(container.textContent).toContain('Geçmiş bir gün seçilemez. Tarihi değiştirin.')
+    expect(container.textContent).not.toContain('Bu seçimle uygun saat bulunamıyor')
+  })
+  it('taşıma uygunluğundaki nedeni de gösterir ve mevcut randevuyu değiştirmez', async () => {
+    vi.mocked(fetch).mockImplementation(input => String(input).includes('/move-availability?') ? Promise.resolve(Response.json({
+      startsAt: [], unavailableReasons: [{ code: 'Leave', message: 'Çalışanın izinleri nedeniyle uygun saat kalmadı.' }], version: appointment.version, timeZone: 'Europe/Istanbul',
+    })) : api(input))
+    const { post } = await render('/yonetim/randevular/' + appointment.id + '/tasi?tarih=2026-10-16')
+    expect(container.textContent).toContain('Çalışanın izinleri nedeniyle uygun saat kalmadı.')
+    expect(container.textContent).toContain('Mevcut randevu')
+    expect(post).not.toHaveBeenCalled()
+  })
   it('URL veya geri/ileri değişiminde önceki çalışanın kayıtlarını yeni filtre altında göstermez', async () => {
     const { router } = await render()
     vi.mocked(fetch).mockImplementation(input => String(input).includes('/api/appointments/?') ? new Promise(() => {}) : api(input))
