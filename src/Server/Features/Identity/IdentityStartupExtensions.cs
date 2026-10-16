@@ -105,6 +105,12 @@ public static class IdentityStartupExtensions
             options.Cookie.Path = "/";
             options.ExpireTimeSpan = TimeSpan.FromHours(8);
             options.SlidingExpiration = false;
+            options.Events.OnSigningIn = context =>
+            {
+                if (context.HttpContext.Items[MfaEndpoints.PersistentRecoveryLogin] is true)
+                    context.Properties.IsPersistent = true;
+                return Task.CompletedTask;
+            };
             options.Events.OnRedirectToLogin = context =>
             {
                 context.Response.StatusCode = StatusCodes.Status401Unauthorized;

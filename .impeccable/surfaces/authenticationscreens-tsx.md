@@ -32,3 +32,7 @@ Constraints: 320/390/768/1280px, 44px targets, keyboard/focus/reduced-motion, WC
 ## Kullanıcı düzeltmesi — 06.10.2026
 
 Yalnız ilk girişte önceki 18 px ana işlem, 16 px yardımcı metin ve genişlikler geri alınır. MFA ve diğer kimlik ekranlarında kompakt butonlar korunur. Kullanıcının mevcut ekran üzerinde doğrudan istediği dar düzenlemedir; yeni ekran/taslak veya başka aşama başlatılmaz. Kabul kanıtı P02 planındaki mevcut yüzey düzeltmeleri kaydına eklenir.
+
+## Beni hatırla — 16.10.2026
+
+Kullanıcı mevcut giriş formuna “Beni hatırla” eklenmesini istedi. Parola ile giriş düğmesi arasında varsayılan kapalı, klavyeyle kullanılabilir ve en az 44 px etiket hedefli kutu bulunur; altındaki açıklama 8 saatlik süreyi ve yalnız kişisel cihazda kullanımı belirtir. Mevcut tek sütun/mobil yerleşim, fotoğraf, renkler ve tokenlar korunur. Tercih parola, MFA ve kurtarma kodu isteklerine gider; başarı yalnız mevcut API onayıyla gösterilir. İkinci adım atlanmaz; yükleme sırasında kutu kilitlenir, hata mesajları ve CSRF korunur. Yeni ekran veya görsel sistem değişikliği yoktur.

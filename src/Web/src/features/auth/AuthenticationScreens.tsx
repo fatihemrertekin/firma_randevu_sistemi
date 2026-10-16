@@ -15,7 +15,7 @@ import { useNavigationChange } from '../../app/NavigationEvents'
 export default function AuthenticationScreens({ auth }: { auth: ReturnType<typeof useAuthentication> }) {
   const {
     account, setAccount, loading, busy, error, setError, email, setEmail,
-    password, setPassword, mfaRequired, setMfaRequired, useRecoveryCode, setUseRecoveryCode,
+    password, setPassword, rememberMe, setRememberMe, mfaRequired, setMfaRequired, useRecoveryCode, setUseRecoveryCode,
     code, setCode, setupInfo, setSetupInfo, setupPassword, setSetupPassword, recoveryCodes, setRecoveryCodes,
     notice, setNotice,
     clearPasswordFields, handleLogin, handleMfaLogin, handleSetup, handleEnable, handleLogout: logout,
@@ -163,6 +163,12 @@ export default function AuthenticationScreens({ auth }: { auth: ReturnType<typeo
               </div>
               <input id="password" type="password" autoComplete="current-password" required disabled={busy} maxLength={1024}
                 value={password} onChange={event => setPassword(event.target.value)} />
+              <label className={styles.rememberMe}>
+                <input type="checkbox" checked={rememberMe} disabled={busy} aria-describedby="remember-me-help"
+                  onChange={event => setRememberMe(event.target.checked)} />
+                Beni hatırla
+              </label>
+              <p id="remember-me-help" className={styles.rememberMeHelp}>Bu tarayıcıda 8 saat boyunca açık kal. Yalnız kendi cihazınızda seçin.</p>
               <button type="submit" disabled={busy}>
                 {busy ? 'Giriş yapılıyor…' : 'Giriş yap'}
               </button>

@@ -39,6 +39,49 @@ async function pendingMfa(logoutStatus: number) {
   await input('email', 'owner@example.test'); await input('password', 'Synthetic!Owner123'); await submit()
   return requests
 }
+it.each([false, true])('beni hatırla tercihini parola ve MFA isteklerine taşır (%s)', async rememberMe => {
+  const requests = vi.fn(async (path: string) => {
+    if (path.endsWith('/me')) return new Response(null, { status: 401 })
+    if (path.endsWith('/csrf')) return Response.json({ token: 'synthetic-csrf' })
+    return new Response(null, { status: 202 })
+  })
+  vi.stubGlobal('fetch', requests)
+  await act(async () => root.render(<App />))
+  const checkbox = container.querySelector<HTMLInputElement>('input[type="checkbox"]')
+  expect(checkbox?.checked).toBe(false)
+  if (rememberMe) await act(async () => checkbox?.click())
+  await input('email', 'owner@example.test'); await input('password', 'Synthetic!Owner123'); await submit()
+  expect(requests).toHaveBeenCalledWith('/api/auth/login', expect.objectContaining({
+    body: JSON.stringify({ email: 'owner@example.test', password: 'Synthetic!Owner123', rememberMe }),
+  }))
+  await input('mfa-code', '123456'); await submit()
+  expect(requests).toHaveBeenCalledWith('/api/auth/mfa/login', expect.objectContaining({
+    body: JSON.stringify({ code: '123456', rememberMe }),
+  }))
+})
+
+it('kurtarma kodunda tercihi korur, girişe dönünce sıfırlar', async () => {
+  const requests = vi.fn(async (path: string) => {
+    if (path.endsWith('/me')) return new Response(null, { status: 401 })
+    if (path.endsWith('/csrf')) return Response.json({ token: 'synthetic-csrf' })
+    return new Response(null, { status: path === '/api/auth/login' ? 202 : 400 })
+  })
+  vi.stubGlobal('fetch', requests)
+  await act(async () => root.render(<App />))
+  await act(async () => container.querySelector<HTMLInputElement>('input[type="checkbox"]')?.click())
+  await input('email', 'owner@example.test'); await input('password', 'Synthetic!Owner123'); await submit()
+  const recovery = Array.from(container.querySelectorAll('button')).find(button => button.textContent === 'Kurtarma kodu kullan')
+  await act(async () => recovery?.click())
+  await input('mfa-code', 'synthetic-recovery'); await submit()
+  expect(requests).toHaveBeenCalledWith('/api/auth/mfa/recovery-login', expect.objectContaining({
+    body: JSON.stringify({ code: 'synthetic-recovery', rememberMe: true }),
+  }))
+  requests.mockImplementation(async (path: string) => path.endsWith('/csrf')
+    ? Response.json({ token: 'synthetic-csrf' }) : new Response(null, { status: 204 }))
+  const back = Array.from(container.querySelectorAll('button')).find(button => button.textContent === 'Girişe dön')
+  await act(async () => back?.click())
+  expect(container.querySelector<HTMLInputElement>('input[type="checkbox"]')?.checked).toBe(false)
+})
 it.each([
   ['/api/staff-invitations/', 'invite-email', 'Çalışan daveti oluştur', 'issued-invitation'],
   ['/api/staff-password-resets/', 'staff-reset-email', 'Çalışan sıfırlama kodu üret', 'issued-staff-reset'],
