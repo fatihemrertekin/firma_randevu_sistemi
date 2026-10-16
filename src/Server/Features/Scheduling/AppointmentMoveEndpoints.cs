@@ -12,7 +12,7 @@ namespace Server.Features.Scheduling;
 public static class AppointmentMoveEndpoints
 {
     public sealed record Request(Guid Version, Guid RequestKey, Guid StaffMemberId, string? StartsAt);
-    public sealed record AvailabilityResponse(Guid Version, string TimeZone, DateTime[] StartsAt);
+    public sealed record AvailabilityResponse(Guid Version, string TimeZone, DateTime[] StartsAt, AppointmentEndpoints.UnavailableReason[] UnavailableReasons);
 
     internal static void MapAppointmentMoveEndpoints(this RouteGroupBuilder appointments)
     {
@@ -34,15 +34,15 @@ public static class AppointmentMoveEndpoints
         if (block.Status != "Confirmed" || now >= block.StartsAt) return Conflict("Yalnız başlamamış onaylı randevu taşınabilir.");
         var policy = await db.BookingPolicies.AsNoTracking().SingleAsync(token);
         var localNow = AppointmentCalendar.LocalDate(now);
-        if (day < localNow || day > localNow.AddDays(policy.HorizonDays)) return Results.Problem(statusCode: 400, title: "Tarih rezervasyon aralığında olmalı.");
+        if (day < localNow || day > localNow.AddDays(policy.HorizonDays))
+            return Results.ValidationProblem(new Dictionary<string, string[]> { ["date"] = [$"Geçmiş bir gün veya {policy.HorizonDays} günlük rezervasyon ufkunun dışı seçilemez. Tarihi değiştirin."] });
         var service = await db.ServiceDefinitions.AsNoTracking().SingleAsync(item => item.Id == block.ServiceDefinitionId, token);
         var schedule = await db.BusinessHoursSchedules.AsNoTracking().SingleAsync(token);
         var version = await db.Appointments.Where(item => item.Id == id).Select(item => item.Version).SingleAsync(token);
-        var starts = member.IsActive && service.IsActive && !service.IsDeleted && schedule.IsConfigured &&
-            await db.StaffServiceAssignments.AnyAsync(item => item.StaffMemberId == member.Id && item.ServiceDefinitionId == service.Id, token)
-            ? await AppointmentEndpoints.FindStartsAsync(db, member.Id, day, now, policy, block.DurationMinutes, block.BufferBeforeMinutes, block.BufferAfterMinutes, id, token) : [];
+        var availability = await AppointmentAvailability.FindAsync(db, member, service, schedule.IsConfigured, day, now, policy,
+            block.DurationMinutes, block.BufferBeforeMinutes, block.BufferAfterMinutes, id, token);
         await transaction.CommitAsync(token);
-        return Results.Ok(new AvailabilityResponse(version, "Europe/Istanbul", starts));
+        return Results.Ok(new AvailabilityResponse(version, "Europe/Istanbul", availability.StartsAt, availability.UnavailableReasons));
     }
 
     private static async Task<IResult> MoveAsync(Guid id, Request request, HttpContext context, IAntiforgery csrf, AppDbContext db, UserManager<AppUser> users, TimeProvider clock)

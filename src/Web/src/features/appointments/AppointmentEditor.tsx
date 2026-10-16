@@ -18,7 +18,7 @@ export default function AppointmentEditor({ appointment, initialDay, post, onSav
   const [startsAt, setStartsAt] = useState(''), [name, setName] = useState(''), [phone, setPhone] = useState('')
   const [slots, setSlots] = useState<Availability | null>(null), [slotsLoading, setSlotsLoading] = useState(!!appointment), [revision, setRevision] = useState(0)
   const [busy, setBusy] = useState(false), [locked, setLocked] = useState(false), [attempt, setAttempt] = useState<Attempt | null>(null)
-  const [error, setError] = useState(''), [fields, setFields] = useState<Record<string, string>>({}), [retryUntil, setRetryUntil] = useState(0)
+  const [error, setError] = useState(''), [availabilityError, setAvailabilityError] = useState(''), [fields, setFields] = useState<Record<string, string>>({}), [retryUntil, setRetryUntil] = useState(0)
   const sending = useRef(false), form = useRef<HTMLFormElement>(null)
   const moving = !!appointment, serviceId = appointment?.serviceId ?? service?.id ?? ''
   const dirty = moving ? staff !== appointment.staffMemberId || day !== businessDay(new Date(appointment.startsAt)) || !!startsAt
@@ -36,11 +36,11 @@ export default function AppointmentEditor({ appointment, initialDay, post, onSav
       .then(response => readAvailability(response, moving)).then(value => {
         if (controller.signal.aborted) return
         if (moving ? value.version !== appointment.version : value.serviceVersion !== service?.version) throw new AppointmentError(409)
-        setSlots(value); setLocked(false)
+        setSlots(value); setLocked(false); setAvailabilityError('')
       }).catch((problem: unknown) => {
         if (controller.signal.aborted) return
         const failure = problem instanceof AppointmentError ? problem : new AppointmentError(500)
-        setError(failure.message); setSlots(null); setLocked(true); setRetryUntil(failure.retryAfter)
+        setAvailabilityError(failure.fields.date ?? failure.message); setSlots(null); setLocked(true); setRetryUntil(failure.retryAfter)
         if (failure.status === 401) onUnauthorized()
       }).finally(() => { if (!controller.signal.aborted) setSlotsLoading(false) })
     return () => controller.abort()
@@ -49,10 +49,10 @@ export default function AppointmentEditor({ appointment, initialDay, post, onSav
     const key = Object.keys(fields)[0]
     if (key) form.current?.querySelector<HTMLInputElement>(`[name="${key}"]`)?.focus()
   }, [fields])
-  function changed() { setStartsAt(''); setSlots(null); setSlotsLoading(true); setError(''); setFields({}); setLocked(false) }
+  function changed() { setStartsAt(''); setSlots(null); setSlotsLoading(true); setError(''); setAvailabilityError(''); setFields({}); setLocked(false) }
   async function reload() {
     if (sending.current || busy || attempt || retryUntil) return
-    sending.current = true; setBusy(true); setError(''); setStartsAt(''); setSlots(null)
+    sending.current = true; setBusy(true); setError(''); setAvailabilityError(''); setStartsAt(''); setSlots(null)
     try {
       if (moving) onReload()
       else if (serviceId) {
@@ -99,7 +99,7 @@ export default function AppointmentEditor({ appointment, initialDay, post, onSav
     <ErrorMessage message={error} />
     {attempt && !busy && <div className={styles.confirmation}><p>İşlemin sonucu belirsiz. Yeni randevu göndermeyin. Taslağı değiştirmeden aynı işlem anahtarıyla sonucu doğrulayın. Bu sayfayı kapatırsanız tekrar göndermeden önce günlük listeyi kontrol edin.</p>
       <button type="button" disabled={busy || !!retryUntil} onClick={() => { void send(attempt) }}>Aynı işlemi yeniden dene</button></div>}
-    {error && !attempt && <button type="button" disabled={busy || !!retryUntil} onClick={() => { void reload() }}>Güncel bilgileri ve saatleri yükle</button>}
+    {(error || availabilityError) && !attempt && <button type="button" disabled={busy || !!retryUntil} onClick={() => { void reload() }}>Güncel bilgileri ve saatleri yükle</button>}
     <div className={styles.columns}>
       <form ref={form} className={styles.paper} noValidate aria-label={moving ? 'Randevuyu taşı' : 'Yeni randevu'} aria-busy={busy} onSubmit={save}>
         <h2>{moving ? 'Yeni zaman' : 'Hizmet ve zaman'}</h2>
@@ -112,7 +112,9 @@ export default function AppointmentEditor({ appointment, initialDay, post, onSav
             onChange={event => { changed(); setDay(event.target.value) }} /></div>
           <div className={styles.wide}><fieldset className={styles.slots} disabled={disabled || slotsLoading || locked}><legend>Uygun başlangıç saati</legend>
             {!serviceId || !staff ? <p>Önce hizmet ve çalışan seçin.</p> : !isDay(day) ? <p>Geçerli tarih seçin.</p> : slotsLoading ? <p role="status">Uygun saatler yükleniyor…</p>
-              : slots?.startsAt.length === 0 ? <p>Bu gün, hizmet ve çalışan için uygun saat yok. Başka bir gün veya çalışan seçin.</p> : null}
+              : availabilityError ? <div className={styles.availabilityNotice} role="status"><strong>Uygun saatler alınamadı</strong><p>{availabilityError}</p></div>
+                : slots?.startsAt.length === 0 ? <div className={styles.availabilityNotice} role="status"><strong>Bu seçimle uygun saat bulunamıyor</strong>
+                  <ul>{slots.unavailableReasons.map(reason => <li key={reason.code}>{reason.message}</li>)}</ul></div> : null}
             <div className={styles.slotOptions}>{slots?.startsAt.map(start => <label className={styles.slot} key={start}><input type="radio" name="startsAt" value={start} checked={startsAt === start}
               aria-invalid={!!fields.startsAt || undefined} aria-describedby={fields.startsAt ? 'appointment-startsAt-error' : undefined} onChange={() => { setStartsAt(start); setFields({}) }} />{formatTime(start)}</label>)}</div>
             {fieldError('startsAt')}

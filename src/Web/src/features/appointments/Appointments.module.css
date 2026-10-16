@@ -47,6 +47,10 @@
 .sectionTitle { border-top: var(--auth-rule) solid var(--border); padding-top: var(--auth-space-5); margin-top: var(--auth-space-5) !important; }
 .slots { padding: 0; margin: 0; border: 0; min-width: 0; }
 .slots legend { font-weight: 600; margin-bottom: var(--auth-space-2); }
+.availabilityNotice { padding: var(--auth-space-4); border: var(--auth-rule) solid var(--border); border-radius: var(--auth-radius); background: var(--primary-soft); color: var(--text); overflow-wrap: anywhere; }
+.availabilityNotice p, .availabilityNotice ul { margin: var(--auth-space-2) 0 0; }
+.availabilityNotice ul { padding-inline-start: var(--auth-space-5); }
+.availabilityNotice li + li { margin-top: var(--auth-space-2); }
 .slotOptions { display: flex; flex-wrap: wrap; gap: var(--auth-space-2); }
 .slot { position: relative; display: inline-flex; align-items: center; justify-content: center; min-width: var(--target-min); min-height: var(--target-min); padding: var(--auth-space-2); border: var(--auth-rule) solid var(--border); border-radius: var(--auth-radius); background: var(--button-navigation-bg); color: var(--text); font-variant-numeric: tabular-nums; cursor: pointer; }
 .slot input { position: absolute; opacity: 0; width: var(--auth-rule); min-height: var(--auth-rule); }

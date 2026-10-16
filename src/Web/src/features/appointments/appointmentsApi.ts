@@ -6,8 +6,10 @@ export type AppointmentRow = { id: string; version: string; staffMemberId: strin
   startsAt: string; endsAt: string; status: AppointmentStatus; customerName: string; pendingExpiresAt: string | null }
 export type Appointment = AppointmentRow & { serviceId: string; durationMinutes: number; price: number; currency: 'TRY'; customerPhone: string }
 export type AppointmentPage = PageMetadata & { items: AppointmentRow[]; date: string; timeZone: 'Europe/Istanbul' }
-export type Availability = { timeZone: 'Europe/Istanbul'; startsAt: string[]; version?: string; serviceVersion?: string }
+export type Availability = { timeZone: 'Europe/Istanbul'; startsAt: string[]; unavailableReasons: { code: string; message: string }[]; version?: string; serviceVersion?: string }
 const record = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null
+const isUnavailableReason = (value: unknown): value is Availability['unavailableReasons'][number] => record(value) && typeof value.code === 'string' && /^[A-Za-z]{1,40}$/u.test(value.code) &&
+  typeof value.message === 'string' && value.message.trim().length > 0 && value.message.length <= 500
 export const isId = (value: unknown): value is string => typeof value === 'string' && /^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/iu.test(value) && !/^0{8}(-0{4}){3}-0{12}$/u.test(value)
 const timestamp = (value: unknown): value is string => typeof value === 'string' && /(?:Z|[+-]\d{2}:\d{2})$/u.test(value) && Number.isFinite(Date.parse(value))
 export function isDay(value: string) {
@@ -40,7 +42,7 @@ async function body(response: Response): Promise<unknown> {
     if (response.status === 400) {
       const problem: unknown = await response.json().catch(() => null)
       if (record(problem) && record(problem.errors)) for (const [key, messages] of Object.entries(problem.errors)) {
-        if (['serviceId', 'staffMemberId', 'startsAt', 'customerName', 'customerPhone'].includes(key) && Array.isArray(messages) && typeof messages[0] === 'string') fields[key] = messages[0]
+        if (['serviceId', 'staffMemberId', 'startsAt', 'customerName', 'customerPhone', 'date'].includes(key) && Array.isArray(messages) && typeof messages[0] === 'string') fields[key] = messages[0]
       }
     }
     const retry = response.headers.get('Retry-After'), until = retry && /^\d+$/u.test(retry) ? Date.now() + Number(retry) * 1000 : Date.parse(retry ?? '')
@@ -72,8 +74,10 @@ export async function readAppointment(response: Response): Promise<Appointment> 
 export async function readAvailability(response: Response, moving: boolean): Promise<Availability> {
   const value = await body(response)
   if (!record(value) || value.timeZone !== 'Europe/Istanbul' || !Array.isArray(value.startsAt) || !value.startsAt.every(timestamp) || value.startsAt.length > 1440 ||
+    !Array.isArray(value.unavailableReasons) || value.unavailableReasons.length > 8 || !value.unavailableReasons.every(isUnavailableReason) ||
+    (value.startsAt.length === 0 ? value.unavailableReasons.length === 0 : value.unavailableReasons.length > 0) ||
     !(moving ? isId(value.version) : isId(value.serviceVersion))) throw new AppointmentError(500)
-  return { timeZone: value.timeZone, startsAt: value.startsAt, version: moving ? String(value.version) : undefined, serviceVersion: moving ? undefined : String(value.serviceVersion) }
+  return { timeZone: value.timeZone, startsAt: value.startsAt, unavailableReasons: value.unavailableReasons, version: moving ? String(value.version) : undefined, serviceVersion: moving ? undefined : String(value.serviceVersion) }
 }
 export const signal = (controller: AbortController) => AbortSignal.any([controller.signal, AbortSignal.timeout(15000)])
 export function appointmentSearch(day: string, staff = '', page = 1, size = 20) {
