@@ -7,6 +7,8 @@ namespace Server.Features.Identity;
 
 public static class MfaEndpoints
 {
+    internal const string PersistentRecoveryLogin = "Identity.PersistentRecoveryLogin";
+
     public static void MapMfaEndpoints(this RouteGroupBuilder auth)
     {
         var mfa = auth.MapGroup("/mfa");
@@ -154,7 +156,7 @@ public static class MfaEndpoints
 
             var result = await signIn.TwoFactorAuthenticatorSignInAsync(
                 request.Code.Replace(" ", string.Empty, StringComparison.Ordinal),
-                isPersistent: false, rememberClient: false);
+                isPersistent: request.RememberMe, rememberClient: false);
             return result.Succeeded
                 ? Results.NoContent()
                 : Results.Problem(statusCode: StatusCodes.Status401Unauthorized,
@@ -178,6 +180,8 @@ public static class MfaEndpoints
                     title: "Kurtarma kodu gerekli.");
             }
 
+            // Identity'nin kurtarma kodu metodu kalıcı oturum parametresi sunmuyor.
+            context.Items[PersistentRecoveryLogin] = request.RememberMe;
             var result = await signIn.TwoFactorRecoveryCodeSignInAsync(request.Code.Trim());
             return result.Succeeded
                 ? Results.NoContent()
@@ -188,7 +192,7 @@ public static class MfaEndpoints
 
     public sealed record PasswordRequest(string Password);
     public sealed record EnableRequest(string Password, string Code);
-    public sealed record CodeRequest(string Code);
+    public sealed record CodeRequest(string Code, bool RememberMe = false);
 
     private static async Task<AppUser?> GetSetupUserUnderLockAsync(
         HttpContext context, AppDbContext db, UserManager<AppUser> users, CancellationToken cancellationToken)

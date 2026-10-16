@@ -46,6 +46,8 @@
 }
 .card .textAction:hover:not(:disabled):not([aria-disabled='true']), .card .textAction:active:not(:disabled):not([aria-disabled='true']) { background: var(--button-navigation-selected-bg); color: var(--auth-petrol); text-decoration: underline; }
 .loginOptions { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--action-row-gap) var(--auth-space-4); margin-top: var(--auth-space-5); padding-top: var(--auth-space-4); border-top: var(--auth-rule) solid var(--border); }
+.rememberMe { display: flex; align-items: center; min-height: var(--target-min); cursor: pointer; }
+.rememberMeHelp { font-size: var(--auth-small-size); }
 .card .login :where(button, a[data-navigation]) { padding: var(--auth-space-2) var(--auth-space-4); width: auto; justify-self: stretch; font-size: var(--auth-body-size); font-weight: 600; line-height: var(--auth-line); }
 .card .login button[type='submit'] { min-height: var(--auth-control-height); font-size: var(--auth-login-action-size); font-weight: 700; }
 .card .login .textAction { padding: var(--auth-space-2) var(--auth-space-3); font-size: var(--auth-small-size); font-weight: 500; }

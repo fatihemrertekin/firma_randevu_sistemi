@@ -46,7 +46,7 @@ public static class AuthEndpoints
             }
 
             var result = await signIn.PasswordSignInAsync(user, request.Password,
-                isPersistent: false, lockoutOnFailure: true);
+                isPersistent: request.RememberMe, lockoutOnFailure: true);
             if (result.RequiresTwoFactor)
             {
                 return Results.Json(new { requiresTwoFactor = true }, statusCode: StatusCodes.Status202Accepted);
@@ -116,5 +116,5 @@ public static class AuthEndpoints
         }
     }
 
-    public sealed record LoginRequest(string Email, string Password);
+    public sealed record LoginRequest(string Email, string Password, bool RememberMe = false);
 }

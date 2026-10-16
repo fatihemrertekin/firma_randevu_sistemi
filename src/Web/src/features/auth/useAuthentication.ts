@@ -10,6 +10,7 @@ export default function useAuthentication() {
   const [error, setError] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [rememberMe, setRememberMe] = useState(false)
   const [mfaRequired, setMfaRequired] = useState(false)
   const [useRecoveryCode, setUseRecoveryCode] = useState(false)
   const [code, setCode] = useState('')
@@ -100,7 +101,7 @@ export default function useAuthentication() {
     setError('')
     setNotice('')
     try {
-      const response = await postWithCsrf('/api/auth/login', { email, password })
+      const response = await postWithCsrf('/api/auth/login', { email, password, rememberMe })
       setPassword('')
       if (response.status === 202) {
         setMfaRequired(true)
@@ -129,7 +130,7 @@ export default function useAuthentication() {
     setError('')
     try {
       const path = useRecoveryCode ? '/api/auth/mfa/recovery-login' : '/api/auth/mfa/login'
-      const response = await postWithCsrf(path, { code })
+      const response = await postWithCsrf(path, { code, rememberMe })
       if (!response.ok) {
         setError(response.status === 429 ? 'Çok fazla deneme. Daha sonra tekrar deneyin.'
           : 'Kod doğrulanamadı. Güncel veya kullanılmamış kodu deneyin. Süre dolduysa girişe dönün.')
@@ -220,6 +221,7 @@ export default function useAuthentication() {
       setPassword('')
       setRecoveryCodes(null)
       setNotice('')
+      setRememberMe(false)
       return true
     } catch {
       setError('Çıkış yapılamadı. Lütfen yeniden deneyin.')
@@ -232,7 +234,7 @@ export default function useAuthentication() {
 
   return {
     account, setAccount, loading, busy, error, setError, notice, setNotice,
-    email, setEmail, password, setPassword, mfaRequired, setMfaRequired,
+    email, setEmail, password, setPassword, rememberMe, setRememberMe, mfaRequired, setMfaRequired,
     useRecoveryCode, setUseRecoveryCode, code, setCode, setupInfo, setSetupInfo,
     setupPassword, setSetupPassword, recoveryCodes, setRecoveryCodes,
     currentPassword, setCurrentPassword, newPassword, setNewPassword,
