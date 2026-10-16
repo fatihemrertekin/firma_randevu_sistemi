@@ -1,6 +1,8 @@
 # STATUS — Güncel durum ve sıradaki iş
 
-U01 uyarı/işlem açıklamaları geliştirme/GitHub/ana 8080 teslimi `done` (16.10.2026): [PR #105](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/105), başarılı son head/main CI, 337 web testi ve 72 sentetik Chrome görüntüsü; yedekli teslimde 46 tablo/hesap/MFA/anahtar/ayar/SMTP korundu. Sağlık/restart ve ana anonim dört genişlik/beş asset kabulü geçti. [Kanıt ve sınır](plans/P04.md#u01--uyarı-ve-işlem-açıklamaları--16102026). U02 kullanıcı onayıyla sürüyor; sonraki aşama başlamadı.
+U02 randevu seçimlerinde boş durumlar geliştirme/GitHub/ana 8080 teslimi `done` (17.10.2026): [PR #109](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/109), başarılı son head/main CI; 349 web testi ve 40 sentetik Chrome görüntüsü. Boş/pasif/yükleme/hata ve henüz okunmamış sayfalar ayrılır; seçimler, günlük filtre ve taslak koruması korunur. Yedekli 8080 tesliminde 46 tablo/hesap/MFA/anahtar/ayar/SMTP eşit; sağlık/restart ve anonim dört genişlik/beş asset kabulü geçti. [Kanıt ve sınır](plans/P04.md#u02--randevu-seçimlerinde-boş-durumlar--17102026). U03 başlamadı.
+
+U01 uyarı/işlem açıklamaları geliştirme/GitHub/ana 8080 teslimi `done` (16.10.2026): [PR #105](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/105), başarılı son head/main CI, 337 web testi ve 72 sentetik Chrome görüntüsü; yedekli teslimde 46 tablo/hesap/MFA/anahtar/ayar/SMTP korundu. Sağlık/restart ve ana anonim dört genişlik/beş asset kabulü geçti. [Kanıt ve sınır](plans/P04.md#u01--uyarı-ve-işlem-açıklamaları--16102026).
 
 Güncelleme: 2026-10-16. Güncel özet burada; kapsam ve kanıt bağlantıları [P02](plans/P02.md) ve [P03](plans/P03.md) planlarında, önceki oturum kayıtları [arşivde](archive/2026-10-02/STATUS.md). Arşivdeki eski durum ve onay bekleme ifadeleri güncel yönlendirme değildir.
 
