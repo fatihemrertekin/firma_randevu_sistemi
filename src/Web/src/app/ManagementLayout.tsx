@@ -22,6 +22,7 @@ import OwnerRecoveryEmail from '../features/auth/OwnerRecoveryEmail'
 import MfaRecoveryCodes from '../features/auth/MfaRecoveryCodes'
 import AuditLog from '../features/audit/AuditLog'
 import BookingPolicy from '../features/booking-policy/BookingPolicy'
+import Appointments from '../features/appointments/Appointments'
 
 type Group = 'business' | 'team' | 'account'
 const groups = [
@@ -29,7 +30,7 @@ const groups = [
   { id: 'team', title: 'Ekip' },
   { id: 'account', title: 'Hesap' },
 ] as const
-const sectionGroups: Record<Exclude<Section, 'audit'>, Group> = {
+const sectionGroups: Record<Exclude<Section, 'audit' | 'appointments'>, Group> = {
   business: 'business', hours: 'business', services: 'business', bookingPolicy: 'business', personnel: 'team', access: 'team', security: 'account',
 }
 
@@ -43,10 +44,12 @@ function NavigationIcon({ kind }: { kind: Section }) {
     security: 'M5 10h14v11H5zM8 10V7a4 4 0 0 1 8 0v3M12 14v3',
     audit: 'M6 2h9l4 4v16H6zM14 2v5h5M9 11h7M9 15h7M9 19h4',
     bookingPolicy: 'M3 5h18v16H3zM7 3v4M17 3v4M3 11h18M8 15h3M8 18h6',
+    appointments: 'M3 5h18v16H3zM7 3v4M17 3v4M3 11h18M7 15h3M14 15h3M7 18h3',
   }
   return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={paths[kind]} /></svg>
 }
 const sections = [
+  { id: 'appointments', title: 'Randevular', description: 'Günlük randevuları çalışanlara göre görüntüleyin ve yönetin.' },
   { id: 'business', title: 'İşletme bilgileri', description: 'İşletmenizin adını ve iletişim bilgilerini yönetin.' },
   { id: 'hours', title: 'İşletme saatleri', description: 'Haftalık açılış, kapanış ve kapalı günleri belirleyin.' },
   { id: 'personnel', title: 'Personel', description: 'İşletmede hizmet veren kişilerin adını ve aktiflik durumunu yönetin.' },
@@ -75,6 +78,11 @@ export default function ManagementLayout({ auth, account }: Props) {
   const guard = useRef({ dirty: false, profileDirty: false, busy: false })
   const setDefinitionDirty = useCallback((value: boolean) => { guard.current.dirty = value }, [])
   const setProfileDirty = useCallback((value: boolean) => { guard.current.profileDirty = value }, [])
+  const { setAccount, setMfaRequired, setCode, setPassword, setNotice } = auth
+  const appointmentUnauthorized = useCallback(() => {
+    setAccount(null); setMfaRequired(false); setCode(''); setPassword('')
+    setNotice('Oturumunuz sona erdi. Yeniden giriş yapın.')
+  }, [setAccount, setMfaRequired, setCode, setPassword, setNotice])
   const [navigationCollapsed, setNavigationCollapsed] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const menuButton = useRef<HTMLButtonElement>(null)
@@ -98,7 +106,7 @@ export default function ManagementLayout({ auth, account }: Props) {
   })
   const focus = useEffectEvent(() => {
     heading.current?.focus()
-    document.title = `${current?.title ?? (forbidden ? 'Erişim izni yok' : 'Sayfa bulunamadı')} · Randevu`
+    document.title = `${(section === 'appointments' ? heading.current?.textContent : current?.title) ?? (forbidden ? 'Erişim izni yok' : 'Sayfa bulunamadı')} · Randevu`
   })
   useEffect(() => { focus() }, [location.pathname, location.search])
 
@@ -147,9 +155,12 @@ export default function ManagementLayout({ auth, account }: Props) {
             aria-controls="management-navigation" aria-expanded={!navigationCollapsed} onClick={() => setNavigationCollapsed(value => !value)}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 3v18M4 3h16v18H4z" /></svg>
           </button></div>
+          {owner && <NavigationLink to={sectionPaths.appointments} disabled={blocked} aria-label="Randevular" aria-current={section === 'appointments' ? 'page' : undefined}>
+            <NavigationIcon kind="appointments" /><span className={styles.navLabel}>Randevular</span>
+          </NavigationLink>}
           {groups.filter(group => owner || group.id === 'account').map(group => <section className={styles.group} key={group.id} aria-labelledby={`management-group-${group.id}`}>
             <h2 id={`management-group-${group.id}`}>{group.title}</h2>
-            {sections.filter(item => item.id !== 'audit' && sectionGroups[item.id] === group.id && (owner || item.id === 'security')).map(item =>
+            {sections.filter(item => item.id !== 'audit' && item.id !== 'appointments' && sectionGroups[item.id] === group.id && (owner || item.id === 'security')).map(item =>
               <NavigationLink key={item.id} to={sectionPaths[item.id]} aria-current={section === item.id ? 'page' : undefined}
                 aria-label={item.title} disabled={blocked} onClick={() => { if (section === item.id) { setMobileMenuOpen(false); heading.current?.focus() } }}>
                 <NavigationIcon kind={item.id} /><span className={styles.navLabel}>{item.title}</span></NavigationLink>)}
@@ -164,7 +175,7 @@ export default function ManagementLayout({ auth, account }: Props) {
             <span>{owner ? 'İşletme Sahibi' : 'Çalışan'}</span></div><p>{account.email}</p></div><button type="button" disabled={blocked} onClick={logout}>Çıkış yap</button></div>
       </div>
       <main id="management-main" className={styles.content}>
-        {!(owner && section === 'services') && <>
+        {!(owner && (section === 'services' || section === 'appointments')) && <>
           <h1 ref={heading} tabIndex={-1}>{current?.title ?? (forbidden ? 'Erişim izni yok' : 'Sayfa bulunamadı')}</h1>
           <p>{current?.description ?? (forbidden ? 'Hesabınızın bu bölüme erişim izni yok.' : 'Bu adres uygulamada bulunmuyor.')}</p>
         </>}
@@ -180,6 +191,8 @@ export default function ManagementLayout({ auth, account }: Props) {
           <BusinessHours post={post} onDirtyChange={setDefinitionDirty} onBusyChange={setDefinitionBusy} />
         </div>}
         {owner && section === 'bookingPolicy' && <BookingPolicy post={post} onDirtyChange={setDefinitionDirty} onBusyChange={setDefinitionBusy} />}
+        {owner && section === 'appointments' && <Appointments post={post} onDirtyChange={setDefinitionDirty} onBusyChange={setDefinitionBusy}
+          headingRef={heading} onUnauthorized={appointmentUnauthorized} />}
         {owner && section === 'services' && <div className={styles.profilePanel}>
           <Services post={post} onDirtyChange={setDefinitionDirty} onBusyChange={setDefinitionBusy} headingRef={heading} />
         </div>}

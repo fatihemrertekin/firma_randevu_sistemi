@@ -171,6 +171,10 @@ Beş listede ortak sayfalama: gerçek kayıt aralığı, yakın numaralar, ilk/�
 
 08.10.2026 mevcut frontend polish: yönetim içerik alanı yeterince genişse hesap güvenliği ve çalışan erişimindeki mevcut görev panelleri iki sütuna yayılır; dar alanda aynı DOM sırasıyla tek sütun kalır. Profil adresi doğal üç satır ve kullanıcı tarafından büyütülebilir alan olarak kalır. Kimlik görev geçişi başlığa erişilebilirlik odağı taşır, inputu otomatik seçmez; MFA yöntem değiştirme düğmesinin odağı korunur. Parola eşleşme hatası görünür alert üzerinden tekrar alanıyla ilişkilidir. Davet boş durumu yalnız başarıyla alınmış listeye dayanır; hizmetten dönüş URL'deki sayfa/boyut tercihini korur.
 
+## Günlük randevu akışı — 16.10.2026
+
+Onaylı [randevu brief'i](.impeccable/surfaces/appointments.md) mevcut açık palet, menü, sistem sans ve ortak kontrolleri sürdürür. Çalışan başlıkları açık mavi yüzeyde, saat sıralı kayıtlar ince zaman hattındadır; bölüm yüksekliği içeriğe göre biter. Dar içerikte tek akış ve çalışan filtresi bulunur. Sayfalı kayıtlar tam gün gibi sunulmaz; durum yazıyla verilir ve telefon yalnız ayrıntıda görünür. Yeni kayıt/taşıma alanları ve seçili veri özeti genişte yan yana, dar alanda tek sütundur. Bu kayıt tasarım kararını tarif eder; gerçek API/tarayıcı ve ana teslim kanıtı [P04 planındadır](docs/plans/P04.md).
+
 ## Doğrudan gezinme ve tam genişlik — 14.10.2026
 
 Kullanıcı `.impeccable/mocks/sidebar-full-width/` içindeki öneriyi onayladı. Bu karar önceki açılır grup yerleşiminin yerini alır: sayfalar başlıklar altında doğrudan görünür, normal ve seçili satırların ikon/metin başlangıçları hizalıdır. Menü daraltılabilir; mobil Menü kapalı başlar. Alanlar/formlar/listeler içerik alanının tamamını kullanır; eski profil/personel/hizmet/saat genişlik tavanları kaldırılır. Düğme ve checkbox işlevine uygun ölçüde kalır.

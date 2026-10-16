@@ -21,6 +21,7 @@ beforeEach(() => {
     if (path.startsWith('/api/staff-accounts/')) return Response.json({ items: [], page: 1, hasMore: false, pageSize: 20, totalCount: 0 })
     if (path.startsWith('/api/staff-members/')) return Response.json({ items: [], page: 1, hasMore: false, pageSize: 20, totalCount: 0 })
     if (path.startsWith('/api/services/')) return Response.json({ items: [], page: 1, hasMore: false, pageSize: 20, totalCount: 0 })
+    if (path.startsWith('/api/appointments/?')) return Response.json({ items: [], page: 1, hasMore: false, pageSize: 20, totalCount: 0, date: new URL(path, 'http://test.local').searchParams.get('date'), timeZone: 'Europe/Istanbul' })
     if (path === '/api/auth/csrf') return Response.json({ token: 'synthetic-csrf' })
     if (path === '/api/staff-password-resets/') return Response.json({ token: 'synthetic-delivery-code', expiresAt: '2026-10-01T23:00:00Z' })
     if (path === '/api/auth/logout') return new Response(null, { status: 204 })
@@ -73,7 +74,8 @@ describe('Yönetim gezinmesi', () => {
     await click(title)
     expect(container.querySelector('h1')?.textContent).toBe(title)
     expect(container.querySelector('#management-navigation a[aria-current="page"]')?.textContent).toBe(title)
-    expect(container.querySelectorAll('#management-navigation a[data-navigation]')).toHaveLength(8)
+    expect(container.querySelectorAll('#management-navigation a[data-navigation]')).toHaveLength(9)
+    expect(container.querySelector('#management-navigation a[aria-label="Randevular"]')?.getAttribute('href')).toBe('/yonetim/randevular')
   })
   it('başlıkta sunucudan gelen işletme adını gösterir; taslak ve başarısız kayıt başlığı değiştirmez', async () => {
     await render()
@@ -307,7 +309,7 @@ describe('Yönetim gezinmesi', () => {
     const navigationText = Array.from(container.querySelectorAll('nav')).map(nav => nav.textContent).join(' ')
     expect(navigationText).toContain('Hesap')
     expect(navigationText).toContain('Hesap ve güvenlik')
-    for (const label of ['İşletme', 'Ekip', 'Personel', 'Hizmetler', 'Rezervasyon ayarları', 'Çalışan erişimleri', 'Değişiklik kayıtları']) {
+    for (const label of ['Randevular', 'İşletme', 'Ekip', 'Personel', 'Hizmetler', 'Rezervasyon ayarları', 'Çalışan erişimleri', 'Değişiklik kayıtları']) {
       expect(navigationText).not.toContain(label)
     }
     expect(container.querySelector('#business-name')).toBeNull()

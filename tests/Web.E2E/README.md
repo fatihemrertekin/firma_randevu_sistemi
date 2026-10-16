@@ -1,5 +1,15 @@
 # URL gezinme kabulü
 
+## Günlük randevu yönetimi kabulü
+
+`appointments.cjs` yalnız `http://127.0.0.1:8097` üzerindeki ayrı ve boş sentetik kurulum içindir. Güncel uygulama imajı, mevcut migration'ları ve dar `app_user` yetkileri uygulanmış PostgreSQL, Local e-posta modu ve henüz MFA kurulmamış `owner@example.test` / `Synthetic!Owner123` test Owner'ı gerekir. Ana 8080 veya gerçek firma hesabı kullanılmaz. Test randevu/personel/hizmet oluşturur; tekrar için yalnız sentetik kurulum yeniden hazırlanır, ana volume silinmez.
+
+Depo kökünde `node tests/Web.E2E/appointments.cjs` çalıştırılır; öncesinde bu dizinde `npm.cmd ci --ignore-scripts` ile mevcut Playwright bağımlılığı hazırlanır. Test MFA/CSRF, çalışan grupları/filtre/F5, elle oluşturma, kirli gezinme ve çift gönderim kilidi, sunucuda commit sonrası kesilen yanıtın aynı anahtarla tekrarı, taşıma, Pending onay ve iptal/salt okunur geçmişi doğrular. Son iki liste hata örneği kontrollü yanıt enjeksiyonudur; gerçek 401 de doğrulanır. Durum/görüntü kabulü gerçek API ile yapılır; yalnız enjeksiyon sonuçları gerçek 403 kanıtı sayılmaz.
+
+320/390/768/1280 px görüntüleri ve rapor `.local/p04-02/` altına yazılır. Yerel ek kabul gerçek 400/409/429, Staff 403, geçmiş Tamamlandı/Gelmedi, sayfalama ve geri/ileri gecikmesini kapsar; kanıtın sürümü ve sınırları [P04 planında](../../docs/plans/P04.md) kayıtlıdır. Testler üretim, yük veya tam WCAG sertifikası değildir.
+
+## Mevcut gezinme kabulü
+
 Bu test yalnız `http://127.0.0.1:8092` üzerinde ayrı, geçici kurulum içindir. Ana uygulamadaki hesap veya veriler kullanılmaz. Test; mevcut şeması uygulanmış boş PostgreSQL, Local e-posta modu, henüz MFA kurulmamış `owner@example.test` / `Synthetic!Owner123` sentetik Owner hesabı ve Chrome gerektirir. Aynı ortama ikinci kez çalıştırmadan önce yalnız test kurulumu yeniden hazırlanır. Üretim parolaları bu dosyaya veya test ortamına girilmez.
 
 Depo kökünden Windows PowerShell:
