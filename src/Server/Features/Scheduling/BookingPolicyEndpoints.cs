@@ -8,8 +8,10 @@ namespace Server.Features.Scheduling;
 
 public static class BookingPolicyEndpoints
 {
-    public sealed record Response(Guid Version, int LeadMinutes, int HorizonDays, int SlotMinutes, string TimeZone);
-    public sealed record UpdateRequest(Guid Version, int? LeadMinutes, int? HorizonDays, int? SlotMinutes);
+    public sealed record Response(Guid Version, int LeadMinutes, int HorizonDays, int SlotMinutes, string TimeZone,
+        int CustomerCancellationLeadMinutes, bool RequiresBusinessApproval);
+    public sealed record UpdateRequest(Guid Version, int? LeadMinutes, int? HorizonDays, int? SlotMinutes,
+        int? CustomerCancellationLeadMinutes, bool? RequiresBusinessApproval);
 
     public static void MapBookingPolicyEndpoints(this IEndpointRouteBuilder app)
     {
@@ -18,7 +20,8 @@ public static class BookingPolicyEndpoints
         policy.MapPost("/", UpdateAsync);
     }
 
-    private static Response Body(BookingPolicy policy) => new(policy.Version, policy.LeadMinutes, policy.HorizonDays, policy.SlotMinutes, "Europe/Istanbul");
+    private static Response Body(BookingPolicy policy) => new(policy.Version, policy.LeadMinutes, policy.HorizonDays, policy.SlotMinutes,
+        "Europe/Istanbul", policy.CustomerCancellationLeadMinutes, policy.RequiresBusinessApproval);
 
     private static async Task<IResult> ReadAsync(HttpContext context, AppDbContext db)
     {
@@ -36,6 +39,8 @@ public static class BookingPolicyEndpoints
         if (request.LeadMinutes is not (>= 0 and <= 43200)) errors["leadMinutes"] = ["Ön süre 0–43200 dakika arasında olmalı."];
         if (request.HorizonDays is not (>= 1 and <= 365)) errors["horizonDays"] = ["İleri rezervasyon süresi 1–365 gün arasında olmalı."];
         if (request.SlotMinutes is not (>= 1 and <= 60)) errors["slotMinutes"] = ["Başlangıç adımı 1–60 dakika arasında olmalı."];
+        if (request.CustomerCancellationLeadMinutes is not (>= 0 and <= 43200)) errors["customerCancellationLeadMinutes"] = ["İptal süresi 0–43200 arasında tam dakika olmalı."];
+        if (request.RequiresBusinessApproval is null) errors["requiresBusinessApproval"] = ["Rezervasyon onay tercihini seçin."];
         if (!errors.ContainsKey("leadMinutes") && !errors.ContainsKey("horizonDays") && request.LeadMinutes >= request.HorizonDays * 1440)
             errors["leadMinutes"] = ["Ön süre ileri rezervasyon süresinden kısa olmalı."];
         if (errors.Count > 0) return Results.ValidationProblem(errors);
@@ -45,10 +50,24 @@ public static class BookingPolicyEndpoints
         // Oluşturma ve taşıma aynı satırı FOR SHARE ile okur; yeni kural kayıt anında geçerli olur.
         var policy = await db.BookingPolicies.FromSqlRaw("SELECT * FROM \"BookingPolicies\" WHERE \"Id\" = 1 FOR UPDATE").SingleAsync(timeout.Token);
         if (policy.Version != request.Version) return Results.Problem(statusCode: 409, title: "Rezervasyon ayarları değişti. Güncel ayarları yükleyin.");
-        if (policy.LeadMinutes == request.LeadMinutes && policy.HorizonDays == request.HorizonDays && policy.SlotMinutes == request.SlotMinutes) return Results.Ok(Body(policy));
+        if (policy.LeadMinutes == request.LeadMinutes && policy.HorizonDays == request.HorizonDays && policy.SlotMinutes == request.SlotMinutes &&
+            policy.CustomerCancellationLeadMinutes == request.CustomerCancellationLeadMinutes && policy.RequiresBusinessApproval == request.RequiresBusinessApproval) return Results.Ok(Body(policy));
         var previous = policy.Version;
         policy.LeadMinutes = request.LeadMinutes.GetValueOrDefault(); policy.HorizonDays = request.HorizonDays.GetValueOrDefault(); policy.SlotMinutes = request.SlotMinutes.GetValueOrDefault(); policy.Version = Guid.NewGuid();
-        db.BookingPolicyAudits.Add(new() { Id = Guid.NewGuid(), ActorId = owner.Id, PreviousVersion = previous, PolicyVersion = policy.Version, OccurredAt = clock.GetUtcNow(), LeadMinutes = policy.LeadMinutes, HorizonDays = policy.HorizonDays, SlotMinutes = policy.SlotMinutes });
+        policy.CustomerCancellationLeadMinutes = request.CustomerCancellationLeadMinutes.GetValueOrDefault(); policy.RequiresBusinessApproval = request.RequiresBusinessApproval.GetValueOrDefault();
+        db.BookingPolicyAudits.Add(new()
+        {
+            Id = Guid.NewGuid(),
+            ActorId = owner.Id,
+            PreviousVersion = previous,
+            PolicyVersion = policy.Version,
+            OccurredAt = clock.GetUtcNow(),
+            LeadMinutes = policy.LeadMinutes,
+            HorizonDays = policy.HorizonDays,
+            SlotMinutes = policy.SlotMinutes,
+            CustomerCancellationLeadMinutes = policy.CustomerCancellationLeadMinutes,
+            RequiresBusinessApproval = policy.RequiresBusinessApproval
+        });
         await db.SaveChangesAsync(timeout.Token); await transaction.CommitAsync(timeout.Token);
         return Results.Ok(Body(policy));
     }

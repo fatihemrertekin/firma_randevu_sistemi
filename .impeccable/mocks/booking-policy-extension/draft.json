@@ -1,0 +1,66 @@
+{
+  "phase": "P04-07A",
+  "createdOn": "2026-10-17",
+  "status": "approved",
+  "approved": true,
+  "implementationStarted": true,
+  "mode": "Operate",
+  "visualAuthority": [
+    "DESIGN.md",
+    "src/Web/src/styles/tokens.css",
+    "src/Web/src/features/booking-policy/BookingPolicy.tsx",
+    "src/Web/src/features/booking-policy/BookingPolicy.module.css",
+    "src/Web/src/app/ManagementLayout.tsx"
+  ],
+  "artifacts": [
+    {
+      "path": "desktop.png",
+      "prompt": "desktop.png.prompt.txt",
+      "reference": ".local/p03-05c/browser/ready-1280.png",
+      "kind": "generated static desktop draft",
+      "source": "C:/Users/MONSTER/.codex/generated_images/01a145ab-f9d7-75e2-a512-e45ba17399f5/exec-6ef723eb-25e4-417a-b43c-e721edb9019b.png"
+    },
+    {
+      "path": "mobile.png",
+      "prompt": "mobile.png.prompt.txt",
+      "references": [
+        ".local/p03-05c/browser/ready-390.png",
+        ".impeccable/mocks/booking-policy-extension/desktop.png"
+      ],
+      "kind": "two sequential views of one mobile page",
+      "source": "C:/Users/MONSTER/.codex/generated_images/01a145ab-f9d7-75e2-a512-e45ba17399f5/exec-ee6117f2-7fa7-412c-b497-4dd0dd9c6bd5.png"
+    }
+  ],
+  "proposedPresentation": "two explanatory radio choices; no answer to optional structured preference question at drafting time",
+  "syntheticValues": {
+    "leadMinutes": 60,
+    "horizonDays": 30,
+    "slotMinutes": 15,
+    "customerCancellationLeadMinutes": 120,
+    "requiresBusinessApproval": true
+  },
+  "visualReview": {
+    "rounds": 2,
+    "firstMobileIssue": "Long full-page image did not represent a narrow mobile viewport convincingly.",
+    "correction": "Replaced by two sequential narrow page views.",
+    "desktopLimitation": "Full lower panel margin is not visible in raster; implementation must preserve natural full panel height.",
+    "reviewedAgainst": "Existing synthetic settings captures, current source, tokens, DESIGN and policy plan.",
+    "notEvidenceOf": [
+      "implemented API",
+      "responsive viewport tests",
+      "keyboard or hit target tests",
+      "measured contrast",
+      "successful save",
+      "OTP or SMS delivery",
+      "main application delivery"
+    ]
+  },
+  "scope": {
+    "applicationCodeChanged": false,
+    "databaseChanged": false,
+    "realOwnerLogin": false,
+    "realMessages": false,
+    "prOrCiClaimed": false
+  },
+  "approvedOn": "2026-10-17"
+}

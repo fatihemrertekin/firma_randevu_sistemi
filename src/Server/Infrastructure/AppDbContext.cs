@@ -164,6 +164,10 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
         });
         policy.HasData(new BookingPolicy { Id = 1, LeadMinutes = 60, HorizonDays = 30, SlotMinutes = 15, Version = Guid.Parse("4928211e-eaba-4086-8a82-f2ca1a83908e") });
         var policyAudit = builder.Entity<BookingPolicyAudit>();
+        policy.Property(item => item.CustomerCancellationLeadMinutes).HasDefaultValue(120);
+        policy.Property(item => item.RequiresBusinessApproval).HasDefaultValue(true);
+        policy.ToTable(table => table.HasCheckConstraint("CK_BookingPolicies_CustomerCancellation", "\"CustomerCancellationLeadMinutes\" BETWEEN 0 AND 43200"));
+        policyAudit.ToTable(table => table.HasCheckConstraint("CK_BookingPolicyAudits_CustomerPolicy", "(\"CustomerCancellationLeadMinutes\" IS NULL AND \"RequiresBusinessApproval\" IS NULL) OR (\"CustomerCancellationLeadMinutes\" IS NOT NULL AND \"CustomerCancellationLeadMinutes\" BETWEEN 0 AND 43200 AND \"RequiresBusinessApproval\" IS NOT NULL)"));
         policyAudit.HasOne<AppUser>().WithMany().HasForeignKey(item => item.ActorId).OnDelete(DeleteBehavior.Restrict);
         policyAudit.HasIndex(item => item.PolicyVersion).IsUnique();
         policyAudit.HasIndex(item => new { item.OccurredAt, item.Id }).IsDescending(true, true);

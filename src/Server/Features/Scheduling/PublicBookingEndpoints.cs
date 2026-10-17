@@ -8,7 +8,8 @@ namespace Server.Features.Scheduling;
 public static class PublicBookingEndpoints
 {
     public sealed record BusinessResponse(string Name, string? Phone, string? Address);
-    public sealed record PolicyResponse(Guid Version, int LeadMinutes, int HorizonDays, int SlotMinutes, string TimeZone);
+    public sealed record PolicyResponse(Guid Version, int LeadMinutes, int HorizonDays, int SlotMinutes, string TimeZone,
+        int CustomerCancellationLeadMinutes, bool RequiresBusinessApproval);
     public sealed record ServiceResponse(Guid Id, string Name, int DurationMinutes, string Price, string Currency, Guid Version);
     public sealed record CatalogResponse(BusinessResponse Business, PolicyResponse Policy, ServiceResponse[] Items,
         int Page, bool HasMore, int PageSize, int TotalCount);
@@ -35,7 +36,8 @@ public static class PublicBookingEndpoints
         var business = await db.BusinessProfiles.AsNoTracking()
             .Select(item => new BusinessResponse(item.Name, item.Phone, item.Address)).SingleAsync(timeout.Token);
         var policy = await db.BookingPolicies.AsNoTracking().Select(item => new PolicyResponse(
-            item.Version, item.LeadMinutes, item.HorizonDays, item.SlotMinutes, "Europe/Istanbul")).SingleAsync(timeout.Token);
+            item.Version, item.LeadMinutes, item.HorizonDays, item.SlotMinutes, "Europe/Istanbul",
+            item.CustomerCancellationLeadMinutes, item.RequiresBusinessApproval)).SingleAsync(timeout.Token);
         var query = db.ServiceDefinitions.AsNoTracking().Where(item => item.IsActive && !item.IsDeleted);
         var totalCount = await query.CountAsync(timeout.Token);
         page = Math.Min(page, Math.Max(1, (int)Math.Ceiling((double)totalCount / pageSize)));

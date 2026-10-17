@@ -1,8 +1,9 @@
 export const bookingPolicyEndpoint = '/api/booking-policy/'
-export const policyLimits = { leadMinutes: [0, 43200], horizonDays: [1, 365], slotMinutes: [1, 60] } as const
+export const policyLimits = { leadMinutes: [0, 43200], horizonDays: [1, 365], slotMinutes: [1, 60], customerCancellationLeadMinutes: [0, 43200] } as const
 export type PolicyField = keyof typeof policyLimits
 export const policyFields = Object.keys(policyLimits) as PolicyField[]
-export type BookingPolicy = Record<PolicyField, number> & { version: string; timeZone: 'Europe/Istanbul' }
+export type PolicyErrors = Partial<Record<PolicyField | 'requiresBusinessApproval', string>>
+export type BookingPolicy = Record<PolicyField, number> & { version: string; timeZone: 'Europe/Istanbul'; requiresBusinessApproval: boolean }
 export class BookingPolicyError extends Error {
   constructor(public status: number) { super(bookingPolicyFailure(status)) }
 }
@@ -22,8 +23,9 @@ export async function readBookingPolicy(response: Response): Promise<BookingPoli
     !('version' in value) || typeof value.version !== 'string' ||
     !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/iu.test(value.version) ||
     value.version === '00000000-0000-0000-0000-000000000000' ||
-    !('timeZone' in value) || value.timeZone !== 'Europe/Istanbul') throw new BookingPolicyError(500)
-  const numbers: Record<PolicyField, number> = { leadMinutes: 0, horizonDays: 0, slotMinutes: 0 }
+    !('timeZone' in value) || value.timeZone !== 'Europe/Istanbul' ||
+    !('requiresBusinessApproval' in value) || typeof value.requiresBusinessApproval !== 'boolean') throw new BookingPolicyError(500)
+  const numbers: Record<PolicyField, number> = { leadMinutes: 0, horizonDays: 0, slotMinutes: 0, customerCancellationLeadMinutes: 0 }
   for (const key of policyFields) {
     const field: unknown = key in value ? value[key as keyof typeof value] : undefined
     const [min, max] = policyLimits[key]
@@ -31,13 +33,13 @@ export async function readBookingPolicy(response: Response): Promise<BookingPoli
     numbers[key] = field
   }
   if (numbers.leadMinutes >= numbers.horizonDays * 1440) throw new BookingPolicyError(500)
-  return { ...numbers, version: value.version, timeZone: value.timeZone }
+  return { ...numbers, version: value.version, timeZone: value.timeZone, requiresBusinessApproval: value.requiresBusinessApproval }
 }
-export async function policyFieldErrors(response: Response): Promise<Partial<Record<PolicyField, string>>> {
-  const value: unknown = await response.json(), errors: Partial<Record<PolicyField, string>> = {}
+export async function policyFieldErrors(response: Response): Promise<PolicyErrors> {
+  const value: unknown = await response.json(), errors: PolicyErrors = {}
   if (typeof value === 'object' && value !== null && 'errors' in value && typeof value.errors === 'object' && value.errors !== null) {
     for (const [key, messages] of Object.entries(value.errors)) {
-      if (policyFields.includes(key as PolicyField) && Array.isArray(messages) && typeof messages[0] === 'string' && messages[0]) errors[key as PolicyField] = messages[0]
+      if ((key === 'requiresBusinessApproval' || policyFields.includes(key as PolicyField)) && Array.isArray(messages) && typeof messages[0] === 'string' && messages[0]) errors[key as keyof PolicyErrors] = messages[0]
     }
   }
   return errors

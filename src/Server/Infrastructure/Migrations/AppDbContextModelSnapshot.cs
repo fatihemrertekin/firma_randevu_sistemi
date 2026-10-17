@@ -487,11 +487,21 @@ namespace Server.Infrastructure.Migrations
                     b.Property<int>("Id")
                         .HasColumnType("integer");
 
+                    b.Property<int>("CustomerCancellationLeadMinutes")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(120);
+
                     b.Property<int>("HorizonDays")
                         .HasColumnType("integer");
 
                     b.Property<int>("LeadMinutes")
                         .HasColumnType("integer");
+
+                    b.Property<bool>("RequiresBusinessApproval")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
 
                     b.Property<int>("SlotMinutes")
                         .HasColumnType("integer");
@@ -504,6 +514,8 @@ namespace Server.Infrastructure.Migrations
 
                     b.ToTable("BookingPolicies", t =>
                         {
+                            t.HasCheckConstraint("CK_BookingPolicies_CustomerCancellation", "\"CustomerCancellationLeadMinutes\" BETWEEN 0 AND 43200");
+
                             t.HasCheckConstraint("CK_BookingPolicies_Values", "\"Id\" = 1 AND \"LeadMinutes\" BETWEEN 0 AND 43200 AND \"HorizonDays\" BETWEEN 1 AND 365 AND \"SlotMinutes\" BETWEEN 1 AND 60");
 
                             t.HasCheckConstraint("CK_BookingPolicies_Window", "\"LeadMinutes\" < \"HorizonDays\" * 1440");
@@ -513,8 +525,10 @@ namespace Server.Infrastructure.Migrations
                         new
                         {
                             Id = 1,
+                            CustomerCancellationLeadMinutes = 120,
                             HorizonDays = 30,
                             LeadMinutes = 60,
+                            RequiresBusinessApproval = true,
                             SlotMinutes = 15,
                             Version = new Guid("4928211e-eaba-4086-8a82-f2ca1a83908e")
                         });
@@ -528,6 +542,9 @@ namespace Server.Infrastructure.Migrations
 
                     b.Property<Guid>("ActorId")
                         .HasColumnType("uuid");
+
+                    b.Property<int?>("CustomerCancellationLeadMinutes")
+                        .HasColumnType("integer");
 
                     b.Property<int>("HorizonDays")
                         .HasColumnType("integer");
@@ -544,6 +561,9 @@ namespace Server.Infrastructure.Migrations
                     b.Property<Guid>("PreviousVersion")
                         .HasColumnType("uuid");
 
+                    b.Property<bool?>("RequiresBusinessApproval")
+                        .HasColumnType("boolean");
+
                     b.Property<int>("SlotMinutes")
                         .HasColumnType("integer");
 
@@ -559,6 +579,8 @@ namespace Server.Infrastructure.Migrations
 
                     b.ToTable("BookingPolicyAudits", t =>
                         {
+                            t.HasCheckConstraint("CK_BookingPolicyAudits_CustomerPolicy", "(\"CustomerCancellationLeadMinutes\" IS NULL AND \"RequiresBusinessApproval\" IS NULL) OR (\"CustomerCancellationLeadMinutes\" IS NOT NULL AND \"CustomerCancellationLeadMinutes\" BETWEEN 0 AND 43200 AND \"RequiresBusinessApproval\" IS NOT NULL)");
+
                             t.HasCheckConstraint("CK_BookingPolicyAudits_Values", "\"PreviousVersion\" <> '00000000-0000-0000-0000-000000000000'::uuid AND \"PolicyVersion\" <> '00000000-0000-0000-0000-000000000000'::uuid AND \"PreviousVersion\" <> \"PolicyVersion\" AND \"LeadMinutes\" BETWEEN 0 AND 43200 AND \"HorizonDays\" BETWEEN 1 AND 365 AND \"LeadMinutes\" < \"HorizonDays\" * 1440 AND \"SlotMinutes\" BETWEEN 1 AND 60");
                         });
                 });
