@@ -444,7 +444,7 @@ public sealed class BookingVerificationTests
         await using var f = new Fixture(); await f.StartAsync(); using var client = f.Client(); await f.RequestAsync(client);
         Dictionary<string, string> before;
         await using (var db = f.Db()) before = await Fingerprints(db);
-        Assert.Equal(50, before.Count);
+        Assert.Equal(51, before.Count);
         foreach (var command in new[]
         {
             new[] { "pg_dump", "-U", "postgres", "-d", "p02_recovery", "-Fc", "-f", "/tmp/p05.dump" },
