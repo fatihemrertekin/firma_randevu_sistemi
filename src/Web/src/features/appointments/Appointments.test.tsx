@@ -240,3 +240,15 @@ it('güvenlik reddini belirsiz kayıt saymaz; müşteri ve zaman taslağını ko
   expect(container.querySelector<HTMLInputElement>('#appointment-customerName')?.value).toBe('Müşteri 01')
   await submit(); expect(post).toHaveBeenCalledTimes(2)
 })
+
+it('durum işlemindeki güvenlik reddinde mevcut durumu ve yeniden deneme olanağını korur', async () => {
+  const post = vi.fn<typeof postWithCsrf>().mockRejectedValueOnce(new RequestVerificationError('Güvenlik doğrulaması geçersiz; işlem uygulanmadı.')).mockResolvedValueOnce(Response.json({ ...appointment, status: 'Cancelled' }))
+  await render('/yonetim/randevular/' + appointment.id, post)
+  await click('İptal et'); await click('Randevuyu iptal et')
+  expect(container.querySelector('[role=alert]')?.textContent).toContain('Güvenlik doğrulaması')
+  expect(container.textContent).not.toContain('Durum değişikliği kaydedilmiş olabilir')
+  const confirm = [...container.querySelectorAll('button')].find(button => button.textContent === 'Randevuyu iptal et')
+  expect(confirm?.disabled).toBe(false)
+  await click('Randevuyu iptal et'); expect(post).toHaveBeenCalledTimes(2)
+  expect(container.textContent).toContain('Güncel durum: İptal edildi')
+})
