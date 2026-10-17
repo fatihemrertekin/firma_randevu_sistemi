@@ -57,8 +57,8 @@ jobs:
           docker compose --env-file deploy/.env -f deploy/compose.local.yaml config --quiet
           docker compose --env-file deploy/.env -f deploy/compose.local.yaml up -d --build --wait
           test "$(docker image inspect firma-randevu:local --format '{{.Config.User}}')" != root
-          curl --fail --silent --show-error --retry 20 --retry-connrefused --retry-delay 2 http://127.0.0.1:8080/health/live
-          curl --fail --silent --show-error --retry 20 --retry-connrefused --retry-delay 2 http://127.0.0.1:8080/health/ready
+          curl --fail --silent --show-error --retry 20 --retry-all-errors --retry-delay 2 http://127.0.0.1:8080/health/live
+          curl --fail --silent --show-error --retry 20 --retry-all-errors --retry-delay 2 http://127.0.0.1:8080/health/ready
           curl --fail --silent --show-error http://127.0.0.1:8080/ | grep 'lang="tr"'
 
       - name: Veritabanı yeniden başlatma kanıtı
@@ -76,7 +76,7 @@ jobs:
           done
           test "$(docker compose --env-file deploy/.env -f deploy/compose.local.yaml exec -T db \
             psql -U postgres -d firma_randevu -tAc 'SELECT value FROM p01_restart_check;')" = korundu
-          curl --fail --silent --show-error --retry 20 --retry-connrefused --retry-delay 2 http://127.0.0.1:8080/health/ready
+          curl --fail --silent --show-error --retry 20 --retry-all-errors --retry-delay 2 http://127.0.0.1:8080/health/ready
 
       - name: Yerel test servislerini durdur
         if: always()
