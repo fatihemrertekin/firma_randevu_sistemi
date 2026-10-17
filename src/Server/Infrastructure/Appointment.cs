@@ -5,7 +5,11 @@ namespace Server.Infrastructure;
 public sealed class Appointment
 {
     public Guid Id { get; set; }
-    public Guid ActorId { get; set; }
+    public Guid? ActorId { get; set; }
+    public string Source { get; set; } = "Owner";
+    public Guid? BookingPolicyVersion { get; set; }
+    public int? CustomerCancellationLeadMinutes { get; set; }
+    public bool? RequiresBusinessApproval { get; set; }
     public Guid RequestKey { get; set; }
     public required string RequestHash { get; set; }
     public required string CustomerName { get; set; }

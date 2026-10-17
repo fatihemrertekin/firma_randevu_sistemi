@@ -117,25 +117,11 @@ public static class AppointmentEndpoints
         if (previous is not null)
             return previous.RequestHash != hash ? Conflict("Aynı işlem anahtarı farklı randevu bilgisiyle kullanılamaz.") :
                 Results.Ok(await ResponseAsync(db, previous.Id, timeout.Token));
-        var policy = await db.BookingPolicies.FromSqlRaw("SELECT * FROM \"BookingPolicies\" WHERE \"Id\" = 1 FOR SHARE").SingleAsync(timeout.Token);
-        var schedule = await db.BusinessHoursSchedules.FromSqlRaw("SELECT * FROM \"BusinessHoursSchedules\" WHERE \"Id\" = 1 FOR SHARE").SingleAsync(timeout.Token);
-        var member = await db.StaffMembers.FromSqlInterpolated($"SELECT * FROM \"StaffMembers\" WHERE \"Id\" = {request.StaffMemberId} FOR UPDATE").SingleOrDefaultAsync(timeout.Token);
-        var service = await db.ServiceDefinitions.FromSqlInterpolated($"SELECT * FROM \"ServiceDefinitions\" WHERE \"Id\" = {request.ServiceId} FOR SHARE").SingleOrDefaultAsync(timeout.Token);
-        if (member is null || member.IsDeleted || service is null || service.IsDeleted) return Results.NotFound();
-        if (service.Version != request.ServiceVersion) return Conflict("Hizmet bilgisi değişti. Güncel fiyat ve süreyi yükleyin.");
-        if (!member.IsActive || !service.IsActive || !schedule.IsConfigured ||
-            !await db.StaffServiceAssignments.AnyAsync(item => item.StaffMemberId == member.Id && item.ServiceDefinitionId == service.Id, timeout.Token))
-            return Conflict("Personel, hizmet veya çalışma saatleri rezervasyona uygun değil.");
+        var creation = await AppointmentCreation.LockAsync(db, request.StaffMemberId, request.ServiceId, timeout.Token);
         var now = clock.GetUtcNow().UtcDateTime;
-        if (!AppointmentRules.InWindow(start, now, policy) || pending && start <= now) return Conflict("Başlangıç rezervasyon aralığına ve saat adımına uygun değil.");
-        var end = start.AddMinutes(service.DurationMinutes);
-        var occupiedStart = start.AddMinutes(-service.BufferBeforeMinutes);
-        var occupiedEnd = end.AddMinutes(service.BufferAfterMinutes);
-        var date = AppointmentCalendar.LocalDate(start);
-        var business = await AppointmentCalendar.LoadAsync(db, null, date, date, timeout.Token);
-        var staff = await AppointmentCalendar.LoadAsync(db, member.Id, date, date, timeout.Token);
-        if (!business.Fits(occupiedStart, occupiedEnd, start) || !staff.Fits(occupiedStart, occupiedEnd, start))
-            return Conflict("Randevu ve tampon sürelerinin tamamı etkin mesai içinde, mola ve izin dışında olmalı.");
+        var (block, invalid) = await creation.PrepareAsync(db, request.ServiceVersion, start, now, pending, timeout.Token);
+        if (invalid is not null) return invalid;
+        if (block is null) throw new InvalidOperationException("Randevu zaman bloğu hazırlanamadı.");
         var appointment = new Appointment
         {
             Id = Guid.NewGuid(),
@@ -147,25 +133,7 @@ public static class AppointmentEndpoints
             CreatedAt = now,
             Version = Guid.NewGuid()
         };
-        var block = new AppointmentTimeBlock
-        {
-            AppointmentId = appointment.Id,
-            StaffMemberId = member.Id,
-            ServiceDefinitionId = service.Id,
-            StaffName = member.Name,
-            ServiceName = service.Name,
-            DurationMinutes = service.DurationMinutes,
-            BufferBeforeMinutes = service.BufferBeforeMinutes,
-            BufferAfterMinutes = service.BufferAfterMinutes,
-            OccupiedStartsAt = occupiedStart,
-            OccupiedEndsAt = occupiedEnd,
-            Price = service.Price,
-            Currency = service.Currency,
-            StartsAt = start,
-            EndsAt = end,
-            Status = pending ? "Pending" : "Confirmed",
-            PendingExpiresAt = pending ? (now.AddMinutes(30) < start ? now.AddMinutes(30) : start) : null
-        };
+        block.AppointmentId = appointment.Id;
         db.Appointments.Add(appointment);
         db.AppointmentTimeBlocks.Add(block);
         db.AppointmentAudits.Add(new AppointmentAudit

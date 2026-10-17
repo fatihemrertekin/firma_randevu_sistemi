@@ -132,6 +132,7 @@ public sealed class BookingSmsWorker(IServiceScopeFactory scopes, BookingVerific
         await db.SaveChangesAsync(token);
         var before = now.AddHours(-24);
         var ids = await db.BookingVerifications.Where(x => x.UpdatedAt < before && x.ExpiresAt < before &&
+                (x.ReplayUntil == null || x.ReplayUntil <= now) &&
                 !db.BookingSmsJobs.Any(j => j.ChallengeId == x.Id && j.Status == "Processing"))
             .OrderBy(x => x.UpdatedAt).Select(x => x.Id).Take(100).ToArrayAsync(token);
         await db.BookingSmsJobs.Where(x => ids.Contains(x.ChallengeId)).ExecuteDeleteAsync(token);

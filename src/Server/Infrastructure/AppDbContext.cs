@@ -105,12 +105,15 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
         appointment.Property(item => item.CustomerName).HasMaxLength(100);
         appointment.Property(item => item.CustomerPhone).HasMaxLength(13);
         appointment.Property(item => item.Version).IsConcurrencyToken();
+        appointment.Property(item => item.Source).HasMaxLength(8).HasDefaultValue("Owner");
         appointment.HasIndex(item => new { item.ActorId, item.RequestKey }).IsUnique();
+        appointment.HasIndex(item => item.RequestKey).IsUnique().HasFilter("\"Source\" = 'Public'");
         appointment.HasOne<AppUser>().WithMany().HasForeignKey(item => item.ActorId).OnDelete(DeleteBehavior.Restrict);
         appointment.ToTable(table =>
         {
             table.HasCheckConstraint("CK_Appointments_Request", "\"RequestKey\" <> '00000000-0000-0000-0000-000000000000'::uuid AND \"RequestHash\" ~ '^[0-9A-F]{64}$'");
             table.HasCheckConstraint("CK_Appointments_Customer", "length(btrim(\"CustomerName\")) BETWEEN 2 AND 100 AND \"CustomerPhone\" ~ '^\\+90[2345][0-9]{9}$'");
+            table.HasCheckConstraint("CK_Appointments_Source", "(\"Source\" = 'Owner' AND \"ActorId\" IS NOT NULL AND \"BookingPolicyVersion\" IS NULL AND \"CustomerCancellationLeadMinutes\" IS NULL AND \"RequiresBusinessApproval\" IS NULL) OR (\"Source\" = 'Public' AND \"ActorId\" IS NULL AND \"BookingPolicyVersion\" IS NOT NULL AND \"BookingPolicyVersion\" <> '00000000-0000-0000-0000-000000000000'::uuid AND \"CustomerCancellationLeadMinutes\" IS NOT NULL AND \"CustomerCancellationLeadMinutes\" BETWEEN 0 AND 43200 AND \"RequiresBusinessApproval\" IS NOT NULL AND \"CustomerPhone\" ~ '^\\+905[0-9]{9}$')");
         });
         var block = builder.Entity<AppointmentTimeBlock>();
         block.HasKey(item => item.AppointmentId);
@@ -142,8 +145,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
         appointmentAudit.Property(item => item.Kind).HasMaxLength(16).HasDefaultValue("Created");
         appointmentAudit.ToTable(table =>
         {
-            table.HasCheckConstraint("CK_AppointmentAudits_Kind", "\"Kind\" IN ('Created','Cancelled','Completed','NoShow','Moved','Confirmed','Expired')");
-            table.HasCheckConstraint("CK_AppointmentAudits_Actor", "(\"Kind\" = 'Expired' AND \"ActorId\" IS NULL) OR (\"Kind\" <> 'Expired' AND \"ActorId\" IS NOT NULL)");
+            table.HasCheckConstraint("CK_AppointmentAudits_Kind", "\"Kind\" IN ('Created','PublicCreated','Cancelled','Completed','NoShow','Moved','Confirmed','Expired')");
+            table.HasCheckConstraint("CK_AppointmentAudits_Actor", "(\"Kind\" IN ('Expired','PublicCreated') AND \"ActorId\" IS NULL) OR (\"Kind\" NOT IN ('Expired','PublicCreated') AND \"ActorId\" IS NOT NULL)");
         });
         var moveCommand = builder.Entity<AppointmentMoveCommand>();
         moveCommand.HasKey(item => new { item.ActorId, item.RequestKey });

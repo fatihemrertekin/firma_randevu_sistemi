@@ -19,6 +19,9 @@ public sealed class BookingVerification
     public DateTimeOffset? VerifiedAt { get; set; }
     public DateTimeOffset? VerifiedUntil { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
+    public Guid? AppointmentId { get; set; }
+    public DateTimeOffset? ConsumedAt { get; set; }
+    public DateTimeOffset? ReplayUntil { get; set; }
 }
 
 public sealed class BookingSmsJob
