@@ -7,7 +7,7 @@ export class MemberRequestError extends Error {
   constructor(public status: number, message = memberFailure(status)) { super(message) }
 }
 export function memberFailure(status: number) {
-  if (status === 400) return 'İstek doğrulanamadı. Ad soyadı kontrol edip yeniden deneyin.'
+  if (status === 400) return 'İstek doğrulanamadı. Bilgilerinizi koruyarak yeniden deneyin.'
   if (status === 401) return 'Oturumunuz sona erdi. Yeniden giriş yapın.'
   if (status === 403) return 'Bu işlem için yetkiniz yok.'
   if (status === 404) return 'Personel kaydı bulunamadı. Listeyi yenileyin.'

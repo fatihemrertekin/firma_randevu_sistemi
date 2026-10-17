@@ -57,7 +57,7 @@ public static class StaffAccountEndpoints
     {
         context.Response.Headers.CacheControl = "no-store";
         if (!await AuthEndpoints.HasValidCsrfAsync(antiforgery, context))
-            return Results.Problem(statusCode: 400, title: "Geçersiz istek doğrulaması.");
+            return AuthEndpoints.InvalidCsrf();
         if (string.IsNullOrWhiteSpace(request.Version) || request.Version.Length > 128)
             return Results.Problem(statusCode: 400, title: "Hesap sürümü gerekli.");
         if (!Guid.TryParse(context.User.FindFirstValue(ClaimTypes.NameIdentifier), out var ownerId))

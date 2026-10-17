@@ -48,7 +48,7 @@ public static class StaffLeaveEndpoints
         HttpContext context, IAntiforgery csrf, AppDbContext db, UserManager<AppUser> users, TimeProvider clock)
     {
         using var timeout = DateExceptionEndpoints.Timeout(context);
-        if (!await AuthEndpoints.HasValidCsrfAsync(csrf, context)) return Results.Problem(statusCode: 400, title: "Geçersiz istek doğrulaması.");
+        if (!await AuthEndpoints.HasValidCsrfAsync(csrf, context)) return AuthEndpoints.InvalidCsrf();
         DateTime start = default, end = default;
         if (id == Guid.Empty || leaveId == Guid.Empty || version == Guid.Empty || (operation != Operation.Remove && !Range(first, last, out start, out end))) return Results.ValidationProblem(new Dictionary<string, string[]> { ["leave"] = ["Kimlik, güncel sürüm ve en fazla 366 günlük offsetli tam dakika aralığı gerekli."] });
         await using var transaction = await db.Database.BeginTransactionAsync(timeout.Token);

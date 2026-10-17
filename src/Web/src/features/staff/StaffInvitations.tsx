@@ -1,3 +1,4 @@
+import { requestErrorMessage } from '../../app/api'
 import ErrorMessage from '../../components/ErrorMessage'
 import { useEffect, useEffectEvent, useRef, useState, type FormEvent } from 'react'
 import ManualDeliveryCode from '../../components/ManualDeliveryCode'
@@ -80,7 +81,7 @@ export default function StaffInvitations({ post, disabled, onBusyChange }: Props
         setIssued({ id: body.id, token: body.token, expiresAt: body.expiresAt })
         setEmail('')
         setVerified(false)
-        try { await load() } catch { setError('Kod oluşturuldu; davet listesi yenilenemedi.') }
+        try { await load() } catch (problem: unknown) { setError(requestErrorMessage(problem, 'Kod oluşturuldu; davet listesi yenilenemedi.')) }
       } else if ([400, 409].includes(response.status)) {
         const problem = (await response.json()) as { title?: string }
         setError(problem.title ?? 'Davet bilgilerini kontrol edin.')
@@ -89,8 +90,8 @@ export default function StaffInvitations({ post, disabled, onBusyChange }: Props
       } else {
         setError('Davet sonucu doğrulanamadı. Listeyi yenileyin; gerekirse daveti iptal edip yeniden üretin. Otomatik tekrar yapılmadı.')
       }
-    } catch {
-      setError('Davet sonucu doğrulanamadı. Listeyi yenileyin; gerekirse daveti iptal edip yeniden üretin. Otomatik tekrar yapılmadı.')
+    } catch (problem: unknown) {
+      setError(requestErrorMessage(problem, 'Davet sonucu doğrulanamadı. Listeyi yenileyin; gerekirse daveti iptal edip yeniden üretin. Otomatik tekrar yapılmadı.'))
     } finally { pending.current = false; setBusy(false) }
   }
   async function revoke(id: string) {

@@ -106,7 +106,7 @@ public sealed class OwnerSelfServiceResetFlow(IConfiguration configuration, IWeb
         {
             context.Response.Headers.CacheControl = "no-store";
             if (!await AuthEndpoints.HasValidCsrfAsync(antiforgery, context))
-                return Results.Problem(statusCode: 400, title: "Geçersiz istek doğrulaması.");
+                return AuthEndpoints.InvalidCsrf();
             var elapsed = Stopwatch.StartNew();
             using var timeout = CancellationTokenSource.CreateLinkedTokenSource(context.RequestAborted);
             timeout.CancelAfter(TimeSpan.FromSeconds(15));

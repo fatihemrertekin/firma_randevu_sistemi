@@ -48,7 +48,7 @@ public static class AppointmentMoveEndpoints
     private static async Task<IResult> MoveAsync(Guid id, Request request, HttpContext context, IAntiforgery csrf, AppDbContext db, UserManager<AppUser> users, TimeProvider clock)
     {
         using var timeout = AppointmentEndpoints.Timeout(context); var token = timeout.Token;
-        if (!await AuthEndpoints.HasValidCsrfAsync(csrf, context)) return Results.Problem(statusCode: 400, title: "Geçersiz istek doğrulaması.");
+        if (!await AuthEndpoints.HasValidCsrfAsync(csrf, context)) return AuthEndpoints.InvalidCsrf();
         if (id == Guid.Empty || request.Version == Guid.Empty || request.RequestKey == Guid.Empty || request.StaffMemberId == Guid.Empty || !AppointmentRules.TryStart(request.StartsAt, out var start))
             return Results.Problem(statusCode: 400, title: "Randevu, güncel sürüm, işlem anahtarı, personel ve saat dilimli tam dakika gerekli.");
         await using var transaction = await db.Database.BeginTransactionAsync(token);

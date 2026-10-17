@@ -61,7 +61,7 @@ public static class DateExceptionEndpoints
         IAntiforgery csrf, AppDbContext db, UserManager<AppUser> users, TimeProvider clock)
     {
         using var timeout = Timeout(context);
-        if (!await AuthEndpoints.HasValidCsrfAsync(csrf, context)) return Results.Problem(statusCode: 400, title: "Geçersiz istek doğrulaması.");
+        if (!await AuthEndpoints.HasValidCsrfAsync(csrf, context)) return AuthEndpoints.InvalidCsrf();
         var errors = new Dictionary<string, string[]>();
         if (!TryDate(input, out var date)) errors["date"] = ["Tarih yyyy-MM-dd biçiminde olmalı."];
         if (request.Version == Guid.Empty) errors["version"] = ["Güncel parent sürümü gerekli."];

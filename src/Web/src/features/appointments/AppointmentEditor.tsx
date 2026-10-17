@@ -1,3 +1,4 @@
+import { RequestVerificationError } from '../../app/api'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import type { postWithCsrf } from '../../app/api'
 import useUnsavedChanges from '../../app/useUnsavedChanges'
@@ -39,7 +40,7 @@ export default function AppointmentEditor({ appointment, initialDay, post, onSav
         setSlots(value); setLocked(false); setAvailabilityError('')
       }).catch((problem: unknown) => {
         if (controller.signal.aborted) return
-        const failure = problem instanceof AppointmentError ? problem : new AppointmentError(500)
+        const failure = problem instanceof AppointmentError ? problem : problem instanceof RequestVerificationError ? new AppointmentError(400, {}, 0, problem.message) : new AppointmentError(500)
         setAvailabilityError(failure.fields.date ?? failure.message); setSlots(null); setLocked(true); setRetryUntil(failure.retryAfter)
         if (failure.status === 401) onUnauthorized()
       }).finally(() => { if (!controller.signal.aborted) setSlotsLoading(false) })
@@ -71,7 +72,7 @@ export default function AppointmentEditor({ appointment, initialDay, post, onSav
       if (saved.serviceId !== serviceId || (appointment && saved.id !== appointment.id)) throw new AppointmentError(500)
       setAttempt(null); onDirtyChange(false); onSaved(saved)
     } catch (problem: unknown) {
-      const failure = problem instanceof AppointmentError ? problem : new AppointmentError(500)
+      const failure = problem instanceof AppointmentError ? problem : problem instanceof RequestVerificationError ? new AppointmentError(400, {}, 0, problem.message) : new AppointmentError(500)
       setError(failure.message); setFields(failure.fields); setRetryUntil(failure.retryAfter)
       if (failure.status < 500) setAttempt(null)
       if (failure.status === 409 || failure.status === 404 || failure.status === 403) { setLocked(true); setSlots(null); setStartsAt('') }

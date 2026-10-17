@@ -29,11 +29,11 @@ const time = new Intl.DateTimeFormat('tr-TR', { timeZone: 'Europe/Istanbul', hou
 export const formatTime = (value: string) => time.format(new Date(value)).replace(':', '.')
 export const formatDay = (value: string) => new Intl.DateTimeFormat('tr-TR', { timeZone: 'Europe/Istanbul', dateStyle: 'full' }).format(new Date(value + 'T12:00:00Z'))
 export class AppointmentError extends Error {
-  constructor(public status: number, public fields: Record<string, string> = {}, public retryAfter = 0) {
-    super(status === 400 ? 'Alanları veya istek doğrulamasını kontrol edip yeniden deneyin.' : status === 401 ? 'Oturumunuz sona erdi. Yeniden giriş yapın.'
+  constructor(public status: number, public fields: Record<string, string> = {}, public retryAfter = 0, message?: string) {
+    super(message ?? (status === 400 ? (Object.keys(fields).length ? 'İşaretli alanları kontrol edip yeniden deneyin.' : 'İstek doğrulanamadı. Bilgilerinizi koruyarak yeniden deneyin.') : status === 401 ? 'Oturumunuz sona erdi. Yeniden giriş yapın.'
       : status === 403 ? 'Bu işlem için yetkiniz yok.' : status === 404 ? 'Randevu veya seçili tanım bulunamadı. Güncel bilgileri yükleyin.'
         : status === 409 ? 'Bilgiler veya uygun saatler değişti. Taslağınız korundu; güncel bilgileri yükleyin.'
-          : status === 429 ? 'Çok sık denendi. Bir süre bekleyip yeniden deneyin.' : 'Sonuç doğrulanamadı. Bağlantınızı kontrol edip yeniden deneyin.')
+          : status === 429 ? 'Çok sık denendi. Bir süre bekleyip yeniden deneyin.' : 'Sonuç doğrulanamadı. Bağlantınızı kontrol edip yeniden deneyin.'))
   }
 }
 async function body(response: Response): Promise<unknown> {

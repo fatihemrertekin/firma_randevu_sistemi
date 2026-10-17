@@ -1,3 +1,4 @@
+import { RequestVerificationError, requestErrorMessage } from '../../app/api'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import ErrorMessage from '../../components/ErrorMessage'
 import StaffMemberEditor from './StaffMemberEditor'
@@ -33,7 +34,7 @@ export default function StaffMemberDetail({ memberId, task, listPath, post, init
         if (value.id !== memberId) throw new MemberRequestError(500)
         if (!controller.signal.aborted) { setMember(value); setStale(false) }
       }).catch((problem: unknown) => {
-        if (!controller.signal.aborted) { setMember(null); setError(problem instanceof MemberRequestError ? problem.message : memberFailure(500)) }
+        if (!controller.signal.aborted) { setMember(null); setError(problem instanceof MemberRequestError ? problem.message : requestErrorMessage(problem, memberFailure(500))) }
       }).finally(() => { if (!controller.signal.aborted) setLoading(false) })
     return () => controller.abort()
   }, [memberId, revision])
@@ -65,7 +66,7 @@ export default function StaffMemberDetail({ memberId, task, listPath, post, init
         { isActive: !member.isActive, version: member.version }, AbortSignal.timeout(15000)))
       if (updated.id !== memberId) throw new MemberRequestError(500)
       setConfirmStatus(false); saved(`${updated.name} ${updated.isActive ? 'aktifleştirildi' : 'pasifleştirildi'}. Giriş hesapları değişmedi.`)
-    } catch (problem: unknown) { setError(problem instanceof MemberRequestError ? problem.message : memberFailure(500)); setStale(true) }
+    } catch (problem: unknown) { setError(problem instanceof MemberRequestError ? problem.message : requestErrorMessage(problem, memberFailure(500))); setStale(!(problem instanceof RequestVerificationError)) }
     finally { sending.current = false; setStatusBusy(false) }
   }
   return <>

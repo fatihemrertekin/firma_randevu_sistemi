@@ -1,3 +1,4 @@
+import { requestErrorMessage } from '../../app/api'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import ErrorMessage from '../../components/ErrorMessage'
 import styles from './MfaRecoveryCodes.module.css'
@@ -24,7 +25,7 @@ export default function MfaRecoveryCodes({ post, disabled, onReplaced, onBusyCha
     const controller = new AbortController()
     fetch('/api/auth/mfa/recovery-codes', { cache: 'no-store', signal: AbortSignal.any([controller.signal, AbortSignal.timeout(15000)]) })
       .then(async response => {
-        if (!response.ok) throw new Error('status')
+        if (!response.ok) { if (!controller.signal.aborted) setCountError(response.status === 401 ? 'Oturumunuz sona erdi. Yeniden giriş yapın.' : response.status === 403 ? 'Bu işlem için yetkiniz yok.' : 'Kod sayısı alınamadı. Yeniden deneyin.'); return }
         const body: unknown = await response.json()
         if (typeof body !== 'object' || body === null || !('remaining' in body) ||
           typeof body.remaining !== 'number' || !Number.isInteger(body.remaining) || body.remaining < 0) throw new Error('count')
@@ -42,7 +43,7 @@ export default function MfaRecoveryCodes({ post, disabled, onReplaced, onBusyCha
       if (!response.ok) {
         setError(response.status === 429 ? 'Çok fazla deneme. Daha sonra tekrar deneyin.'
           : response.status === 400 ? 'Mevcut parola doğrulanamadı veya hesap geçici olarak kilitli.'
-          : response.status === 401 || response.status === 403 || response.status === 409 ? 'Oturum geçersiz. Yeniden giriş yapın.'
+          : response.status === 403 ? 'Bu işlem için yetkiniz yok.' : response.status === 401 || response.status === 409 ? 'Oturum geçersiz. Yeniden giriş yapın.'
           : 'Sonuç doğrulanamadı. Yeniden giriş yaptıktan sonra kod sayısını kontrol edin.')
         return
       }
@@ -51,7 +52,7 @@ export default function MfaRecoveryCodes({ post, disabled, onReplaced, onBusyCha
         !Array.isArray(body.recoveryCodes) || body.recoveryCodes.length !== 8 ||
         !body.recoveryCodes.every((code: unknown): code is string => typeof code === 'string' && code.length > 0)) throw new Error('codes')
       onReplaced(body.recoveryCodes)
-    } catch { setError('Sonuç doğrulanamadı. Yeniden giriş yapıp kodları tekrar oluşturun; eski kodlar yenilenmiş olabilir.') }
+    } catch (problem: unknown) { setError(requestErrorMessage(problem, 'Sonuç doğrulanamadı. Yeniden giriş yapıp kodları tekrar oluşturun; eski kodlar yenilenmiş olabilir.')) }
     finally { setPassword(''); pending.current = false; setBusy(false) }
   }
   return <section aria-labelledby="recovery-title">

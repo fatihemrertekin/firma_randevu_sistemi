@@ -60,7 +60,7 @@ public static class StaffServiceEndpoints
         AppDbContext db, UserManager<AppUser> users, TimeProvider clock)
     {
         using var timeout = Timeout(context);
-        if (!await AuthEndpoints.HasValidCsrfAsync(antiforgery, context)) return Results.Problem(statusCode: 400, title: "Geçersiz istek doğrulaması.");
+        if (!await AuthEndpoints.HasValidCsrfAsync(antiforgery, context)) return AuthEndpoints.InvalidCsrf();
         if (request.Version == Guid.Empty || request.Services is null || request.Services.Length > 500 ||
             request.Services.Any(item => item is null || item.Id == Guid.Empty || item.Version == Guid.Empty) ||
             request.Services.Select(item => item.Id).Distinct().Count() != request.Services.Length)

@@ -1,3 +1,4 @@
+import { RequestVerificationError, requestErrorMessage } from '../app/api'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import ErrorMessage from './ErrorMessage'
 import useUnsavedChanges from '../app/useUnsavedChanges'
@@ -30,7 +31,7 @@ export default function WeeklyHoursEditor({ endpoint, heading, formLabel, subjec
         setSnapshot(value); setDays(hoursDraft(value)); setLocked(false); setErrors({}); setError('')
       }).catch((problem: unknown) => {
         if (!controller.signal.aborted) {
-          setError(hoursFailure(problem instanceof HoursError ? problem.status : 500, subject))
+          setError(hoursFailure(problem instanceof HoursError ? problem.status : problem instanceof RequestVerificationError ? 400 : 500, subject))
           if (problem instanceof HoursError) setRetry(problem.retryAfter)
         }
       }).finally(() => { if (!controller.signal.aborted) setLoading(false) })
@@ -74,9 +75,9 @@ export default function WeeklyHoursEditor({ endpoint, heading, formLabel, subjec
       const saved = await readSnapshot(response)
       setSnapshot(saved); setDays(hoursDraft(saved)); onDirtyChange(false); setNotice(`${subject} kaydedildi.`); onSaved?.()
     } catch (problem: unknown) {
-      const status = problem instanceof HoursError ? problem.status : 500
+      const status = problem instanceof HoursError ? problem.status : problem instanceof RequestVerificationError ? 400 : 500
       const scheduleConflict = problem instanceof HoursError && (problem.appointmentsOutsideHours || problem.breaksOutsideHours)
-      setError(scheduleConflict ? problem.message : hoursFailure(status, subject))
+      setError(scheduleConflict ? problem.message : requestErrorMessage(problem, hoursFailure(status, subject)))
       setLocked(status === 401 || status === 403 || status === 404 || (status === 409 && !scheduleConflict) || status >= 500)
     } finally { sending.current = false; setBusy(false) }
   }

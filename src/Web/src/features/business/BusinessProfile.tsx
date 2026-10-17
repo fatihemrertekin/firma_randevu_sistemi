@@ -1,3 +1,4 @@
+import { RequestVerificationError, requestErrorMessage } from '../../app/api'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import ErrorMessage from '../../components/ErrorMessage'
 import styles from './BusinessProfile.module.css'
@@ -35,7 +36,8 @@ export default function BusinessProfile({ post, disabled = false, onDirtyChange,
   const [confirmReload, setConfirmReload] = useState(false)
   const [invalidField, setInvalidField] = useState('')
   const [fieldError, setFieldError] = useState('')
-  const pending = useRef(false)
+  const pending = useRef(false), form = useRef<HTMLFormElement>(null)
+  useEffect(() => { if (invalidField) form.current?.querySelector<HTMLInputElement | HTMLTextAreaElement>('#' + invalidField)?.focus() }, [invalidField])
 
   useEffect(() => { onDirtyChange?.(dirty) }, [dirty, onDirtyChange])
   useEffect(() => { onBusyChange?.(loading || busy) }, [loading, busy, onBusyChange])
@@ -52,8 +54,8 @@ export default function BusinessProfile({ post, disabled = false, onDirtyChange,
     const timer = setTimeout(() => controller.abort(), 15000)
     fetch('/api/business-profile/', { cache: 'no-store', signal: controller.signal })
       .then(async response => {
-        if (!response.ok) throw new Error(response.status === 401 || response.status === 403
-          ? 'İşletme sahibi oturumu geçersiz. Yeniden giriş yapın.' : 'Profil yüklenemedi. Yeniden yüklemeyi deneyin.')
+        if (!response.ok) throw new Error(response.status === 401 ? 'Oturumunuz sona erdi. Yeniden giriş yapın.' : response.status === 403
+          ? 'İşletme profilini görüntülemek için işletme sahibi yetkisi gerekir.' : 'Profil yüklenemedi. Yeniden yüklemeyi deneyin.')
         const loaded = await readProfile(response)
         if (active) { setProfile(loaded); setReloadRequired(false); setDirty(false); onConfirmedNameChange?.(loaded.name) }
       })
@@ -92,21 +94,24 @@ export default function BusinessProfile({ post, disabled = false, onDirtyChange,
         setDirty(false)
         setNotice('İşletme profili kaydedildi.')
       } else if (response.status === 400) {
-        const problem = await response.json() as { title?: string }
-        setError(problem.title ?? 'Profil alanlarını kontrol edin.')
+        const problem: unknown = await response.json().catch(() => null)
+        const errors = typeof problem === 'object' && problem !== null && 'errors' in problem && typeof problem.errors === 'object' && problem.errors !== null ? problem.errors : {}
+        const field = Object.entries(errors).find(([key, messages]) => ['name', 'phone', 'email', 'address'].includes(key) && Array.isArray(messages) && typeof messages[0] === 'string')
+        if (field && Array.isArray(field[1]) && typeof field[1][0] === 'string') { setInvalidField('business-' + field[0]); setFieldError(field[1][0]) }
+        else setError('İstek doğrulanamadı. Profil bilgileriniz korundu; yeniden deneyin.')
       } else if (response.status === 429) {
         setError('Çok fazla istek. Daha sonra tekrar deneyin.')
       } else {
         setReloadRequired(true)
         setError(response.status === 409
           ? 'Profil başka bir işlemde değişti. Güncel bilgileri yükleyip yeniden düzenleyin.'
-          : response.status === 401 || response.status === 403
-            ? 'İşletme sahibi oturumu geçersiz. Yeniden giriş yapın.'
+          : response.status === 401 ? 'Oturumunuz sona erdi. Yeniden giriş yapın.' : response.status === 403
+            ? 'İşletme profilini değiştirmek için işletme sahibi yetkisi gerekir.'
             : 'Kayıt sonucu doğrulanamadı; otomatik tekrar yapılmadı. Güncel bilgileri yükleyin.')
       }
-    } catch {
-      setReloadRequired(true)
-      setError('Kayıt sonucu doğrulanamadı; otomatik tekrar yapılmadı. Güncel bilgileri yükleyin.')
+    } catch (problem: unknown) {
+      setReloadRequired(!(problem instanceof RequestVerificationError))
+      setError(requestErrorMessage(problem, 'Kayıt sonucu doğrulanamadı; otomatik tekrar yapılmadı. Güncel bilgileri yükleyin.'))
     } finally { pending.current = false; setBusy(false) }
   }
 
@@ -116,12 +121,13 @@ export default function BusinessProfile({ post, disabled = false, onDirtyChange,
     setLoading(true); setError(''); setNotice(''); setReload(current => current + 1)
   }
 
+  const fieldErrorFor = (id: string) => invalidField === id && fieldError && <p id="business-field-error" role="alert">{fieldError}</p>
   return <section className={styles.layout} aria-labelledby="business-profile-title">
     <h2 className={styles.screenReaderOnly} id="business-profile-title">İşletme profili</h2>
     <div className={styles.editor}>
     {loading ? <><p role="status">Profil yükleniyor…</p><div className={styles.skeleton} aria-hidden="true"><span /><span /><span /><span /></div></> : profile && <>
       {!profile.name && <p>İşletme profili henüz doldurulmadı.</p>}
-      <form id="business-profile-form" aria-label="İşletme profilini düzenle" aria-busy={busy} onSubmit={save}
+      <form ref={form} id="business-profile-form" aria-label="İşletme profilini düzenle" aria-busy={busy} onSubmit={save}
         onInvalid={event => {
           const input = event.target
           if (input instanceof HTMLInputElement || input instanceof HTMLTextAreaElement) {
@@ -133,26 +139,29 @@ export default function BusinessProfile({ post, disabled = false, onDirtyChange,
         <input id="business-name" required minLength={2} maxLength={150} autoComplete="organization"
           aria-invalid={invalidField === 'business-name' || undefined} aria-describedby={invalidField === 'business-name' ? 'business-field-error' : undefined}
           disabled={disabled || busy || reloadRequired} value={profile.name} onChange={event => change('name', event.target.value)} />
+        {fieldErrorFor('business-name')}
         </div>
         <div className={styles.field}>
         <label htmlFor="business-phone">İletişim telefonu (isteğe bağlı)</label>
         <input id="business-phone" type="tel" maxLength={32} autoComplete="tel" placeholder="Telefon numarası"
           aria-invalid={invalidField === 'business-phone' || undefined} aria-describedby={invalidField === 'business-phone' ? 'business-field-error' : undefined}
           disabled={disabled || busy || reloadRequired} value={profile.phone ?? ''} onChange={event => change('phone', event.target.value)} />
+        {fieldErrorFor('business-phone')}
         </div>
         <div className={styles.field}>
         <label htmlFor="business-email">İletişim e-postası (isteğe bağlı)</label>
         <input id="business-email" type="email" maxLength={254} autoComplete="email"
           aria-invalid={invalidField === 'business-email' || undefined} aria-describedby={invalidField === 'business-email' ? 'business-field-error' : undefined}
           disabled={disabled || busy || reloadRequired} value={profile.email ?? ''} onChange={event => change('email', event.target.value)} />
+        {fieldErrorFor('business-email')}
         </div>
         <div className={styles.field}>
         <label htmlFor="business-address">Açık adres (isteğe bağlı)</label>
         <textarea id="business-address" maxLength={500} rows={3} autoComplete="street-address"
           aria-invalid={invalidField === 'business-address' || undefined} aria-describedby={invalidField === 'business-address' ? 'business-field-error' : undefined}
           disabled={disabled || busy || reloadRequired} value={profile.address ?? ''} onChange={event => change('address', event.target.value)} />
+        {fieldErrorFor('business-address')}
         </div>
-        {fieldError && <p id="business-field-error" role="alert">{fieldError}</p>}
       </form>
     </>}
     {dirty && !error && <p className={styles.draft} role="status">Değişiklikler henüz kaydedilmedi.</p>}

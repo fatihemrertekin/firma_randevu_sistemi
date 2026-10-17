@@ -1,3 +1,4 @@
+import { RequestVerificationError, requestErrorMessage } from '../../app/api'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import ErrorMessage from '../../components/ErrorMessage'
 import useUnsavedChanges from '../../app/useUnsavedChanges'
@@ -52,7 +53,7 @@ export default function StaffServicesEditor({ memberId, post, onSaved, onCancel,
           completed(location.pathname + (query.size ? `?${query}` : ''), { replace: true }, true)
         }
       }).catch((problem: unknown) => {
-        if (!controller.signal.aborted) { setError(problem instanceof SelectionError ? problem.message : new SelectionError(500).message); setLocked(true) }
+        if (!controller.signal.aborted) { setError(problem instanceof SelectionError ? problem.message : requestErrorMessage(problem, new SelectionError(500).message)); setLocked(true) }
       }).finally(() => { if (!controller.signal.aborted) setLoading(false) })
     return () => controller.abort()
   }, [memberId, page, pageSize, revision, onMemberRead, completed, location.pathname, location.search])
@@ -95,11 +96,14 @@ export default function StaffServicesEditor({ memberId, post, onSaved, onCancel,
       const response = await post(`/api/staff-members/${memberId}/services`,
         { version: snapshot.member.version, services: Array.from(selected.values()) }, AbortSignal.timeout(15000))
       if (response.status === 400) {
-        setFieldError('Hizmet seçimleri doğrulanamadı. Güncel listeyi yükleyip yeniden seç.'); return
+        const problem: unknown = await response.json().catch(() => null)
+        if (typeof problem === 'object' && problem !== null && 'errors' in problem && typeof problem.errors === 'object' && problem.errors !== null && 'services' in problem.errors && Array.isArray(problem.errors.services) && typeof problem.errors.services[0] === 'string') setFieldError(problem.errors.services[0])
+        else setError('İstek doğrulanamadı. Hizmet seçimleriniz korundu; yeniden deneyin.')
+        return
       }
       await readSelection(response); onDirtyChange(false); onSaved()
     } catch (problem: unknown) {
-      setError(problem instanceof SelectionError ? problem.message : new SelectionError(500).message); setLocked(true)
+      setError(problem instanceof SelectionError ? problem.message : requestErrorMessage(problem, new SelectionError(500).message)); setLocked(!(problem instanceof RequestVerificationError))
     } finally { sending.current = false; setBusy(false) }
   }
   const blocked = loading || busy || locked

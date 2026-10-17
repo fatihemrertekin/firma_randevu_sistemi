@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { RequestVerificationError } from '../../app/api'
 import { act } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -109,4 +110,12 @@ describe('Haftalık işletme saatleri', () => {
     await render(vi.fn<HoursPost>(async () => Response.json({ ...saved, days: [] }))); await monday(); await submit()
     expect(container.textContent).not.toContain('İşletme saatleri kaydedildi.'); expect(field('day0OpensAt').value).toBe('09:00')
   })
+})
+
+it('güvenlik reddinde haftalık saatleri korur ve yeniden denemeyi kilitlemez', async () => {
+  const post = vi.fn<HoursPost>().mockRejectedValue(new RequestVerificationError('Güvenlik doğrulaması geçersiz; işlem uygulanmadı.'))
+  await render(post); await monday(); await submit()
+  expect(container.querySelector('[role=alert]')?.textContent).toContain('Güvenlik doğrulaması')
+  expect(field('day0OpensAt').value).toBe('09:00')
+  await submit(); expect(post).toHaveBeenCalledTimes(2)
 })

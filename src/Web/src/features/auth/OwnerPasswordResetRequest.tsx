@@ -1,3 +1,4 @@
+import { requestErrorMessage } from '../../app/api'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { postWithCsrf } from '../../app/api'
 import ErrorMessage from '../../components/ErrorMessage'
@@ -48,7 +49,7 @@ export default function OwnerPasswordResetRequest({ onCancel, onDone, onManual, 
       const response = await postWithCsrf('/api/auth/password-reset-request', { email: email.trim() }, controller.signal)
       if (response.status === 202) setNotice('Bilgiler uygunsa e-postanıza sıfırlama bağlantısı hazırlanacaktır. Bağlantı 30 dakika geçerlidir.')
       else setError(response.status === 429 ? 'Çok fazla istek. Daha sonra yeniden deneyin.' : 'İstek tamamlanamadı. Daha sonra yeniden deneyin.')
-    } catch { setError('İsteğin sonucu doğrulanamadı. Daha sonra yeniden deneyin.') }
+    } catch (problem: unknown) { setError(requestErrorMessage(problem, 'İsteğin sonucu doğrulanamadı. Daha sonra yeniden deneyin.')) }
     finally { clearTimeout(timer); pending.current = false; setBusy(false) }
   }
   if (manual) return <PasswordResetForm onRequest={body => postWithCsrf('/api/auth/reset-password', body, AbortSignal.timeout(15000))}
