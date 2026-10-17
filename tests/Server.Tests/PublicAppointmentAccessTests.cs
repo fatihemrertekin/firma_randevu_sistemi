@@ -489,4 +489,17 @@ public sealed class PublicAppointmentAccessTests
             Assert.Equal("42501", error.SqlState);
         }
     }
+
+    [Fact]
+    public async Task DistantAppointmentCapsAccessAtThirtyOneDaysWithoutExtendingItOnRotation()
+    {
+        await using var f = new Fixture { AccessEnabled = true }; await f.StartAsync(); await Confirmed(f);
+        await using (var db = f.Db()) { (await db.BookingPolicies.SingleAsync(Token)).HorizonDays = 365; await db.SaveChangesAsync(Token); }
+        using var client = f.Client();
+        var request = await PublicAppointmentTests.SeedVerified(f, f.Request() with { StartsAt = f.Clock.Now.AddDays(60).ToString("O", System.Globalization.CultureInfo.InvariantCulture) });
+        using var created = await PostAsync(client, Path, request, await GetCsrfAsync(client));
+        var booking = (request, await Read<PublicAppointmentEndpoints.Response>(created, HttpStatusCode.Created));
+        var first = await Issue(client, booking); Assert.Equal(f.Clock.Now.AddDays(31), first.ExpiresAt);
+        f.Clock.Now += TimeSpan.FromHours(1); var rotated = await Issue(client, booking, true); Assert.Equal(first.ExpiresAt, rotated.ExpiresAt);
+    }
 }
