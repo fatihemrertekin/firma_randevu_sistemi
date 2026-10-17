@@ -40,6 +40,10 @@
   --action-row-gap: 1rem;
   --section-title-size: 1.25rem;
   --prose-line: 1.6;
+  --booking-width: 76rem;
+  --booking-summary: 21rem;
+  --booking-time-min: 8rem;
+  --booking-brand-font: 'Unna', Georgia, serif;
 }
 
 /* Shared palette roles also cover identity and management surfaces. */

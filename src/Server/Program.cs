@@ -47,7 +47,8 @@ if (!app.Environment.IsDevelopment())
 app.UseRouting();
 app.Use(async (context, next) =>
 {
-    if (context.Request.Path.StartsWithSegments("/api/public-booking"))
+    if (context.Request.Path.StartsWithSegments("/api/public-booking") ||
+        context.Request.Path.StartsWithSegments("/randevu"))
         context.Response.OnStarting(() =>
         {
             context.Response.Headers.CacheControl = "no-store";
