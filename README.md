@@ -18,7 +18,7 @@ E-posta doğrulama/sıfırlama bağlantısının kanıtı açılışta adres çu
 
 ## Telefon doğrulama — gönderim kapalı
 
-P05-02 telefon doğrulama uygulaması/kabulü sürüyor: `/api/public-booking/verification/request`, `/resend`, `/verify` POST uçları. Ana kurulumda gönderim varsayılan kapalıdır; geçerli Origin/CSRF sonrası 503 döner ve kayıt oluşturmaz. Gerçek SMS adaptörü yoktur; sahte taşıyıcı yalnız test sürecindedir. OTP randevu/müşteri oturumu oluşturmaz. [Sözleşme ve kabul](docs/plans/P05.md), [güvenlik](docs/SECURITY.md).
+P05-02 gönderim kapalı telefon doğrulaması ana yerel uygulamaya teslim edildi: `/api/public-booking/verification/request`, `/resend`, `/verify` POST uçları. Ana kurulumda gönderim varsayılan kapalıdır; geçerli Origin/CSRF sonrası 503 döner ve kayıt oluşturmaz. Gerçek SMS adaptörü yoktur; sahte taşıyıcı yalnız test sürecindedir. OTP randevu/müşteri oturumu oluşturmaz. [Sözleşme ve kabul](docs/plans/P05.md), [güvenlik](docs/SECURITY.md).
 
 ## Müşteriye açık okuma API'leri
 
