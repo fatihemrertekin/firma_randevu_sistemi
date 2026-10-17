@@ -17,7 +17,7 @@ export function requestErrorMessage(problem: unknown, fallback: string) {
   return problem instanceof RequestVerificationError ? problem.message : fallback
 }
 
-export async function postWithCsrf(path: string, body: object, signal?: AbortSignal): Promise<Response> {
+export async function postWithCsrf(path: string, body: object, signal?: AbortSignal, bearer?: string): Promise<Response> {
   const requestSignal = signal ?? AbortSignal.timeout(15000)
   let token: string
   try {
@@ -32,7 +32,8 @@ export async function postWithCsrf(path: string, body: object, signal?: AbortSig
   const response = await fetch(path, {
     method: 'POST',
     signal: requestSignal,
-    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token },
+    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token, ...(bearer ? { Authorization: `Bearer ${bearer}` } : {}) },
+    cache: 'no-store',
     body: JSON.stringify(body),
   })
   if (response.status === 400) {

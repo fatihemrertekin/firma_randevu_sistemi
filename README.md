@@ -1,5 +1,13 @@
 # Firma Randevu Sistemi
 
+## Misafir rezervasyonu
+
+`/randevu`, işletme oturumu gerektirmeyen hizmet → çalışan → saat → iletişim → telefon doğrulama/son kontrol akışıdır. Kod doğrulaması saat tutmaz; ayrı gönderim mevcut API ile tek talep oluşturur. Sunucunun Pending/Confirmed sonucu gösterilir. `/randevu/sonuc/{id}#erisim=<yetki>` yalnız o randevunun sonucunu ve süre uygunsa açık onaylı iptalini açar; fragment router/API'den önce temizlenir, yetki yalnız bellekte Bearer olarak kullanılır. Sayfa yenilenirse kaydedilen özgün bağlantı yeniden açılmalıdır. Telefonla geçmiş araması veya müşteri üyeliği yoktur.
+
+Ana ortamda OTP/erişim ve gerçek SMS kapalı tutulur; katalog okunması SMS veya rezervasyonun etkin olduğu anlamına gelmez. Kapalı işlem 503 ile açıklanır; sağlayıcı, harcama veya pilot aktivasyonu bu UI teslimine dahil değildir. [Kapsam ve kabul](docs/plans/P04.md#misafir-ekranı--güncellenmiş-kapsam-ve-durum-taslağı--18102026).
+
+Frontend kapıları kök komutlarla çalışır. İzole gerçek PostgreSQL/Kestrel ve sahte SMS kontrol sunucusu hazırken `node tests/Web.E2E/public-booking.cjs` dört genişlikte oluşturma, Pending/Confirmed, tek iptal, yanıt kaybı ve yetkisiz bağlantıyı kontrol eder. Varsayılan test portları 8111/8112; gerekirse `PUBLIC_BOOKING_TEST_ORIGIN`, `PUBLIC_BOOKING_SMS_TEST_ORIGIN` ve `PUBLIC_BOOKING_EVIDENCE` ortam değişkenlerini kullanın. Yalnız loopback sentetik hedefler kabul edilir; ana 8080 yazma hedefi olarak reddedilir. Test kontrol sunucusu gerçek ortam/ürün özelliği değildir.
+
 P04-10 geliştirme/GitHub/ana yerel teslimi tamamlandı: başarılı Public makbuzuyla `POST /api/public-booking/appointments/{id}/access` (`challengeId`, `challengeSecret`, `replaceExisting`); ayrı bearer token ile `GET /api/public-booking/appointments/{id}` ve `POST /api/public-booking/appointments/{id}/cancel` (`version`, `requestKey`). POST ayrıca aynı Origin+CSRF ister. `PublicBooking:AccessEnabled` varsayılan kapalıdır; ana 8080'de açılmaz. Token/yenileme/iptal/restore sınırı [ADR-008](docs/adr/008-public-appointment-access.md), gerçek kabul/teslim durumu [P04](docs/plans/P04.md#p04-10--sonuç-ve-müşteri-iptal-yetkisi-dar-planı--17102026) içindedir. Test: `dotnet test --project tests/Server.Tests/Server.Tests.csproj --no-restore --filter-class Server.Tests.PublicAppointmentAccessTests`. Müşteri ekranı/gerçek SMS eklenmez.
 
 Türkiye'deki tek şubeli hizmet işletmeleri için planlanan markalı randevu uygulaması. P01 temel kurulum tamamlandı; P02'de Owner oturumu eklendi. Gerçek rezervasyon henüz yoktur. Güncel durum için [STATUS](docs/STATUS.md), ürün kararları için [PRODUCT](docs/PRODUCT.md), aşamalar için [ROADMAP](docs/ROADMAP.md).
