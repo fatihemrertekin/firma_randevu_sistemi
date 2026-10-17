@@ -165,4 +165,5 @@ it('profil alan doğrulamasını ilgili alanla ilişkilendirir', async () => {
   await act(async () => root.render(<BusinessProfile post={post} />)); await fill('#business-name', 'Taslak salon'); await submit()
   expect(container.querySelector('#business-phone')?.getAttribute('aria-invalid')).toBe('true')
   expect(container.querySelector('#business-field-error')?.textContent).toBe('Geçerli telefon girin.')
+  expect(container.querySelector('#business-phone')?.nextElementSibling?.id).toBe('business-field-error')
 })

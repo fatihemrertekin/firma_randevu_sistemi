@@ -121,6 +121,7 @@ export default function BusinessProfile({ post, disabled = false, onDirtyChange,
     setLoading(true); setError(''); setNotice(''); setReload(current => current + 1)
   }
 
+  const fieldErrorFor = (id: string) => invalidField === id && fieldError && <p id="business-field-error" role="alert">{fieldError}</p>
   return <section className={styles.layout} aria-labelledby="business-profile-title">
     <h2 className={styles.screenReaderOnly} id="business-profile-title">İşletme profili</h2>
     <div className={styles.editor}>
@@ -138,26 +139,29 @@ export default function BusinessProfile({ post, disabled = false, onDirtyChange,
         <input id="business-name" required minLength={2} maxLength={150} autoComplete="organization"
           aria-invalid={invalidField === 'business-name' || undefined} aria-describedby={invalidField === 'business-name' ? 'business-field-error' : undefined}
           disabled={disabled || busy || reloadRequired} value={profile.name} onChange={event => change('name', event.target.value)} />
+        {fieldErrorFor('business-name')}
         </div>
         <div className={styles.field}>
         <label htmlFor="business-phone">İletişim telefonu (isteğe bağlı)</label>
         <input id="business-phone" type="tel" maxLength={32} autoComplete="tel" placeholder="Telefon numarası"
           aria-invalid={invalidField === 'business-phone' || undefined} aria-describedby={invalidField === 'business-phone' ? 'business-field-error' : undefined}
           disabled={disabled || busy || reloadRequired} value={profile.phone ?? ''} onChange={event => change('phone', event.target.value)} />
+        {fieldErrorFor('business-phone')}
         </div>
         <div className={styles.field}>
         <label htmlFor="business-email">İletişim e-postası (isteğe bağlı)</label>
         <input id="business-email" type="email" maxLength={254} autoComplete="email"
           aria-invalid={invalidField === 'business-email' || undefined} aria-describedby={invalidField === 'business-email' ? 'business-field-error' : undefined}
           disabled={disabled || busy || reloadRequired} value={profile.email ?? ''} onChange={event => change('email', event.target.value)} />
+        {fieldErrorFor('business-email')}
         </div>
         <div className={styles.field}>
         <label htmlFor="business-address">Açık adres (isteğe bağlı)</label>
         <textarea id="business-address" maxLength={500} rows={3} autoComplete="street-address"
           aria-invalid={invalidField === 'business-address' || undefined} aria-describedby={invalidField === 'business-address' ? 'business-field-error' : undefined}
           disabled={disabled || busy || reloadRequired} value={profile.address ?? ''} onChange={event => change('address', event.target.value)} />
+        {fieldErrorFor('business-address')}
         </div>
-        {fieldError && <p id="business-field-error" role="alert">{fieldError}</p>}
       </form>
     </>}
     {dirty && !error && <p className={styles.draft} role="status">Değişiklikler henüz kaydedilmedi.</p>}
