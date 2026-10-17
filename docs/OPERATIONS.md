@@ -4,7 +4,7 @@ Hazırlanma: 2026-09-29. Bu dosya plandır; çalışan altyapının kanıtı de�
 
 ## 1. Kurulum ve kapasite
 
-P05-02 telefon doğrulaması geliştirme/kabul aşamasındadır. Ana kurulumda `BookingVerification:Enabled` verilmez veya false kalır; gerçek taşıyıcı adaptörü yoktur. HMAC anahtarı ana ortama testten kopyalanmaz. Enabled fakat kullanılabilir taşıyıcı/32 bayt anahtar eksikse açılış reddedilir. [Sözleşme, migration ve kabul](plans/P05.md).
+P05-02 gönderim kapalı telefon doğrulaması yedekli ana yerel teslimde doğrulandı. Ana kurulumda `BookingVerification:Enabled` verilmez veya false kalır; gerçek taşıyıcı adaptörü yoktur. HMAC anahtarı ana ortama testten kopyalanmaz. Enabled fakat kullanılabilir taşıyıcı/32 bayt anahtar eksikse veya kayıtlı kota anahtar kimliği farklıysa açılış reddedilir. [Sözleşme, migration ve kabul](plans/P05.md).
 
 Geri dönüş/restore'da önce doğrulamayı ve gönderimi kapat; in-flight işleri durdur. DB ile aynı firmaya ait Data Protection/HMAC anahtarları ve config yedeklenir. Eski kuyruk kayıtları gönderim kapalı restore edilir; otomatik SMS veya kota sıfırlaması yapılmaz. Eklemeli şema uyumlu eski imajla korunur; veri/kota varken Down reddedilir. Gerçek SMS aktivasyonunun fiyat/harcama/aktarım kapısı ayrı onaydır.
 
