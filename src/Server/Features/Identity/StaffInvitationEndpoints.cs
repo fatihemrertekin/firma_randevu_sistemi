@@ -63,7 +63,7 @@ public static class StaffInvitationEndpoints
         TimeProvider clock, PartitionedRateLimiter<Guid> accountLimiter)
     {
         context.Response.Headers.CacheControl = "no-store";
-        if (!await AuthEndpoints.HasValidCsrfAsync(antiforgery, context)) return Results.Problem(statusCode: 400, title: "Geçersiz istek doğrulaması.");
+        if (!await AuthEndpoints.HasValidCsrfAsync(antiforgery, context)) return AuthEndpoints.InvalidCsrf();
         if (!request.VerifiedRecipient || !ValidEmail(request.Email)) return Results.Problem(statusCode: 400, title: "Geçerli e-posta ve alıcının doğrulandığına ilişkin onay gerekli.");
         if (!Guid.TryParse(context.User.FindFirstValue(ClaimTypes.NameIdentifier), out var ownerId)) return Results.Unauthorized();
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(context.RequestAborted);
@@ -116,7 +116,7 @@ public static class StaffInvitationEndpoints
         AppDbContext db, UserManager<AppUser> users, IConfiguration config, TimeProvider clock)
     {
         context.Response.Headers.CacheControl = "no-store";
-        if (!await AuthEndpoints.HasValidCsrfAsync(antiforgery, context)) return Results.Problem(statusCode: 400, title: "Geçersiz istek doğrulaması.");
+        if (!await AuthEndpoints.HasValidCsrfAsync(antiforgery, context)) return AuthEndpoints.InvalidCsrf();
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(context.RequestAborted);
         timeout.CancelAfter(TimeSpan.FromSeconds(15));
         await using var transaction = await db.Database.BeginTransactionAsync(timeout.Token);
@@ -141,7 +141,7 @@ public static class StaffInvitationEndpoints
         TimeProvider clock, PartitionedRateLimiter<Guid> accountLimiter)
     {
         context.Response.Headers.CacheControl = "no-store";
-        if (!await AuthEndpoints.HasValidCsrfAsync(antiforgery, context)) return Results.Problem(statusCode: 400, title: "Geçersiz istek doğrulaması.");
+        if (!await AuthEndpoints.HasValidCsrfAsync(antiforgery, context)) return AuthEndpoints.InvalidCsrf();
         if (context.User.Identity?.IsAuthenticated == true) return Results.Problem(statusCode: 409, title: "Daveti kabul etmek için mevcut hesaptan çıkış yapın.");
         if (!ValidEmail(request.Email) || request.Token is not { Length: 43 } ||
             !request.Token.All(character => char.IsAsciiLetterOrDigit(character) || character is '-' or '_')) return InvalidInvitation();

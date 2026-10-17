@@ -45,7 +45,7 @@ public static class WeeklyBreakEndpoints
         AppDbContext db, UserManager<AppUser> users, TimeProvider clock)
     {
         using var timeout = Timeout(context);
-        if (!await AuthEndpoints.HasValidCsrfAsync(antiforgery, context)) return Results.Problem(statusCode: 400, title: "Geçersiz istek doğrulaması.");
+        if (!await AuthEndpoints.HasValidCsrfAsync(antiforgery, context)) return AuthEndpoints.InvalidCsrf();
         await using var transaction = await db.Database.BeginTransactionAsync(timeout.Token);
         var owner = await OwnerMutationAuthorization.LockAsync(context, db, users, timeout.Token);
         if (owner is null) return Results.Unauthorized();

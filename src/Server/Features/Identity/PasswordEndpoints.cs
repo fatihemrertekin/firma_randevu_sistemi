@@ -21,8 +21,7 @@ public static class PasswordEndpoints
         context.Response.Headers.CacheControl = "no-store";
         if (!await AuthEndpoints.HasValidCsrfAsync(antiforgery, context))
         {
-            return Results.Problem(statusCode: StatusCodes.Status400BadRequest,
-                title: "Geçersiz istek doğrulaması.");
+            return AuthEndpoints.InvalidCsrf();
         }
         if (string.IsNullOrEmpty(request.CurrentPassword) || string.IsNullOrEmpty(request.NewPassword) ||
             request.CurrentPassword.Length > 1024 || request.NewPassword.Length > 1024 ||

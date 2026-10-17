@@ -1,3 +1,4 @@
+import { requestErrorMessage } from '../../app/api'
 import ErrorMessage from '../../components/ErrorMessage'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import styles from './AuthenticationScreens.module.css'
@@ -34,13 +35,15 @@ export default function PasswordResetForm({ onRequest, onDone, onCancel, staff =
       } else if (response.status === 400 || response.status === 409) {
         const problem = (await response.json()) as { title?: string }
         setError(problem.title ?? 'Sıfırlama kodunu ve parola alanlarını kontrol edin.')
+      } else if (response.status === 403) {
+        setError('Bu işlem için yetkiniz yok.')
       } else if (response.status === 429) {
         setError('Çok fazla deneme. Daha sonra tekrar deneyin.')
       } else {
         setError('Sonuç doğrulanamadı. Yeni parolanızla giriş yapmayı deneyin; otomatik tekrar yapılmadı.')
       }
-    } catch {
-      setError('Sonuç doğrulanamadı. Yeni parolanızla giriş yapmayı deneyin; otomatik tekrar yapılmadı.')
+    } catch (problem: unknown) {
+      setError(requestErrorMessage(problem, 'Sonuç doğrulanamadı. Yeni parolanızla giriş yapmayı deneyin; otomatik tekrar yapılmadı.'))
     } finally {
       setToken('')
       setNewPassword('')

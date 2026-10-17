@@ -46,7 +46,7 @@ public static class StaffHoursEndpoints
         AppDbContext db, UserManager<AppUser> users, TimeProvider clock)
     {
         using var timeout = Timeout(context);
-        if (!await AuthEndpoints.HasValidCsrfAsync(antiforgery, context)) return Results.Problem(statusCode: 400, title: "Geçersiz istek doğrulaması.");
+        if (!await AuthEndpoints.HasValidCsrfAsync(antiforgery, context)) return AuthEndpoints.InvalidCsrf();
         var desired = WeeklyHours.Validate(request.Version, request.Days, out var errors);
         if (errors.Count != 0) return Results.ValidationProblem(errors);
         await using var transaction = await db.Database.BeginTransactionAsync(timeout.Token);

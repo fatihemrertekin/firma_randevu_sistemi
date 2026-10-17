@@ -89,7 +89,7 @@ public static class AppointmentEndpoints
     {
         using var timeout = Timeout(context);
         if (!await AuthEndpoints.HasValidCsrfAsync(antiforgery, context))
-            return Results.Problem(statusCode: 400, title: "Geçersiz istek doğrulaması.");
+            return AuthEndpoints.InvalidCsrf();
         var name = request.CustomerName?.Trim();
         var errors = new Dictionary<string, string[]>();
         if (request.RequestKey == Guid.Empty) errors["requestKey"] = ["İşlem anahtarı gerekli."];

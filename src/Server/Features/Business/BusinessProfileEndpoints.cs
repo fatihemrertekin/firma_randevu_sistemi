@@ -33,19 +33,19 @@ public static class BusinessProfileEndpoints
     {
         context.Response.Headers.CacheControl = "no-store";
         if (!await AuthEndpoints.HasValidCsrfAsync(antiforgery, context))
-            return Results.Problem(statusCode: 400, title: "Geçersiz istek doğrulaması.");
+            return AuthEndpoints.InvalidCsrf();
         var name = request.Name?.Trim();
         var phone = Optional(request.Phone);
         var email = Optional(request.Email);
         var address = Optional(request.Address);
         if (name is not { Length: >= 2 and <= 150 } || name.Any(char.IsControl))
-            return Results.Problem(statusCode: 400, title: "İşletme adı 2–150 karakter olmalı.");
+            return Results.ValidationProblem(new Dictionary<string, string[]> { ["name"] = ["İşletme adı 2–150 karakter olmalı."] });
         if (phone is not null && !TurkishPhone.TryNormalize(phone, out phone, out var phoneError))
-            return Results.Problem(statusCode: 400, title: phoneError);
+            return Results.ValidationProblem(new Dictionary<string, string[]> { ["phone"] = [phoneError] });
         if (email is not null && (email.Length > 254 || email.Any(char.IsControl) || !new EmailAddressAttribute().IsValid(email)))
-            return Results.Problem(statusCode: 400, title: "Geçerli bir iletişim e-postası girin.");
+            return Results.ValidationProblem(new Dictionary<string, string[]> { ["email"] = ["Geçerli bir iletişim e-postası girin."] });
         if (address is not null && (address.Length > 500 || address.Any(character => char.IsControl(character) && character is not '\r' and not '\n')))
-            return Results.Problem(statusCode: 400, title: "Adres en fazla 500 karakter olmalı.");
+            return Results.ValidationProblem(new Dictionary<string, string[]> { ["address"] = ["Adres en fazla 500 karakter olmalı."] });
         if (request.Version == Guid.Empty)
             return Results.Problem(statusCode: 400, title: "Profil sürümü gerekli. Bilgileri yeniden yükleyin.");
         if (!Guid.TryParse(context.User.FindFirstValue(ClaimTypes.NameIdentifier), out var ownerId)) return Results.Unauthorized();

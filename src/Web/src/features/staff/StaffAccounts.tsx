@@ -1,3 +1,4 @@
+import { requestErrorMessage } from '../../app/api'
 import { useEffect, useEffectEvent, useRef, useState } from 'react'
 import ErrorMessage from '../../components/ErrorMessage'
 import styles from './StaffAccounts.module.css'
@@ -109,7 +110,7 @@ export default function StaffAccounts({ post, disabled, onBusyChange }: Props) {
         : 'Çalışan hesabı etkinleştirildi. Çalışan mevcut parolasıyla yeniden giriş yapabilir.')
       load(); heading.current?.focus()
     } catch (problem: unknown) {
-      if (mounted.current) setError(problem instanceof StaffRequestError ? problem.message : failure(500))
+      if (mounted.current) setError(problem instanceof StaffRequestError ? problem.message : requestErrorMessage(problem, failure(500)))
     } finally {
       sending.current = false
       if (mounted.current) setBusy(false)

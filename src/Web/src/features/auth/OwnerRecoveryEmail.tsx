@@ -1,3 +1,4 @@
+import { requestErrorMessage } from '../../app/api'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import ErrorMessage from '../../components/ErrorMessage'
 import styles from './OwnerRecoveryEmail.module.css'
@@ -23,7 +24,7 @@ export default function OwnerRecoveryEmail({ post, disabled = false }: Props) {
     const timer = setTimeout(() => controller.abort(), 15000)
     fetch('/api/auth/recovery-email/', { cache: 'no-store', signal: controller.signal })
       .then(async response => {
-        if (!response.ok) throw new Error('E-posta doğrulama durumu alınamadı. Yeniden deneyin.')
+        if (!response.ok) { if (active) setError(response.status === 401 ? 'Oturumunuz sona erdi. Yeniden giriş yapın.' : response.status === 403 ? 'Bu işlem için yetkiniz yok.' : 'E-posta doğrulama durumu alınamadı. Yeniden deneyin.'); return }
         const value: unknown = await response.json()
         if (typeof value !== 'object' || value === null || !('email' in value) || typeof value.email !== 'string' ||
           !('verifiedAt' in value) || (value.verifiedAt !== null && typeof value.verifiedAt !== 'string') ||
@@ -70,13 +71,13 @@ export default function OwnerRecoveryEmail({ post, disabled = false }: Props) {
       const response = await post('/api/auth/recovery-email/request', {}, controller.signal)
       if (!response.ok) {
         setError(response.status === 429 ? 'Yeni doğrulama istemeden önce bir dakika bekleyin.'
-          : response.status === 401 || response.status === 403 ? 'Oturum geçersiz. Yeniden giriş yapın.'
+          : response.status === 401 ? 'Oturumunuz sona erdi. Yeniden giriş yapın.' : response.status === 403 ? 'Bu işlem için yetkiniz yok. İşletme sahibi yetkisi gerekir.'
           : response.status === 409 ? 'Hesap e-postanız zaten doğrulanmış. Durumu yenileyin.'
           : 'Doğrulama iletisi teslim edilemedi. Daha sonra yeniden deneyin.')
         return
       }
       setNotice('Doğrulama iletisi hazırlandı. E-postanızdaki bağlantıyı 30 dakika içinde açıp onaylayın.')
-    } catch { setError('İletinin teslimi doğrulanamadı. Bir dakika sonra yeniden deneyin.') }
+    } catch (problem: unknown) { setError(requestErrorMessage(problem, 'İletinin teslimi doğrulanamadı. Bir dakika sonra yeniden deneyin.')) }
     finally { clearTimeout(timer); pending.current = false; setBusy(false) }
   }
 

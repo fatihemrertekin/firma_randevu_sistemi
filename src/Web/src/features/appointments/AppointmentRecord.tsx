@@ -1,3 +1,4 @@
+import { RequestVerificationError } from '../../app/api'
 import { useCallback, useEffect, useRef, useState, type RefObject } from 'react'
 import type { postWithCsrf } from '../../app/api'
 import { formatTryPrice } from '../../app/money'
@@ -36,8 +37,8 @@ export default function AppointmentRecord({ id, moving, initialDay, search, post
       if (!controller.signal.aborted) { setData(value); setLocked(false); setSelected(null); setError('') }
     }).catch((problem: unknown) => {
       if (controller.signal.aborted) return
-      const failure = problem instanceof AppointmentError ? problem : new AppointmentError(500)
-      setError(failure.message); setLocked(true); setRetryUntil(failure.retryAfter)
+      const failure = problem instanceof AppointmentError ? problem : problem instanceof RequestVerificationError ? new AppointmentError(400, {}, 0, problem.message) : new AppointmentError(500)
+      setError(failure.message); setLocked(!(problem instanceof RequestVerificationError)); setRetryUntil(failure.retryAfter)
       if (failure.status === 401 || failure.status === 403 || failure.status === 404) setData(null)
       if (failure.status === 401) onUnauthorized()
     }).finally(() => { if (!controller.signal.aborted) setLoading(false) })
@@ -53,8 +54,8 @@ export default function AppointmentRecord({ id, moving, initialDay, search, post
       setData(saved); setLocked(false); setSelected(null); setAttempt(null)
       setNotice(`Randevu güncellendi. Güncel durum: ${statusLabels[saved.status]}.`)
     } catch (problem: unknown) {
-      const failure = problem instanceof AppointmentError ? problem : new AppointmentError(500)
-      setError(failure.message); setLocked(true); setRetryUntil(failure.retryAfter)
+      const failure = problem instanceof AppointmentError ? problem : problem instanceof RequestVerificationError ? new AppointmentError(400, {}, 0, problem.message) : new AppointmentError(500)
+      setError(failure.message); setLocked(!(problem instanceof RequestVerificationError)); setRetryUntil(failure.retryAfter)
       if (failure.status < 500) setAttempt(null)
       if (failure.status === 401) onUnauthorized()
     } finally { sending.current = false; setBusy(false) }

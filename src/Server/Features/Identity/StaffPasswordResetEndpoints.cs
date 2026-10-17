@@ -46,7 +46,7 @@ public static class StaffPasswordResetEndpoints
     {
         context.Response.Headers.CacheControl = "no-store";
         if (!await AuthEndpoints.HasValidCsrfAsync(antiforgery, context))
-            return Results.Problem(statusCode: 400, title: "Geçersiz istek doğrulaması.");
+            return AuthEndpoints.InvalidCsrf();
         if (!request.VerifiedRecipient || request.Email is not { Length: > 0 and <= 256 } ||
             !new EmailAddressAttribute().IsValid(request.Email.Trim()))
             return Results.Problem(statusCode: 400, title: "Geçerli e-posta ve doğrulanmış alıcı onayı gerekli.");
@@ -97,7 +97,7 @@ public static class StaffPasswordResetEndpoints
     {
         context.Response.Headers.CacheControl = "no-store";
         if (!await AuthEndpoints.HasValidCsrfAsync(antiforgery, context))
-            return Results.Problem(statusCode: 400, title: "Geçersiz istek doğrulaması.");
+            return AuthEndpoints.InvalidCsrf();
         // Do not sign out an unrelated account when a reset code is submitted.
         if (context.User.Identity?.IsAuthenticated == true)
             return Results.Problem(statusCode: 409, title: "Parola sıfırlamak için mevcut hesaptan çıkış yapın.");

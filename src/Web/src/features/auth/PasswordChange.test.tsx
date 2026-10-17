@@ -114,13 +114,20 @@ describe.each([['Owner', owner], ['Staff', staff]] as const)('%s parola değişi
     expect(container.querySelector<HTMLButtonElement>('form[aria-label="Parola değiştirme"] button[type="submit"]')?.disabled).toBe(false)
   })
 
-  it.each([401, 403, 409])('geçersiz oturum yanıtında (%i) yeniden giriş ister', async status => {
+  it.each([401, 409])('geçersiz oturum yanıtında (%i) yeniden giriş ister', async status => {
     mockRequests(async () => new Response(null, { status }), account)
     await renderApp()
     await fillForm()
     await submit()
     expect(container.textContent).toContain('İşletme girişi')
     expect(container.querySelector('[role="alert"]')?.textContent).toContain('Yeniden giriş yapın')
+  })
+
+  it('403 yanıtında oturumu ve ekranı korur; tekrar giriş istemez', async () => {
+    mockRequests(async () => new Response(null, { status: 403 }), account)
+    await renderApp(); await fillForm(); await submit()
+    expect(container.textContent).not.toContain('İşletme girişi')
+    expect(container.querySelector('[role="alert"]')?.textContent).toBe('Bu işlem için yetkiniz yok.')
   })
 
   it.each([429, 500])('limit/hata yanıtında (%i) başarı göstermez ve tekrar göndermeyi açar', async status => {

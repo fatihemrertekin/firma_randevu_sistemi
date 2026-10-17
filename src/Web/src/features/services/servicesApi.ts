@@ -7,7 +7,7 @@ export class ServiceRequestError extends Error {
   constructor(public status: number, message = serviceFailure(status)) { super(message) }
 }
 export function serviceFailure(status: number) {
-  if (status === 400) return 'Hizmet alanlarını kontrol edip yeniden deneyin.'
+  if (status === 400) return 'İstek doğrulanamadı. Bilgilerinizi koruyarak yeniden deneyin.'
   if (status === 401) return 'Oturumunuz sona erdi. Yeniden giriş yapın.'
   if (status === 403) return 'Bu işlem için yetkiniz yok.'
   if (status === 404) return 'Hizmet kaydı bulunamadı. Listeyi yenileyin.'

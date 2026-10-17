@@ -45,7 +45,7 @@ public static class OwnerRecoveryEmailEndpoints
     {
         context.Response.Headers.CacheControl = "no-store";
         if (!await AuthEndpoints.HasValidCsrfAsync(antiforgery, context))
-            return Results.Problem(statusCode: 400, title: "Geçersiz istek doğrulaması.");
+            return AuthEndpoints.InvalidCsrf();
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(context.RequestAborted);
         timeout.CancelAfter(TimeSpan.FromSeconds(15));
         var ownerId = users.GetUserId(context.User);
@@ -102,7 +102,7 @@ public static class OwnerRecoveryEmailEndpoints
     {
         context.Response.Headers.CacheControl = "no-store";
         if (!await AuthEndpoints.HasValidCsrfAsync(antiforgery, context))
-            return Results.Problem(statusCode: 400, title: "Geçersiz istek doğrulaması.");
+            return AuthEndpoints.InvalidCsrf();
         if (request.Token is not { Length: 43 } || request.Token.Any(character =>
             !char.IsAsciiLetterOrDigit(character) && character is not '-' and not '_')) return InvalidToken();
         var hash = TokenHash(request.Token, configuration);

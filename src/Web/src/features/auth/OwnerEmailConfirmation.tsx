@@ -1,3 +1,4 @@
+import { requestErrorMessage } from '../../app/api'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useBlocker } from 'react-router'
 import { postWithCsrf } from '../../app/api'
@@ -36,7 +37,7 @@ export default function OwnerEmailConfirmation({ token, onClose }: { token: stri
       else setError(response.status === 429 ? 'Çok fazla deneme. Daha sonra tekrar deneyin.'
         : response.status === 400 ? 'Doğrulama bağlantısı geçersiz veya süresi dolmuş. Hesabınızdan yeni bir ileti isteyin.'
         : 'Doğrulama tamamlanamadı. Yeniden deneyin.')
-    } catch { setError('Sonuç doğrulanamadı. Hesabınızdan doğrulama durumunu kontrol edin.') }
+    } catch (problem: unknown) { setError(requestErrorMessage(problem, 'Sonuç doğrulanamadı. Hesabınızdan doğrulama durumunu kontrol edin.')) }
     finally { clearTimeout(timer); setBusy(false); pending.current = false }
   }
   return <AuthenticationLayout>

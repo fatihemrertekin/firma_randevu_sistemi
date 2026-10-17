@@ -27,8 +27,7 @@ public static class AuthEndpoints
         {
             if (!await HasValidCsrfAsync(antiforgery, context))
             {
-                return Results.Problem(statusCode: StatusCodes.Status400BadRequest,
-                    title: "Geçersiz istek doğrulaması.");
+                return AuthEndpoints.InvalidCsrf();
             }
 
             if (string.IsNullOrWhiteSpace(request.Email) || request.Email.Length > 254 ||
@@ -67,8 +66,7 @@ public static class AuthEndpoints
         {
             if (!await HasValidCsrfAsync(antiforgery, context))
             {
-                return Results.Problem(statusCode: StatusCodes.Status400BadRequest,
-                    title: "Geçersiz istek doğrulaması.");
+                return AuthEndpoints.InvalidCsrf();
             }
 
             await signIn.SignOutAsync();
@@ -102,6 +100,10 @@ public static class AuthEndpoints
         app.MapStaffPasswordResetEndpoints();
         app.MapStaffAccountEndpoints();
     }
+
+    internal static IResult InvalidCsrf() => Results.Problem(statusCode: 400,
+        title: "Geçersiz istek doğrulaması.",
+        extensions: new Dictionary<string, object?> { ["code"] = "csrf_invalid" });
 
     internal static async Task<bool> HasValidCsrfAsync(IAntiforgery antiforgery, HttpContext context)
     {

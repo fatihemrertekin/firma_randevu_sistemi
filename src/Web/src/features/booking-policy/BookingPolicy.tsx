@@ -1,3 +1,4 @@
+import { RequestVerificationError, requestErrorMessage } from '../../app/api'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import type { postWithCsrf } from '../../app/api'
 import useUnsavedChanges from '../../app/useUnsavedChanges'
@@ -57,7 +58,7 @@ export default function BookingPolicy({ post, onDirtyChange, onBusyChange }: Pro
         setOriginal(value); setDraft(draftOf(value)); setLocked(false); setDenied(false); setError(''); setErrors({})
       }).catch((problem: unknown) => {
         if (controller.signal.aborted) return
-        const status = problem instanceof BookingPolicyError ? problem.status : 500
+        const status = problem instanceof BookingPolicyError ? problem.status : problem instanceof RequestVerificationError ? 400 : 500
         setDenied(status === 401 || status === 403)
         setError(status >= 500 ? 'Ayarlar yüklenemedi. Bağlantınızı kontrol edip yeniden deneyin. Ekranda kalan değerler güncel olarak doğrulanmadı.' : bookingPolicyFailure(status))
       }).finally(() => { if (!controller.signal.aborted) setLoading(false) })
@@ -93,8 +94,8 @@ export default function BookingPolicy({ post, onDirtyChange, onBusyChange }: Pro
       const saved = await readBookingPolicy(response)
       setOriginal(saved); setDraft(draftOf(saved)); onDirtyChange(false); setNotice('Rezervasyon ayarları kaydedildi.')
     } catch (problem: unknown) {
-      const status = problem instanceof BookingPolicyError ? problem.status : 500
-      setError(bookingPolicyFailure(status)); setLocked(true); setDenied(status === 401 || status === 403)
+      const status = problem instanceof BookingPolicyError ? problem.status : problem instanceof RequestVerificationError ? 400 : 500
+      setError(requestErrorMessage(problem, bookingPolicyFailure(status))); setLocked(status !== 400); setDenied(status === 401 || status === 403)
     } finally { sending.current = false; setBusy(false) }
   }
   return <div className={styles.editor}>

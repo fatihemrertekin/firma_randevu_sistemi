@@ -1,3 +1,4 @@
+import { RequestVerificationError, requestErrorMessage } from '../../app/api'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import ErrorMessage from '../../components/ErrorMessage'
 import useUnsavedChanges from '../../app/useUnsavedChanges'
@@ -39,12 +40,18 @@ export default function StaffMemberEditor({ member, post, onSaved, onCancel, onD
     try {
       const response = await post(original ? `/api/staff-members/${id}` : '/api/staff-members/',
         original ? { name: trimmed, version: original.version } : { id, name: trimmed }, AbortSignal.timeout(15000))
-      if (response.status === 400) { setFieldError(memberFailure(400)); input.current?.focus(); return }
+      if (response.status === 400) {
+        const problem: unknown = await response.json().catch(() => null)
+        if (typeof problem === 'object' && problem !== null && 'errors' in problem && typeof problem.errors === 'object' && problem.errors !== null && 'name' in problem.errors && Array.isArray(problem.errors.name) && typeof problem.errors.name[0] === 'string') {
+          setFieldError(problem.errors.name[0]); input.current?.focus()
+        } else setError(memberFailure(400))
+        return
+      }
       const saved = await readMember(response)
       onDirtyChange(false); onSaved(saved)
     } catch (problem: unknown) {
-      const status = problem instanceof MemberRequestError ? problem.status : 500
-      setError(problem instanceof MemberRequestError ? problem.message : memberFailure(500))
+      const status = problem instanceof MemberRequestError ? problem.status : problem instanceof RequestVerificationError ? 400 : 500
+      setError(problem instanceof MemberRequestError ? problem.message : requestErrorMessage(problem, memberFailure(500)))
       // Yeni kaydın aynı istek kimliğiyle tekrarı çift kayıt yaratmaz. Düzenlemede önce güncel sürüm gerekir.
       setReloadRequired(status === 409 || (original !== null && status >= 500))
     } finally { pending(false) }
@@ -57,7 +64,7 @@ export default function StaffMemberEditor({ member, post, onSaved, onCancel, onD
       setOriginal(current); setName(current.name); setReloadRequired(false); onDirtyChange(false)
       onMemberRead?.(current)
       input.current?.focus()
-    } catch (problem: unknown) { setError(problem instanceof MemberRequestError ? problem.message : memberFailure(500)) }
+    } catch (problem: unknown) { setError(problem instanceof MemberRequestError ? problem.message : requestErrorMessage(problem, memberFailure(500))) }
     finally { pending(false) }
   }
   return <form className={`${styles.editor} ${personnel.taskForm}`} aria-label={original ? 'Personel adını düzenle' : 'Personel ekle'} aria-busy={busy} onSubmit={event => { void save(event) }} noValidate>

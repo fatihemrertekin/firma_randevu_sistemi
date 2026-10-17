@@ -33,7 +33,7 @@ public static class BookingPolicyEndpoints
         AppDbContext db, UserManager<AppUser> users, TimeProvider clock)
     {
         using var timeout = AppointmentEndpoints.Timeout(context);
-        if (!await AuthEndpoints.HasValidCsrfAsync(csrf, context)) return Results.Problem(statusCode: 400, title: "Geçersiz istek doğrulaması.");
+        if (!await AuthEndpoints.HasValidCsrfAsync(csrf, context)) return AuthEndpoints.InvalidCsrf();
         var errors = new Dictionary<string, string[]>();
         if (request.Version == Guid.Empty) errors["version"] = ["Güncel ayar sürümü gerekli."];
         if (request.LeadMinutes is not (>= 0 and <= 43200)) errors["leadMinutes"] = ["Ön süre 0–43200 dakika arasında olmalı."];

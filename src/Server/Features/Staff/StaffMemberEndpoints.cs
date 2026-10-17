@@ -79,9 +79,9 @@ public static class StaffMemberEndpoints
     {
         using var timeout = Timeout(context);
         if (!await AuthEndpoints.HasValidCsrfAsync(antiforgery, context))
-            return Results.Problem(statusCode: 400, title: "Geçersiz istek doğrulaması.");
+            return AuthEndpoints.InvalidCsrf();
         var name = request.Name?.Trim();
-        if (!ValidName(name)) return Results.Problem(statusCode: 400, title: "Ad soyad 1–100 karakter olmalı ve kontrol karakteri içermemeli.");
+        if (!ValidName(name)) return Results.ValidationProblem(new Dictionary<string, string[]> { ["name"] = ["Ad soyad 1–100 karakter olmalı ve kontrol karakteri içermemeli."] });
         if (request.Id == Guid.Empty) return Results.Problem(statusCode: 400, title: "Kayıt istek kimliği gerekli.");
         await using var transaction = await db.Database.BeginTransactionAsync(timeout.Token);
         var owner = await OwnerMutationAuthorization.LockAsync(context, db, users, timeout.Token);
@@ -115,9 +115,9 @@ public static class StaffMemberEndpoints
     {
         using var timeout = Timeout(context);
         if (!await AuthEndpoints.HasValidCsrfAsync(antiforgery, context))
-            return Results.Problem(statusCode: 400, title: "Geçersiz istek doğrulaması.");
+            return AuthEndpoints.InvalidCsrf();
         name = name?.Trim();
-        if (!deleting && active is null && !ValidName(name)) return Results.Problem(statusCode: 400, title: "Ad soyad 1–100 karakter olmalı ve kontrol karakteri içermemeli.");
+        if (!deleting && active is null && !ValidName(name)) return Results.ValidationProblem(new Dictionary<string, string[]> { ["name"] = ["Ad soyad 1–100 karakter olmalı ve kontrol karakteri içermemeli."] });
         if (version == Guid.Empty) return Results.Problem(statusCode: 400, title: "Personel sürümü gerekli.");
         await using var transaction = await db.Database.BeginTransactionAsync(timeout.Token);
         var owner = await OwnerMutationAuthorization.LockAsync(context, db, users, timeout.Token);

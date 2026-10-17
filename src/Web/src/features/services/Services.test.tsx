@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { RequestVerificationError } from '../../app/api'
 import { act } from 'react'
 import { createMemoryRouter } from 'react-router'
 import { RouterProvider } from 'react-router/dom'
@@ -187,4 +188,13 @@ describe('Hizmet yönetimi', () => {
     await click('Listeyi yenile'); expect(container.querySelector('[role="alert"]')?.textContent).toContain('Liste yanıtı doğrulanamadı.')
     expect(container.textContent).not.toContain('350,01 ₺')
   })
+})
+
+it('güvenlik reddinde hizmet taslağını ve yeniden denemeyi korur, alanı suçlamaz', async () => {
+  const post = vi.fn<ServicePost>().mockRejectedValueOnce(new RequestVerificationError('Güvenlik doğrulaması geçersiz; işlem uygulanmadı.')).mockResolvedValueOnce(Response.json(service))
+  await render(post); await newService(); await submit()
+  expect(container.querySelector('[role=alert]')?.textContent).toContain('Güvenlik doğrulaması')
+  expect(container.querySelector<HTMLInputElement>('#service-name')?.value).toBe('Yeni Hizmet')
+  expect(container.querySelector('[aria-invalid=true]')).toBeNull()
+  await submit(); expect(post).toHaveBeenCalledTimes(2)
 })

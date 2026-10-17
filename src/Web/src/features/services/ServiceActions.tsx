@@ -1,3 +1,4 @@
+import { RequestVerificationError, requestErrorMessage } from '../../app/api'
 import { useEffect, useRef, useState } from 'react'
 import ErrorMessage from '../../components/ErrorMessage'
 import { readService, ServiceRequestError, serviceFailure, type Service, type ServicePost } from './servicesApi'
@@ -33,8 +34,8 @@ export default function ServiceActions({ service, post, blocked, dirty, onBusyCh
       if (current.id !== service.id) throw new ServiceRequestError(500)
       onChanged(current, `${updated.name} ${updated.isActive ? 'aktifleştirildi' : 'pasifleştirildi'}.`)
     } catch (problem: unknown) {
-      setError(problem instanceof ServiceRequestError ? problem.message : serviceFailure(500))
-      setTarget(null); onConfirmChange(false); onRequiresReload()
+      setError(problem instanceof ServiceRequestError ? problem.message : requestErrorMessage(problem, serviceFailure(500)))
+      setTarget(null); onConfirmChange(false); if (!(problem instanceof RequestVerificationError)) onRequiresReload()
     } finally { sending.current = false; setBusy(false); onBusyChange(false) }
   }
   return <section className={styles.definitionActions} aria-labelledby="service-actions-title">
