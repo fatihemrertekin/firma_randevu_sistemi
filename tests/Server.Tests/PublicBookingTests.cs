@@ -201,8 +201,13 @@ public sealed class PublicBookingTests
         using var client = app.CreateClient();
         var empty = await Read<PublicBookingEndpoints.CatalogResponse>(client, "/api/public-booking/catalog?page=10000");
         Assert.Empty(empty.Items); Assert.Equal(0, empty.TotalCount); Assert.Equal(1, empty.Page); Assert.False(empty.HasMore);
-        foreach (var path in new[] { "/api/public-booking/catalog", "/api/public-booking/staff", "/api/public-booking/availability", "/api/public-booking/appointments" })
+        foreach (var path in new[] { "/api/public-booking/catalog", "/api/public-booking/staff", "/api/public-booking/availability" })
         { using var response = await client.PostAsJsonAsync(path, new { }, Token); Assert.Contains(response.StatusCode, new[] { HttpStatusCode.NotFound, HttpStatusCode.MethodNotAllowed }); }
+        using var untrustedWrite = await PostAsync(client, "/api/public-booking/appointments", new { }, null);
+        Assert.Equal(HttpStatusCode.BadRequest, untrustedWrite.StatusCode);
+        client.DefaultRequestHeaders.Add("Origin", "http://localhost");
+        using var disabledWrite = await PostAsync(client, "/api/public-booking/appointments", new { }, await GetCsrfAsync(client));
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, disabledWrite.StatusCode);
         foreach (var path in new[] { "/api/services/", "/api/staff-members/", "/api/business-profile/", "/api/booking-policy/", "/api/appointments/", $"/api/appointments/{Guid.NewGuid()}" })
         { using var response = await client.GetAsync(path, Token); Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode); }
         using var write = await client.PostAsJsonAsync("/api/appointments/", new { }, Token); Assert.Equal(HttpStatusCode.Unauthorized, write.StatusCode);
