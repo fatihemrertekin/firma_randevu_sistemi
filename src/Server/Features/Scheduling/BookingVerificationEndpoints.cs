@@ -25,17 +25,17 @@ public static class BookingVerificationEndpoints
     {
         var group = app.MapGroup("/api/public-booking/verification").AllowAnonymous().RequireRateLimiting("booking-verification");
         group.MapPost("/request", (HttpContext ctx, IAntiforgery csrf, BookingVerificationSecurity security, AppDbContext db,
-            IDataProtectionProvider protection, TimeProvider clock) => ExecuteAsync<Request>(ctx, csrf, security,
+            IDataProtectionProvider protection, TimeProvider clock) => ExecuteAsync<Request>(ctx, csrf, security.Enabled,
                 (body, token) => RequestAsync(body, ctx, db, security, protection, clock, token)));
         group.MapPost("/resend", (HttpContext ctx, IAntiforgery csrf, BookingVerificationSecurity security, AppDbContext db,
-            IDataProtectionProvider protection, TimeProvider clock) => ExecuteAsync<Resend>(ctx, csrf, security,
+            IDataProtectionProvider protection, TimeProvider clock) => ExecuteAsync<Resend>(ctx, csrf, security.Enabled,
                 (body, token) => ResendAsync(body, ctx, db, security, protection, clock, token)));
         group.MapPost("/verify", (HttpContext ctx, IAntiforgery csrf, BookingVerificationSecurity security, AppDbContext db,
-            TimeProvider clock) => ExecuteAsync<Verify>(ctx, csrf, security,
+            TimeProvider clock) => ExecuteAsync<Verify>(ctx, csrf, security.Enabled,
                 (body, token) => VerifyAsync(body, ctx, db, security, clock, token)));
     }
 
-    internal static async Task<IResult> ExecuteAsync<T>(HttpContext ctx, IAntiforgery csrf, BookingVerificationSecurity security,
+    internal static async Task<IResult> ExecuteAsync<T>(HttpContext ctx, IAntiforgery csrf, bool enabled,
         Func<T, CancellationToken, Task<IResult>> action)
     {
         using var timeout = AppointmentEndpoints.Timeout(ctx);
@@ -45,7 +45,7 @@ public static class BookingVerificationEndpoints
             uri.GetLeftPart(UriPartial.Authority) != origin[0] ||
             !string.Equals(origin[0], $"{ctx.Request.Scheme}://{ctx.Request.Host}", StringComparison.OrdinalIgnoreCase) ||
             !await AuthEndpoints.HasValidCsrfAsync(csrf, ctx)) return AuthEndpoints.InvalidCsrf();
-        if (!security.Enabled) return Results.Problem(statusCode: 503, title: "Telefon doğrulaması şu anda kullanılamıyor.");
+        if (!enabled) return Results.Problem(statusCode: 503, title: "Bu işlem şu anda kullanılamıyor.");
         if (!ctx.Request.HasJsonContentType()) return Results.Problem(statusCode: 415, title: "JSON istek gövdesi gerekli.");
         var bytes = new byte[4097]; var count = 0;
         while (count < bytes.Length)

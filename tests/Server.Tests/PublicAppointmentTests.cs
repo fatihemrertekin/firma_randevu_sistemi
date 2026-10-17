@@ -54,7 +54,7 @@ public sealed class PublicAppointmentTests
         foreach (var field in new[] { "customerName", "customerPhone", "requestHash", "secret", "actorId" }) Assert.DoesNotContain(field, json, StringComparison.OrdinalIgnoreCase);
         return Assert.IsType<PublicAppointmentEndpoints.Response>(await response.Content.ReadFromJsonAsync<PublicAppointmentEndpoints.Response>(Token));
     }
-    private static async Task<PublicAppointmentEndpoints.Request> Verified(Fixture f, HttpClient client)
+    internal static async Task<PublicAppointmentEndpoints.Request> Verified(Fixture f, HttpClient client)
     {
         var intent = f.Request();
         using var requested = await f.Post(client, "request", intent); Assert.Equal(HttpStatusCode.Accepted, requested.StatusCode);
@@ -65,7 +65,7 @@ public sealed class PublicAppointmentTests
         return Create(intent, challenge.ChallengeId, challenge.ChallengeSecret);
     }
     // Yarış testleri OTP gönderim kotasını tüketmeden, gerçek doğrulama sonrası oluşan kayıt biçimini kullanır.
-    private static async Task<PublicAppointmentEndpoints.Request> SeedVerified(Fixture f, BookingVerificationEndpoints.Request? intent = null)
+    internal static async Task<PublicAppointmentEndpoints.Request> SeedVerified(Fixture f, BookingVerificationEndpoints.Request? intent = null)
     {
         intent ??= f.Request();
         var security = f.App.Services.GetRequiredService<BookingVerificationSecurity>();
@@ -345,7 +345,7 @@ public sealed class PublicAppointmentTests
         var audit = await final.AppointmentAudits.SingleAsync(x => x.Kind == "Expired", Token); Assert.Null(audit.ActorId);
     }
 
-    private static async Task<HttpClient> Owner(Fixture f)
+    internal static async Task<HttpClient> Owner(Fixture f)
     {
         using var scope = f.App.Services.CreateScope(); var users = scope.ServiceProvider.GetRequiredService<UserManager<AppUser>>();
         var roles = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole<Guid>>>();

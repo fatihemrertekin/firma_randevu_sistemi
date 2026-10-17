@@ -29,6 +29,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<Appointment> Appointments => Set<Appointment>();
     public DbSet<AppointmentTimeBlock> AppointmentTimeBlocks => Set<AppointmentTimeBlock>();
     public DbSet<AppointmentAudit> AppointmentAudits => Set<AppointmentAudit>();
+    public DbSet<PublicAppointmentAccess> PublicAppointmentAccesses => Set<PublicAppointmentAccess>();
     public DbSet<AppointmentStatusCommand> AppointmentStatusCommands => Set<AppointmentStatusCommand>();
     public DbSet<AppointmentMoveCommand> AppointmentMoveCommands => Set<AppointmentMoveCommand>();
     public DbSet<BookingPolicy> BookingPolicies => Set<BookingPolicy>();
@@ -145,8 +146,20 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
         appointmentAudit.Property(item => item.Kind).HasMaxLength(16).HasDefaultValue("Created");
         appointmentAudit.ToTable(table =>
         {
-            table.HasCheckConstraint("CK_AppointmentAudits_Kind", "\"Kind\" IN ('Created','PublicCreated','Cancelled','Completed','NoShow','Moved','Confirmed','Expired')");
-            table.HasCheckConstraint("CK_AppointmentAudits_Actor", "(\"Kind\" IN ('Expired','PublicCreated') AND \"ActorId\" IS NULL) OR (\"Kind\" NOT IN ('Expired','PublicCreated') AND \"ActorId\" IS NOT NULL)");
+            table.HasCheckConstraint("CK_AppointmentAudits_Kind", "\"Kind\" IN ('Created','PublicCreated','PublicCancelled','Cancelled','Completed','NoShow','Moved','Confirmed','Expired')");
+            table.HasCheckConstraint("CK_AppointmentAudits_Actor", "(\"Kind\" IN ('Expired','PublicCreated','PublicCancelled') AND \"ActorId\" IS NULL) OR (\"Kind\" NOT IN ('Expired','PublicCreated','PublicCancelled') AND \"ActorId\" IS NOT NULL)");
+        });
+        var access = builder.Entity<PublicAppointmentAccess>();
+        access.HasKey(item => item.AppointmentId);
+        access.HasOne<Appointment>().WithOne().HasForeignKey<PublicAppointmentAccess>(item => item.AppointmentId).OnDelete(DeleteBehavior.Restrict);
+        access.HasOne<AppointmentAudit>().WithMany().HasForeignKey(item => item.CancellationAuditId).OnDelete(DeleteBehavior.Restrict);
+        access.Property(item => item.TokenHash).HasMaxLength(64);
+        access.Property(item => item.Version).IsConcurrencyToken();
+        access.ToTable(table =>
+        {
+            table.HasCheckConstraint("CK_PublicAppointmentAccesses_Token", "\"TokenHash\" ~ '^[0-9A-F]{64}$' AND \"Version\" <> '00000000-0000-0000-0000-000000000000'::uuid");
+            table.HasCheckConstraint("CK_PublicAppointmentAccesses_Time", "isfinite(\"FirstIssuedAt\") AND isfinite(\"ExpiresAt\") AND \"ExpiresAt\" > \"FirstIssuedAt\" AND \"ExpiresAt\" <= \"FirstIssuedAt\" + INTERVAL '31 days'");
+            table.HasCheckConstraint("CK_PublicAppointmentAccesses_Cancellation", "(\"CancellationRequestKey\" IS NULL AND \"CancellationExpectedVersion\" IS NULL AND \"CancellationAuditId\" IS NULL) OR (\"CancellationRequestKey\" IS NOT NULL AND \"CancellationRequestKey\" <> '00000000-0000-0000-0000-000000000000'::uuid AND \"CancellationExpectedVersion\" IS NOT NULL AND \"CancellationExpectedVersion\" <> '00000000-0000-0000-0000-000000000000'::uuid AND \"CancellationAuditId\" IS NOT NULL)");
         });
         var moveCommand = builder.Entity<AppointmentMoveCommand>();
         moveCommand.HasKey(item => new { item.ActorId, item.RequestKey });
