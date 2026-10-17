@@ -1,5 +1,7 @@
 # Firma Randevu Sistemi
 
+P04-10 uygulaması: başarılı Public makbuzuyla `POST /api/public-booking/appointments/{id}/access` (`challengeId`, `challengeSecret`, `replaceExisting`); ayrı bearer token ile `GET /api/public-booking/appointments/{id}` ve `POST /api/public-booking/appointments/{id}/cancel` (`version`, `requestKey`). POST ayrıca aynı Origin+CSRF ister. `PublicBooking:AccessEnabled` varsayılan kapalıdır; ana 8080'de açılmaz. Token/yenileme/iptal/restore sınırı [ADR-008](docs/adr/008-public-appointment-access.md), gerçek kabul/teslim durumu [P04](docs/plans/P04.md#p04-10--sonuç-ve-müşteri-iptal-yetkisi-dar-planı--17102026) içindedir. Test: `dotnet test --project tests/Server.Tests/Server.Tests.csproj --no-restore --filter-class Server.Tests.PublicAppointmentAccessTests`. Müşteri ekranı/gerçek SMS eklenmez.
+
 Türkiye'deki tek şubeli hizmet işletmeleri için planlanan markalı randevu uygulaması. P01 temel kurulum tamamlandı; P02'de Owner oturumu eklendi. Gerçek rezervasyon henüz yoktur. Güncel durum için [STATUS](docs/STATUS.md), ürün kararları için [PRODUCT](docs/PRODUCT.md), aşamalar için [ROADMAP](docs/ROADMAP.md).
 
 Frontend `src/Web/src/features/auth`, `features/business` ve `features/staff` altında mevcut özelliklere göre düzenlenir. `app` oturum API yardımcısını ve yönetim yerleşimini, `components` ortak bileşenleri, `styles` ortak renk/form kurallarını barındırır. Testler ilgili özelliğin yanındadır. Yönetim ekranında işletme bilgileri, hesap ve güvenlik, çalışan erişimleri ayrı bölümlerdir; çalışan hesabında yalnız hesap ve güvenlik görünür.
