@@ -7,7 +7,7 @@ export type Selection = { member: StaffMember; selected: ServiceReference[] }
 export type SelectionPage = Selection & PageMetadata & { items: Service[] }
 export class SelectionError extends Error {
   constructor(public status: number) {
-    super(status === 400 ? 'Hizmet seçimlerini kontrol edip yeniden dene.'
+    super(status === 400 ? 'İstek doğrulanamadı. Bilgilerinizi koruyarak yeniden deneyin.'
       : status === 404 ? 'Personel veya hizmet bulunamadı. Güncel seçimleri yükle.'
         : status === 409 ? 'Personel veya hizmet değişti. Taslağın korundu; güncel seçimleri yükleyip yeniden düzenle.' : memberFailure(status))
   }

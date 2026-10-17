@@ -7,7 +7,7 @@ export type HoursPost = typeof postWithCsrf
 const hour = /^(?:[01][0-9]|2[0-3]):[0-5][0-9]$/u
 export function validHour(value: string | null): value is string { return value !== null && hour.test(value) }
 export function hoursFailure(status: number, subject = 'İşletme saatleri') {
-  if (status === 400) return 'Günleri ve saat alanlarını kontrol edin.'
+  if (status === 400) return 'İstek doğrulanamadı. Bilgilerinizi koruyarak yeniden deneyin.'
   if (status === 401) return 'Oturumunuz sona erdi. Yeniden giriş yapın.'
   if (status === 403) return 'Bu işlem için yetkiniz yok.'
   if (status === 404) return 'Personel kaydı bulunamadı. Listeye dönüp yenileyin.'

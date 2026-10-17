@@ -324,7 +324,7 @@ describe('Yönetim gezinmesi', () => {
     expect(container.querySelector('h1')?.textContent).toBe('Yeniden giriş yapın')
   })
 
-  it('profil alanı hatasını alanla ilişkilendirir; sunucu hatasında açıklamaya odaklanır', async () => {
+  it('profil alanı hatasını alanla ilişkilendirir; sunucu alan hatasında ilgili alana odaklanır', async () => {
     await render()
     await fill('business-email', 'gecersiz-adres')
     const button = container.querySelector<HTMLButtonElement>('button[type="submit"]')
@@ -337,13 +337,14 @@ describe('Yönetim gezinmesi', () => {
     const requests = vi.mocked(fetch)
     const original = requests.getMockImplementation()
     requests.mockImplementation(async (input, options) => {
-      if (input === '/api/business-profile/' && options?.method === 'POST') return Response.json({ title: 'Telefon alanını kontrol edin.' }, { status: 400 })
+      if (input === '/api/business-profile/' && options?.method === 'POST') return Response.json({ errors: { phone: ['Telefon alanını kontrol edin.'] } }, { status: 400 })
       if (!original) throw new Error('Test isteği yok')
       return original(input, options)
     })
     await submit('İşletme profilini düzenle')
-    expect(document.activeElement?.getAttribute('role')).toBe('alert')
-    expect(document.activeElement?.textContent).toContain('Telefon alanını kontrol edin.')
+    expect(document.activeElement?.id).toBe('business-phone')
+    expect(document.activeElement?.getAttribute('aria-describedby')).toBe('business-field-error')
+    expect(container.querySelector('#business-field-error')?.textContent).toBe('Telefon alanını kontrol edin.')
   })
 
   it('giriş ve ikinci adım tamamlanmadan işletme yönetimini göstermez', async () => {

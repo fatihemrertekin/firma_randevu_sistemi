@@ -1,3 +1,4 @@
+import { RequestVerificationError, requestErrorMessage } from '../../app/api'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import ErrorMessage from '../../components/ErrorMessage'
 import useUnsavedChanges from '../../app/useUnsavedChanges'
@@ -61,8 +62,8 @@ export default function ServiceEditor({ service, post, onSaved, onCancel, onDirt
       }
       await readService(response); onDirtyChange(false); onSaved()
     } catch (problem: unknown) {
-      const status = problem instanceof ServiceRequestError ? problem.status : 500
-      setError(problem instanceof ServiceRequestError ? problem.message : serviceFailure(500))
+      const status = problem instanceof ServiceRequestError ? problem.status : problem instanceof RequestVerificationError ? 400 : 500
+      setError(problem instanceof ServiceRequestError ? problem.message : requestErrorMessage(problem, serviceFailure(500)))
       setReloadRequired(status === 409 || (original !== null && status >= 500))
     } finally { pending(false) }
   }
@@ -75,7 +76,7 @@ export default function ServiceEditor({ service, post, onSaved, onCancel, onDirt
       setOriginal(current); setName(current.name); setDuration(String(current.durationMinutes)); setPrice(current.price.replace('.', ','))
       setReloadRequired(false); onDirtyChange(false)
       onReloaded(current)
-    } catch (problem: unknown) { setError(problem instanceof ServiceRequestError ? problem.message : serviceFailure(500)) }
+    } catch (problem: unknown) { setError(problem instanceof ServiceRequestError ? problem.message : requestErrorMessage(problem, serviceFailure(500))) }
     finally { pending(false) }
   }
   function changed(field: string) { setFieldErrors(current => { const next = { ...current }; delete next[field]; return next }) }

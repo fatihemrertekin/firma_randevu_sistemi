@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { RequestVerificationError } from '../../app/api'
 import { act } from 'react'
 import { createMemoryRouter } from 'react-router'
 import { RouterProvider } from 'react-router/dom'
@@ -247,4 +248,21 @@ describe('Personel yönetimi', () => {
     expect(container.querySelector('[role="alert"]')?.textContent).toContain('Liste yanıtı doğrulanamadı.')
     expect(container.textContent).not.toContain(member.name)
   })
+})
+
+it('güvenlik reddinde ad alanını hatalı işaretlemez; taslak ve istek kimliği korunur', async () => {
+  const post = vi.fn<StaffPost>().mockRejectedValueOnce(new RequestVerificationError('Güvenlik doğrulaması geçersiz; işlem uygulanmadı.')).mockResolvedValueOnce(Response.json(member))
+  await render(post); await click('Yeni personel'); await fill('Taslak kişi'); await submit()
+  expect(container.querySelector('[role=alert]')?.textContent).toContain('Güvenlik doğrulaması')
+  expect(container.querySelector<HTMLInputElement>('#member-name')?.value).toBe('Taslak kişi')
+  expect(container.querySelector('[aria-invalid=true]')).toBeNull()
+  await submit(); expect(post.mock.calls[0][1]).toEqual(post.mock.calls[1][1])
+})
+it('tanınan ad doğrulamasını alan yanında, bilinmeyen 400 yanıtını genel gösterir', async () => {
+  const post = vi.fn<StaffPost>().mockResolvedValueOnce(Response.json({ errors: { name: ['Ad kuralına uymuyor.'] } }, { status: 400 })).mockResolvedValueOnce(Response.json({ code: 'unknown', title: 'rastgele' }, { status: 400 }))
+  await render(post); await click('Yeni personel'); await fill('Taslak kişi'); await submit()
+  expect(container.querySelector('#member-field-error')?.textContent).toBe('Ad kuralına uymuyor.')
+  await fill('Başka kişi'); await submit()
+  expect(container.querySelector('#member-field-error')).toBeNull()
+  expect(container.querySelector('[role=alert]')?.textContent).toContain('İstek doğrulanamadı')
 })

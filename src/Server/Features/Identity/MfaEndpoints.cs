@@ -23,8 +23,7 @@ public static class MfaEndpoints
         {
             if (!await AuthEndpoints.HasValidCsrfAsync(antiforgery, context))
             {
-                return Results.Problem(statusCode: StatusCodes.Status400BadRequest,
-                    title: "Geçersiz istek doğrulaması.");
+                return AuthEndpoints.InvalidCsrf();
             }
 
             using var timeout = CancellationTokenSource.CreateLinkedTokenSource(context.RequestAborted);
@@ -79,8 +78,7 @@ public static class MfaEndpoints
         {
             if (!await AuthEndpoints.HasValidCsrfAsync(antiforgery, context))
             {
-                return Results.Problem(statusCode: StatusCodes.Status400BadRequest,
-                    title: "Geçersiz istek doğrulaması.");
+                return AuthEndpoints.InvalidCsrf();
             }
 
             using var timeout = CancellationTokenSource.CreateLinkedTokenSource(context.RequestAborted);
@@ -145,8 +143,7 @@ public static class MfaEndpoints
         {
             if (!await AuthEndpoints.HasValidCsrfAsync(antiforgery, context))
             {
-                return Results.Problem(statusCode: StatusCodes.Status400BadRequest,
-                    title: "Geçersiz istek doğrulaması.");
+                return AuthEndpoints.InvalidCsrf();
             }
             if (string.IsNullOrWhiteSpace(request.Code) || request.Code.Length > 32)
             {
@@ -171,8 +168,7 @@ public static class MfaEndpoints
         {
             if (!await AuthEndpoints.HasValidCsrfAsync(antiforgery, context))
             {
-                return Results.Problem(statusCode: StatusCodes.Status400BadRequest,
-                    title: "Geçersiz istek doğrulaması.");
+                return AuthEndpoints.InvalidCsrf();
             }
             if (string.IsNullOrWhiteSpace(request.Code) || request.Code.Length > 32)
             {

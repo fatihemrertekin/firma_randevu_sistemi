@@ -26,7 +26,7 @@ public static class PasswordResetEndpoints
     {
         context.Response.Headers.CacheControl = "no-store";
         if (!await AuthEndpoints.HasValidCsrfAsync(antiforgery, context))
-            return Results.Problem(statusCode: StatusCodes.Status400BadRequest, title: "Geçersiz istek doğrulaması.");
+            return AuthEndpoints.InvalidCsrf();
         if (string.IsNullOrEmpty(request.NewPassword) || request.NewPassword.Length > 1024 ||
             request.NewPassword != request.ConfirmPassword)
             return Results.Problem(statusCode: StatusCodes.Status400BadRequest, title: "Yeni parola ve aynı tekrarı gerekli.");

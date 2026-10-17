@@ -110,3 +110,12 @@ describe('Çalışan parola sıfırlama kodu üretme', () => {
     expect(container.querySelector('form[aria-label="Çalışan sıfırlama kodu üret"]') !== null).toBe(ownerAccess)
   })
 })
+
+it.each([401, 403])('sıfırlama kodu %i yanıtını oturum ve yetki olarak ayırır', async status => {
+  const post = vi.fn(async () => new Response(null, { status }))
+  await act(async () => root.render(<StaffPasswordReset post={post} disabled={false} onBusyChange={vi.fn()} />))
+  await prepare(); await submit()
+  const message = container.querySelector('[role=alert]')?.textContent
+  expect(message).toContain(status === 401 ? 'Yeniden giriş' : 'yalnız işletme sahibi')
+  if (status === 403) expect(message).not.toContain('Yeniden giriş')
+})

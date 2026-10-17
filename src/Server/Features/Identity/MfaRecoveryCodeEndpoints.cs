@@ -30,7 +30,7 @@ public static class MfaRecoveryCodeEndpoints
     {
         context.Response.Headers.CacheControl = "no-store";
         if (!await AuthEndpoints.HasValidCsrfAsync(antiforgery, context))
-            return Results.Problem(statusCode: 400, title: "Geçersiz istek doğrulaması.");
+            return AuthEndpoints.InvalidCsrf();
         if (string.IsNullOrEmpty(request.CurrentPassword) || request.CurrentPassword.Length > 1024)
             return Results.Problem(statusCode: 400, title: "Mevcut parola gerekli.");
         if (!Guid.TryParse(users.GetUserId(context.User), out var userId)) return Results.Unauthorized();

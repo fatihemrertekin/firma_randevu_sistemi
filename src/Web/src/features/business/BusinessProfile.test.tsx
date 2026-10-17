@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { RequestVerificationError } from '../../app/api'
 import { act } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -143,4 +144,25 @@ describe('İşletme profili', () => {
     await act(async () => root.render(<App />))
     expect(container.querySelector('#business-profile-title') !== null).toBe(ownerAccess)
   })
+})
+
+it.each([401, 403])('profil yükleme %i yanıtında oturum ve yetkiyi ayırır', async status => {
+  vi.mocked(fetch).mockResolvedValueOnce(new Response(null, { status }))
+  await act(async () => root.render(<BusinessProfile post={vi.fn()} />))
+  const text = container.querySelector('[role=alert]')?.textContent
+  expect(text).toContain(status === 401 ? 'Yeniden giriş' : 'yetkisi gerekir')
+  if (status === 403) expect(text).not.toContain('Yeniden giriş')
+})
+it('güvenlik reddinde profil taslağını korur ve alan hatası göstermez', async () => {
+  const post = vi.fn().mockRejectedValueOnce(new RequestVerificationError('Güvenlik doğrulaması geçersiz; işlem uygulanmadı.'))
+  await act(async () => root.render(<BusinessProfile post={post} />)); await fill('#business-name', 'Taslak salon'); await submit()
+  expect(container.querySelector('[role=alert]')?.textContent).toContain('Güvenlik doğrulaması')
+  expect(container.querySelector<HTMLInputElement>('#business-name')?.value).toBe('Taslak salon')
+  expect(container.querySelector<HTMLInputElement>('#business-name')?.disabled).toBe(false)
+})
+it('profil alan doğrulamasını ilgili alanla ilişkilendirir', async () => {
+  const post = vi.fn(async () => Response.json({ errors: { phone: ['Geçerli telefon girin.'] } }, { status: 400 }))
+  await act(async () => root.render(<BusinessProfile post={post} />)); await fill('#business-name', 'Taslak salon'); await submit()
+  expect(container.querySelector('#business-phone')?.getAttribute('aria-invalid')).toBe('true')
+  expect(container.querySelector('#business-field-error')?.textContent).toBe('Geçerli telefon girin.')
 })

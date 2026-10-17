@@ -46,7 +46,7 @@ public static class BusinessHoursEndpoints
         AppDbContext db, UserManager<AppUser> users, TimeProvider clock)
     {
         using var timeout = Timeout(context);
-        if (!await AuthEndpoints.HasValidCsrfAsync(antiforgery, context)) return Results.Problem(statusCode: 400, title: "Geçersiz istek doğrulaması.");
+        if (!await AuthEndpoints.HasValidCsrfAsync(antiforgery, context)) return AuthEndpoints.InvalidCsrf();
         var validated = WeeklyHours.Validate(request.Version, request.Days, out var errors);
         var desired = validated.Select(item => new BusinessOpeningDay { ScheduleId = 1, Day = item.Day, IsClosed = item.IsClosed, OpensAtMinute = item.Start, ClosesAtMinute = item.End }).ToArray();
         if (errors.Count != 0) return Results.ValidationProblem(errors);

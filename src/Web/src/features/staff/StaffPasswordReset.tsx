@@ -1,3 +1,4 @@
+import { requestErrorMessage } from '../../app/api'
 import ErrorMessage from '../../components/ErrorMessage'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import ManualDeliveryCode from '../../components/ManualDeliveryCode'
@@ -32,15 +33,17 @@ export default function StaffPasswordReset({ post, disabled, onBusyChange }: Pro
       } else if (response.status === 400) {
         const problem = await response.json() as { title?: string }
         setError(problem.title ?? 'Hesabı ve alıcı onayını kontrol edin.')
-      } else if (response.status === 401 || response.status === 403) {
-        setError('İşletme sahibi oturumu geçersiz. Yeniden giriş yapın.')
+      } else if (response.status === 401) {
+        setError('Oturumunuz sona erdi. Yeniden giriş yapın.')
+      } else if (response.status === 403) {
+        setError('Çalışan sıfırlama kodunu yalnız işletme sahibi üretebilir.')
       } else if (response.status === 429) {
         setError('Çok fazla deneme. Daha sonra tekrar deneyin.')
       } else {
         setError('Kod üretimi doğrulanamadı; otomatik tekrar yapılmadı. Çalışana kod teslim etmeyin.')
       }
-    } catch {
-      setError('Kod üretimi doğrulanamadı; otomatik tekrar yapılmadı. Çalışana kod teslim etmeyin.')
+    } catch (problem: unknown) {
+      setError(requestErrorMessage(problem, 'Kod üretimi doğrulanamadı; otomatik tekrar yapılmadı. Çalışana kod teslim etmeyin.'))
     } finally {
       setEmail('')
       setVerified(false)

@@ -1,3 +1,4 @@
+import { requestErrorMessage } from '../../app/api'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { getAccount, postWithCsrf, type Account } from '../../app/api'
 
@@ -45,7 +46,8 @@ export default function useAuthentication() {
         currentPassword, newPassword, confirmPassword,
       })
       clearPasswordFields()
-      if (response.status === 401 || response.status === 403 || response.status === 409) {
+      if (response.status === 403) { setError('Bu işlem için yetkiniz yok.'); return }
+      if (response.status === 401 || response.status === 409) {
         setAccount(null)
         setMfaRequired(false)
         setCode('')
@@ -74,9 +76,9 @@ export default function useAuthentication() {
       setNotice(account?.staffAccess && !account.ownerAccess
         ? 'Parolanız değişti ve bütün oturumlar kapatıldı. Yeni parolanızla yeniden giriş yapın.'
         : 'Parolanız değişti ve bütün oturumlar kapatıldı. Yeni parolanız ve ikinci adımla yeniden giriş yapın.')
-    } catch {
+    } catch (problem: unknown) {
       clearPasswordFields()
-      setError('Sonuç doğrulanamadı. Yeniden giriş yapmayı deneyin.')
+      setError(requestErrorMessage(problem, 'Sonuç doğrulanamadı. Yeniden giriş yapmayı deneyin.'))
     } finally {
       requestPending.current = false
       setBusy(false)
@@ -108,13 +110,13 @@ export default function useAuthentication() {
         return
       }
       if (!response.ok) {
-        setError(response.status === 429 ? 'Çok fazla deneme. Daha sonra tekrar deneyin.'
+        setError(response.status === 403 ? 'Bu işlem için yetkiniz yok.' : response.status === 429 ? 'Çok fazla deneme. Daha sonra tekrar deneyin.'
           : response.status === 401 ? 'E-posta veya parola hatalı.' : 'Giriş yapılamadı.')
         return
       }
       setAccount(await getAccount())
-    } catch {
-      setError('Giriş yapılamadı. Lütfen yeniden deneyin.')
+    } catch (problem: unknown) {
+      setError(requestErrorMessage(problem, 'Giriş yapılamadı. Lütfen yeniden deneyin.'))
     } finally {
       setPassword('')
       requestPending.current = false
@@ -132,7 +134,7 @@ export default function useAuthentication() {
       const path = useRecoveryCode ? '/api/auth/mfa/recovery-login' : '/api/auth/mfa/login'
       const response = await postWithCsrf(path, { code, rememberMe })
       if (!response.ok) {
-        setError(response.status === 429 ? 'Çok fazla deneme. Daha sonra tekrar deneyin.'
+        setError(response.status === 403 ? 'Bu işlem için yetkiniz yok.' : response.status === 429 ? 'Çok fazla deneme. Daha sonra tekrar deneyin.'
           : 'Kod doğrulanamadı. Güncel veya kullanılmamış kodu deneyin. Süre dolduysa girişe dönün.')
         return
       }
@@ -140,8 +142,8 @@ export default function useAuthentication() {
       setMfaRequired(false)
       setUseRecoveryCode(false)
       setAccount(await getAccount())
-    } catch {
-      setError('Kod doğrulanamadı. Lütfen yeniden deneyin.')
+    } catch (problem: unknown) {
+      setError(requestErrorMessage(problem, 'Kod doğrulanamadı. Lütfen yeniden deneyin.'))
     } finally {
       requestPending.current = false
       setBusy(false)
@@ -157,14 +159,14 @@ export default function useAuthentication() {
     try {
       const response = await postWithCsrf('/api/auth/mfa/setup', { password: setupPassword })
       if (!response.ok) {
-        setError(response.status === 429 ? 'Çok fazla deneme. Daha sonra tekrar deneyin.'
+        setError(response.status === 403 ? 'Bu işlem için yetkiniz yok.' : response.status === 429 ? 'Çok fazla deneme. Daha sonra tekrar deneyin.'
           : response.status === 401 ? 'Parola doğrulanamadı.' : 'Kurulum başlatılamadı.')
         return
       }
       setSetupInfo((await response.json()) as SetupInfo)
       setSetupPassword('')
-    } catch {
-      setError('Kurulum başlatılamadı. Lütfen yeniden deneyin.')
+    } catch (problem: unknown) {
+      setError(requestErrorMessage(problem, 'Kurulum başlatılamadı. Lütfen yeniden deneyin.'))
     } finally {
       setSetupPassword('')
       requestPending.current = false
@@ -184,7 +186,7 @@ export default function useAuthentication() {
         code,
       })
       if (!response.ok) {
-        setError(response.status === 429 ? 'Çok fazla deneme. Daha sonra tekrar deneyin.'
+        setError(response.status === 403 ? 'Bu işlem için yetkiniz yok.' : response.status === 429 ? 'Çok fazla deneme. Daha sonra tekrar deneyin.'
           : 'Parola veya doğrulama kodu hatalı.')
         return
       }
@@ -194,8 +196,8 @@ export default function useAuthentication() {
       setSetupPassword('')
       setCode('')
       setAccount(null)
-    } catch {
-      setError('İki aşamalı giriş açılamadı. Lütfen yeniden deneyin.')
+    } catch (problem: unknown) {
+      setError(requestErrorMessage(problem, 'İki aşamalı giriş açılamadı. Lütfen yeniden deneyin.'))
     } finally {
       setSetupPassword('')
       requestPending.current = false
@@ -223,8 +225,8 @@ export default function useAuthentication() {
       setNotice('')
       setRememberMe(false)
       return true
-    } catch {
-      setError('Çıkış yapılamadı. Lütfen yeniden deneyin.')
+    } catch (problem: unknown) {
+      setError(requestErrorMessage(problem, 'Çıkış yapılamadı. Lütfen yeniden deneyin.'))
       return false
     } finally {
       requestPending.current = false

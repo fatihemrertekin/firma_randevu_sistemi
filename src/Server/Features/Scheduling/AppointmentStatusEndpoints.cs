@@ -24,7 +24,7 @@ public static class AppointmentStatusEndpoints
         IAntiforgery csrf, AppDbContext db, UserManager<AppUser> users, TimeProvider clock)
     {
         using var timeout = AppointmentEndpoints.Timeout(context); var token = timeout.Token;
-        if (!await AuthEndpoints.HasValidCsrfAsync(csrf, context)) return Results.Problem(statusCode: 400, title: "Geçersiz istek doğrulaması.");
+        if (!await AuthEndpoints.HasValidCsrfAsync(csrf, context)) return AuthEndpoints.InvalidCsrf();
         if (id == Guid.Empty || request.Version == Guid.Empty || request.RequestKey == Guid.Empty)
             return Results.Problem(statusCode: 400, title: "Randevu, güncel sürüm ve işlem anahtarı gerekli.");
         await using var transaction = await db.Database.BeginTransactionAsync(token);

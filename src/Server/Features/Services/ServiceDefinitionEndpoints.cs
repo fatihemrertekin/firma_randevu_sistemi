@@ -48,7 +48,7 @@ public static class ServiceDefinitionEndpoints
         IAntiforgery antiforgery, AppDbContext db, UserManager<AppUser> users, TimeProvider clock)
     {
         using var timeout = Timeout(context);
-        if (!await AuthEndpoints.HasValidCsrfAsync(antiforgery, context)) return Results.Problem(statusCode: 400, title: "Geçersiz istek doğrulaması.");
+        if (!await AuthEndpoints.HasValidCsrfAsync(antiforgery, context)) return AuthEndpoints.InvalidCsrf();
         var errors = new Dictionary<string, string[]>();
         if (request.Version == Guid.Empty) errors["version"] = ["Güncel hizmet sürümü gerekli."];
         if (request.BufferBeforeMinutes is null or < 0 or > 120) errors["bufferBeforeMinutes"] = ["Ön tampon 0–120 arasında tam dakika olmalı."];
@@ -124,7 +124,7 @@ public static class ServiceDefinitionEndpoints
         AppDbContext db, UserManager<AppUser> users, TimeProvider clock)
     {
         using var timeout = Timeout(context);
-        if (!await AuthEndpoints.HasValidCsrfAsync(antiforgery, context)) return Results.Problem(statusCode: 400, title: "Geçersiz istek doğrulaması.");
+        if (!await AuthEndpoints.HasValidCsrfAsync(antiforgery, context)) return AuthEndpoints.InvalidCsrf();
         var definition = Validate(request.Name, request.DurationMinutes, request.Price, out var errors);
         if (definition is null) return Results.ValidationProblem(errors);
         if (request.Id == Guid.Empty) return Results.Problem(statusCode: 400, title: "Kayıt istek kimliği gerekli.");
@@ -156,7 +156,7 @@ public static class ServiceDefinitionEndpoints
         IAntiforgery antiforgery, AppDbContext db, UserManager<AppUser> users, TimeProvider clock, bool deleting = false)
     {
         using var timeout = Timeout(context);
-        if (!await AuthEndpoints.HasValidCsrfAsync(antiforgery, context)) return Results.Problem(statusCode: 400, title: "Geçersiz istek doğrulaması.");
+        if (!await AuthEndpoints.HasValidCsrfAsync(antiforgery, context)) return AuthEndpoints.InvalidCsrf();
         Definition? definition = null;
         if (request is not null)
         {
