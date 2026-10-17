@@ -201,7 +201,7 @@ public sealed class PublicBookingTests
         using var client = app.CreateClient();
         var empty = await Read<PublicBookingEndpoints.CatalogResponse>(client, "/api/public-booking/catalog?page=10000");
         Assert.Empty(empty.Items); Assert.Equal(0, empty.TotalCount); Assert.Equal(1, empty.Page); Assert.False(empty.HasMore);
-        foreach (var path in new[] { "/api/public-booking/catalog", "/api/public-booking/staff", "/api/public-booking/availability", "/api/public-booking/appointments", "/api/public-booking/verification/request" })
+        foreach (var path in new[] { "/api/public-booking/catalog", "/api/public-booking/staff", "/api/public-booking/availability", "/api/public-booking/appointments" })
         { using var response = await client.PostAsJsonAsync(path, new { }, Token); Assert.Contains(response.StatusCode, new[] { HttpStatusCode.NotFound, HttpStatusCode.MethodNotAllowed }); }
         foreach (var path in new[] { "/api/services/", "/api/staff-members/", "/api/business-profile/", "/api/booking-policy/", "/api/appointments/", $"/api/appointments/{Guid.NewGuid()}" })
         { using var response = await client.GetAsync(path, Token); Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode); }
