@@ -307,6 +307,9 @@ public sealed class BookingVerificationTests
         Assert.Equal(f.StaffId, (await db.StaffMembers.SingleAsync(Token)).Id);
         using var client = f.Client(); await f.RequestAsync(client);
         await Assert.ThrowsAsync<Npgsql.PostgresException>(() => migrator.MigrateAsync("20261016222045_CustomerBookingPolicy", Token));
+        // Daha yeni boş migration geri alınmış olabilir; eski şemayı güncel entity ile okumadan önce doğrula ve yükselt.
+        Assert.Equal(1, await db.Database.SqlQueryRaw<int>("SELECT count(*)::int AS \"Value\" FROM \"BookingVerifications\"").SingleAsync(Token));
+        await db.Database.MigrateAsync(Token);
         Assert.Single(await db.BookingVerifications.ToArrayAsync(Token));
     }
 
