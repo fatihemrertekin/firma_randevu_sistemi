@@ -88,6 +88,8 @@ REVOKE DELETE, TRUNCATE ON TABLE "OwnerSelfServiceResets" FROM app_user;
 GRANT SELECT, INSERT, UPDATE ON TABLE "IdentityEmailQuotas" TO app_user;
 REVOKE DELETE, TRUNCATE ON TABLE "IdentityEmailQuotas" FROM app_user;
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO app_user;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE "BookingVerifications", "BookingSmsJobs", "BookingVerificationQuotaEvents", "BookingSmsPeriods" TO app_user;
+REVOKE TRUNCATE ON TABLE "BookingVerifications", "BookingSmsJobs", "BookingVerificationQuotaEvents", "BookingSmsPeriods" FROM app_user;
 '@ | docker compose --env-file deploy/.env -f deploy/compose.local.yaml exec -T db psql -U postgres -d firma_randevu -v ON_ERROR_STOP=1
 if ($LASTEXITCODE -ne 0) {
     throw 'Uygulama rolü yetkileri verilemedi.'

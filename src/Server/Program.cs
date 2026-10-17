@@ -16,11 +16,24 @@ builder.Services.AddProblemDetails();
 
 builder.AddApplicationIdentity();
 builder.Services.AddHostedService<AppointmentPendingWorker>();
+builder.Services.AddSingleton<IBookingSmsDelivery, DisabledBookingSmsDelivery>();
+builder.Services.AddSingleton<BookingVerificationSecurity>();
+builder.Services.AddHostedService<BookingSmsWorker>();
 
 var app = builder.Build();
 // İstekler ve teslim işçisi başlamadan son yapılandırmayı doğrula.
 _ = app.Services.GetRequiredService<IOwnerEmailVerificationDelivery>();
 _ = app.Services.GetRequiredService<OwnerSelfServiceResetFlow>();
+var bookingSecurity = app.Services.GetRequiredService<BookingVerificationSecurity>();
+if (bookingSecurity.Enabled)
+{
+    await using var scope = app.Services.CreateAsyncScope();
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+    await using var transaction = await db.Database.BeginTransactionAsync(timeout.Token);
+    await bookingSecurity.LockAsync(db, timeout.Token);
+    await transaction.CommitAsync(timeout.Token);
+}
 
 if (await app.TryRunIdentityCommandAsync(args))
 {
@@ -44,6 +57,7 @@ app.MapServiceDefinitionEndpoints();
 app.MapAppointmentEndpoints();
 app.MapBookingPolicyEndpoints();
 app.MapPublicBookingEndpoints();
+app.MapBookingVerificationEndpoints();
 
 app.MapGet("/health/live", () => Results.Ok(new { status = "ok" }));
 

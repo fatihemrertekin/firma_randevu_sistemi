@@ -16,6 +16,10 @@ Yönetim ekranları ayrı adresler kullanır: `/yonetim/isletme`, `/yonetim/isle
 
 E-posta doğrulama/sıfırlama bağlantısının kanıtı açılışta adres çubuğundan kaldırılır, yalnız bellekte tutulur ve ekran terk edildiğinde silinir. Tekrar yenilemede e-postadaki bağlantının yeniden açılması gerekir. [Mimari karar](docs/adr/004-url-navigation.md) ve [gerçek API gezinme testi](tests/Web.E2E/README.md) ayrıntıları içerir. React Router ve bağımlılıklarının [lisansları](docs/navigation-licenses.txt) imajda `/app/navigation-licenses.txt` olarak bulunur.
 
+## Telefon doğrulama — gönderim kapalı
+
+P05-02 telefon doğrulama uygulaması/kabulü sürüyor: `/api/public-booking/verification/request`, `/resend`, `/verify` POST uçları. Ana kurulumda gönderim varsayılan kapalıdır; geçerli Origin/CSRF sonrası 503 döner ve kayıt oluşturmaz. Gerçek SMS adaptörü yoktur; sahte taşıyıcı yalnız test sürecindedir. OTP randevu/müşteri oturumu oluşturmaz. [Sözleşme ve kabul](docs/plans/P05.md), [güvenlik](docs/SECURITY.md).
+
 ## Müşteriye açık okuma API'leri
 
 P04-06 yalnız okuma sunar: `GET /api/public-booking/catalog?page=1&pageSize=20`, `GET /api/public-booking/staff?serviceId=<UUID>&page=1&pageSize=20` ve `GET /api/public-booking/availability?serviceId=<UUID>&staffMemberId=<UUID>&date=yyyy-MM-dd`. Oturum gerekmez. Katalog işletmenin adı/telefonu/adresi, ön süre/ufuk/adım ve iptal süresi/onay tercihini içeren politika ile aktif hizmetleri; çalışan listesi yalnız seçili hizmete atanmış aktif personelin kimlik/adını döndürür. Listeler 1–50 sayfa boyutu ve gerçek toplamla sınırlıdır; sayfa aralığı 1–10000, son sayfayı aşan istek son sayfaya çekilir. Fiyat mevcut hizmet API'sindeki gibi iki ondalıklı TRY metnidir.

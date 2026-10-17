@@ -4,6 +4,10 @@ Hazırlanma: 2026-09-29. Bu dosya plandır; çalışan altyapının kanıtı de�
 
 ## 1. Kurulum ve kapasite
 
+P05-02 telefon doğrulaması geliştirme/kabul aşamasındadır. Ana kurulumda `BookingVerification:Enabled` verilmez veya false kalır; gerçek taşıyıcı adaptörü yoktur. HMAC anahtarı ana ortama testten kopyalanmaz. Enabled fakat kullanılabilir taşıyıcı/32 bayt anahtar eksikse açılış reddedilir. [Sözleşme, migration ve kabul](plans/P05.md).
+
+Geri dönüş/restore'da önce doğrulamayı ve gönderimi kapat; in-flight işleri durdur. DB ile aynı firmaya ait Data Protection/HMAC anahtarları ve config yedeklenir. Eski kuyruk kayıtları gönderim kapalı restore edilir; otomatik SMS veya kota sıfırlaması yapılmaz. Eklemeli şema uyumlu eski imajla korunur; veri/kota varken Down reddedilir. Gerçek SMS aktivasyonunun fiyat/harcama/aktarım kapısı ayrı onaydır.
+
 - Yerelde geliştir; VPS'i pilotta aç. 4 GB deneme, Coolify+ayrı DB süreçleri için 8 GB sınıfı üretim adayıdır; kapasite garantisi değildir. Firma sayısını yük testiyle belirle: RAM/CPU/disk, DB bağlantısı, p95 gecikme, kuyruk.
 - Tek Compose şablonu ve tekrar güvenli kurulum komutu: firma/domain/sırlar → servis/migration/sağlık sonucu. CPU/RAM/log/disk sınırı ve yanlış firma kaynağını silmeme kontrolü. Coolify ortak proxy ağı izolasyon kanıtı değildir.
 - SSH anahtarı, firewall, güncelleme; yönetim paneline kısıtlı erişim/MFA. Docker/panel tüm hostu etkiler. Web portları açık, DB iç ağda; uptime alarmı host dışında.

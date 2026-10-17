@@ -22,6 +22,10 @@ public sealed class OwnerMfaRecoveryAudit
 public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     : IdentityDbContext<AppUser, IdentityRole<Guid>, Guid>(options)
 {
+    public DbSet<BookingVerification> BookingVerifications => Set<BookingVerification>();
+    public DbSet<BookingSmsJob> BookingSmsJobs => Set<BookingSmsJob>();
+    public DbSet<BookingVerificationQuotaEvent> BookingVerificationQuotaEvents => Set<BookingVerificationQuotaEvent>();
+    public DbSet<BookingSmsPeriod> BookingSmsPeriods => Set<BookingSmsPeriod>();
     public DbSet<Appointment> Appointments => Set<Appointment>();
     public DbSet<AppointmentTimeBlock> AppointmentTimeBlocks => Set<AppointmentTimeBlock>();
     public DbSet<AppointmentAudit> AppointmentAudits => Set<AppointmentAudit>();
@@ -93,6 +97,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
+        BookingVerificationModel.Configure(builder);
         ConfigureDateCalendar(builder);
         builder.HasPostgresExtension("btree_gist");
         var appointment = builder.Entity<Appointment>();

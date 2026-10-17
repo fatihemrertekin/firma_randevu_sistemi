@@ -216,11 +216,11 @@ public static class IdentityStartupExtensions
                         PermitLimit = 10,
                         Window = TimeSpan.FromMinutes(5)
                     }));
-            foreach (var policy in new[] { "staff-management", "service-management", "business-hours", "audit-log", "appointments", "booking-policy", "public-booking" })
+            foreach (var policy in new[] { "staff-management", "service-management", "business-hours", "audit-log", "appointments", "booking-policy", "public-booking", "booking-verification" })
                 options.AddPolicy(policy, context => RateLimitPartition.GetFixedWindowLimiter(
                 context.Connection.RemoteIpAddress?.ToString() ?? "unknown", _ => new FixedWindowRateLimiterOptions
                 {
-                    PermitLimit = policy is "appointments" or "public-booking" ? 60 : 30,
+                    PermitLimit = policy == "booking-verification" ? 20 : policy is "appointments" or "public-booking" ? 60 : 30,
                     Window = TimeSpan.FromMinutes(1)
                 }));
         });
