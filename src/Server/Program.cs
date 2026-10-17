@@ -45,6 +45,17 @@ if (!app.Environment.IsDevelopment())
     app.UseExceptionHandler();
 }
 app.UseRouting();
+app.Use(async (context, next) =>
+{
+    if (context.Request.Path.StartsWithSegments("/api/public-booking"))
+        context.Response.OnStarting(() =>
+        {
+            context.Response.Headers.CacheControl = "no-store";
+            context.Response.Headers["Referrer-Policy"] = "no-referrer";
+            return Task.CompletedTask;
+        });
+    await next(context);
+});
 app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
@@ -59,6 +70,7 @@ app.MapBookingPolicyEndpoints();
 app.MapPublicBookingEndpoints();
 app.MapBookingVerificationEndpoints();
 app.MapPublicAppointmentEndpoints();
+app.MapPublicAppointmentAccessEndpoints();
 
 app.MapGet("/health/live", () => Results.Ok(new { status = "ok" }));
 

@@ -49,6 +49,18 @@ public sealed class AppointmentAudit
     public string Kind { get; set; } = "Created";
 }
 
+public sealed class PublicAppointmentAccess
+{
+    public Guid AppointmentId { get; set; }
+    public required string TokenHash { get; set; }
+    public Guid Version { get; set; }
+    public DateTimeOffset FirstIssuedAt { get; set; }
+    public DateTimeOffset ExpiresAt { get; set; }
+    public Guid? CancellationRequestKey { get; set; }
+    public Guid? CancellationExpectedVersion { get; set; }
+    public Guid? CancellationAuditId { get; set; }
+}
+
 public sealed class AppointmentStatusCommand
 {
     public Guid ActorId { get; set; }

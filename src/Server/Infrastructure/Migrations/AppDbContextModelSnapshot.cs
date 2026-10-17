@@ -336,9 +336,9 @@ namespace Server.Infrastructure.Migrations
 
                     b.ToTable("AppointmentAudits", t =>
                         {
-                            t.HasCheckConstraint("CK_AppointmentAudits_Actor", "(\"Kind\" IN ('Expired','PublicCreated') AND \"ActorId\" IS NULL) OR (\"Kind\" NOT IN ('Expired','PublicCreated') AND \"ActorId\" IS NOT NULL)");
+                            t.HasCheckConstraint("CK_AppointmentAudits_Actor", "(\"Kind\" IN ('Expired','PublicCreated','PublicCancelled') AND \"ActorId\" IS NULL) OR (\"Kind\" NOT IN ('Expired','PublicCreated','PublicCancelled') AND \"ActorId\" IS NOT NULL)");
 
-                            t.HasCheckConstraint("CK_AppointmentAudits_Kind", "\"Kind\" IN ('Created','PublicCreated','Cancelled','Completed','NoShow','Moved','Confirmed','Expired')");
+                            t.HasCheckConstraint("CK_AppointmentAudits_Kind", "\"Kind\" IN ('Created','PublicCreated','PublicCancelled','Cancelled','Completed','NoShow','Moved','Confirmed','Expired')");
                         });
                 });
 
@@ -1293,6 +1293,49 @@ namespace Server.Infrastructure.Migrations
                     b.ToTable("OwnerSelfServiceResets");
                 });
 
+            modelBuilder.Entity("Server.Infrastructure.PublicAppointmentAccess", b =>
+                {
+                    b.Property<Guid>("AppointmentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("CancellationAuditId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("CancellationExpectedVersion")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("CancellationRequestKey")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("FirstIssuedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<Guid>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("uuid");
+
+                    b.HasKey("AppointmentId");
+
+                    b.HasIndex("CancellationAuditId");
+
+                    b.ToTable("PublicAppointmentAccesses", t =>
+                        {
+                            t.HasCheckConstraint("CK_PublicAppointmentAccesses_Cancellation", "(\"CancellationRequestKey\" IS NULL AND \"CancellationExpectedVersion\" IS NULL AND \"CancellationAuditId\" IS NULL) OR (\"CancellationRequestKey\" IS NOT NULL AND \"CancellationRequestKey\" <> '00000000-0000-0000-0000-000000000000'::uuid AND \"CancellationExpectedVersion\" IS NOT NULL AND \"CancellationExpectedVersion\" <> '00000000-0000-0000-0000-000000000000'::uuid AND \"CancellationAuditId\" IS NOT NULL)");
+
+                            t.HasCheckConstraint("CK_PublicAppointmentAccesses_Time", "isfinite(\"FirstIssuedAt\") AND isfinite(\"ExpiresAt\") AND \"ExpiresAt\" > \"FirstIssuedAt\" AND \"ExpiresAt\" <= \"FirstIssuedAt\" + INTERVAL '31 days'");
+
+                            t.HasCheckConstraint("CK_PublicAppointmentAccesses_Token", "\"TokenHash\" ~ '^[0-9A-F]{64}$' AND \"Version\" <> '00000000-0000-0000-0000-000000000000'::uuid");
+                        });
+                });
+
             modelBuilder.Entity("Server.Infrastructure.ServiceDefinition", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2138,6 +2181,20 @@ namespace Server.Infrastructure.Migrations
                         .HasForeignKey("OwnerId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Server.Infrastructure.PublicAppointmentAccess", b =>
+                {
+                    b.HasOne("Server.Infrastructure.Appointment", null)
+                        .WithOne()
+                        .HasForeignKey("Server.Infrastructure.PublicAppointmentAccess", "AppointmentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Server.Infrastructure.AppointmentAudit", null)
+                        .WithMany()
+                        .HasForeignKey("CancellationAuditId")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("Server.Infrastructure.ServiceDefinitionAudit", b =>

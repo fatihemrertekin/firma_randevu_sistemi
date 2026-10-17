@@ -31,6 +31,9 @@ GRANT UPDATE ("StaffMemberId", "StaffName", "StartsAt", "EndsAt", "OccupiedStart
 GRANT SELECT, INSERT ON TABLE "AppointmentMoveCommands" TO app_user;
 REVOKE UPDATE, DELETE, TRUNCATE ON TABLE "AppointmentMoveCommands" FROM app_user;
 GRANT SELECT, INSERT ON TABLE "AppointmentStatusCommands" TO app_user;
+GRANT SELECT, INSERT ON TABLE "PublicAppointmentAccesses" TO app_user;
+REVOKE UPDATE, DELETE, TRUNCATE ON TABLE "PublicAppointmentAccesses" FROM app_user;
+GRANT UPDATE ("TokenHash", "Version", "CancellationRequestKey", "CancellationExpectedVersion", "CancellationAuditId") ON TABLE "PublicAppointmentAccesses" TO app_user;
 REVOKE UPDATE, DELETE, TRUNCATE ON TABLE "AppointmentStatusCommands" FROM app_user;
 GRANT SELECT ON TABLE "BookingPolicies" TO app_user;
 REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON TABLE "BookingPolicies" FROM app_user;

@@ -197,6 +197,7 @@ public static class IdentityStartupExtensions
             {
                 if (!rejection.HttpContext.Request.Path.StartsWithSegments("/api/public-booking")) return;
                 rejection.HttpContext.Response.Headers.CacheControl = "no-store";
+                rejection.HttpContext.Response.Headers["Referrer-Policy"] = "no-referrer";
                 if (rejection.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
                     rejection.HttpContext.Response.Headers.RetryAfter = Math.Max(1, Math.Ceiling(retryAfter.TotalSeconds)).ToString(CultureInfo.InvariantCulture);
                 await Results.Problem(statusCode: 429, title: "Çok fazla istek. Belirtilen bekleme süresinden sonra yeniden deneyin.")

@@ -1,5 +1,11 @@
 # Güvenlik — uygulama kapsamı ve sınırlar
 
+## P04-10 tek randevu erişimi
+
+Token üretme/yenileme, GET ve müşteri iptalinin yetki/ömür/restore sözleşmesi [ADR-008](adr/008-public-appointment-access.md) içindedir. `PublicBooking:AccessEnabled` varsayılan kapalıdır; ana kurulumda açılmaz. Authorization bearer token URL/query/cookie'den alınmaz, Owner cookie'si yerine geçmez. POST aynı Origin+CSRF, 4 KiB/JSON allowlist ve mevcut ortak yazım limiti altında; GET mevcut okuma limitindedir. Kamu yanıtları hata/429 dahil no-store/no-referrer taşır. Header/gövde sırları loglanmaz.
+
+İptal yalnız güncel sürüm ve rezervasyondaki koşulla tek transaction'da tüketilir; eski başarılı komut güvenli tekrardır. Rotasyon eski hash'i kaldırır, iptal makbuzunu yenilemez. Restore edilmiş DB yeniden açılmadan önce hem erişim hash'leri hem tüketilmiş makbuzların secret hash'leri geçersizleştirilir. [Gerçek kabul ve teslim durumu](plans/P04.md#p04-10--sonuç-ve-müşteri-iptal-yetkisi-dar-planı--17102026); yeni ekran/gerçek mesaj gönderimi ayrı kapsamdır.
+
 Bu belge uygunluk sertifikası değildir. Genel yetki/izolasyon/sır sözleşmesi kök [AGENTS](../AGENTS.md) içindedir; gerçek kabul [STATUS](STATUS.md) ve ilgili aşama planlarında izlenir.
 
 ## P05-02 telefon doğrulaması

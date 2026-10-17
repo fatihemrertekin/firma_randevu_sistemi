@@ -16,7 +16,7 @@ public static class PublicAppointmentEndpoints
 
     public static void MapPublicAppointmentEndpoints(this IEndpointRouteBuilder app) =>
         app.MapPost("/api/public-booking/appointments", (HttpContext ctx, IAntiforgery csrf, BookingVerificationSecurity security,
-            AppDbContext db, TimeProvider clock) => BookingVerificationEndpoints.ExecuteAsync<Request>(ctx, csrf, security,
+            AppDbContext db, TimeProvider clock) => BookingVerificationEndpoints.ExecuteAsync<Request>(ctx, csrf, security.Enabled,
                 (body, token) => CreateAsync(body, ctx, db, security, clock, token)))
         .AllowAnonymous().RequireRateLimiting("booking-verification");
 
@@ -30,34 +30,29 @@ public static class PublicAppointmentEndpoints
         return item.RequestKey != body.RequestKey || !BookingVerificationSecurity.Equal(item.RequestHash, hash) ? Conflict() : null;
     }
 
-    private static async Task<Response> ReadAsync(AppDbContext db, Guid id, CancellationToken token)
+    internal sealed record Snapshot(Guid Id, Guid Version, string ServiceName, string StaffName, DateTime StartsAt, DateTime EndsAt,
+        decimal Price, string Currency, string Status, DateTime? PendingExpiresAt, Guid? PolicyVersion,
+        int? CustomerCancellationLeadMinutes, bool? RequiresBusinessApproval)
     {
-        var row = await (from appointment in db.Appointments.AsNoTracking()
-                         join block in db.AppointmentTimeBlocks.AsNoTracking() on appointment.Id equals block.AppointmentId
-                         where appointment.Id == id && appointment.Source == "Public"
-                         select new
-                         {
-                             appointment.Id,
-                             appointment.Version,
-                             block.ServiceName,
-                             block.StaffName,
-                             block.StartsAt,
-                             block.EndsAt,
-                             block.Price,
-                             block.Currency,
-                             block.Status,
-                             block.PendingExpiresAt,
-                             appointment.BookingPolicyVersion,
-                             appointment.CustomerCancellationLeadMinutes,
-                             appointment.RequiresBusinessApproval
-                         })
-            .SingleAsync(token);
-        if (row.BookingPolicyVersion is not { } policy || row.CustomerCancellationLeadMinutes is not { } minutes ||
-            row.RequiresBusinessApproval is not { } approval) throw new InvalidOperationException("Müşteri politika snapshot'ı eksik.");
-        return new(row.Id, row.Version, row.ServiceName, row.StaffName, row.StartsAt, row.EndsAt,
-            row.Price.ToString("F2", CultureInfo.InvariantCulture), row.Currency, row.Status, row.PendingExpiresAt,
-            policy, minutes, approval, row.StartsAt.AddMinutes(-minutes));
+        internal Response Response()
+        {
+            if (PolicyVersion is not { } policy || CustomerCancellationLeadMinutes is not { } minutes ||
+                RequiresBusinessApproval is not { } approval) throw new InvalidOperationException("Müşteri politika snapshot'ı eksik.");
+            return new(Id, Version, ServiceName, StaffName, StartsAt, EndsAt, Price.ToString("F2", CultureInfo.InvariantCulture),
+                Currency, Status, PendingExpiresAt, policy, minutes, approval, StartsAt.AddMinutes(-minutes));
+        }
     }
+
+    internal static IQueryable<Snapshot> Query(AppDbContext db, Guid id) =>
+        from appointment in db.Appointments.AsNoTracking()
+        join block in db.AppointmentTimeBlocks.AsNoTracking() on appointment.Id equals block.AppointmentId
+        where appointment.Id == id && appointment.Source == "Public"
+        select new Snapshot(appointment.Id, appointment.Version, block.ServiceName, block.StaffName,
+            block.StartsAt, block.EndsAt, block.Price, block.Currency, block.Status, block.PendingExpiresAt,
+            appointment.BookingPolicyVersion, appointment.CustomerCancellationLeadMinutes, appointment.RequiresBusinessApproval);
+
+    internal static async Task<Response> ReadAsync(AppDbContext db, Guid id, CancellationToken token) =>
+        (await Query(db, id).SingleAsync(token)).Response();
 
     private static async Task<IResult> CreateAsync(Request body, HttpContext ctx, AppDbContext db,
         BookingVerificationSecurity security, TimeProvider clock, CancellationToken token)

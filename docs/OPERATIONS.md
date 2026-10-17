@@ -1,5 +1,9 @@
 # OPERATIONS — Kurulum, işletim ve büyüme
 
+P04-10 erişim tablosu/audit CHECK'i ekler; uygulama rolü sadece gereken token/sürüm/iptal makbuzu kolonlarını güncelleyebilir, erişim bitişi ve ilk verilme anını değiştiremez. `PublicBooking:AccessEnabled` varsayılan false'tur. Ana 8080 tesliminde erişim ve OTP kapalı; token/iptal tarihçesi oluşmuşsa P04-09 imajı güvenli rollback sayılmaz. [ADR-008](adr/008-public-appointment-access.md) yetki ömrünü ve uyum sınırını tutar.
+
+Restore sonrası eski müşteri yetkileri yeniden açılmaz: uygulama kapalıyken veya iki kapı da false iken doğru firma/restore DB hedefini doğrula; migration rolüyle `psql -v ON_ERROR_STOP=1 -f deploy/Invalidate-RestoredPublicAccess.sql` çalıştır. İşlem erişim hash/sürümünü ve tüketilmiş makbuzların secret hash'ini değiştirir; randevu/audit/iptal makbuzunu silmez. Eski token ve receipt yenilemesinin 403 olduğunu sentetik kabulde doğrula; gerçek yeniden açma ayrı işletim kararıdır. Eski müşteri bağlantıları çalışmayacağından işletmeyle iletişim gerekir. Restore veri kaybı/uzlaştırma incelemesinin yerine geçmez; sırlar ve SQL çıktısı loglanmaz.
+
 Hazırlanma: 2026-09-29. Bu dosya plandır; çalışan altyapının kanıtı değildir. Uygulandıkça gerçek komutlar, adresler ve ölçümlerle güncellenir (sırlar hariç). Kısa ilkeler AGENTS.md Bölüm 8'dedir.
 
 ## 1. Kurulum ve kapasite

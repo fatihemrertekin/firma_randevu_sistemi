@@ -43,12 +43,13 @@ public sealed class BookingVerificationTests
         public PostgreSqlContainer Database { get; } = RecoveryDatabase();
         public Clock Clock { get; } = new();
         public Sms Sms { get; } = new();
-        public WebApplicationFactory<Program> App { get; private set; } = new();
+        public WebApplicationFactory<Program> App { get; internal set; } = new();
         public Guid ServiceId { get; } = Guid.NewGuid();
         public Guid StaffId { get; } = Guid.NewGuid();
         public Guid ServiceVersion { get; } = Guid.NewGuid();
         public Guid PolicyVersion { get; private set; }
         public bool Enabled { get; set; } = true;
+        public bool AccessEnabled { get; set; }
         public string HmacKey { get; set; } = Convert.ToBase64String(Enumerable.Range(0, 32).Select(x => (byte)x).ToArray());
         public string DatabaseName { get; set; } = "p02_recovery";
         private string ConnectionString => new Npgsql.NpgsqlConnectionStringBuilder(Database.GetConnectionString()) { Database = DatabaseName }.ConnectionString;
@@ -84,6 +85,7 @@ public sealed class BookingVerificationTests
                     ["ConnectionStrings:AppDatabase"] = ConnectionString,
                     ["Auth:InstanceId"] = "p05-synthetic",
                     ["BookingVerification:Enabled"] = Enabled.ToString(),
+                    ["PublicBooking:AccessEnabled"] = AccessEnabled.ToString(),
                     ["BookingVerification:HmacKey"] = HmacKey
                 }));
                 builder.ConfigureServices(services =>
