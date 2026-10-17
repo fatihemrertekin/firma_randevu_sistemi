@@ -52,7 +52,7 @@ Kanıt `.local/p03-05c/` altındadır. Son head/main CI ve şifreli yedekli ana 
 
 ## P04-07A — İptal süresi ve onay tercihi genişletme brief'i — 17.10.2026
 
-Durum: **brief/görsel onayı done; uygulama ve ana teslim in_progress**. Kullanıcı 17.10.2026'da “Taslağı onaylıyorum. P04-07A’yı bu düzenle uygula; iptal süresi ve onay tercihini API’ye bağlayıp testleri ve ana 8080 teslimini tamamla.” dedi. Mode: **Operate**. Hedef mevcut `/yonetim/rezervasyon-ayarlari`, `src/Web/src/features/booking-policy/BookingPolicy.tsx`; yeni sayfa/menü yoktur. Ürün/sayısal öneri kaynağı [P04-07 planı](../../docs/plans/P04.md#p04-07--politika-kaydı-ve-telefon-doğrulama-uygulama-planı--17102026).
+Durum: **geliştirme/GitHub/ana 8080 teslimi done**. Kullanıcı 17.10.2026'da “Taslağı onaylıyorum. P04-07A’yı bu düzenle uygula; iptal süresi ve onay tercihini API’ye bağlayıp testleri ve ana 8080 teslimini tamamla.” dedi. Mode: **Operate**. Hedef mevcut `/yonetim/rezervasyon-ayarlari`, `src/Web/src/features/booking-policy/BookingPolicy.tsx`; yeni sayfa/menü yoktur. Ürün/sayısal öneri kaynağı [P04-07 planı](../../docs/plans/P04.md#p04-07--politika-kaydı-ve-telefon-doğrulama-uygulama-planı--17102026).
 
 ### Altı satırlık ekran özeti
 
@@ -104,3 +104,5 @@ Bu brief/taslak hazırlığı kod yazmadan tamamlandı; ardından kullanıcı ik
 İki alan mevcut endpoint/CSRF/sürüm/no-op/audit ve kamu katalog projeksiyonuna bağlandı. Formda sayı yardımı, false/0 değeri, adlandırılmış fieldset/radio grubu, tek Kaydet, kirli taslak/boş yanıt/hata/odak/bekleme ve belirsiz sonuç korunur. Alanlar aynı satır sistemini kullanır; yeni ortak görsel token veya bağımlılık yoktur. Rasterdaki TASLAK/örnek değer etiketleri ürüne taşınmaz. Fieldset'in erişilebilir adı dışarıdaki görünür başlıkla `aria-labelledby` üzerinden sağlanır; klavye radio davranışı doğaldır.
 
 Yerel web typecheck/lint, 358 test ve build geçti. Ayrı 8100 sentetik Chrome/gerçek API kabulünde dört genişlikte 36 görüntü; false/125 kalıcılığı ve 0 açıklaması, radio ok tuşu/44 px etiket hedefi, iptal alan hatası/odak, tek gönderim, gerçek 409/CSRF/yanıt kaybı/Staff 403/anonim 401/429 ve beş asset eşitliği geçti. Dört temsilci görüntü onaylı taslak/DESIGN ile incelendi: genişte iki sütun, mobilde sarma/tek sıra, görünür odak ve doğal panel sonu korunuyor; yatay taşma/script hatası yok. Tam WCAG sertifikası veya müşteri rezervasyon kabulü değildir. Kanıt `.local/p04-07a/`; son kaynak/CI/restore/ana teslim tamamlanmadan uygulama done değildir.
+
+Son kaynak/restore/head-main CI ve yedekli ana 8080 teslimi tamamlandı; [kanıt ve geri dönüş](../../docs/plans/P04.md#p04-07a-github-ve-ana-yerel-teslim--17102026). İki alan gerçek API ile çalışır; eski randevular/46 tablonun eski verileri ve hesap/MFA/anahtar/ayar/SMTP korundu. Yeni müşteri yazımı/OTP/SMS başlamadı. Son belge kaydının kendi CI kapıları korunur.
