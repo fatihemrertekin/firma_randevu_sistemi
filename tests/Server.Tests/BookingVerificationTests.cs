@@ -23,12 +23,12 @@ public sealed class BookingVerificationTests
 {
     private static CancellationToken Token => TestContext.Current.CancellationToken;
     private const string Path = "/api/public-booking/verification/";
-    private sealed class Clock : TimeProvider
+    internal sealed class Clock : TimeProvider
     {
         public DateTimeOffset Now { get; set; } = new(2026, 10, 17, 6, 0, 0, TimeSpan.Zero);
         public override DateTimeOffset GetUtcNow() => Now;
     }
-    private sealed class Sms : IBookingSmsDelivery
+    internal sealed class Sms : IBookingSmsDelivery
     {
         public bool Available { get; set; } = true;
         public ConcurrentQueue<(string Phone, string Code, Guid Id)> Calls { get; } = new();
@@ -38,7 +38,7 @@ public sealed class BookingVerificationTests
             Calls.Enqueue((phone, code, deliveryId)); return Result(token);
         }
     }
-    private sealed class Fixture : IAsyncDisposable
+    internal sealed class Fixture : IAsyncDisposable
     {
         public PostgreSqlContainer Database { get; } = RecoveryDatabase();
         public Clock Clock { get; } = new();
@@ -307,6 +307,9 @@ public sealed class BookingVerificationTests
         Assert.Equal(f.StaffId, (await db.StaffMembers.SingleAsync(Token)).Id);
         using var client = f.Client(); await f.RequestAsync(client);
         await Assert.ThrowsAsync<Npgsql.PostgresException>(() => migrator.MigrateAsync("20261016222045_CustomerBookingPolicy", Token));
+        // Daha yeni boş migration geri alınmış olabilir; eski şemayı güncel entity ile okumadan önce doğrula ve yükselt.
+        Assert.Equal(1, await db.Database.SqlQueryRaw<int>("SELECT count(*)::int AS \"Value\" FROM \"BookingVerifications\"").SingleAsync(Token));
+        await db.Database.MigrateAsync(Token);
         Assert.Single(await db.BookingVerifications.ToArrayAsync(Token));
     }
 
@@ -416,7 +419,7 @@ public sealed class BookingVerificationTests
         Assert.False(new BookingVerificationSecurity(config, new Sms { Available = false }).Enabled);
     }
 
-    private static async Task<Dictionary<string, string>> Fingerprints(AppDbContext db)
+    internal static async Task<Dictionary<string, string>> Fingerprints(AppDbContext db)
     {
         await using var connection = new Npgsql.NpgsqlConnection(db.Database.GetConnectionString()); await connection.OpenAsync(Token);
         var tables = new List<string>();

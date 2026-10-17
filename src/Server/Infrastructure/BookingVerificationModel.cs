@@ -8,10 +8,13 @@ internal static class BookingVerificationModel
     {
         var challenge = builder.Entity<BookingVerification>();
         challenge.HasIndex(x => x.RequestKey).IsUnique();
+        challenge.HasOne<Appointment>().WithMany().HasForeignKey(x => x.AppointmentId).OnDelete(DeleteBehavior.Restrict);
+        challenge.HasIndex(x => x.AppointmentId).IsUnique().HasFilter("\"AppointmentId\" IS NOT NULL");
         foreach (var name in new[] { "RequestHash", "SecretHash", "PhoneHash", "IpHash", "CodeHash" })
             challenge.Property<string>(name).HasMaxLength(64);
         challenge.ToTable(t =>
         {
+            t.HasCheckConstraint("CK_BookingVerification_Consumption", "(\"AppointmentId\" IS NULL AND \"ConsumedAt\" IS NULL AND \"ReplayUntil\" IS NULL) OR (\"AppointmentId\" IS NOT NULL AND \"ConsumedAt\" IS NOT NULL AND isfinite(\"ConsumedAt\") AND \"ReplayUntil\" IS NOT NULL AND \"ReplayUntil\" = \"ConsumedAt\" + INTERVAL '24 hours' AND \"VerifiedAt\" IS NOT NULL AND \"VerifiedUntil\" IS NOT NULL AND \"ConsumedAt\" >= \"VerifiedAt\" AND \"ConsumedAt\" < \"VerifiedUntil\")");
             t.HasCheckConstraint("CK_BookingVerification_Attempts", "\"FailedAttempts\" BETWEEN 0 AND 5 AND \"CodeVersion\" BETWEEN 1 AND 3 AND cardinality(\"UsedCodeHashes\") BETWEEN 0 AND 3");
             t.HasCheckConstraint("CK_BookingVerification_Hashes", "\"RequestHash\" ~ '^[0-9A-F]{64}$' AND \"SecretHash\" ~ '^[0-9A-F]{64}$' AND \"PhoneHash\" ~ '^[0-9A-F]{64}$' AND \"IpHash\" ~ '^[0-9A-F]{64}$' AND (\"CodeHash\" IS NULL OR \"CodeHash\" ~ '^[0-9A-F]{64}$')");
             t.HasCheckConstraint("CK_BookingVerification_Times", "\"ExpiresAt\" > \"CreatedAt\" AND \"ResendAt\" > \"CreatedAt\" AND ((\"VerifiedAt\" IS NULL AND \"VerifiedUntil\" IS NULL) OR (\"VerifiedAt\" IS NOT NULL AND \"VerifiedUntil\" > \"VerifiedAt\" AND \"CodeHash\" IS NULL))");

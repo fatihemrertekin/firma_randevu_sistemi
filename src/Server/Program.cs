@@ -58,6 +58,7 @@ app.MapAppointmentEndpoints();
 app.MapBookingPolicyEndpoints();
 app.MapPublicBookingEndpoints();
 app.MapBookingVerificationEndpoints();
+app.MapPublicAppointmentEndpoints();
 
 app.MapGet("/health/live", () => Results.Ok(new { status = "ok" }));
 

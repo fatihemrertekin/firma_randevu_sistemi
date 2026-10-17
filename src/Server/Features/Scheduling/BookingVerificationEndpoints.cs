@@ -35,7 +35,7 @@ public static class BookingVerificationEndpoints
                 (body, token) => VerifyAsync(body, ctx, db, security, clock, token)));
     }
 
-    private static async Task<IResult> ExecuteAsync<T>(HttpContext ctx, IAntiforgery csrf, BookingVerificationSecurity security,
+    internal static async Task<IResult> ExecuteAsync<T>(HttpContext ctx, IAntiforgery csrf, BookingVerificationSecurity security,
         Func<T, CancellationToken, Task<IResult>> action)
     {
         using var timeout = AppointmentEndpoints.Timeout(ctx);
@@ -71,10 +71,23 @@ public static class BookingVerificationEndpoints
         return Results.Problem(statusCode: 429, title: "Doğrulama sınırına ulaşıldı. Belirtilen süreyi bekleyin.");
     }
 
-    private static bool Secret(BookingVerification? item, string? secret) => item is not null && secret is { Length: 43 } &&
+    internal static bool Secret(BookingVerification? item, string? secret) => item is not null && secret is { Length: 43 } &&
         BookingVerificationSecurity.Equal(item.SecretHash, BookingVerificationSecurity.SecretHash(secret));
     private static bool Active(BookingVerification item, DateTimeOffset now) =>
-        item.VerifiedAt is null && item.FailedAttempts < 5 && now < item.ExpiresAt;
+        item.ConsumedAt is null && item.VerifiedAt is null && item.FailedAttempts < 5 && now < item.ExpiresAt;
+
+    internal static bool TryNormalize(Request body, out string name, out string phone, out DateTime start)
+    {
+        name = body.CustomerName?.Trim() ?? "";
+        phone = ""; start = default;
+        return body.RequestKey != Guid.Empty && body.ServiceId != Guid.Empty && body.ServiceVersion != Guid.Empty &&
+            body.PolicyVersion != Guid.Empty && body.StaffMemberId != Guid.Empty && name is { Length: >= 2 and <= 100 } && !name.Any(char.IsControl) &&
+            TurkishPhone.TryNormalize(body.CustomerPhone, out phone, out _) && phone.StartsWith("+905", StringComparison.Ordinal) &&
+            AppointmentRules.TryStart(body.StartsAt, out start);
+    }
+
+    internal static string RequestHash(Request body, string name, string phone, DateTime start, BookingVerificationSecurity security) =>
+        security.Hash("request-v1", body.ServiceId, body.ServiceVersion, body.PolicyVersion, body.StaffMemberId, start, name, phone);
 
     private static BookingSmsJob Job(BookingVerification item, string phone, string code, IDataProtectionProvider protection, DateTimeOffset now, Guid? resendKey) => new()
     {
@@ -92,11 +105,7 @@ public static class BookingVerificationEndpoints
     private static async Task<IResult> RequestAsync(Request body, HttpContext ctx, AppDbContext db, BookingVerificationSecurity security,
         IDataProtectionProvider protection, TimeProvider clock, CancellationToken token)
     {
-        var name = body.CustomerName?.Trim();
-        if (body.RequestKey == Guid.Empty || body.ServiceId == Guid.Empty || body.ServiceVersion == Guid.Empty ||
-            body.PolicyVersion == Guid.Empty || body.StaffMemberId == Guid.Empty || name is not { Length: >= 2 and <= 100 } || name.Any(char.IsControl) ||
-            !TurkishPhone.TryNormalize(body.CustomerPhone, out var phone, out _) || !phone.StartsWith("+905", StringComparison.Ordinal) ||
-            !AppointmentRules.TryStart(body.StartsAt, out var start)) return Invalid();
+        if (!TryNormalize(body, out var name, out var phone, out var start)) return Invalid();
         var now = clock.GetUtcNow();
         await using var transaction = await db.Database.BeginTransactionAsync(token);
         // Bu yalnız ön kontroldür; OTP bir slot kilidi veya rezervasyon değildir.
@@ -132,7 +141,7 @@ public static class BookingVerificationEndpoints
             ResendAt = now.AddSeconds(60),
             UpdatedAt = now,
             ProtectedPhone = protection.CreateProtector(BookingVerificationSecurity.PayloadPurpose + ".Recipient").Protect(phone),
-            RequestHash = security.Hash("request-v1", body.ServiceId, body.ServiceVersion, body.PolicyVersion, body.StaffMemberId, start, name, phone)
+            RequestHash = RequestHash(body, name, phone, start, security)
         };
         item.CodeHash = security.Hash("code", item.Id, item.CodeVersion, code);
         item.UsedCodeHashes = [security.Hash("code-reuse", item.Id, code)];
@@ -187,6 +196,7 @@ public static class BookingVerificationEndpoints
         var item = await db.BookingVerifications.SingleOrDefaultAsync(x => x.Id == body.ChallengeId, token);
         if (!Secret(item, body.ChallengeSecret) || item is null) return Forbidden();
         var now = clock.GetUtcNow();
+        if (item.ConsumedAt is not null) return Invalid();
         if (item.VerifiedUntil > now) return Results.Ok(new VerifiedResponse(true, item.VerifiedUntil.Value));
         if (!Active(item, now)) return Invalid();
         if (body.Code is not { Length: 6 } || body.Code.Any(c => c is < '0' or > '9')) return Invalid();

@@ -8,6 +8,8 @@ P05-02 gönderim kapalı telefon doğrulaması yedekli ana yerel teslimde doğru
 
 Geri dönüş/restore'da önce doğrulamayı ve gönderimi kapat; in-flight işleri durdur. DB ile aynı firmaya ait Data Protection/HMAC anahtarları ve config yedeklenir. Eski kuyruk kayıtları gönderim kapalı restore edilir; otomatik SMS veya kota sıfırlaması yapılmaz. Eklemeli şema uyumlu eski imajla korunur; veri/kota varken Down reddedilir. Gerçek SMS aktivasyonunun fiyat/harcama/aktarım kapısı ayrı onaydır.
 
+P04-09, bu kapalı ayara kamu randevu yazımını da bağlar. Migration öncesi şifreli DB/anahtar/config yedeği ve eski kolon/satır karşılaştırması gerekir. İlk Public/null aktör veya tüketim kaydından sonra P05-02 imajına otomatik dönülmez; makbuz ömrünü ve yeni kaynağı anlayan test edilmiş imaj/ileri düzeltme gerekir. Veri varken silici Down reddedilir; restore otomatik seçenek değildir ve gönderim kapalı yapılır. [P04-09 kabul/teslim ve sınırlar](plans/P04.md#p04-09--atomik-müşteri-randevu-yazımı--17102026), [ADR-007](adr/007-public-appointment-consumption.md).
+
 - Yerelde geliştir; VPS'i pilotta aç. 4 GB deneme, Coolify+ayrı DB süreçleri için 8 GB sınıfı üretim adayıdır; kapasite garantisi değildir. Firma sayısını yük testiyle belirle: RAM/CPU/disk, DB bağlantısı, p95 gecikme, kuyruk.
 - Tek Compose şablonu ve tekrar güvenli kurulum komutu: firma/domain/sırlar → servis/migration/sağlık sonucu. CPU/RAM/log/disk sınırı ve yanlış firma kaynağını silmeme kontrolü. Coolify ortak proxy ağı izolasyon kanıtı değildir.
 - SSH anahtarı, firewall, güncelleme; yönetim paneline kısıtlı erişim/MFA. Docker/panel tüm hostu etkiler. Web portları açık, DB iç ağda; uptime alarmı host dışında.
