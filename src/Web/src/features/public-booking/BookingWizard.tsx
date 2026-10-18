@@ -61,7 +61,8 @@ export default function BookingWizard({ onCreated, onBusiness }: Props) {
       guard.current.dirty = false; guard.current.busy = false
       onCreated(value, { challengeId: challenge.challengeId, challengeSecret: challenge.challengeSecret })
     } catch (e) {
-      if (e instanceof RequestVerificationError || e instanceof BookingError && ([400,404,409,429].includes(e.status) || e.status === 403 && !uncertain)) setUncertain(false)
+      // A rejected retry cannot settle the earlier request whose response was lost.
+      if (!uncertain && (e instanceof RequestVerificationError || e instanceof BookingError && [400,403,404,409,429].includes(e.status))) setUncertain(false)
       throw e
     }
   })

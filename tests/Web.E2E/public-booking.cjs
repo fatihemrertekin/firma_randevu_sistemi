@@ -23,6 +23,7 @@ fs.mkdirSync(out, { recursive: true })
     await page.route('**/api/public-booking/appointments/*/cancel', async route => {
       bodies.cancel.push(route.request().postDataJSON())
       if (loseCancel) { loseCancel = false; await route.fetch(); return route.abort('failed') }
+      if (bodies.cancel.length === 2) { const headers = { ...route.request().headers() }; delete headers['x-csrf-token']; return route.continue({ headers }) }
       return route.continue()
     })
     async function capture(name) {
@@ -49,9 +50,18 @@ fs.mkdirSync(out, { recursive: true })
     assert.equal((await (await context.request.get(control + '/state')).json()).appointments, 0)
     await page.getByRole('button', { name: 'Randevu talebi gönder', exact: true }).click()
     await page.getByRole('button', { name: 'Aynı talebi yeniden dene', exact: true }).waitFor(); await capture('create-unknown')
+    for (let attempt = 0; attempt < 25; attempt++) {
+      const response = await context.request.post(origin + '/api/public-booking/appointments', { data: {}, headers: { Origin: origin } })
+      if (response.status() === 429) break
+      assert.equal(response.status(), 400)
+      assert(attempt < 24, 'Real shared request limit should reject before 25 attempts')
+    }
+    await page.getByRole('button', { name: 'Aynı talebi yeniden dene', exact: true }).click()
+    await page.getByRole('alert').filter({ hasText: 'Çok sık denendi' }).waitFor(); assert(await page.getByRole('button', { name: 'Hizmeti değiştir', exact: true }).isDisabled()); await capture('create-retry-limited')
+    await page.waitForFunction(() => [...document.querySelectorAll('button')].some(button => button.textContent === 'Aynı talebi yeniden dene' && !button.disabled), undefined, { timeout: 75000 })
     await page.getByRole('button', { name: 'Aynı talebi yeniden dene', exact: true }).click()
     await page.getByRole('heading', { name: 'İşletme onayı bekleniyor', exact: true }).waitFor(); await page.getByRole('button', { name: 'Sonuç bağlantısını kopyala', exact: true }).waitFor(); await capture('pending')
-    assert.deepEqual(bodies.create[0], bodies.create[1]); assert.equal((await (await context.request.get(control + '/state')).json()).appointments, 1)
+    assert.deepEqual(bodies.create[0], bodies.create[1]); assert.deepEqual(bodies.create[1], bodies.create[2]); assert.equal((await (await context.request.get(control + '/state')).json()).appointments, 1)
     await page.getByRole('button', { name: 'Sonuç bağlantısını kopyala', exact: true }).click()
     const fallback = page.getByLabel('Kopyalanacak sonuç bağlantısı')
     let link
@@ -62,8 +72,9 @@ fs.mkdirSync(out, { recursive: true })
     await page.getByRole('button', { name: 'Randevuyu iptal et', exact: true }).click(); await capture('cancel-confirm')
     assert.equal((await (await context.request.get(control + '/state')).json()).cancellations, 0)
     await page.getByRole('button', { name: 'Evet, randevuyu iptal et', exact: true }).click(); await page.getByRole('button', { name: 'Aynı iptali yeniden dene', exact: true }).waitFor(); await page.getByRole('button', { name: 'Aynı iptali yeniden dene', exact: true }).click()
+    await page.getByRole('alert').filter({ hasText: 'işlem uygulanmadı' }).waitFor(); await capture('cancel-retry-csrf'); await page.getByRole('button', { name: 'Aynı iptali yeniden dene', exact: true }).click()
     await page.getByRole('heading', { name: 'Randevu iptal edildi', exact: true }).waitFor(); await capture('cancelled')
-    assert.deepEqual(bodies.cancel[0], bodies.cancel[1]); assert.equal((await (await context.request.get(control + '/state')).json()).cancellations, 1)
+    assert.deepEqual(bodies.cancel[0], bodies.cancel[1]); assert.deepEqual(bodies.cancel[1], bodies.cancel[2]); assert.equal((await (await context.request.get(control + '/state')).json()).cancellations, 1)
     await page.goto(link); await page.getByRole('heading', { name: 'Randevu iptal edildi', exact: true }).waitFor(); assert.equal(new URL(page.url()).hash, ''); await capture('reopened')
     const wrong = new URL(link); wrong.hash = 'erisim=' + 'x'.repeat(43)
     await page.goto(wrong.href); await page.getByRole('alert').filter({ hasText: 'Bağlantı geçersiz veya süresi dolmuş' }).waitFor(); assert.equal(await page.getByRole('heading', { name: 'İşletme onayı bekleniyor', exact: true }).count(), 0); await capture('forbidden')
@@ -79,7 +90,7 @@ fs.mkdirSync(out, { recursive: true })
     assert.equal((await (await context.request.get(control + '/state')).json()).appointments, 2)
     const head = await context.request.get(origin + '/randevu'); assert.equal(head.headers()['cache-control'], 'no-store'); assert.equal(head.headers()['referrer-policy'], 'no-referrer')
     assert.deepEqual(errors, [])
-    fs.writeFileSync(path.join(out, 'report.json'), JSON.stringify({ pass: true, widths: [320,390,768,1280], screenshots, api: 'real Kestrel/PostgreSQL, fake SMS', lostCreateAndCancel: true, singleRecordAndCancellation: true, fragmentRemoved: true, storageEmpty: true, pageErrors: errors }, null, 2))
+    fs.writeFileSync(path.join(out, 'report.json'), JSON.stringify({ pass: true, widths: [320,390,768,1280], screenshots, api: 'real Kestrel/PostgreSQL, fake SMS', lostCreateAndCancel: true, realRateAndCsrfRetries: true, singleRecordAndCancellation: true, fragmentRemoved: true, storageEmpty: true, pageErrors: errors }, null, 2))
     console.log(JSON.stringify({ pass: true, screenshots: screenshots.length }))
   } finally { await browser.close() }
 })().catch(error => { console.error(error); process.exitCode = 1 })
