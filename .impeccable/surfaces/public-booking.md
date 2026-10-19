@@ -1,5 +1,7 @@
 # Misafir rezervasyonu — kapsam ve görsel yön
 
+20.10.2026 güncel durum: onaylanan UI uygulaması ve GitHub/ana 8080 teslimi tamamlandı; [güncel kabul/kanıt](../../docs/plans/P04.md#misafir-ekranı-kabul-ve-ana-8080-teslimi--20102026). Aşağıdaki planned/onay bekleme ifadeleri tarihli hazırlık kaydıdır. Gerçek SMS ve ana OTP/erişim kapalıdır.
+
 Durum: yerel kapsam/görsel hazırlığı tamamlandı; **1 — Sabit özetli adımlar görsel yönü seçildi**, 16.10.2026. İnsan yanıtı Impeccable seçim sayfasından `optionId: summary`, `buildPath: comp` olarak alındı; [seçili görsel](../mocks/decision/public-booking-summary.png), [yanıt kaydı](../mocks/decision/public-booking-choice.json) ve görsel yan JSON'unda saklıdır. 16.10 seçimi yalnız görsel yön içindi; 18.10.2026 tarihli “Onaylıyorum” yanıtı güncellenen UI/API kapsamının uygulama, test, PR/CI ve kapıları kapalı ana 8080 teslimini onayladı. Mod: **Operate**. Hedef `/randevu` ve `/randevu/sonuc/{id}`; güncel uygulama/kabul kaydı P04 planındadır. Ürün otoritesi [PRODUCT](../../docs/PRODUCT.md), görsel otorite [DESIGN](../../DESIGN.md), ortak kontroller ve `tokens.css`'tir. [Uygulama planı](../../docs/plans/P04.md#p04-05--misafir-rezervasyonu-kapsam-ve-görsel-plan--16102026) teknik kapsamın tek kaydıdır.
 
 ## Ekran brief'i

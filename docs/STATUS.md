@@ -1,6 +1,6 @@
 # STATUS — Güncel durum ve sıradaki iş
 
-Misafir ekranı uygulaması `in_progress` (18.10.2026): kullanıcı güncellenen kapsamı onayladı. Beş adım, gerçek API doğrulama/yazım, tek sonuç bağlantısı ve müşteri iptali eklendi. Yerel frontend/HTTP/gerçek Chrome kabulü yürütülüyor; PR/CI ve ana 8080 teslimi henüz tamamlanmadı. SMS/aktivasyon kapsam dışı; önceki onay bekleme ifadeleri tarihli hazırlık kayıtlarıdır.
+Misafir ekranı geliştirme/GitHub/ana 8080 teslimi `done` (20.10.2026): [UI PR #121](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/121) ve [tekrar düzeltmesi PR #122](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/122), exact-head push/PR ve [birleşme main CI](https://github.com/fatihemrertekin/firma_randevu_sistemi/actions/runs/39341372990) başarılı; 424 web/407 sunucu testi, 40 yeni web/3 yeni PostgreSQL-HTTP vakası ve gerçek API/sahte SMS ile dört genişlikte 56 Chrome görüntüsü. Şifreli yedek sonrası 51 tablonun tüm kolon/satırları, hesap/MFA/anahtar/ayar/SMTP korundu; sağlık/restart ve ana anonim GET/HEAD kabulü geçti. [Kanıt ve geri dönüş](plans/P04.md#misafir-ekranı-kabul-ve-ana-8080-teslimi--20102026). Gerçek SMS/OTP/erişim kapalıdır. Sonraki tek aday gerçek SMS sağlayıcısı, maliyet/kota ve kontrollü pilot aktivasyonu için ayrı plandır; planned ve başlamadı. Son belge kaydının head/main CI'ı ayrıca doğrulanır; aşağıdaki onay/sonraki iş ifadeleri tarihli hazırlık kayıtlarıdır.
 
 Misafir ekranı brief/kapsam yenilemesi yerelde `done` (18.10.2026): **Sabit özetli adımlar** seçimi korunarak mevcut API eşlemesi, doğrulama/sonuç/iptal durumları, kayıp yanıt ve bağlantı güvenliği netleştirildi. [Somut uygulama kapsamı ve kabul kapıları](plans/P04.md#misafir-ekranı--güncellenmiş-kapsam-ve-durum-taslağı--18102026), [brief ve yerel durum taslağı](../.impeccable/surfaces/public-booking.md). Sonraki tek iş bu kapsamın ayrı ekran uygulama onayıdır; UI uygulaması `planned`. Ürün kodu/DB/ana 8080 değişmedi; yeni test/PR/CI/deploy kabulü iddia edilmez. Gerçek SMS/hatırlatma ve ana ortam OTP/erişim aktivasyonu kapsam dışındadır. Aşağıdaki sonraki aday ifadeleri tarihli teslim kayıtlarıdır.
 
@@ -98,7 +98,7 @@ Program.cs bakımı `done`: başlangıç 265 satırdan 69 satıra indi; önce/so
 
 ## Sıradaki iş
 
-**Misafir ekranının güncellenmiş kapsamını onaylamak.** Yerel hazırlık yukarıdaki kayıtta tamamlandı; ekran kodu için ayrı onay beklenir. Onay sonrası bu dar UI/API entegrasyonu, sentetik kabul, PR/CI/main ve kapıları kapalı ana 8080 teslimi yapılır. Gerçek SMS/hatırlatma otomatik başlamaz.
+**Gerçek SMS için ayrı kapsam/maliyet planı.** Sağlayıcı, harcama/kota ve kontrollü pilot aktivasyonu somutlaştırılmadan gerçek gönderim açılmaz. Bu iş otomatik başlamadı; misafir UI teslimi yukarıda tamamlandı. Önceki onay bekleme ifadeleri tarihli kayıttır.
 
 T07 Değişiklik kayıtları bakımı ve güvenli bağımlılık yaması `done`: [PR #67](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/67), aynı head/main CI ve yedekli ana 8080 kabulü geçti; [kapsam, kanıt ve yerel test sınırı](plans/P02.md#t07-değişiklik-kayıtları-bakımı--14102026).
 

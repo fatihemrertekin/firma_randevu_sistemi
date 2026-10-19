@@ -2,6 +2,8 @@
 
 ## Misafir rezervasyonu
 
+20.10.2026 UI/API entegrasyonu [UI PR #121](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/121) ve [tekrar düzeltmesi PR #122](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/122) ile main'e teslim edildi; exact-head ve birleşme CI 424 web/407 sunucu testiyle başarılı. Ana 8080 sağlık/tarayıcı kabulü ve 51 tablonun veri/anahtar/ayar koruması geçti. Ana OTP/erişim ve gerçek SMS kapalıdır; [kanıt/geri dönüş](docs/plans/P04.md#misafir-ekranı-kabul-ve-ana-8080-teslimi--20102026).
+
 `/randevu`, işletme oturumu gerektirmeyen hizmet → çalışan → saat → iletişim → telefon doğrulama/son kontrol akışıdır. Kod doğrulaması saat tutmaz; ayrı gönderim mevcut API ile tek talep oluşturur. Sunucunun Pending/Confirmed sonucu gösterilir. `/randevu/sonuc/{id}#erisim=<yetki>` yalnız o randevunun sonucunu ve süre uygunsa açık onaylı iptalini açar; fragment router/API'den önce temizlenir, yetki yalnız bellekte Bearer olarak kullanılır. Sayfa yenilenirse kaydedilen özgün bağlantı yeniden açılmalıdır. Telefonla geçmiş araması veya müşteri üyeliği yoktur.
 
 Ana ortamda OTP/erişim ve gerçek SMS kapalı tutulur; katalog okunması SMS veya rezervasyonun etkin olduğu anlamına gelmez. Kapalı işlem 503 ile açıklanır; sağlayıcı, harcama veya pilot aktivasyonu bu UI teslimine dahil değildir. [Kapsam ve kabul](docs/plans/P04.md#misafir-ekranı--güncellenmiş-kapsam-ve-durum-taslağı--18102026).
