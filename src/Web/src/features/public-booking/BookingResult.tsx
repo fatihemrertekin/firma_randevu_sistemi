@@ -64,11 +64,11 @@ export default function BookingResult({ id, initialResult, initialToken, receipt
       setResult(value); cancelCommand.current = null; setUnknownCancel(false); setConfirm(false); setNotice('Randevu iptal edildi.')
     } catch (e) {
       setFailure(e)
-      if (e instanceof RequestVerificationError) { setUnknownCancel(false); setConfirm(false) }
+      if (!unknownCancel && e instanceof RequestVerificationError) { cancelCommand.current = null; setUnknownCancel(false); setConfirm(false) }
       if (e instanceof BookingError) {
         if (e.status === 429) setRetryAt(e.retryAt)
         if (e.status === 409) { setReading(true); setRevision(v => v + 1) }
-        if ([400,403,409,429].includes(e.status)) { cancelCommand.current = null; setUnknownCancel(false); setConfirm(false) }
+        if (!unknownCancel && [400,403,409,429].includes(e.status)) { cancelCommand.current = null; setUnknownCancel(false); setConfirm(false) }
       }
     } finally { pending.current = false; setBusy(false) }
   }

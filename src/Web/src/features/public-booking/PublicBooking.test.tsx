@@ -149,3 +149,24 @@ it('eski uygunluk yanıtı yeni tarih seçimini ezmez', async () => {
   expect(container.querySelector<HTMLInputElement>('input[name="time"]')?.closest('label')?.textContent).not.toContain(new Intl.DateTimeFormat('tr-TR', { timeZone: 'Europe/Istanbul', hour: '2-digit', minute: '2-digit' }).format(new Date(stale)).replace(':','.'))
   expect(container.querySelectorAll('input[name="time"]')).toHaveLength(1)
 })
+it.each(['rate', 'csrf'])('kayıp yazım sonrası %s reddi önceki belirsizliği ve anahtarı temizlemez', async kind => {
+  let attempts = 0
+  override = c => c.url.endsWith('/appointments') ? (++attempts === 1 ? Promise.reject(new TypeError('lost')) : attempts === 2 ? Response.json(kind === 'csrf' ? { code: 'csrf_invalid' } : {}, { status: kind === 'csrf' ? 400 : 429 }) : undefined) : undefined
+  const created = await verified(); await click('Randevu talebi gönder'); await click('Aynı talebi yeniden dene')
+  expect(container.querySelector<HTMLButtonElement>('[aria-label="Hizmeti değiştir"]')?.disabled).toBe(true)
+  await click('Aynı talebi yeniden dene'); const writes = calls.filter(c => c.url.endsWith('/appointments'))
+  expect(writes).toHaveLength(3); expect(writes[0].body).toEqual(writes[1].body); expect(writes[1].body).toEqual(writes[2].body); expect(created).toHaveBeenCalledTimes(1)
+})
+it.each(['rate', 'csrf'])('kayıp iptal sonrası %s reddinde aynı sürüm/anahtarla devam eder', async kind => {
+  let attempts = 0
+  override = c => c.url.endsWith('/cancel') ? (++attempts === 1 ? Promise.reject(new TypeError('lost')) : attempts === 2 ? Response.json(kind === 'csrf' ? { code: 'csrf_invalid' } : {}, { status: kind === 'csrf' ? 400 : 429 }) : undefined) : undefined
+  await mount(<BookingResult id={result.id} initialToken={access.token}/>); await click('Randevuyu iptal et'); await click('Evet, randevuyu iptal et'); await click('Aynı iptali yeniden dene'); await click('Aynı iptali yeniden dene')
+  const writes = calls.filter(c => c.url.endsWith('/cancel')); expect(writes).toHaveLength(3); expect(writes[0].body).toEqual(writes[1].body); expect(writes[1].body).toEqual(writes[2].body)
+  expect(container.textContent).toContain('Randevu iptal edildi')
+})
+it('gerçek uygunluk sözleşmesindeki tarih alan hatasını alanla bağlar ve odaklar', async () => {
+  override = c => c.url.includes('/availability') ? Response.json({ errors: { date: ['Bugünden başlayarak geçerli aralıkta bir tarih seçin.'] } }, { status: 400 }) : undefined
+  await mount(<BookingWizard onCreated={() => {}} onBusiness={() => {}}/>); await radio('service'); await click('Devam et'); await radio('member'); await click('Devam et')
+  const field = container.querySelector<HTMLInputElement>('#booking-date')!
+  expect(field.getAttribute('aria-invalid')).toBe('true'); expect(document.activeElement).toBe(field); expect(container.querySelector('#' + field.getAttribute('aria-describedby'))?.textContent).toContain('geçerli aralıkta')
+})

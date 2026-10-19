@@ -29,11 +29,13 @@ export default function BookingWizard({ onCreated, onBusiness }: Props) {
   useEffect(() => { guard.current = { dirty: !!service || !!name || !!phone || uncertain, profileDirty: false, busy }; }, [service, name, phone, uncertain, busy])
   useNavigationGuard(guard, () => {})
   useEffect(() => { heading.current?.focus() }, [step])
-  const fields = failure instanceof BookingError ? failure.fields : {}
+  const readError = step === 1 ? catalog?.error : step === 2 ? members?.error : step === 3 ? availability?.error : null
+  const shownError = failure ?? readError
+  const fields = shownError instanceof BookingError ? shownError.fields : {}
   useEffect(() => {
-    const field = failure instanceof BookingError ? Object.keys(failure.fields)[0] : undefined
+    const field = shownError instanceof BookingError ? Object.keys(shownError.fields)[0] : undefined
     if (field) document.getElementById(`booking-${field}`)?.focus()
-  }, [failure])
+  }, [shownError])
   function invalidate() { setChallenge(null); setUntil(''); setCode(''); request.current = null; resendKey.current = null; setFailure(null); setNotice('') }
   function changeStep(value: number) { if (busy || uncertain) return; invalidate(); setStep(value) }
   async function run(action: () => Promise<void>) {
@@ -61,7 +63,8 @@ export default function BookingWizard({ onCreated, onBusiness }: Props) {
       guard.current.dirty = false; guard.current.busy = false
       onCreated(value, { challengeId: challenge.challengeId, challengeSecret: challenge.challengeSecret })
     } catch (e) {
-      if (e instanceof RequestVerificationError || e instanceof BookingError && ([400,404,409,429].includes(e.status) || e.status === 403 && !uncertain)) setUncertain(false)
+      // A rejected retry cannot settle the earlier request whose response was lost.
+      if (!uncertain && (e instanceof RequestVerificationError || e instanceof BookingError && [400,403,404,409,429].includes(e.status))) setUncertain(false)
       throw e
     }
   })
@@ -91,13 +94,12 @@ export default function BookingWizard({ onCreated, onBusiness }: Props) {
   function paging(data: { page: number; pageSize: number; totalCount: number; hasMore: boolean; items: unknown[] }, staff = false) {
     return <Pagination page={data.page} pageSize={data.pageSize} itemCount={data.items.length} totalCount={data.totalCount} hasNext={data.hasMore} disabled={busy} label={staff ? 'Çalışan sayfaları' : 'Hizmet sayfaları'} onPageChange={staff ? setMemberPage : setPage} onPageSizeChange={value => { setSize(value); setPage(1); setMemberPage(1) }} />
   }
-  const readError = step === 1 ? catalog?.error : step === 2 ? members?.error : step === 3 ? availability?.error : null
   return <div className={`${styles.layout} ${styles.wizard}`}><div className={styles.intro}>
     <h1 ref={heading} tabIndex={-1}>Randevu alın</h1><p>Hizmetinizi, çalışanınızı ve saatinizi seçin.</p>
     <ol className={styles.steps} aria-label="Rezervasyon adımları">{labels.map((label, i) => <li key={label} aria-current={step === i + 1 ? 'step' : undefined}><span>{i + 1}</span>{label}</li>)}</ol>
     <p className={styles.mobileStep}>Adım {step} / 5 · {labels[step - 1]}</p>
     </div>{summary}<section className={styles.form} aria-label={labels[step - 1]}>
-      <ErrorMessage message={failure ? errorMessage(failure) : readError ? errorMessage(readError) : ''}/>
+      <ErrorMessage message={shownError ? errorMessage(shownError) : ''}/>
       {!!readError && <button onClick={() => setRevision(v => v + 1)}>Yeniden dene</button>}
       {failure instanceof BookingError && [404,409].includes(failure.status) && !uncertain && <button onClick={() => { invalidate(); setRevision(v => v + 1); setService(null); setMember(null); setStart(''); setStep(1) }}>Güncel seçenekleri yükle</button>}
       {failure instanceof BookingError && failure.status === 403 && !uncertain && <button onClick={() => { invalidate(); setStep(4) }}>Yeniden doğrula</button>}
@@ -109,7 +111,7 @@ export default function BookingWizard({ onCreated, onBusiness }: Props) {
       {step === 2 && <><h2>Çalışan seçin</h2>{!members && <p role="status">Çalışanlar yükleniyor…</p>}{members?.data && <>
         {members.data.totalCount === 0 ? <p>Bu hizmet için çevrim içi seçilebilecek çalışan bulunmuyor. Başka hizmet seçin veya işletmeyle iletişime geçin.</p> : <fieldset className={styles.choices}><legend>Çalışanlar</legend>{members.data.items.map(item => <label key={item.id}><input type="radio" name="member" checked={member?.id === item.id} onChange={() => { invalidate(); setMember(item); setStart('') }}/>{item.name}</label>)}</fieldset>}{paging(members.data, true)}
         <div className={styles.actions}><button onClick={() => changeStep(1)}>Geri</button><button className={styles.primary} disabled={!member} onClick={() => setStep(3)}>Devam et</button></div></>}</>}
-      {step === 3 && <><label htmlFor="booking-date">Tarih seçin</label><input id="booking-date" type="date" value={day} min={businessDay()} max={policy ? nextDay(businessDay(), policy.horizonDays) : undefined} onChange={e => { invalidate(); setDay(e.target.value); setStart('') }}/>
+      {step === 3 && <><label htmlFor="booking-date">Tarih seçin</label><input id="booking-date" type="date" value={day} min={businessDay()} max={policy ? nextDay(businessDay(), policy.horizonDays) : undefined} aria-invalid={!!fields.date} aria-describedby={fields.date ? 'booking-date-error' : undefined} onChange={e => { invalidate(); setDay(e.target.value); setStart('') }}/>{fields.date && <p id="booking-date-error">{fields.date}</p>}
         <h2>Uygun saatler</h2><p>İstanbul saati</p>{!availability && isDay(day) && <p role="status">Saatler yükleniyor…</p>}{availability?.data && <>
           {availability.data.startsAt.length === 0 ? <p>Bu çalışan için seçtiğiniz gün uygun saat bulunmuyor. Başka tarih veya çalışan seçin.</p> : <fieldset className={`${styles.choices} ${styles.times}`}><legend>Uygun saatler</legend>{[...availability.data.startsAt].sort().map(value => <label key={value}><input type="radio" name="time" checked={start === value} onChange={() => setStart(value)}/>{formatTime(value)}</label>)}</fieldset>}
         </>}<div className={styles.actions}><button onClick={() => changeStep(2)}>Geri</button><button className={styles.primary} disabled={!start || !availability?.data?.startsAt.includes(start)} onClick={() => setStep(4)}>Devam et</button></div></>}
