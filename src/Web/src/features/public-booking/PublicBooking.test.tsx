@@ -164,3 +164,9 @@ it.each(['rate', 'csrf'])('kayıp iptal sonrası %s reddinde aynı sürüm/anaht
   const writes = calls.filter(c => c.url.endsWith('/cancel')); expect(writes).toHaveLength(3); expect(writes[0].body).toEqual(writes[1].body); expect(writes[1].body).toEqual(writes[2].body)
   expect(container.textContent).toContain('Randevu iptal edildi')
 })
+it('gerçek uygunluk sözleşmesindeki tarih alan hatasını alanla bağlar ve odaklar', async () => {
+  override = c => c.url.includes('/availability') ? Response.json({ errors: { date: ['Bugünden başlayarak geçerli aralıkta bir tarih seçin.'] } }, { status: 400 }) : undefined
+  await mount(<BookingWizard onCreated={() => {}} onBusiness={() => {}}/>); await radio('service'); await click('Devam et'); await radio('member'); await click('Devam et')
+  const field = container.querySelector<HTMLInputElement>('#booking-date')!
+  expect(field.getAttribute('aria-invalid')).toBe('true'); expect(document.activeElement).toBe(field); expect(container.querySelector('#' + field.getAttribute('aria-describedby'))?.textContent).toContain('geçerli aralıkta')
+})
