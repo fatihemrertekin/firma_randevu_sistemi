@@ -16,7 +16,9 @@ builder.Services.AddProblemDetails();
 
 builder.AddApplicationIdentity();
 builder.Services.AddHostedService<AppointmentPendingWorker>();
-builder.Services.AddSingleton<IBookingSmsDelivery, DisabledBookingSmsDelivery>();
+builder.Services.AddHttpClient<IBookingSmsDelivery, NetgsmBookingSmsDelivery>(client => client.Timeout = TimeSpan.FromSeconds(10))
+    .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler { AllowAutoRedirect = false, PooledConnectionLifetime = TimeSpan.FromMinutes(5) })
+    .RemoveAllLoggers();
 builder.Services.AddSingleton<BookingVerificationSecurity>();
 builder.Services.AddHostedService<BookingSmsWorker>();
 
@@ -32,6 +34,9 @@ if (bookingSecurity.Enabled)
     using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(10));
     await using var transaction = await db.Database.BeginTransactionAsync(timeout.Token);
     await bookingSecurity.LockAsync(db, timeout.Token);
+    if (bookingSecurity.DispatchEnabled && await BookingSmsBudget.PolicyAsync(db, bookingSecurity,
+        app.Services.GetRequiredService<TimeProvider>().GetUtcNow(), timeout.Token) is null)
+        throw new InvalidOperationException("SMS bütçesi onaysız, süresi dolmuş, geri yükleme sonrası iptal edilmiş veya fiyatla uyuşmuyor. Gönderimi kapatıp operatör uzlaştırması yapın.");
     await transaction.CommitAsync(timeout.Token);
 }
 

@@ -44,5 +44,31 @@ internal static class BookingVerificationModel
         period.HasKey(x => x.Key);
         period.Property(x => x.Key).HasMaxLength(16);
         period.ToTable(t => t.HasCheckConstraint("CK_BookingSmsPeriod_Attempts", "\"Attempts\" BETWEEN 0 AND 2000"));
+        var policy = builder.Entity<BookingSmsBudgetPolicy>();
+        policy.Property(x => x.InstanceId).HasMaxLength(100);
+        policy.Property(x => x.KeyId).HasMaxLength(64);
+        foreach (var name in new[] { "UnitPriceTry", "DailyTry", "MonthlyTry", "TotalTry" }) policy.Property<decimal>(name).HasPrecision(10, 2);
+        policy.ToTable(t =>
+        {
+            t.HasCheckConstraint("CK_BookingSmsBudgetPolicy_Identity", "\"Id\" <> '00000000-0000-0000-0000-000000000000'::uuid AND length(\"InstanceId\") BETWEEN 1 AND 100 AND \"KeyId\" ~ '^[0-9A-F]{64}$'");
+            t.HasCheckConstraint("CK_BookingSmsBudgetPolicy_Limits", "\"UnitPriceTry\" > 0 AND \"UnitPriceTry\" <= 0.50 AND \"DailyCalls\" BETWEEN 1 AND 20 AND \"MonthlyCalls\" BETWEEN 1 AND 200 AND \"TotalCalls\" BETWEEN 1 AND 200 AND \"DailyTry\" > 0 AND \"DailyTry\" <= 10 AND \"MonthlyTry\" > 0 AND \"MonthlyTry\" <= 100 AND \"TotalTry\" > 0 AND \"TotalTry\" <= 100");
+            t.HasCheckConstraint("CK_BookingSmsBudgetPolicy_Times", "isfinite(\"StartsAt\") AND isfinite(\"EndsAt\") AND \"EndsAt\" > \"StartsAt\" AND \"EndsAt\" <= \"StartsAt\" + INTERVAL '31 days' AND (\"RevokedAt\" IS NULL OR isfinite(\"RevokedAt\"))");
+        });
+        var attempt = builder.Entity<BookingSmsAttempt>();
+        attempt.HasKey(x => new { x.JobId, x.Number });
+        // İşin 24 saatlik temizliği mali rezervasyonu/sağlayıcı referansını silemez.
+        attempt.HasOne<BookingSmsBudgetPolicy>().WithMany().HasForeignKey(x => x.PolicyId).OnDelete(DeleteBehavior.Restrict);
+        attempt.Property(x => x.ReservedTry).HasPrecision(10, 2);
+        attempt.Property(x => x.Outcome).HasMaxLength(20);
+        attempt.Property(x => x.ProviderReference).HasMaxLength(80);
+        attempt.HasIndex(x => new { x.PolicyId, x.ReservedAt });
+        attempt.HasIndex(x => x.ReservedAt);
+        attempt.HasIndex(x => x.RetainUntil);
+        attempt.ToTable(t =>
+        {
+            t.HasCheckConstraint("CK_BookingSmsAttempt_Budget", "\"JobId\" <> '00000000-0000-0000-0000-000000000000'::uuid AND \"Number\" BETWEEN 1 AND 3 AND \"ReservedTry\" > 0 AND \"ReservedTry\" <= 0.50 AND isfinite(\"ReservedAt\") AND isfinite(\"RetainUntil\") AND \"RetainUntil\" >= \"ReservedAt\" + INTERVAL '30 days'");
+            t.HasCheckConstraint("CK_BookingSmsAttempt_State", "(\"StartedAt\" IS NULL AND \"LeaseId\" IS NULL AND \"Outcome\" IN ('Reserved','Released') AND \"ProviderReference\" IS NULL) OR (\"StartedAt\" IS NOT NULL AND isfinite(\"StartedAt\") AND \"StartedAt\" >= \"ReservedAt\" AND \"LeaseId\" IS NOT NULL AND \"Outcome\" IN ('Started','Accepted','TemporaryFailure','PermanentFailure','Unknown'))");
+            t.HasCheckConstraint("CK_BookingSmsAttempt_Reference", "\"ProviderReference\" IS NULL OR \"ProviderReference\" ~ '^[0-9]{1,80}$'");
+        });
     }
 }

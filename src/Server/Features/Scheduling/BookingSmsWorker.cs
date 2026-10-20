@@ -35,6 +35,7 @@ public sealed class BookingSmsWorker(IServiceScopeFactory scopes, BookingVerific
         await using var scope = scopes.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         await MaintainAsync(db, clock.GetUtcNow(), token);
+        if (!security.DispatchEnabled) return;
         BookingSmsJob? job;
         var lease = Guid.NewGuid();
         await using (var transaction = await db.Database.BeginTransactionAsync(token))
@@ -51,6 +52,7 @@ public sealed class BookingSmsWorker(IServiceScopeFactory scopes, BookingVerific
             await db.SaveChangesAsync(token); await transaction.CommitAsync(token);
         }
         BookingVerificationSecurity.Payload? payload = null;
+        BookingSmsAttempt? attempt = null;
         await using (var transaction = await db.Database.BeginTransactionAsync(token))
         {
             await security.LockAsync(db, token);
@@ -72,20 +74,37 @@ public sealed class BookingSmsWorker(IServiceScopeFactory scopes, BookingVerific
                 if (payload is null) Finish(job, "Failed", now);
                 else
                 {
-                    var wait = await BookingVerificationQuota.ReserveCallAsync(db, now, token);
-                    if (wait is not null) { job.NextAttemptAt = wait.Value; Release(job, "Pending", now); payload = null; }
-                    else { job.Attempts++; job.UpdatedAt = now; }
+                    // Eski/restore edilmiş, rezervasyonsuz kuyruğu yeni bütçeye sessizce taşımayız.
+                    var hasReservation = await db.BookingSmsAttempts.AnyAsync(x => x.JobId == job.Id && x.Number == 1, token);
+                    var reservation = hasReservation ? await BookingSmsBudget.ReserveAsync(db, security, job.Id, job.Attempts + 1, now, token) : new BookingSmsBudget.Reservation(null);
+                    if (reservation.Attempt is null)
+                    {
+                        if (reservation.WaitUntil is { } until) { job.NextAttemptAt = until; Release(job, "Pending", now); }
+                        else Finish(job, "Cancelled", now);
+                        payload = null;
+                    }
+                    else
+                    {
+                        var wait = await BookingVerificationQuota.ReserveCallAsync(db, now, token);
+                        if (wait is not null) { job.NextAttemptAt = wait.Value; Release(job, "Pending", now); payload = null; }
+                        else
+                        {
+                            attempt = reservation.Attempt; attempt.StartedAt = now; attempt.LeaseId = lease; attempt.Outcome = "Started";
+                            job.Attempts++; job.UpdatedAt = now;
+                            if (reservation.Warning) logger.LogWarning("OTP gönderim bütçesi yüzde 80 uyarı sınırına ulaştı; operatör kontrolü gerekli.");
+                        }
+                    }
                 }
             }
             await db.SaveChangesAsync(token); await transaction.CommitAsync(token);
         }
-        if (payload is null || job.Status != "Processing") return;
-        var outcome = BookingSmsOutcome.Unknown;
+        if (payload is null || job.Status != "Processing" || attempt is null) return;
+        var result = new BookingSmsResult(BookingSmsOutcome.Unknown);
         try
         {
             using var sendTimeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             sendTimeout.CancelAfter(TimeSpan.FromSeconds(10));
-            outcome = await delivery.SendAsync(payload.Phone, payload.Code, job.Id, sendTimeout.Token);
+            result = await delivery.SendAsync(payload.Phone, payload.Code, job.Id, sendTimeout.Token);
         }
         catch (Exception error) when (error is IOException or HttpRequestException or OperationCanceledException or TimeoutException)
         {
@@ -97,14 +116,21 @@ public sealed class BookingSmsWorker(IServiceScopeFactory scopes, BookingVerific
         {
             await security.LockAsync(db, acknowledgement.Token);
             await db.Entry(job).ReloadAsync(acknowledgement.Token);
-            if (job.LeaseId != lease || job.Status != "Processing") return;
+            await db.Entry(attempt).ReloadAsync(acknowledgement.Token);
             var now = clock.GetUtcNow();
+            attempt.ProviderReference = result.ProviderReference;
+            attempt.Outcome = job.LeaseId == lease && job.Status == "Processing" && job.LeaseUntil > now
+                ? result.Outcome.ToString() : "Unknown";
+            if (job.LeaseId != lease || job.Status != "Processing")
+            {
+                await db.SaveChangesAsync(acknowledgement.Token); await transaction.CommitAsync(acknowledgement.Token); return;
+            }
             if (job.LeaseUntil <= now) Finish(job, "Unknown", now);
-            else if (outcome == BookingSmsOutcome.TemporaryFailure && job.Attempts < 3 && job.ExpiresAt > now.AddSeconds(job.Attempts == 1 ? 15 : 30))
+            else if (result.Outcome == BookingSmsOutcome.TemporaryFailure && job.Attempts < 3 && job.ExpiresAt > now.AddSeconds(job.Attempts == 1 ? 15 : 30))
             {
                 job.NextAttemptAt = now.AddSeconds(job.Attempts == 1 ? 15 : 30); Release(job, "Pending", now);
             }
-            else Finish(job, outcome == BookingSmsOutcome.Accepted ? "Accepted" : outcome == BookingSmsOutcome.Unknown ? "Unknown" : "Failed", now);
+            else Finish(job, result.Outcome == BookingSmsOutcome.Accepted ? "Accepted" : result.Outcome == BookingSmsOutcome.Unknown ? "Unknown" : "Failed", now);
             await db.SaveChangesAsync(acknowledgement.Token); await transaction.CommitAsync(acknowledgement.Token);
         }
     }
@@ -130,6 +156,7 @@ public sealed class BookingSmsWorker(IServiceScopeFactory scopes, BookingVerific
             .OrderBy(x => x.UpdatedAt).Take(100).ToArrayAsync(token);
         foreach (var job in stale) Finish(job, job.Status == "Processing" ? "Unknown" : "Expired", now);
         await db.SaveChangesAsync(token);
+        await BookingSmsBudget.MaintainAsync(db, now, token);
         var before = now.AddHours(-24);
         var ids = await db.BookingVerifications.Where(x => x.UpdatedAt < before && x.ExpiresAt < before &&
                 (x.ReplayUntil == null || x.ReplayUntil <= now) &&

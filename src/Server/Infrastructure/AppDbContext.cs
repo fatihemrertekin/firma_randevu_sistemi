@@ -26,6 +26,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<BookingSmsJob> BookingSmsJobs => Set<BookingSmsJob>();
     public DbSet<BookingVerificationQuotaEvent> BookingVerificationQuotaEvents => Set<BookingVerificationQuotaEvent>();
     public DbSet<BookingSmsPeriod> BookingSmsPeriods => Set<BookingSmsPeriod>();
+    public DbSet<BookingSmsBudgetPolicy> BookingSmsBudgetPolicies => Set<BookingSmsBudgetPolicy>();
+    public DbSet<BookingSmsAttempt> BookingSmsAttempts => Set<BookingSmsAttempt>();
     public DbSet<Appointment> Appointments => Set<Appointment>();
     public DbSet<AppointmentTimeBlock> AppointmentTimeBlocks => Set<AppointmentTimeBlock>();
     public DbSet<AppointmentAudit> AppointmentAudits => Set<AppointmentAudit>();
