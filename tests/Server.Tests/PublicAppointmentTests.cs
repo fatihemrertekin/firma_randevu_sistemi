@@ -292,7 +292,9 @@ public sealed class PublicAppointmentTests
             "UPDATE \"AppointmentAudits\" SET \"Kind\"='Created'", "UPDATE \"BookingVerifications\" SET \"ConsumedAt\"=NULL",
             "UPDATE \"BookingVerifications\" SET \"ReplayUntil\"=\"ConsumedAt\" + INTERVAL '25 hours'" })
         { var error = await Assert.ThrowsAsync<PostgresException>(() => db.Database.ExecuteSqlRawAsync(sql, Token)); Assert.Equal("23514", error.SqlState); }
-        var down = await Assert.ThrowsAsync<PostgresException>(() => db.GetService<IMigrator>().MigrateAsync("20261017095913_BookingPhoneVerification", Token));
+        var downSql = db.GetService<IMigrator>().GenerateScript("20261017145959_PublicAppointmentBooking", "20261017095913_BookingPhoneVerification", MigrationsSqlGenerationOptions.NoTransactions);
+        var down = await Assert.ThrowsAsync<PostgresException>(() => db.Database.ExecuteSqlRawAsync(downSql, Token));
+        Assert.Equal("Müşteri randevusu veya tüketilmiş doğrulama varken Down uygulanamaz.", down.MessageText);
         Assert.Equal("P0001", down.SqlState); Assert.Single(await db.Appointments.ToArrayAsync(Token)); Assert.False(db.Database.HasPendingModelChanges());
     }
 

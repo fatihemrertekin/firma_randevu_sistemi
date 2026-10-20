@@ -341,10 +341,10 @@ public sealed class BookingVerificationTests
         db.BookingSmsBudgetPolicies.Add(budget); await db.SaveChangesAsync(Token);
         Assert.Equal(f.StaffId, (await db.StaffMembers.SingleAsync(Token)).Id);
         using var client = f.Client(); await f.RequestAsync(client);
-        await Assert.ThrowsAsync<Npgsql.PostgresException>(() => migrator.MigrateAsync("20261016222045_CustomerBookingPolicy", Token));
-        // Daha yeni boş migration geri alınmış olabilir; eski şemayı güncel entity ile okumadan önce doğrula ve yükselt.
-        Assert.Equal(1, await db.Database.SqlQueryRaw<int>("SELECT count(*)::int AS \"Value\" FROM \"BookingVerifications\"").SingleAsync(Token));
-        await db.Database.MigrateAsync(Token);
+        // Yeni bütçe guard'ının eski OTP veri korumasını maskelemesine izin verme.
+        var down = migrator.GenerateScript("20261017095913_BookingPhoneVerification", "20261016222045_CustomerBookingPolicy", MigrationsSqlGenerationOptions.NoTransactions);
+        var error = await Assert.ThrowsAsync<Npgsql.PostgresException>(() => db.Database.ExecuteSqlRawAsync(down, Token));
+        Assert.Equal("Telefon doğrulama kayıtları veya kota varken Down uygulanamaz.", error.MessageText);
         Assert.Single(await db.BookingVerifications.ToArrayAsync(Token));
     }
 

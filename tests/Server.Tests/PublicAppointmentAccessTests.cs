@@ -268,7 +268,9 @@ public sealed class PublicAppointmentAccessTests
         await using var f = new Fixture { AccessEnabled = true }; await f.StartAsync(); using var client = f.Client();
         var booking = await Book(f, client); await Issue(client, booking);
         await using var db = f.Db();
-        await Assert.ThrowsAsync<Npgsql.PostgresException>(() => db.GetService<IMigrator>().MigrateAsync("20261017145959_PublicAppointmentBooking", Token));
+        var downSql = db.GetService<IMigrator>().GenerateScript("20261017201619_PublicAppointmentAccess", "20261017145959_PublicAppointmentBooking", MigrationsSqlGenerationOptions.NoTransactions);
+        var error = await Assert.ThrowsAsync<Npgsql.PostgresException>(() => db.Database.ExecuteSqlRawAsync(downSql, Token));
+        Assert.Equal("Müşteri erişimi veya iptal tarihçesi varken geri migration uygulanamaz.", error.MessageText);
         Assert.Single(await db.PublicAppointmentAccesses.ToArrayAsync(Token));
         foreach (var sql in new[] {
             "UPDATE \"PublicAppointmentAccesses\" SET \"TokenHash\"='plain'",

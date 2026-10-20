@@ -240,7 +240,8 @@ public sealed class BookingSmsBudgetTests
         await using (var db = f.Db())
         {
             Assert.False(db.Database.HasPendingModelChanges()); await db.Database.MigrateAsync(Token); await db.Database.MigrateAsync(Token);
-            await Assert.ThrowsAsync<PostgresException>(() => db.GetService<IMigrator>().MigrateAsync("20261017201619_PublicAppointmentAccess", Token));
+            var down = await Assert.ThrowsAsync<PostgresException>(() => db.GetService<IMigrator>().MigrateAsync("20261017201619_PublicAppointmentAccess", Token));
+            Assert.Equal("SMS bütçe onayı veya deneme tarihçesi varken Down uygulanamaz.", down.MessageText);
             await db.Database.ExecuteSqlRawAsync("CREATE ROLE app_user LOGIN PASSWORD 'SyntheticApp!123'; GRANT USAGE ON SCHEMA public TO app_user", Token);
             var script = await File.ReadAllTextAsync(FilePath("deploy/Apply-LocalMigration.ps1"), Token);
             var start = script.IndexOf("@'", StringComparison.Ordinal) + 2;
