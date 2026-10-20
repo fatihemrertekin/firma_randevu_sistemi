@@ -25,10 +25,10 @@ public static class BookingVerificationEndpoints
     {
         var group = app.MapGroup("/api/public-booking/verification").AllowAnonymous().RequireRateLimiting("booking-verification");
         group.MapPost("/request", (HttpContext ctx, IAntiforgery csrf, BookingVerificationSecurity security, AppDbContext db,
-            IDataProtectionProvider protection, TimeProvider clock) => ExecuteAsync<Request>(ctx, csrf, security.Enabled,
+            IDataProtectionProvider protection, TimeProvider clock) => ExecuteAsync<Request>(ctx, csrf, security.Enabled && security.DispatchEnabled,
                 (body, token) => RequestAsync(body, ctx, db, security, protection, clock, token)));
         group.MapPost("/resend", (HttpContext ctx, IAntiforgery csrf, BookingVerificationSecurity security, AppDbContext db,
-            IDataProtectionProvider protection, TimeProvider clock) => ExecuteAsync<Resend>(ctx, csrf, security.Enabled,
+            IDataProtectionProvider protection, TimeProvider clock) => ExecuteAsync<Resend>(ctx, csrf, security.Enabled && security.DispatchEnabled,
                 (body, token) => ResendAsync(body, ctx, db, security, protection, clock, token)));
         group.MapPost("/verify", (HttpContext ctx, IAntiforgery csrf, BookingVerificationSecurity security, AppDbContext db,
             TimeProvider clock) => ExecuteAsync<Verify>(ctx, csrf, security.Enabled,
@@ -145,7 +145,10 @@ public static class BookingVerificationEndpoints
         };
         item.CodeHash = security.Hash("code", item.Id, item.CodeVersion, code);
         item.UsedCodeHashes = [security.Hash("code-reuse", item.Id, code)];
-        db.BookingVerifications.Add(item); db.BookingSmsJobs.Add(Job(item, phone, code, protection, now, null));
+        var job = Job(item, phone, code, protection, now, null);
+        var reservation = await BookingSmsBudget.ReserveAsync(db, security, job.Id, 1, now, token);
+        if (reservation.Attempt is null) return reservation.WaitUntil is { } until ? Limited(ctx, until, now) : Results.Problem(statusCode: 503, title: "Telefon doğrulaması için gönderim bütçesi kullanılamıyor.");
+        db.BookingVerifications.Add(item); db.BookingSmsJobs.Add(job);
         BookingVerificationQuota.Event(db, security.KeyId, "Send", phoneHash, ipHash, now);
         await db.SaveChangesAsync(token); await transaction.CommitAsync(token);
         return Results.Json(new Requested(item.Id, secret, "+90******" + phone[^4..], item.ExpiresAt, item.ResendAt), statusCode: 202);
@@ -177,16 +180,23 @@ public static class BookingVerificationEndpoints
         item.UsedCodeHashes = [.. item.UsedCodeHashes, security.Hash("code-reuse", item.Id, code)];
         item.CodeVersion++;
         item.CodeHash = security.Hash("code", item.Id, item.CodeVersion, code); item.ResendAt = now.AddSeconds(60); item.UpdatedAt = now;
-        db.BookingSmsJobs.Add(Job(item, phone, code, protection, now, body.ResendKey));
+        var job = Job(item, phone, code, protection, now, body.ResendKey);
+        var reservation = await BookingSmsBudget.ReserveAsync(db, security, job.Id, 1, now, token);
+        if (reservation.Attempt is null) return reservation.WaitUntil is { } until ? Limited(ctx, until, now) : Results.Problem(statusCode: 503, title: "Telefon doğrulaması için gönderim bütçesi kullanılamıyor.");
+        db.BookingSmsJobs.Add(job);
         BookingVerificationQuota.Event(db, security.KeyId, "Send", item.PhoneHash, ipHash, now);
         await db.SaveChangesAsync(token); await transaction.CommitAsync(token);
         return Results.Json(new Resent(item.Id, item.ExpiresAt, item.ResendAt), statusCode: 202);
     }
 
-    internal static Task<int> CancelJobsAsync(AppDbContext db, Guid id, DateTimeOffset now, CancellationToken token) =>
-        db.BookingSmsJobs.Where(x => x.ChallengeId == id && (x.Status == "Pending" || x.Status == "Processing"))
+    internal static async Task<int> CancelJobsAsync(AppDbContext db, Guid id, DateTimeOffset now, CancellationToken token)
+    {
+        var jobs = db.BookingSmsJobs.Where(x => x.ChallengeId == id && (x.Status == "Pending" || x.Status == "Processing"));
+        await BookingSmsBudget.ReleaseAsync(db, jobs.Select(x => x.Id), token);
+        return await jobs
             .ExecuteUpdateAsync(s => s.SetProperty(x => x.Status, "Cancelled").SetProperty(x => x.ProtectedPayload, (string?)null)
                 .SetProperty(x => x.LeaseId, (Guid?)null).SetProperty(x => x.LeaseUntil, (DateTimeOffset?)null).SetProperty(x => x.UpdatedAt, now), token);
+    }
 
     private static async Task<IResult> VerifyAsync(Verify body, HttpContext ctx, AppDbContext db, BookingVerificationSecurity security,
         TimeProvider clock, CancellationToken token)

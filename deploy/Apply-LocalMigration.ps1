@@ -93,6 +93,11 @@ REVOKE DELETE, TRUNCATE ON TABLE "IdentityEmailQuotas" FROM app_user;
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO app_user;
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE "BookingVerifications", "BookingSmsJobs", "BookingVerificationQuotaEvents", "BookingSmsPeriods" TO app_user;
 REVOKE TRUNCATE ON TABLE "BookingVerifications", "BookingSmsJobs", "BookingVerificationQuotaEvents", "BookingSmsPeriods" FROM app_user;
+GRANT SELECT ON TABLE "BookingSmsBudgetPolicies" TO app_user;
+REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON TABLE "BookingSmsBudgetPolicies" FROM app_user;
+GRANT SELECT, INSERT, DELETE ON TABLE "BookingSmsAttempts" TO app_user;
+REVOKE UPDATE, TRUNCATE ON TABLE "BookingSmsAttempts" FROM app_user;
+GRANT UPDATE ("ReservedAt", "StartedAt", "LeaseId", "Outcome", "ProviderReference", "RetainUntil") ON TABLE "BookingSmsAttempts" TO app_user;
 '@ | docker compose --env-file deploy/.env -f deploy/compose.local.yaml exec -T db psql -U postgres -d firma_randevu -v ON_ERROR_STOP=1
 if ($LASTEXITCODE -ne 0) {
     throw 'Uygulama rolü yetkileri verilemedi.'

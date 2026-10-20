@@ -429,7 +429,12 @@ public sealed class PublicAppointmentAccessTests
         var command = new PublicAppointmentAccessEndpoints.Cancel(booking.Result.Version, Guid.NewGuid());
         using var cancelled = await Post(client, booking.Result.Id, "cancel", command); Assert.Equal(HttpStatusCode.OK, cancelled.StatusCode);
         Dictionary<string, string> before;
-        await using (var db = f.Db()) before = await BookingVerificationTests.Fingerprints(db);
+        BookingSmsBudgetPolicy budgetBefore;
+        await using (var db = f.Db())
+        {
+            before = await BookingVerificationTests.Fingerprints(db);
+            budgetBefore = await db.BookingSmsBudgetPolicies.AsNoTracking().SingleAsync(Token);
+        }
         foreach (var operation in new[] { new[] { "pg_dump", "-U", "postgres", "-d", "p02_recovery", "-Fc", "-f", "/tmp/access.dump" },
             new[] { "pg_restore", "--file=/tmp/access-check.sql", "/tmp/access.dump" },
             new[] { "createdb", "-U", "postgres", "access_restored" }, new[] { "pg_restore", "-U", "postgres", "-d", "access_restored", "/tmp/access.dump" } })
@@ -448,9 +453,12 @@ public sealed class PublicAppointmentAccessTests
             Assert.Equal(2, await db.AppointmentAudits.CountAsync(Token)); Assert.Equal("Cancelled", (await db.AppointmentTimeBlocks.SingleAsync(Token)).Status);
             Assert.Equal(command.RequestKey, (await db.PublicAppointmentAccesses.SingleAsync(Token)).CancellationRequestKey);
             var after = await BookingVerificationTests.Fingerprints(db);
-            foreach (var table in before.Keys.Except(new[] { "PublicAppointmentAccesses", "BookingVerifications" })) Assert.Equal(before[table], after[table]);
+            foreach (var table in before.Keys.Except(new[] { "PublicAppointmentAccesses", "BookingVerifications", "BookingSmsBudgetPolicies" })) Assert.Equal(before[table], after[table]);
+            var budgetAfter = await db.BookingSmsBudgetPolicies.AsNoTracking().SingleAsync(Token);
+            Assert.NotNull(budgetAfter.RevokedAt); budgetAfter.RevokedAt = null;
+            Assert.Equal(System.Text.Json.JsonSerializer.Serialize(budgetBefore), System.Text.Json.JsonSerializer.Serialize(budgetAfter));
         }
-        f.AccessEnabled = true; f.Enabled = true; await f.RestartAsync(); using var resumed = f.Client();
+        f.AccessEnabled = true; f.Enabled = true; f.DispatchEnabled = false; await f.RestartAsync(); using var resumed = f.Client();
         foreach (var token in new[] { first.Token, current.Token })
         {
             Authorize(resumed, token); using var read = await resumed.GetAsync($"{Path}/{booking.Result.Id}", Token); Assert.Equal(HttpStatusCode.Forbidden, read.StatusCode);

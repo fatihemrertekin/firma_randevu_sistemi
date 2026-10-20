@@ -14,9 +14,15 @@ public sealed class BookingVerificationSecurity
     private readonly byte[] key = [];
     private readonly string instance;
     public bool Enabled { get; }
+    public bool DispatchEnabled { get; }
+    public Guid BudgetApprovalId { get; }
+    internal string InstanceId => instance;
+    private readonly IBookingSmsDelivery delivery;
+    internal decimal MaximumUnitPriceTry => delivery.MaximumUnitPriceTry;
 
     public BookingVerificationSecurity(IConfiguration config, IBookingSmsDelivery delivery)
     {
+        this.delivery = delivery;
         instance = config["Auth:InstanceId"] ?? "";
         Enabled = config.GetValue<bool>("BookingVerification:Enabled");
         if (!Enabled) return;
@@ -25,6 +31,13 @@ public sealed class BookingVerificationSecurity
         try { key = Convert.FromBase64String(config["BookingVerification:HmacKey"] ?? ""); }
         catch (FormatException) { throw new InvalidOperationException("Telefon doğrulama anahtarı geçersiz."); }
         if (key.Length != 32) throw new InvalidOperationException("Telefon doğrulama anahtarı 32 bayt olmalı.");
+        DispatchEnabled = config.GetValue<bool>("BookingSms:DispatchEnabled");
+        if (DispatchEnabled)
+        {
+            if (!Guid.TryParse(config["BookingSms:BudgetApprovalId"], out var approval) || approval == Guid.Empty)
+                throw new InvalidOperationException("SMS gönderimi için kalıcı bütçe onay kimliği gerekli.");
+            BudgetApprovalId = approval;
+        }
     }
 
     public string Hash(string purpose, params object[] values) => Convert.ToHexString(HMACSHA256.HashData(key,

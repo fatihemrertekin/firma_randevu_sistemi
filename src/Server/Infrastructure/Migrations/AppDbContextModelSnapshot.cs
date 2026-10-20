@@ -607,6 +607,122 @@ namespace Server.Infrastructure.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Server.Infrastructure.BookingSmsAttempt", b =>
+                {
+                    b.Property<Guid>("JobId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Number")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid?>("LeaseId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Outcome")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<Guid>("PolicyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ProviderReference")
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
+
+                    b.Property<DateTimeOffset>("ReservedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal>("ReservedTry")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("numeric(10,2)");
+
+                    b.Property<DateTimeOffset>("RetainUntil")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("StartedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("JobId", "Number");
+
+                    b.HasIndex("ReservedAt");
+
+                    b.HasIndex("RetainUntil");
+
+                    b.HasIndex("PolicyId", "ReservedAt");
+
+                    b.ToTable("BookingSmsAttempts", t =>
+                        {
+                            t.HasCheckConstraint("CK_BookingSmsAttempt_Budget", "\"JobId\" <> '00000000-0000-0000-0000-000000000000'::uuid AND \"Number\" BETWEEN 1 AND 3 AND \"ReservedTry\" > 0 AND \"ReservedTry\" <= 0.50 AND isfinite(\"ReservedAt\") AND isfinite(\"RetainUntil\") AND \"RetainUntil\" >= \"ReservedAt\" + INTERVAL '30 days'");
+
+                            t.HasCheckConstraint("CK_BookingSmsAttempt_Reference", "\"ProviderReference\" IS NULL OR \"ProviderReference\" ~ '^[0-9]{1,80}$'");
+
+                            t.HasCheckConstraint("CK_BookingSmsAttempt_State", "(\"StartedAt\" IS NULL AND \"LeaseId\" IS NULL AND \"Outcome\" IN ('Reserved','Released') AND \"ProviderReference\" IS NULL) OR (\"StartedAt\" IS NOT NULL AND isfinite(\"StartedAt\") AND \"StartedAt\" >= \"ReservedAt\" AND \"LeaseId\" IS NOT NULL AND \"Outcome\" IN ('Started','Accepted','TemporaryFailure','PermanentFailure','Unknown'))");
+                        });
+                });
+
+            modelBuilder.Entity("Server.Infrastructure.BookingSmsBudgetPolicy", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("DailyCalls")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("DailyTry")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("numeric(10,2)");
+
+                    b.Property<DateTimeOffset>("EndsAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("InstanceId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("KeyId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<int>("MonthlyCalls")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("MonthlyTry")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("numeric(10,2)");
+
+                    b.Property<DateTimeOffset?>("RevokedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("StartsAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("TotalCalls")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("TotalTry")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("numeric(10,2)");
+
+                    b.Property<decimal>("UnitPriceTry")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("numeric(10,2)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("BookingSmsBudgetPolicies", t =>
+                        {
+                            t.HasCheckConstraint("CK_BookingSmsBudgetPolicy_Identity", "\"Id\" <> '00000000-0000-0000-0000-000000000000'::uuid AND length(\"InstanceId\") BETWEEN 1 AND 100 AND \"KeyId\" ~ '^[0-9A-F]{64}$'");
+
+                            t.HasCheckConstraint("CK_BookingSmsBudgetPolicy_Limits", "\"UnitPriceTry\" > 0 AND \"UnitPriceTry\" <= 0.50 AND \"DailyCalls\" BETWEEN 1 AND 20 AND \"MonthlyCalls\" BETWEEN 1 AND 200 AND \"TotalCalls\" BETWEEN 1 AND 200 AND \"DailyTry\" > 0 AND \"DailyTry\" <= 10 AND \"MonthlyTry\" > 0 AND \"MonthlyTry\" <= 100 AND \"TotalTry\" > 0 AND \"TotalTry\" <= 100");
+
+                            t.HasCheckConstraint("CK_BookingSmsBudgetPolicy_Times", "isfinite(\"StartsAt\") AND isfinite(\"EndsAt\") AND \"EndsAt\" > \"StartsAt\" AND \"EndsAt\" <= \"StartsAt\" + INTERVAL '31 days' AND (\"RevokedAt\" IS NULL OR isfinite(\"RevokedAt\"))");
+                        });
+                });
+
             modelBuilder.Entity("Server.Infrastructure.BookingSmsJob", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2081,6 +2197,15 @@ namespace Server.Infrastructure.Migrations
                     b.HasOne("Server.Infrastructure.AppUser", null)
                         .WithMany()
                         .HasForeignKey("ActorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Server.Infrastructure.BookingSmsAttempt", b =>
+                {
+                    b.HasOne("Server.Infrastructure.BookingSmsBudgetPolicy", null)
+                        .WithMany()
+                        .HasForeignKey("PolicyId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

@@ -31,11 +31,13 @@ public sealed class BookingVerificationTests
     internal sealed class Sms : IBookingSmsDelivery
     {
         public bool Available { get; set; } = true;
+        public decimal MaximumUnitPriceTry { get; set; } = 0.40m;
+        public string? ProviderReference { get; set; }
         public ConcurrentQueue<(string Phone, string Code, Guid Id)> Calls { get; } = new();
         public Func<CancellationToken, Task<BookingSmsOutcome>> Result { get; set; } = _ => Task.FromResult(BookingSmsOutcome.Accepted);
-        public Task<BookingSmsOutcome> SendAsync(string phone, string code, Guid deliveryId, CancellationToken token)
+        public async Task<BookingSmsResult> SendAsync(string phone, string code, Guid deliveryId, CancellationToken token)
         {
-            Calls.Enqueue((phone, code, deliveryId)); return Result(token);
+            Calls.Enqueue((phone, code, deliveryId)); return new(await Result(token), ProviderReference);
         }
     }
     internal sealed class Fixture : IAsyncDisposable
@@ -50,6 +52,9 @@ public sealed class BookingVerificationTests
         public Guid PolicyVersion { get; private set; }
         public bool Enabled { get; set; } = true;
         public bool AccessEnabled { get; set; }
+        public bool DispatchEnabled { get; set; } = true;
+        public Guid BudgetApprovalId { get; set; } = Guid.NewGuid();
+        public string? AppConnectionString { get; set; }
         public string HmacKey { get; set; } = Convert.ToBase64String(Enumerable.Range(0, 32).Select(x => (byte)x).ToArray());
         public string DatabaseName { get; set; } = "p02_recovery";
         private string ConnectionString => new Npgsql.NpgsqlConnectionStringBuilder(Database.GetConnectionString()) { Database = DatabaseName }.ConnectionString;
@@ -72,6 +77,28 @@ public sealed class BookingVerificationTests
             for (var day = 0; day < 7; day++) db.StaffWorkingDays.Add(new() { StaffMemberId = StaffId, Day = day, OpensAtMinute = 540, ClosesAtMinute = 1200 });
             PolicyVersion = (await db.BookingPolicies.SingleAsync(Token)).Version;
             await db.SaveChangesAsync(Token);
+            var config = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Auth:InstanceId"] = "p05-synthetic",
+                ["BookingVerification:Enabled"] = "true",
+                ["BookingVerification:HmacKey"] = HmacKey
+            }).Build();
+            db.BookingSmsBudgetPolicies.Add(new()
+            {
+                Id = BudgetApprovalId,
+                InstanceId = "p05-synthetic",
+                KeyId = new BookingVerificationSecurity(config, Sms).KeyId,
+                UnitPriceTry = 0.50m,
+                DailyCalls = 20,
+                MonthlyCalls = 200,
+                TotalCalls = 200,
+                DailyTry = 10m,
+                MonthlyTry = 100m,
+                TotalTry = 100m,
+                StartsAt = Clock.Now,
+                EndsAt = Clock.Now.AddDays(31)
+            });
+            await db.SaveChangesAsync(Token);
             await RestartAsync();
         }
         public async Task RestartAsync()
@@ -82,10 +109,12 @@ public sealed class BookingVerificationTests
                 builder.UseEnvironment("Development");
                 builder.ConfigureAppConfiguration((_, config) => config.AddInMemoryCollection(new Dictionary<string, string?>
                 {
-                    ["ConnectionStrings:AppDatabase"] = ConnectionString,
+                    ["ConnectionStrings:AppDatabase"] = AppConnectionString ?? ConnectionString,
                     ["Auth:InstanceId"] = "p05-synthetic",
                     ["BookingVerification:Enabled"] = Enabled.ToString(),
                     ["PublicBooking:AccessEnabled"] = AccessEnabled.ToString(),
+                    ["BookingSms:DispatchEnabled"] = DispatchEnabled.ToString(),
+                    ["BookingSms:BudgetApprovalId"] = BudgetApprovalId.ToString(),
                     ["BookingVerification:HmacKey"] = HmacKey
                 }));
                 builder.ConfigureServices(services =>
@@ -121,10 +150,10 @@ public sealed class BookingVerificationTests
         var originalKey = f.HmacKey;
         var differentKey = Convert.ToBase64String(new byte[32]);
         await using var other = f.App.WithWebHostBuilder(builder => builder.ConfigureAppConfiguration((_, config) =>
-            config.AddInMemoryCollection(new Dictionary<string, string?> { ["BookingVerification:HmacKey"] = differentKey })));
+            config.AddInMemoryCollection(new Dictionary<string, string?> { ["BookingVerification:HmacKey"] = differentKey, ["BookingSms:DispatchEnabled"] = "false" })));
         using var otherClient = other.CreateClient(); otherClient.DefaultRequestHeaders.Add("Origin", "http://localhost");
         await f.RequestAsync(client);
-        using var rejected = await f.Post(otherClient, "request", f.Request());
+        using var rejected = await f.Post(otherClient, "verify", new BookingVerificationEndpoints.Verify(Guid.NewGuid(), new string('a', 43), "123456"));
         Assert.Equal(HttpStatusCode.InternalServerError, rejected.StatusCode);
         f.HmacKey = differentKey; await f.RestartAsync();
         Assert.Throws<InvalidOperationException>(() => f.Client());
@@ -304,8 +333,12 @@ public sealed class BookingVerificationTests
         await using var f = new Fixture(); await f.StartAsync(); await using var db = f.Db();
         Assert.False(db.Database.HasPendingModelChanges()); await db.Database.MigrateAsync(Token); await db.Database.MigrateAsync(Token);
         var migrator = db.GetService<IMigrator>();
+        var budget = await db.BookingSmsBudgetPolicies.AsNoTracking().SingleAsync(Token);
+        // Bu senaryo eski boş OTP migration'ını sınar; yeni bütçe guard'ı ayrı sınıfta sınanır.
+        await db.BookingSmsBudgetPolicies.ExecuteDeleteAsync(Token);
         await migrator.MigrateAsync("20261016222045_CustomerBookingPolicy", Token);
         await db.Database.MigrateAsync(Token);
+        db.BookingSmsBudgetPolicies.Add(budget); await db.SaveChangesAsync(Token);
         Assert.Equal(f.StaffId, (await db.StaffMembers.SingleAsync(Token)).Id);
         using var client = f.Client(); await f.RequestAsync(client);
         await Assert.ThrowsAsync<Npgsql.PostgresException>(() => migrator.MigrateAsync("20261016222045_CustomerBookingPolicy", Token));
@@ -444,7 +477,7 @@ public sealed class BookingVerificationTests
         await using var f = new Fixture(); await f.StartAsync(); using var client = f.Client(); await f.RequestAsync(client);
         Dictionary<string, string> before;
         await using (var db = f.Db()) before = await Fingerprints(db);
-        Assert.Equal(51, before.Count);
+        Assert.Equal(53, before.Count);
         foreach (var command in new[]
         {
             new[] { "pg_dump", "-U", "postgres", "-d", "p02_recovery", "-Fc", "-f", "/tmp/p05.dump" },
