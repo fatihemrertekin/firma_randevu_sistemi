@@ -1,5 +1,9 @@
 # Güvenlik — uygulama kapsamı ve sınırlar
 
+## Vite/Vitest güvenlik bakımı — 23.10.2026
+
+Vite `8.3.3`, Vitest/mocker/spy `5.0.3` yamaları temiz lock kurulumunda doğrulandı; tam ve üretim npm taramaları **0 açık**. Aşağıdaki P05-08 taraması yama öncesi tarihli kayıttır. Kurulu upstream fonksiyonlarında mock kod enjeksiyonu, Windows backslash geçişi ve editor percent/CR/LF argümanları için normal girdilerle birlikte dokuz kontrol geçti; canlı exploit/shell/editor çalıştırılmadı. [Kapsam, ilgili testler ve teslim kapıları](plans/P05.md#vitevitest-güvenlik-bakımı--23102026). Üretim API/DB/kimlik ve kapalı gönderim ayarları değişmedi; NuGet kaynağı değişmediğinden önceki tarama tekrarlanmadı.
+
 ## P04-10 tek randevu erişimi
 
 Token üretme/yenileme, GET ve müşteri iptalinin yetki/ömür/restore sözleşmesi [ADR-008](adr/008-public-appointment-access.md) içindedir. `PublicBooking:AccessEnabled` varsayılan kapalıdır; ana kurulumda açılmaz. Authorization bearer token URL/query/cookie'den alınmaz, Owner cookie'si yerine geçmez. POST aynı Origin+CSRF, 4 KiB/JSON allowlist ve mevcut ortak yazım limiti altında; GET mevcut okuma limitindedir. Kamu yanıtları hata/429 dahil no-store/no-referrer taşır. Header/gövde sırları loglanmaz.
