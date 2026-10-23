@@ -2,7 +2,16 @@ name: CI
 
 on:
   push:
+    branches: [main]
   pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   verify:
@@ -10,14 +19,39 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: CI kapsamı regresyonları
+        run: python3 -m unittest discover -s .github/scripts -p 'test_*.py'
+
+      - name: Değişiklik kapsamı
+        id: scope
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          CI_EVENT: ${{ github.event_name }}
+        run: python3 .github/scripts/ci_scope.py
+
+      - name: Belge kontrolleri
+        shell: pwsh
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          git diff --check $env:BASE_SHA $env:HEAD_SHA
+          if ($LASTEXITCODE -ne 0) { throw 'Belge diff kontrolü başarısız.' }
+          ./.github/scripts/Validate-Documentation.ps1
 
       - uses: actions/setup-node@v4
+        if: steps.scope.outputs.web == 'true' || steps.scope.outputs.server == 'true'
         with:
           node-version-file: .node-version
           cache: npm
           cache-dependency-path: src/Web/package-lock.json
 
       - uses: actions/setup-dotnet@v4
+        if: steps.scope.outputs.server == 'true'
         with:
           dotnet-version: 10.0.401
           cache: true
@@ -26,33 +60,46 @@ jobs:
             tests/Server.Tests/packages.lock.json
 
       - name: Web bağımlılıkları
+        if: steps.scope.outputs.web == 'true' || steps.scope.outputs.server == 'true'
         run: npm ci --ignore-scripts
         working-directory: src/Web
 
+      - name: Sunucu testleri için statik web çıktısı
+        if: steps.scope.outputs.server == 'true' && steps.scope.outputs.web == 'false'
+        run: npm run build
+        working-directory: src/Web
+
       - name: Web kontrolleri
+        if: steps.scope.outputs.web == 'true'
         run: |
           npm run typecheck
           npm run lint
-          npm test
+          mapfile -t tests < <(jq -r '.web[]' ../../.github/test-plan.json)
+          npm test -- "${tests[@]}"
           npm run build
         working-directory: src/Web
 
       - name: Sunucu bağımlılıkları
+        if: steps.scope.outputs.server == 'true'
         run: dotnet restore FirmaRandevu.slnx --locked-mode
 
       - name: Sunucu kontrolleri
+        if: steps.scope.outputs.server == 'true'
         run: |
           dotnet build FirmaRandevu.slnx --no-restore
-          dotnet test FirmaRandevu.slnx --no-restore
+          mapfile -t tests < <(jq -r '.server[]' .github/test-plan.json)
+          dotnet run --project tests/Server.Tests/Server.Tests.csproj --no-build -- -class "${tests[@]}"
           dotnet format FirmaRandevu.slnx --verify-no-changes --no-restore
 
       - name: Geçici yerel test parolaları
+        if: steps.scope.outputs.compose == 'true'
         run: |
           echo "POSTGRES_PASSWORD=$(openssl rand -hex 32)" >> deploy/.env
           echo "APP_DB_PASSWORD=$(openssl rand -hex 32)" >> deploy/.env
           echo 'DB_PORT=55432' >> deploy/.env
 
       - name: Compose ve imaj
+        if: steps.scope.outputs.compose == 'true'
         run: |
           docker compose --env-file deploy/.env -f deploy/compose.local.yaml config --quiet
           docker compose --env-file deploy/.env -f deploy/compose.local.yaml up -d --build --wait
@@ -62,6 +109,7 @@ jobs:
           curl --fail --silent --show-error http://127.0.0.1:8080/ | grep 'lang="tr"'
 
       - name: Veritabanı yeniden başlatma kanıtı
+        if: steps.scope.outputs.compose == 'true'
         run: |
           docker compose --env-file deploy/.env -f deploy/compose.local.yaml exec -T db \
             psql -U postgres -d firma_randevu -v ON_ERROR_STOP=1 \

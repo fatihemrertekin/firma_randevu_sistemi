@@ -15,6 +15,7 @@ src/Server/wwwroot/
 .npm-cache/
 .nuget/
 .local/
+.github/scripts/__pycache__/
 
 # Yerel altyapı ve sırlar
 .env

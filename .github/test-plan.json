@@ -1,0 +1,7 @@
+{
+  "reason": "CI helpers and documentation only; product source, database and deployment are unchanged.",
+  "files": [],
+  "web": [],
+  "server": [],
+  "compose": false
+}
