@@ -34,6 +34,7 @@ public static class AppointmentEndpoints
         appointments.MapPost("/pending", (CreateRequest request, HttpContext context, IAntiforgery csrf, AppDbContext db, UserManager<AppUser> users, TimeProvider clock) => CreateAsync(request, true, context, csrf, db, users, clock));
         appointments.MapAppointmentStatusEndpoints();
         appointments.MapAppointmentMoveEndpoints();
+        AppointmentReminders.MapAppointmentReminderEndpoints(appointments);
     }
 
     internal static CancellationTokenSource Timeout(HttpContext context)
@@ -146,6 +147,7 @@ public static class AppointmentEndpoints
         });
         try
         {
+            await AppointmentReminders.SyncAsync(context, db, appointment, block, clock.GetUtcNow(), timeout.Token);
             await db.SaveChangesAsync(timeout.Token);
             await transaction.CommitAsync(timeout.Token);
         }

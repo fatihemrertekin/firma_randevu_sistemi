@@ -8,23 +8,24 @@ internal static class BookingSmsBudget
     internal sealed record Reservation(BookingSmsAttempt? Attempt, DateTimeOffset? WaitUntil = null, bool Warning = false);
 
     internal static async Task<BookingSmsBudgetPolicy?> PolicyAsync(AppDbContext db, BookingVerificationSecurity security,
-        DateTimeOffset now, CancellationToken token)
+        DateTimeOffset now, CancellationToken token, decimal? maximumUnitPriceTry = null)
     {
         if (!security.DispatchEnabled) return null;
         var policy = await db.BookingSmsBudgetPolicies.AsNoTracking().SingleOrDefaultAsync(x => x.Id == security.BudgetApprovalId, token);
         return policy is not null && policy.InstanceId == security.InstanceId && policy.KeyId == security.KeyId &&
             policy.RevokedAt is null && policy.StartsAt <= now && now < policy.EndsAt &&
-            security.MaximumUnitPriceTry > 0 && security.MaximumUnitPriceTry <= policy.UnitPriceTry
+            (maximumUnitPriceTry ?? security.MaximumUnitPriceTry) > 0 && (maximumUnitPriceTry ?? security.MaximumUnitPriceTry) <= policy.UnitPriceTry
             ? policy : null;
     }
 
     // Çağıran, OTP kilidini ve aynı transaction'ı tutar; ilk rezervasyon kuyrukla birlikte commit edilir.
     internal static async Task<Reservation> ReserveAsync(AppDbContext db, BookingVerificationSecurity security,
-        Guid jobId, int number, DateTimeOffset now, CancellationToken token)
+        Guid jobId, int number, DateTimeOffset now, CancellationToken token, string purpose = "Otp", decimal? maximumUnitPriceTry = null)
     {
-        var policy = await PolicyAsync(db, security, now, token);
+        var policy = await PolicyAsync(db, security, now, token, maximumUnitPriceTry);
         if (policy is null) return new(null);
         var attempt = await db.BookingSmsAttempts.SingleOrDefaultAsync(x => x.JobId == jobId && x.Number == number, token);
+        if (await db.BookingSmsAttempts.AnyAsync(x => x.JobId == jobId && x.Purpose != purpose, token)) return new(null);
         if (attempt is not null && (attempt.PolicyId != policy.Id || attempt.StartedAt is not null || attempt.Outcome != "Reserved" || attempt.ReservedTry != policy.UnitPriceTry))
             return new(null);
         if (number > 1 && !await db.BookingSmsAttempts.AnyAsync(x => x.JobId == jobId && x.Number == 1 && x.StartedAt != null, token))
@@ -51,7 +52,7 @@ internal static class BookingSmsBudget
         if (waits.Count > 0) return new(null, waits.Max());
         if (attempt is null)
         {
-            attempt = new() { JobId = jobId, Number = number, PolicyId = policy.Id, ReservedTry = policy.UnitPriceTry, Outcome = "Reserved" };
+            attempt = new() { JobId = jobId, Number = number, PolicyId = policy.Id, ReservedTry = policy.UnitPriceTry, Outcome = "Reserved", Purpose = purpose };
             db.BookingSmsAttempts.Add(attempt);
         }
         // Gece kuyruğa alınan, henüz çağrılmamış iş gerçek çağrı gününe/ayına yeniden ayrılır.
@@ -65,15 +66,19 @@ internal static class BookingSmsBudget
     }
 
     internal static Task<int> ReleaseAsync(AppDbContext db, IQueryable<Guid> jobs, CancellationToken token) =>
-        db.BookingSmsAttempts.Where(x => jobs.Contains(x.JobId) && x.StartedAt == null && x.Outcome == "Reserved")
+        db.BookingSmsAttempts.Where(x => x.Purpose == "Otp" && jobs.Contains(x.JobId) && x.StartedAt == null && x.Outcome == "Reserved")
             .ExecuteUpdateAsync(s => s.SetProperty(x => x.Outcome, "Released"), token);
 
     internal static async Task MaintainAsync(AppDbContext db, DateTimeOffset now, CancellationToken token)
     {
         var inactive = db.BookingSmsJobs.Where(j => j.Status != "Pending" && j.Status != "Processing" || j.ExpiresAt <= now).Select(j => j.Id);
         await ReleaseAsync(db, inactive, token);
-        await db.BookingSmsAttempts.Where(a => a.Outcome == "Started" && !db.BookingSmsJobs.Any(j => j.Id == a.JobId &&
-            j.Status == "Processing" && j.LeaseId == a.LeaseId && j.LeaseUntil > now))
+        await db.BookingSmsAttempts.Where(a => a.Purpose == "Reminder" && a.StartedAt == null && a.Outcome == "Reserved" &&
+            !db.AppointmentReminderJobs.Any(j => j.Id == a.JobId && (j.Status == "Pending" || j.Status == "Processing") && j.Deadline > now))
+            .ExecuteUpdateAsync(s => s.SetProperty(x => x.Outcome, "Released"), token);
+        await db.BookingSmsAttempts.Where(a => a.Outcome == "Started" &&
+            (a.Purpose == "Otp" && !db.BookingSmsJobs.Any(j => j.Id == a.JobId && j.Status == "Processing" && j.LeaseId == a.LeaseId && j.LeaseUntil > now) ||
+             a.Purpose == "Reminder" && !db.AppointmentReminderJobs.Any(j => j.Id == a.JobId && j.Status == "Processing" && j.LeaseId == a.LeaseId && j.LeaseUntil > now)))
             .ExecuteUpdateAsync(s => s.SetProperty(x => x.Outcome, "Unknown"), token);
         await db.Database.ExecuteSqlInterpolatedAsync($"""
             DELETE FROM "BookingSmsAttempts" WHERE ("JobId", "Number") IN

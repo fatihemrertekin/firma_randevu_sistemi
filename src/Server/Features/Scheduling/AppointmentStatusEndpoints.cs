@@ -52,6 +52,7 @@ public static class AppointmentStatusEndpoints
         if (block.Status == "Confirmed" && (status == "Cancelled" ? now >= block.StartsAt : now < block.StartsAt))
             return Conflict(status == "Cancelled" ? "Başlayan randevu sıradan iptalle açılmaz." : "Randevu başlamadan tamamlandı veya gelmedi olarak işaretlenemez.");
         block.Status = status; appointment.Version = Guid.NewGuid();
+        await AppointmentReminders.SyncAsync(context, db, appointment, block, clock.GetUtcNow(), token);
         var audit = new AppointmentAudit { Id = Guid.NewGuid(), AppointmentId = id, ActorId = owner.Id, AppointmentVersion = appointment.Version, OccurredAt = now, Kind = status };
         db.AppointmentAudits.Add(audit);
         db.AppointmentStatusCommands.Add(new() { ActorId = owner.Id, RequestKey = request.RequestKey, AppointmentId = id, ExpectedVersion = request.Version, Status = status, AuditId = audit.Id });

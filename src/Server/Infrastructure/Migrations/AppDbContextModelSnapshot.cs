@@ -379,6 +379,83 @@ namespace Server.Infrastructure.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Server.Infrastructure.AppointmentReminderJob", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AppointmentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AppointmentVersion")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Attempts")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("BudgetApprovalId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("Deadline")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("DueAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("LeaseId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("LeaseUntil")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("NextAttemptAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ProtectedPhone")
+                        .HasMaxLength(4096)
+                        .HasColumnType("character varying(4096)");
+
+                    b.Property<DateTimeOffset?>("StartedOnceAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("StartsAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<DateTimeOffset?>("SuppressedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("SuppressedBy")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AppointmentId")
+                        .IsUnique();
+
+                    b.HasIndex("SuppressedBy");
+
+                    b.HasIndex("Status", "NextAttemptAt");
+
+                    b.ToTable("AppointmentReminderJobs", t =>
+                        {
+                            t.HasCheckConstraint("CK_AppointmentReminderJobs_Lease", "(\"Status\" = 'Processing' AND \"LeaseId\" IS NOT NULL AND \"LeaseUntil\" IS NOT NULL) OR (\"Status\" <> 'Processing' AND \"LeaseId\" IS NULL AND \"LeaseUntil\" IS NULL)");
+
+                            t.HasCheckConstraint("CK_AppointmentReminderJobs_Payload", "(\"Status\" IN ('Pending','Processing') AND \"ProtectedPhone\" IS NOT NULL AND \"SuppressedAt\" IS NULL) OR (\"Status\" NOT IN ('Pending','Processing') AND \"ProtectedPhone\" IS NULL)");
+
+                            t.HasCheckConstraint("CK_AppointmentReminderJobs_Started", "(\"Attempts\" = 0 AND \"StartedOnceAt\" IS NULL) OR (\"Attempts\" > 0 AND \"StartedOnceAt\" IS NOT NULL)");
+
+                            t.HasCheckConstraint("CK_AppointmentReminderJobs_State", "\"Status\" IN ('Pending','Processing','Accepted','Unknown','Failed','Cancelled','TooLate','Expired','Budget','Suppressed') AND \"Attempts\" BETWEEN 0 AND 3");
+
+                            t.HasCheckConstraint("CK_AppointmentReminderJobs_Time", "isfinite(\"StartsAt\") AND \"DueAt\" = \"StartsAt\" - INTERVAL '3 hours' AND \"Deadline\" = \"DueAt\" + INTERVAL '15 minutes' AND isfinite(\"NextAttemptAt\")");
+                        });
+                });
+
             modelBuilder.Entity("Server.Infrastructure.AppointmentStatusCommand", b =>
                 {
                     b.Property<Guid>("ActorId")
@@ -630,6 +707,13 @@ namespace Server.Infrastructure.Migrations
                         .HasMaxLength(80)
                         .HasColumnType("character varying(80)");
 
+                    b.Property<string>("Purpose")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(8)
+                        .HasColumnType("character varying(8)")
+                        .HasDefaultValue("Otp");
+
                     b.Property<DateTimeOffset>("ReservedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -658,6 +742,8 @@ namespace Server.Infrastructure.Migrations
                             t.HasCheckConstraint("CK_BookingSmsAttempt_Reference", "\"ProviderReference\" IS NULL OR \"ProviderReference\" ~ '^[0-9]{1,80}$'");
 
                             t.HasCheckConstraint("CK_BookingSmsAttempt_State", "(\"StartedAt\" IS NULL AND \"LeaseId\" IS NULL AND \"Outcome\" IN ('Reserved','Released') AND \"ProviderReference\" IS NULL) OR (\"StartedAt\" IS NOT NULL AND isfinite(\"StartedAt\") AND \"StartedAt\" >= \"ReservedAt\" AND \"LeaseId\" IS NOT NULL AND \"Outcome\" IN ('Started','Accepted','TemporaryFailure','PermanentFailure','Unknown'))");
+
+                            t.HasCheckConstraint("CK_BookingSmsAttempts_Purpose", "\"Purpose\" IN ('Otp','Reminder')");
                         });
                 });
 
@@ -2148,6 +2234,20 @@ namespace Server.Infrastructure.Migrations
                         .HasForeignKey("StaffMemberId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Server.Infrastructure.AppointmentReminderJob", b =>
+                {
+                    b.HasOne("Server.Infrastructure.Appointment", null)
+                        .WithMany()
+                        .HasForeignKey("AppointmentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Server.Infrastructure.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("SuppressedBy")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("Server.Infrastructure.AppointmentStatusCommand", b =>

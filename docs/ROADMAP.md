@@ -67,6 +67,8 @@ Pilot kapsamı [PRODUCT](PRODUCT.md#2-ürün-kararları) ile kararlaştırıldı
 
 ### P05 — Doğrulama/bildirim (P04)
 
+- 23.10.2026: P05-07 gönderim kapalı tek hatırlatma planı yerelde tamamlandı; ürün sahibi zamanı **3 saat önce** seçti. Sıradaki P05-08 uygulaması somut kapsam onayından sonra başlar; [kaynak/kabul ve sınırlar](plans/P05.md#p05-07--gönderim-kapalı-tek-hatırlatma-planı--23102026). Gerçek SMS/ücretli kabul ertelemesi ve açık UI görsel kapanışı korunur.
+- 20.10.2026 sıra kararı: ücret gerektiren P05-05 gerçek SMS/OTP kabulü proje geliştirmelerinin sonuna ertelendi; kapanışta hatırlatılıp güncel maliyet/alıcı/koşul onayıyla ele alınır. P05-06 gerçek pilotu bunun önüne geçmez. Sıradaki maliyetsiz aday P05-07 gönderim kapalı tek hatırlatmanın dar planıdır; gerçek SMS gerektirmeyen geliştirme/sentetik kabul sürer, P05 bütünü done sayılmaz. Ayrıntı ve kapanış tetiği [P05 planındadır](plans/P05.md#ücretli-gerçek-sms-kabulünün-proje-sonuna-ertelenmesi--20102026).
 - İş: Outbox/worker; tek resmi SMS adaptörü + test sahtesi; misafir için OTP ve onaylı randevuya tek hatırlatma. İşletmenin gerektiğinde manuel onayı vardır; bekleyen istek 30 dakikada onaylanmazsa iptal edilip slot serbest kalır. İşletme e-postası için işlemsel servis. Hesap yoksa sandbox/gönderim kapalı. SMS gönderici başlığı/operatör onayı süresini erken başlat.
 - Çıkış: Restart, tekrar, timeout ve eski hatırlatma testleri; SMS kotası/harcama tavanı. Kamu rezervasyonunda OTP var; manuel onay akışı tanımlıdır ve mesaj maliyeti ölçülür.
 

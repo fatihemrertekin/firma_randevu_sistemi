@@ -52,6 +52,8 @@ public sealed class BookingVerificationTests
         public Guid PolicyVersion { get; private set; }
         public bool Enabled { get; set; } = true;
         public bool AccessEnabled { get; set; }
+        public bool RemindersEnabled { get; set; }
+        public IAppointmentReminderDelivery? ReminderDelivery { get; set; }
         public bool DispatchEnabled { get; set; } = true;
         public Guid BudgetApprovalId { get; set; } = Guid.NewGuid();
         public string? AppConnectionString { get; set; }
@@ -113,6 +115,7 @@ public sealed class BookingVerificationTests
                     ["Auth:InstanceId"] = "p05-synthetic",
                     ["BookingVerification:Enabled"] = Enabled.ToString(),
                     ["PublicBooking:AccessEnabled"] = AccessEnabled.ToString(),
+                    ["AppointmentReminders:Enabled"] = RemindersEnabled.ToString(),
                     ["BookingSms:DispatchEnabled"] = DispatchEnabled.ToString(),
                     ["BookingSms:BudgetApprovalId"] = BudgetApprovalId.ToString(),
                     ["BookingVerification:HmacKey"] = HmacKey
@@ -120,8 +123,10 @@ public sealed class BookingVerificationTests
                 builder.ConfigureServices(services =>
                 {
                     services.AddSingleton<TimeProvider>(Clock); services.AddSingleton<IBookingSmsDelivery>(Sms);
+                    if (ReminderDelivery is not null) services.AddSingleton<IAppointmentReminderDelivery>(ReminderDelivery);
                     foreach (var descriptor in services.Where(x => x.ServiceType == typeof(IHostedService) &&
-                        (x.ImplementationType == typeof(BookingSmsWorker) || x.ImplementationType == typeof(AppointmentPendingWorker))).ToArray()) services.Remove(descriptor);
+                        (x.ImplementationType == typeof(BookingSmsWorker) || x.ImplementationType == typeof(AppointmentPendingWorker) ||
+                         x.ImplementationType == typeof(AppointmentReminderWorker))).ToArray()) services.Remove(descriptor);
                 });
             });
         }

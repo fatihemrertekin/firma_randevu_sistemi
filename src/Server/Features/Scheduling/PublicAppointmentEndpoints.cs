@@ -100,6 +100,7 @@ public static class PublicAppointmentEndpoints
             };
             block.AppointmentId = appointment.Id;
             db.Appointments.Add(appointment); db.AppointmentTimeBlocks.Add(block);
+            await AppointmentReminders.SyncAsync(ctx, db, appointment, block, now, token);
             db.AppointmentAudits.Add(new()
             {
                 Id = Guid.NewGuid(),

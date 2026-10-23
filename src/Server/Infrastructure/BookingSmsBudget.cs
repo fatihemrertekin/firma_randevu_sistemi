@@ -19,6 +19,7 @@ public sealed class BookingSmsBudgetPolicy
 
 public sealed class BookingSmsAttempt
 {
+    public string Purpose { get; set; } = "Otp";
     public Guid JobId { get; set; }
     public int Number { get; set; }
     public Guid PolicyId { get; set; }

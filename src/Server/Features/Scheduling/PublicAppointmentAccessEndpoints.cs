@@ -128,6 +128,7 @@ public static class PublicAppointmentAccessEndpoints
             block.Status == "Pending" && (block.PendingExpiresAt is null || now.UtcDateTime >= block.PendingExpiresAt)) return Conflict();
         block.Status = "Cancelled";
         appointment.Version = Guid.NewGuid();
+        await AppointmentReminders.SyncAsync(ctx, db, appointment, block, now, token);
         var audit = new AppointmentAudit { Id = Guid.NewGuid(), AppointmentId = id, AppointmentVersion = appointment.Version, OccurredAt = now.UtcDateTime, Kind = "PublicCancelled" };
         db.AppointmentAudits.Add(audit);
         access.CancellationRequestKey = body.RequestKey; access.CancellationExpectedVersion = body.Version; access.CancellationAuditId = audit.Id;

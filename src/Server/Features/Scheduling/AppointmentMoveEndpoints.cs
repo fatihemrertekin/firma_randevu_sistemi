@@ -90,6 +90,7 @@ public static class AppointmentMoveEndpoints
             if (block.StaffMemberId != target.Id) block.StaffName = target.Name;
             block.StaffMemberId = target.Id; block.StartsAt = start; block.EndsAt = end; block.OccupiedStartsAt = occupiedStart; block.OccupiedEndsAt = occupiedEnd;
             appointment.Version = Guid.NewGuid(); auditId = Guid.NewGuid();
+            await AppointmentReminders.SyncAsync(context, db, appointment, block, clock.GetUtcNow(), token);
             db.AppointmentAudits.Add(new() { Id = auditId, AppointmentId = id, ActorId = owner.Id, AppointmentVersion = appointment.Version, OccurredAt = now, Kind = "Moved" });
         }
         db.AppointmentMoveCommands.Add(new() { ActorId = owner.Id, RequestKey = request.RequestKey, AppointmentId = id, ExpectedVersion = request.Version, StaffMemberId = target.Id, StartsAt = start, AuditId = auditId });

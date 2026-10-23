@@ -10,6 +10,8 @@ Bu belge uygunluk sertifikası değildir. Genel yetki/izolasyon/sır sözleşmes
 
 ## P05-02 telefon doğrulaması
 
+P05-08 hatırlatma ayrı kapalı taşıyıcı/iş ve ortak SMS bütçesi kullanır. Randevu sürümü/durumu/engelleme gönderim öncesi kilit altında denetlenir; Started sonrasında iptal uçuşa geçmiş çağrıyı geri alamaz. Şifreli alıcı terminal durumda temizlenir; tekrar önleme ve engelleme kaydı korunur. Amaç/bedel/kimlik kolonları uygulama rolünde değiştirilemez, DB trigger'ı ilk çağrı ve engellemenin geri alınmasını reddeder. Owner engelleme API'si nesne/sürüm/MFA/CSRF ve mevcut limitleri uygular. [ADR-010](adr/010-appointment-reminder.md); gerçek alıcı/ret/normal SMS sağlayıcı kabulü proje sonundaki ayrı kapılardır.
+
 Gönderim kapalı P05-02 geliştirme/GitHub/ana yerel kabulü `done`; [P05](plans/P05.md) ve [ADR-006](adr/006-booking-phone-verification.md) sözleşmeyi tutar. Anonim üç POST aynı origin ve CSRF, 4 KiB gövde sınırı ve ayrı IP limiti taşır. Ana ortamda kapalı özellik geçerli güvenlik isteğine 503 döner; challenge/kota/iş yaratılmaz. P05-04 Netgsm adaptörü de varsayılan kapalıdır; test kodunu kamuya açıklayan uç yoktur. [ADR-009](adr/009-booking-sms-budget.md) gönderim öncesi kalıcı adet/TRY rezervasyonunu, dar yetkileri, Unknown ve restore'da bütçe iptalini tanımlar. Gerçek gönderim ayrıca yetkilendirilir.
 
 Telefon/ad, Identity hesabı veya müşteri geçmişi bulmak/birleştirmek için kullanılmaz. OTP yalnız tek talebin numarasına erişimi sınar; Owner MFA/oturum yerine geçmez ve randevu/blok yaratmaz. Secret/kod/gövde/telefon/IP log, URL veya kalıcı tarayıcı deposuna alınmaz. Kota HMAC'leri anonim veri sayılmaz.
