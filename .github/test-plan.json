@@ -1,7 +1,13 @@
 {
-  "reason": "CI helpers and documentation only; product source, database and deployment are unchanged.",
-  "files": [],
-  "web": [],
+  "reason": "Vite/Vitest patch and lock updates affect the common frontend transform, test setup, spies and static build. Explicit App, URLNavigation, public booking, API and money tests cover jsdom/Node environments, React routes, asynchronous fetch mocks and assertions. Typecheck/lint/build and the rebuilt image's real browser/asset acceptance cover bundling; server source, database, identity and Compose are unchanged, so server tests and Compose database scenarios are not selected.",
+  "files": ["src/Web/package.json", "src/Web/package-lock.json"],
+  "web": [
+    "src/App.test.tsx",
+    "src/app/URLNavigation.test.tsx",
+    "src/features/public-booking/PublicBooking.test.tsx",
+    "src/app/api.test.tsx",
+    "src/app/money.test.tsx"
+  ],
   "server": [],
   "compose": false
 }
