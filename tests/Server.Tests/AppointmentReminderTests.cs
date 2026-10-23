@@ -77,6 +77,55 @@ public sealed class AppointmentReminderTests
         await PasswordStepAsync(owner); await CompleteMfaAsync(owner, Assert.IsType<string>(await users.GetAuthenticatorKeyAsync(user)));
     }
 
+    private sealed class NormalSmsHandler(string reply) : HttpMessageHandler
+    {
+        public int Calls { get; private set; }
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken token)
+        {
+            Calls++;
+            Assert.Equal("https://api.netgsm.com.tr/sms/rest/v2/send", request.RequestUri?.AbsoluteUri);
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(reply) });
+        }
+    }
+
+    [Theory]
+    [InlineData("{\"code\":\"00\",\"jobid\":\"123\"}", "Accepted")]
+    [InlineData("{\"code\":\"85\"}", "Unknown")]
+    public async Task NormalCarrierWithoutOtpUsesPersistentBudgetAndNeverRepeatsAfterRestart(string reply, string status)
+    {
+        await using var f = New(otp: false);
+        var handler = new NormalSmsHandler(reply);
+        using var http = new HttpClient(handler);
+        var config = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["Netgsm:RemindersEnabled"] = "true",
+            ["Netgsm:Username"] = "8500000000",
+            ["Netgsm:Password"] = "Synthetic!Api123",
+            ["Netgsm:Header"] = "SENTETIK",
+            ["Netgsm:ReminderMaximumUnitPriceTry"] = "0.40"
+        }).Build();
+        f.ReminderDelivery = new NetgsmAppointmentReminderDelivery(http, config, f.Clock);
+        await f.StartAsync(); using var owner = await Owner(f); await Book(f, owner); await Due(f);
+        await Work(f); await f.RestartAsync(); await Work(f);
+        await using var check = f.Db();
+        Assert.Equal(status, (await check.AppointmentReminderJobs.SingleAsync(Token)).Status);
+        var attempt = Assert.Single(await check.BookingSmsAttempts.ToArrayAsync(Token));
+        Assert.Equal("Reminder", attempt.Purpose); Assert.Equal(status, attempt.Outcome);
+        Assert.Equal(0.50m, attempt.ReservedTry); Assert.NotNull(attempt.StartedAt);
+        Assert.Equal(1, handler.Calls); Assert.Empty(f.Sms.Calls);
+        Assert.Empty(await check.BookingVerifications.ToArrayAsync(Token));
+    }
+
+    [Fact]
+    public async Task ProductionReminderRegistrationIsClosedAndEnabledFeatureCannotUseClosedCarrier()
+    {
+        await using var f = new Fixture { Enabled = false, RemindersEnabled = false };
+        await f.StartAsync(); using var client = f.Client();
+        Assert.False(Assert.IsType<NetgsmAppointmentReminderDelivery>(f.App.Services.GetRequiredService<IAppointmentReminderDelivery>()).Available);
+        f.RemindersEnabled = true; await f.RestartAsync();
+        Assert.Throws<InvalidOperationException>(() => f.Client());
+    }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]

@@ -1,28 +1,18 @@
 {
-  "reason": "P05-10 adds Owner reminder preference read/disable UI and permits opt-out while sending is disabled. Reminder API/DB tests cover MFA/roles, closed config, concurrent replay, lifecycle/restore and started-call races. Status/move tests cover the unchanged callers of reminder SyncAsync; SMS budget tests protect shared OTP spending. Web tests cover the new component, owning detail page/parser, navigation busy guard and CSRF. Existing schema/startup/Compose are unchanged, so no full suite or Compose database restart scenario is selected. CI uses one -class flag per selected xUnit class; local discovery and the selected four-class run verify it.",
   "files": [
-    ".impeccable/surfaces/appointments.md",
-    "src/Server/Features/Scheduling/AppointmentReminders.cs",
-    "src/Web/src/features/appointments/AppointmentRecord.tsx",
-    "src/Web/src/features/appointments/AppointmentReminder.tsx",
-    "src/Web/src/features/appointments/AppointmentReminder.test.tsx",
-    "src/Web/src/features/appointments/Appointments.test.tsx",
-    "src/Web/src/features/appointments/appointmentsApi.ts",
-    "src/Web/src/features/appointments/appointmentsApi.test.tsx",
+    "src/Server/Features/Scheduling/NetgsmAppointmentReminderDelivery.cs",
+    "src/Server/Program.cs",
+    "src/Server/appsettings.json",
+    "tests/Server.Tests/NetgsmAppointmentReminderDeliveryTests.cs",
     "tests/Server.Tests/AppointmentReminderTests.cs"
   ],
-  "web": [
-    "src/features/appointments/AppointmentReminder.test.tsx",
-    "src/features/appointments/Appointments.test.tsx",
-    "src/features/appointments/appointmentsApi.test.tsx",
-    "src/app/URLNavigation.test.tsx",
-    "src/app/api.test.tsx"
-  ],
+  "reason": "P05-11 wires an independently closed Netgsm normal-SMS reminder adapter into the existing worker. Adapter/OTP tests cover fixed HTTP contracts, credentials, unit prices, dates, bounded responses and unknown outcomes. AppointmentReminderTests exercise actual DI closed/fail-closed startup plus real-adapter fake HTTP through persistent PostgreSQL budget, restart, ret, restore and worker callers. BookingSmsBudgetTests cover shared spending and invalid/revoked budget startup. No UI, schema, Identity or Compose change; no full suite.",
+  "web": [],
+  "compose": false,
   "server": [
+    "Server.Tests.NetgsmAppointmentReminderDeliveryTests",
+    "Server.Tests.NetgsmBookingSmsDeliveryTests",
     "Server.Tests.AppointmentReminderTests",
-    "Server.Tests.AppointmentStatusTests",
-    "Server.Tests.AppointmentMoveTests",
     "Server.Tests.BookingSmsBudgetTests"
-  ],
-  "compose": false
+  ]
 }
