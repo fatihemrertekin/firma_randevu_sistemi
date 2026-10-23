@@ -231,7 +231,8 @@ public sealed class AppointmentReminderTests
     [Fact]
     public async Task SuppressIsOwnerCsrfVersionProtectedIdempotentAndSurvivesMove()
     {
-        await using var f = New(); await f.StartAsync(); using var owner = await Owner(f); using var anonymous = f.Client();
+        await using var f = New(); await f.StartAsync(); f.App.UseKestrel(0);
+        using var owner = await Owner(f); using var anonymous = f.Client();
         var original = await Book(f, owner, pending: true); var path = $"/api/appointments/{original.Id}/reminder/disable";
         var request = new AppointmentReminders.DisableRequest(original.Version);
         using var unauthorized = await PostAsync(anonymous, path, request, await GetCsrfAsync(anonymous)); Assert.Equal(HttpStatusCode.Unauthorized, unauthorized.StatusCode);
@@ -383,7 +384,9 @@ public sealed class AppointmentReminderTests
     public async Task CrossPurposeJobIdCollisionCannotAdoptOtpReservation()
     {
         await using var f = New(); await f.StartAsync(); using var owner = await Owner(f); using var client = f.Client();
-        await Book(f, owner); await f.RequestAsync(client); await f.Work();
+        await Book(f, owner);
+        using var requested = await f.Post(client, "request", f.Request() with { StartsAt = "2026-10-19T12:00:00+03:00" });
+        Assert.Equal(HttpStatusCode.Accepted, requested.StatusCode); await f.Work();
         await using (var db = f.Db())
         {
             var id = await db.BookingSmsJobs.Select(x => x.Id).SingleAsync(Token);
