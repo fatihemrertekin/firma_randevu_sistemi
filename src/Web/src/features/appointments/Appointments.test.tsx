@@ -28,6 +28,8 @@ function api(input: RequestInfo | URL): Promise<Response> {
   if (path.endsWith('/move-availability')) return Promise.resolve(Response.json({ startsAt: ['2026-10-16T08:00:00Z'], unavailableReasons: [], version: appointment.version, timeZone: 'Europe/Istanbul' }))
   if (path === '/api/appointments/') return Promise.resolve(Response.json({ ...list(), date: url.searchParams.get('date') ?? '2026-10-16' }))
   if (path === '/api/appointments/' + appointment.id) return Promise.resolve(Response.json(appointment))
+  if (path === '/api/appointments/' + appointment.id + '/reminder') return Promise.resolve(Response.json({ appointmentVersion: appointment.version,
+    suppressed: false, hasStarted: false, scheduledFor: null, dispatchEnabled: false }))
   throw new Error('Beklenmeyen istek: ' + input)
 }
 beforeEach(() => {
@@ -70,6 +72,15 @@ async function fillCreation() {
 }
 
 describe('İşletmenin günlük randevu akışı', () => {
+  it('aynı randevu sürümü yeniden yüklenince hatırlatma tercihini de yeniden okur', async () => {
+    let stale = true
+    vi.mocked(fetch).mockImplementation(input => String(input).endsWith('/reminder') && stale
+      ? Promise.resolve(Response.json({ appointmentVersion: service.version, suppressed: false, hasStarted: false, scheduledFor: null, dispatchEnabled: false })) : api(input))
+    await render('/yonetim/randevular/' + appointment.id)
+    expect(container.textContent).not.toContain('Bu randevuda hatırlatmayı kapat')
+    stale = false; await click('Güncel randevuyu yükle')
+    expect(container.textContent).toContain('Bu randevuda hatırlatmayı kapat')
+  })
   it('aynı seçimdeki nedenleri saat alanında gösterir, yeni seçimde eski uyarıyı kaldırır', async () => {
     vi.mocked(fetch).mockImplementation(input => String(input).includes('/api/appointments/availability?') ? Promise.resolve(Response.json({
       startsAt: [], unavailableReasons: [{ code: 'ServiceNotAssigned', message: 'Bu hizmet seçili çalışana atanmamış.' }, { code: 'BusinessClosed', message: 'İşletme seçili tarihte kapalı.' }],

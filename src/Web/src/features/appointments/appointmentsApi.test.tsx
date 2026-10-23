@@ -1,7 +1,19 @@
 import { describe, expect, it } from 'vitest'
-import { businessDay, isDay, nextDay, readAppointmentPage, readAvailability } from './appointmentsApi'
+import { businessDay, isDay, nextDay, readAppointmentPage, readAvailability, readReminder, readReminderDisabled } from './appointmentsApi'
 
 describe('Randevu veri sınırı', () => {
+  it('hatırlatma yanıtında yalnız doğrulanmış alanları kullanır; 204 gövdesiz başarıdır', async () => {
+    const value = { appointmentVersion: '00000001-0000-0000-0000-000000000001', suppressed: false, hasStarted: false, scheduledFor: null, dispatchEnabled: false }
+    expect(await readReminder(Response.json({ ...value, extra: 'unused' }))).toEqual(value)
+    for (const invalid of [{ ...value, suppressed: 'false' }, { ...value, hasStarted: null }, { ...value, dispatchEnabled: 0 },
+      { ...value, appointmentVersion: '' }, { ...value, scheduledFor: '2026-10-23T12:00:00' },
+      { ...value, suppressed: true, scheduledFor: '2026-10-23T12:00:00Z' }]) {
+      await expect(readReminder(Response.json(invalid))).rejects.toMatchObject({ status: 500 })
+    }
+    await expect(readReminderDisabled(new Response(null, { status: 204 }))).resolves.toBeUndefined()
+    await expect(readReminderDisabled(Response.json({}))).rejects.toMatchObject({ status: 500 })
+    await expect(readReminderDisabled(new Response(null, { status: 409 }))).rejects.toMatchObject({ status: 409 })
+  })
   it('İstanbul gününü UTC tarihinden ayırır, geçersiz gün taşmaz', () => {
     expect(businessDay(new Date('2026-10-15T21:30:00Z'))).toBe('2026-10-16')
     expect(nextDay('2026-10-31', 1)).toBe('2026-11-01')

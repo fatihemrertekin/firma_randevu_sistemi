@@ -1,5 +1,9 @@
 # Günlük randevu yönetimi
 
+## Randevu bazında hatırlatma tercihi — 23.10.2026
+
+Kullanıcı P05-09 kapsamı/yerleşimi sunulduktan sonra “sıradaki işe başla” diyerek P05-10 uygulamasına yetki verdi. Mevcut ayrıntının işlem alanına “SMS hatırlatması” bölümü eklenir; ortak görsel sistem ve önceki dört yüzey korunur. Yeni GET gerçek tercihi okur; mevcut disable POST'u yalnız seçili randevuyu kapatır. Gönderim kapalıyken de tercih kaydedilebilir; OTP ve diğer randevular etkilenmez. Onay aynı yerde açılır; Vazgeç/Escape odağı ilk işleme döndürür. Başarı 204/kayıp yanıt sonrası yeniden GET ile doğrulanır; sürüm çelişkisinde güncel randevu birlikte yüklenir. Başlamış SMS'in geri alınacağı veya telefona teslim edildiği söylenmez. Yeniden açma, genel müşteri tercihi ve normal SMS adaptörü bu dilimde yoktur. [Kapsam/kabul](../../docs/plans/P05.md#p05-09--normal-sms-ve-randevu-bazında-ret-planı--23102026).
+
 Mod: `Operate`. Hedef: `src/Web/src/features/appointments/Appointments.tsx`, `/yonetim/randevular`.
 
 ## Onay ve görsel sözleşme
