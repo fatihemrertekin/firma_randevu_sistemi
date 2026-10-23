@@ -141,7 +141,7 @@ Akış: endpoint/controller → gerektiğinde iş servisi → EF DbContext. Basi
 
 ## 10. Git ve PR
 
-- CI main hedefli PR ve main push için çalışır; geliştirme dalında push CI bekleme. Yalnız README.md/DESIGN.md/docs Markdown değişikliklerinde hafif belge kapısı, diğer veya belirsiz kapsamda tam kapılar zorunludur. Güncel PR head ve birleşme main sonucu başarılı olmadan teslimi bitirme. Eski PR çalışması yeni head ile iptal edilir. Başarılı kontrolleri gerekçesiz tekrarlama; CI takibinde özet/hata çıktısını kullan. Yalnız CI/belge değişmiş ve ürün kaynağı eşitse 8080 imajını yeniden üretme; eşitlik/sağlık kanıtını kaydet.
+- Kullanıcının 23.10.2026 kararı: yerel, PR ve main'de yalnız yapılan işle ilgili testleri çalıştır; otomatik tam test yok. Ürün değişikliğinde `.github/test-plan.json` dosyasını gerçek ürün diff'i ve ilgili web/sunucu testleriyle güncelle; çağıranlar ve seçimin gerekçesini yaz. Ortak DB/kimlik/başlangıç değişikliği daha geniş ilgili grup gerektiriyorsa açıkça listele; test silme veya doğrulama zayıflatma yok. CI main hedefli PR ve main push içindir; dal push CI bekleme. Güncel PR head ve birleşme main CI başarılı olmadan bitirme; eski PR çalışması yeni head ile iptal edilir. Başarılı kontrolleri gerekçesiz tekrarlama; yalnız özet/hata çıktısını oku. CI/belge değişmiş ve ürün kaynağı eşitse 8080 imajını yeniden üretme; eşitlik/sağlık kanıtını kaydet.
 
 - Bir commit bir amaç; mesaj emir kipinde ve kısa. Sır/PII/üretim verisi commit'lenmez.
 - Ana dal korumalı; CI yeşil olmadan birleştirme yok. Kullanıcının başka değişikliklerini geri alma.
