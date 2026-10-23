@@ -21,7 +21,9 @@ builder.Services.AddHttpClient<IBookingSmsDelivery, NetgsmBookingSmsDelivery>(cl
     .RemoveAllLoggers();
 builder.Services.AddSingleton<BookingVerificationSecurity>();
 builder.Services.AddHostedService<BookingSmsWorker>();
-builder.Services.AddSingleton<IAppointmentReminderDelivery, DisabledAppointmentReminderDelivery>();
+builder.Services.AddHttpClient<IAppointmentReminderDelivery, NetgsmAppointmentReminderDelivery>(client => client.Timeout = TimeSpan.FromSeconds(10))
+    .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler { AllowAutoRedirect = false, PooledConnectionLifetime = TimeSpan.FromMinutes(5) })
+    .RemoveAllLoggers();
 builder.Services.AddSingleton<AppointmentReminders>();
 builder.Services.AddHostedService<AppointmentReminderWorker>();
 
