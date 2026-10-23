@@ -8,7 +8,11 @@ Hazırlanma: 2026-09-29. Bu dosya plandır; çalışan altyapının kanıtı de�
 
 ## 1. Kurulum ve kapasite
 
-P05 telefon doğrulaması ana kurulumda kapalıdır. `BookingVerification:Enabled`, `BookingSms:DispatchEnabled`, `Netgsm:Enabled` ve `PublicBooking:AccessEnabled` verilmez veya false kalır. HMAC/Netgsm sırları testten ana ortama kopyalanmaz. Enabled fakat kullanılabilir taşıyıcı/32 bayt anahtar eksikse veya kayıtlı kota anahtar kimliği farklıysa açılış reddedilir; dispatch ayrıca geçerli süreli DB bütçe onayı ve bedel uyumu ister. [Sözleşme, migration ve kabul](plans/P05.md), [bütçe kararı](adr/009-booking-sms-budget.md).
+P05 telefon doğrulaması ana kurulumda kapalıdır. `BookingVerification:Enabled`, `BookingSms:DispatchEnabled`, `Netgsm:Enabled`, `AppointmentReminders:Enabled` ve `PublicBooking:AccessEnabled` verilmez veya false kalır. HMAC/Netgsm sırları testten ana ortama kopyalanmaz. Enabled fakat kullanılabilir taşıyıcı/32 bayt anahtar eksikse veya kayıtlı kota anahtar kimliği farklıysa açılış reddedilir; dispatch ayrıca geçerli süreli DB bütçe onayı ve bedel uyumu ister. [Sözleşme, migration ve kabul](plans/P05.md), [bütçe kararı](adr/009-booking-sms-budget.md).
+
+P05-08 hatırlatma için OTP açılmaz; aynı `BookingVerification:HmacKey`/firma kimliği ve bütçe onay bağı kullanılır. Ürün DI'da gerçek hatırlatma taşıyıcısı yoktur; Enabled vermek gönderimi kullanıma hazır yapmaz, yanlış kurulum reddedilir. Bütçe onay kimliği değişince eski işler yeni onaya taşınmaz. Restore bütün gönderimler kapalıyken yapılır; mevcut iptal betiği hatırlatma işlerini de engeller. Sağlayıcı mutabakatı ve ayrı onay olmadan eski kuyruğu yeniden gönderime almayın. İlk çağrı/engelleme tarihçesi DB'de sıfırlanamaz. [Karar ve geri dönüş sınırı](adr/010-appointment-reminder.md).
+
+SMS kapıları uygulama başlangıcında okunur; yalnız dosyayı değiştirmek çalışan worker'ı durdurmaz. Kapıları kapattıktan sonra kontrollü restart ve sağlık/kapalı ayar kontrolü gerekir. Başlamış dış çağrı tamamlanabilir; iptal/Unknown kayıtları ve sağlayıcı mutabakatı korunur.
 
 Geri dönüş/restore'da önce doğrulamayı ve gönderimi kapat; in-flight işleri durdur. DB ile aynı firmaya ait Data Protection/HMAC anahtarları ve config yedeklenir. Eski kuyruk kayıtları gönderim kapalı restore edilir; otomatik SMS veya kota sıfırlaması yapılmaz. Eklemeli şema uyumlu eski imajla korunur; veri/kota varken Down reddedilir. Gerçek SMS aktivasyonunun fiyat/harcama/aktarım kapısı ayrı onaydır.
 

@@ -25,8 +25,8 @@ public sealed class BookingVerificationSecurity
         this.delivery = delivery;
         instance = config["Auth:InstanceId"] ?? "";
         Enabled = config.GetValue<bool>("BookingVerification:Enabled");
-        if (!Enabled) return;
-        if (!delivery.Available || string.IsNullOrWhiteSpace(instance))
+        if (!Enabled && !config.GetValue<bool>("AppointmentReminders:Enabled")) return;
+        if (Enabled && !delivery.Available || string.IsNullOrWhiteSpace(instance))
             throw new InvalidOperationException("Telefon doğrulaması için kullanılabilir taşıyıcı ve firma kimliği gerekli.");
         try { key = Convert.FromBase64String(config["BookingVerification:HmacKey"] ?? ""); }
         catch (FormatException) { throw new InvalidOperationException("Telefon doğrulama anahtarı geçersiz."); }

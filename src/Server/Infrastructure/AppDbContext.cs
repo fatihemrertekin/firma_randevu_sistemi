@@ -28,6 +28,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<BookingSmsPeriod> BookingSmsPeriods => Set<BookingSmsPeriod>();
     public DbSet<BookingSmsBudgetPolicy> BookingSmsBudgetPolicies => Set<BookingSmsBudgetPolicy>();
     public DbSet<BookingSmsAttempt> BookingSmsAttempts => Set<BookingSmsAttempt>();
+    public DbSet<AppointmentReminderJob> AppointmentReminderJobs => Set<AppointmentReminderJob>();
     public DbSet<Appointment> Appointments => Set<Appointment>();
     public DbSet<AppointmentTimeBlock> AppointmentTimeBlocks => Set<AppointmentTimeBlock>();
     public DbSet<AppointmentAudit> AppointmentAudits => Set<AppointmentAudit>();
@@ -101,6 +102,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     {
         base.OnModelCreating(builder);
         BookingVerificationModel.Configure(builder);
+        AppointmentReminderModel.Configure(builder);
         ConfigureDateCalendar(builder);
         builder.HasPostgresExtension("btree_gist");
         var appointment = builder.Entity<Appointment>();

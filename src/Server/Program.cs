@@ -21,21 +21,28 @@ builder.Services.AddHttpClient<IBookingSmsDelivery, NetgsmBookingSmsDelivery>(cl
     .RemoveAllLoggers();
 builder.Services.AddSingleton<BookingVerificationSecurity>();
 builder.Services.AddHostedService<BookingSmsWorker>();
+builder.Services.AddSingleton<IAppointmentReminderDelivery, DisabledAppointmentReminderDelivery>();
+builder.Services.AddSingleton<AppointmentReminders>();
+builder.Services.AddHostedService<AppointmentReminderWorker>();
 
 var app = builder.Build();
 // İstekler ve teslim işçisi başlamadan son yapılandırmayı doğrula.
 _ = app.Services.GetRequiredService<IOwnerEmailVerificationDelivery>();
 _ = app.Services.GetRequiredService<OwnerSelfServiceResetFlow>();
 var bookingSecurity = app.Services.GetRequiredService<BookingVerificationSecurity>();
-if (bookingSecurity.Enabled)
+var reminders = app.Services.GetRequiredService<AppointmentReminders>();
+if (bookingSecurity.Enabled || reminders.Enabled)
 {
     await using var scope = app.Services.CreateAsyncScope();
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(10));
     await using var transaction = await db.Database.BeginTransactionAsync(timeout.Token);
     await bookingSecurity.LockAsync(db, timeout.Token);
-    if (bookingSecurity.DispatchEnabled && await BookingSmsBudget.PolicyAsync(db, bookingSecurity,
-        app.Services.GetRequiredService<TimeProvider>().GetUtcNow(), timeout.Token) is null)
+    var now = app.Services.GetRequiredService<TimeProvider>().GetUtcNow();
+    if (bookingSecurity.DispatchEnabled &&
+        (bookingSecurity.Enabled && await BookingSmsBudget.PolicyAsync(db, bookingSecurity, now, timeout.Token) is null ||
+         reminders.Enabled && await BookingSmsBudget.PolicyAsync(db, bookingSecurity, now, timeout.Token,
+             app.Services.GetRequiredService<IAppointmentReminderDelivery>().MaximumUnitPriceTry) is null))
         throw new InvalidOperationException("SMS bütçesi onaysız, süresi dolmuş, geri yükleme sonrası iptal edilmiş veya fiyatla uyuşmuyor. Gönderimi kapatıp operatör uzlaştırması yapın.");
     await transaction.CommitAsync(timeout.Token);
 }
