@@ -5,6 +5,7 @@ export type AppointmentStatus = keyof typeof statusLabels
 export type AppointmentRow = { id: string; version: string; staffMemberId: string; staffName: string; serviceName: string;
   startsAt: string; endsAt: string; status: AppointmentStatus; customerName: string; pendingExpiresAt: string | null }
 export type Appointment = AppointmentRow & { serviceId: string; durationMinutes: number; price: number; currency: 'TRY'; customerPhone: string }
+export type Reminder = { appointmentVersion: string; suppressed: boolean; hasStarted: boolean; scheduledFor: string | null; dispatchEnabled: boolean }
 export type AppointmentPage = PageMetadata & { items: AppointmentRow[]; date: string; timeZone: 'Europe/Istanbul' }
 export type Availability = { timeZone: 'Europe/Istanbul'; startsAt: string[]; unavailableReasons: { code: string; message: string }[]; version?: string; serviceVersion?: string }
 const record = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null
@@ -70,6 +71,18 @@ export async function readAppointment(response: Response): Promise<Appointment> 
     !('price' in value) || typeof value.price !== 'number' || !Number.isFinite(value.price) || value.price < 0 || !('currency' in value) || value.currency !== 'TRY' ||
     !('customerPhone' in value) || typeof value.customerPhone !== 'string') throw new AppointmentError(500)
   return { ...value, serviceId: value.serviceId, durationMinutes: value.durationMinutes, price: value.price, currency: value.currency, customerPhone: value.customerPhone }
+}
+export async function readReminder(response: Response): Promise<Reminder> {
+  const value = await body(response)
+  if (!record(value) || !isId(value.appointmentVersion) || typeof value.suppressed !== 'boolean' || typeof value.hasStarted !== 'boolean' ||
+    typeof value.dispatchEnabled !== 'boolean' || !(value.scheduledFor === null || timestamp(value.scheduledFor)) ||
+    value.suppressed && value.scheduledFor !== null) throw new AppointmentError(500)
+  return { appointmentVersion: value.appointmentVersion, suppressed: value.suppressed, hasStarted: value.hasStarted,
+    scheduledFor: value.scheduledFor, dispatchEnabled: value.dispatchEnabled }
+}
+export async function readReminderDisabled(response: Response): Promise<void> {
+  if (!response.ok) await body(response)
+  if (response.status !== 204) throw new AppointmentError(500)
 }
 export async function readAvailability(response: Response, moving: boolean): Promise<Availability> {
   const value = await body(response)

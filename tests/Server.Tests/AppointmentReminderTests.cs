@@ -14,6 +14,7 @@ using Server.Infrastructure;
 using Xunit;
 using static Server.Tests.Support.AuthenticationTestSupport;
 using static Server.Tests.Support.TestAccounts;
+using static Server.Tests.Support.StaffTestSupport;
 using Fixture = Server.Tests.BookingVerificationTests.Fixture;
 
 namespace Server.Tests;
@@ -74,6 +75,102 @@ public sealed class AppointmentReminderTests
         var users = scope.ServiceProvider.GetRequiredService<UserManager<AppUser>>();
         var user = Assert.IsType<AppUser>(await users.FindByEmailAsync(Email));
         await PasswordStepAsync(owner); await CompleteMfaAsync(owner, Assert.IsType<string>(await users.GetAuthenticatorKeyAsync(user)));
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ReminderReadRequiresMfaOwnerReturnsOnlyPreferenceAndNeverCreatesWork(bool enabled)
+    {
+        await using var f = New(otp: false, enabled: enabled); await f.StartAsync(); f.App.UseKestrel(0);
+        using var owner = await Owner(f); var appointment = await Book(f, owner);
+        var path = $"/api/appointments/{appointment.Id}/reminder";
+        using var anonymous = f.Client(); using var pending = f.Client(); await PasswordStepAsync(pending);
+        await CreatePasswordStaffAsync(f.App); using var staff = f.Client(); await LoginPasswordStaffAsync(staff);
+        foreach (var client in new[] { anonymous, pending, staff })
+        {
+            using var denied = await client.GetAsync(path, Token);
+            Assert.Equal(client == staff ? HttpStatusCode.Forbidden : HttpStatusCode.Unauthorized, denied.StatusCode);
+        }
+        using var missing = await owner.GetAsync($"/api/appointments/{Guid.NewGuid()}/reminder", Token);
+        Assert.Equal(HttpStatusCode.NotFound, missing.StatusCode);
+        using var response = await owner.GetAsync(path, Token); Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.True(response.Headers.CacheControl?.NoStore);
+        var json = await response.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>(Token);
+        Assert.Equal(new[] { "appointmentVersion", "dispatchEnabled", "hasStarted", "scheduledFor", "suppressed" },
+            json.EnumerateObject().Select(x => x.Name).Order().ToArray());
+        var value = await owner.GetFromJsonAsync<AppointmentReminders.ReminderResponse>(path, Token);
+        Assert.NotNull(value); Assert.Equal(appointment.Version, value.AppointmentVersion);
+        Assert.Equal(enabled, value.DispatchEnabled); Assert.False(value.Suppressed); Assert.False(value.HasStarted);
+        Assert.Equal(enabled ? new DateTimeOffset(appointment.StartsAt).AddHours(-3) : (DateTimeOffset?)null, value.ScheduledFor);
+        await using var db = f.Db(); Assert.Equal(enabled ? 1 : 0, await db.AppointmentReminderJobs.CountAsync(Token));
+        Assert.Empty(await db.BookingSmsAttempts.ToArrayAsync(Token)); Assert.Empty(Carrier(f).Calls);
+    }
+
+    [Theory]
+    [InlineData("Pending")]
+    [InlineData("Confirmed")]
+    [InlineData("Cancelled")]
+    [InlineData("Completed")]
+    [InlineData("NoShow")]
+    public async Task DisabledDeliveryStillRecordsOnePreferenceWithoutChangingAppointmentsOrOtp(string status)
+    {
+        await using var f = New(otp: false, enabled: false); f.DispatchEnabled = false;
+        await f.StartAsync(); using var owner = await Owner(f);
+        var appointment = await Book(f, owner, pending: status == "Pending");
+        // Seed the status under test; status transitions themselves are covered by their owning tests.
+        await using (var db = f.Db()) await db.AppointmentTimeBlocks.Where(x => x.AppointmentId == appointment.Id)
+            .ExecuteUpdateAsync(s => s.SetProperty(x => x.Status, status), Token);
+        using var second = await PostAsync(owner, "/api/appointments/", Command(f) with { StartsAt = "2026-10-18T14:00:00+03:00" }, await GetCsrfAsync(owner));
+        Assert.Equal(HttpStatusCode.Created, second.StatusCode);
+        var path = $"/api/appointments/{appointment.Id}/reminder/disable";
+        var csrf = await GetCsrfAsync(owner);
+        var responses = await Task.WhenAll(Enumerable.Range(0, 4).Select(_ => PostAsync(owner, path,
+            new AppointmentReminders.DisableRequest(appointment.Version), csrf)));
+        try { Assert.All(responses, response => Assert.Equal(HttpStatusCode.NoContent, response.StatusCode)); }
+        finally { foreach (var response in responses) response.Dispose(); }
+        Guid? actor; DateTimeOffset? suppressedAt;
+        await using (var db = f.Db())
+        {
+            var job = Assert.Single(await db.AppointmentReminderJobs.ToArrayAsync(Token));
+            actor = job.SuppressedBy; suppressedAt = job.SuppressedAt;
+            Assert.NotNull(actor); Assert.NotNull(suppressedAt); Assert.Null(job.ProtectedPhone); Assert.Null(job.StartedOnceAt);
+        }
+        await f.RestartAsync(); using var restarted = f.Client(); await Relogin(f, restarted);
+        using var replay = await PostAsync(restarted, path, new AppointmentReminders.DisableRequest(appointment.Version), await GetCsrfAsync(restarted));
+        Assert.Equal(HttpStatusCode.NoContent, replay.StatusCode);
+        var preference = await restarted.GetFromJsonAsync<AppointmentReminders.ReminderResponse>($"/api/appointments/{appointment.Id}/reminder", Token);
+        Assert.NotNull(preference); Assert.True(preference.Suppressed); Assert.False(preference.HasStarted);
+        Assert.False(preference.DispatchEnabled); Assert.Null(preference.ScheduledFor);
+        await using var check = f.Db(); var saved = Assert.Single(await check.AppointmentReminderJobs.ToArrayAsync(Token));
+        Assert.Equal(actor, saved.SuppressedBy); Assert.Equal(suppressedAt, saved.SuppressedAt);
+        Assert.Equal(2, await check.Appointments.CountAsync(Token));
+        Assert.Equal(appointment.Version, (await check.Appointments.SingleAsync(x => x.Id == appointment.Id, Token)).Version);
+        Assert.Equal(status, (await check.AppointmentTimeBlocks.SingleAsync(x => x.AppointmentId == appointment.Id, Token)).Status);
+        Assert.Empty(await check.BookingVerifications.ToArrayAsync(Token)); Assert.Empty(await check.BookingSmsAttempts.ToArrayAsync(Token));
+        Assert.Empty(Carrier(f).Calls); Assert.Empty(f.Sms.Calls);
+    }
+
+    [Fact]
+    public async Task SuppressionDuringCallKeepsStartedHistoryAndLateReplyCannotReopenPreference()
+    {
+        await using var f = New(); await f.StartAsync(); using var owner = await Owner(f);
+        var appointment = await Book(f, owner); await Due(f); await Relogin(f, owner);
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var reply = new TaskCompletionSource<BookingSmsOutcome>(TaskCreationOptions.RunContinuationsAsynchronously);
+        Carrier(f).Result = token => { entered.SetResult(); return reply.Task.WaitAsync(token); };
+        var sending = Work(f); await entered.Task.WaitAsync(TimeSpan.FromSeconds(5), Token);
+        var path = $"/api/appointments/{appointment.Id}/reminder";
+        var before = await owner.GetFromJsonAsync<AppointmentReminders.ReminderResponse>(path, Token);
+        Assert.NotNull(before); Assert.True(before.HasStarted); Assert.False(before.Suppressed);
+        using var disabled = await PostAsync(owner, path + "/disable", new AppointmentReminders.DisableRequest(appointment.Version), await GetCsrfAsync(owner));
+        Assert.Equal(HttpStatusCode.NoContent, disabled.StatusCode);
+        reply.SetResult(BookingSmsOutcome.Accepted); await sending; await Work(f);
+        var after = await owner.GetFromJsonAsync<AppointmentReminders.ReminderResponse>(path, Token);
+        Assert.NotNull(after); Assert.True(after.Suppressed); Assert.True(after.HasStarted); Assert.Null(after.ScheduledFor);
+        await using var db = f.Db(); Assert.Equal("Suppressed", (await db.AppointmentReminderJobs.SingleAsync(Token)).Status);
+        Assert.Equal("Unknown", (await db.BookingSmsAttempts.SingleAsync(Token)).Outcome);
+        Assert.Single(Carrier(f).Calls);
     }
 
     [Fact]

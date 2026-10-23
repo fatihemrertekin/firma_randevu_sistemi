@@ -1,5 +1,7 @@
 # Güvenlik — uygulama kapsamı ve sınırlar
 
+P05-10: Owner/MFA tercih GET'i yalnız randevu sürümü, engelleme/ilk çağrı bilgisi, planlanan zaman ve kurulum kapısını döndürür; telefon, mesaj, şifreli alıcı veya sağlayıcı/bütçe kimliği yoktur. Mevcut ret POST'u özellik kapalıyken de tercih kaydeder; Owner/MFA/CSRF/nesne/sürüm/transaction koruması değişmez, gönderim açılmaz. Ret yalnız seçili randevu ve tek yönlüdür; Started sonrası dış çağrı geri alınamaz. [Uygulama ve ayrı kabul kapıları](plans/P05.md#p05-10--kullanılabilir-randevu-bazında-ret-akışı--23102026).
+
 ## Vite/Vitest güvenlik bakımı — 23.10.2026
 
 Vite `8.3.3`, Vitest/mocker/spy `5.0.3` yamaları temiz lock kurulumunda doğrulandı; tam ve üretim npm taramaları **0 açık**. Aşağıdaki P05-08 taraması yama öncesi tarihli kayıttır. Kurulu upstream fonksiyonlarında mock kod enjeksiyonu, Windows backslash geçişi ve editor percent/CR/LF argümanları için normal girdilerle birlikte dokuz kontrol geçti; canlı exploit/shell/editor çalıştırılmadı. [Kapsam, ilgili testler ve teslim kapıları](plans/P05.md#vitevitest-güvenlik-bakımı--23102026). Üretim API/DB/kimlik ve kapalı gönderim ayarları değişmedi; NuGet kaynağı değişmediğinden önceki tarama tekrarlanmadı.

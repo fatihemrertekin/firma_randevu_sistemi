@@ -88,7 +88,9 @@ jobs:
         run: |
           dotnet build FirmaRandevu.slnx --no-restore
           mapfile -t tests < <(jq -r '.server[]' .github/test-plan.json)
-          dotnet run --project tests/Server.Tests/Server.Tests.csproj --no-build -- -class "${tests[@]}"
+          args=()
+          for test in "${tests[@]}"; do args+=(-class "$test"); done
+          dotnet run --project tests/Server.Tests/Server.Tests.csproj --no-build -- "${args[@]}"
           dotnet format FirmaRandevu.slnx --verify-no-changes --no-restore
 
       - name: Geçici yerel test parolaları

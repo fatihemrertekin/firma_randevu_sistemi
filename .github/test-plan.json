@@ -1,13 +1,28 @@
 {
-  "reason": "Vite/Vitest patch and lock updates affect the common frontend transform, test setup, spies and static build. Explicit App, URLNavigation, public booking, API and money tests cover jsdom/Node environments, React routes, asynchronous fetch mocks and assertions. Typecheck/lint/build and the rebuilt image's real browser/asset acceptance cover bundling; server source, database, identity and Compose are unchanged, so server tests and Compose database scenarios are not selected.",
-  "files": ["src/Web/package.json", "src/Web/package-lock.json"],
-  "web": [
-    "src/App.test.tsx",
-    "src/app/URLNavigation.test.tsx",
-    "src/features/public-booking/PublicBooking.test.tsx",
-    "src/app/api.test.tsx",
-    "src/app/money.test.tsx"
+  "reason": "P05-10 adds Owner reminder preference read/disable UI and permits opt-out while sending is disabled. Reminder API/DB tests cover MFA/roles, closed config, concurrent replay, lifecycle/restore and started-call races. Status/move tests cover the unchanged callers of reminder SyncAsync; SMS budget tests protect shared OTP spending. Web tests cover the new component, owning detail page/parser, navigation busy guard and CSRF. Existing schema/startup/Compose are unchanged, so no full suite or Compose database restart scenario is selected. CI uses one -class flag per selected xUnit class; local discovery and the selected four-class run verify it.",
+  "files": [
+    ".impeccable/surfaces/appointments.md",
+    "src/Server/Features/Scheduling/AppointmentReminders.cs",
+    "src/Web/src/features/appointments/AppointmentRecord.tsx",
+    "src/Web/src/features/appointments/AppointmentReminder.tsx",
+    "src/Web/src/features/appointments/AppointmentReminder.test.tsx",
+    "src/Web/src/features/appointments/Appointments.test.tsx",
+    "src/Web/src/features/appointments/appointmentsApi.ts",
+    "src/Web/src/features/appointments/appointmentsApi.test.tsx",
+    "tests/Server.Tests/AppointmentReminderTests.cs"
   ],
-  "server": [],
+  "web": [
+    "src/features/appointments/AppointmentReminder.test.tsx",
+    "src/features/appointments/Appointments.test.tsx",
+    "src/features/appointments/appointmentsApi.test.tsx",
+    "src/app/URLNavigation.test.tsx",
+    "src/app/api.test.tsx"
+  ],
+  "server": [
+    "Server.Tests.AppointmentReminderTests",
+    "Server.Tests.AppointmentStatusTests",
+    "Server.Tests.AppointmentMoveTests",
+    "Server.Tests.BookingSmsBudgetTests"
+  ],
   "compose": false
 }

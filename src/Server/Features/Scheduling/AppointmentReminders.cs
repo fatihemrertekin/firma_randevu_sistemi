@@ -60,16 +60,35 @@ public sealed class AppointmentReminders
     }
 
     public sealed record DisableRequest(Guid Version);
+    public sealed record ReminderResponse(Guid AppointmentVersion, bool Suppressed, bool HasStarted,
+        DateTimeOffset? ScheduledFor, bool DispatchEnabled);
 
-    internal static void MapAppointmentReminderEndpoints(RouteGroupBuilder appointments) =>
+    internal static void MapAppointmentReminderEndpoints(RouteGroupBuilder appointments)
+    {
+        appointments.MapGet("/{id:guid}/reminder", ReadAsync);
         appointments.MapPost("/{id:guid}/reminder/disable", DisableAsync);
+    }
+
+    private static async Task<IResult> ReadAsync(Guid id, HttpContext context, AppDbContext db, AppointmentReminders reminders)
+    {
+        using var timeout = AppointmentEndpoints.Timeout(context);
+        var dispatch = reminders.Enabled && reminders.security.DispatchEnabled;
+        var response = await (from appointment in db.Appointments.AsNoTracking()
+                              join job in db.AppointmentReminderJobs on appointment.Id equals job.AppointmentId into jobs
+                              from job in jobs.DefaultIfEmpty()
+                              where appointment.Id == id
+                              select new ReminderResponse(appointment.Version, job != null && job.SuppressedAt != null,
+                                  job != null && job.StartedOnceAt != null,
+                                  job != null && job.SuppressedAt == null && (job.Status == "Pending" || job.Status == "Processing")
+                                      ? (DateTimeOffset?)job.DueAt : null, dispatch)).SingleOrDefaultAsync(timeout.Token);
+        return response is null ? Results.NotFound() : Results.Ok(response);
+    }
 
     private static async Task<IResult> DisableAsync(Guid id, DisableRequest request, HttpContext context,
         IAntiforgery csrf, AppDbContext db, UserManager<AppUser> users, AppointmentReminders reminders, TimeProvider clock)
     {
         using var timeout = AppointmentEndpoints.Timeout(context); var token = timeout.Token;
         if (!await AuthEndpoints.HasValidCsrfAsync(csrf, context)) return AuthEndpoints.InvalidCsrf();
-        if (!reminders.Enabled) return Results.Problem(statusCode: 503, title: "Hatırlatma özelliği kapalı.");
         if (id == Guid.Empty || request.Version == Guid.Empty) return Results.Problem(statusCode: 400, title: "Randevu ve güncel sürüm gerekli.");
         await using var transaction = await db.Database.BeginTransactionAsync(token);
         var owner = await OwnerMutationAuthorization.LockAsync(context, db, users, token);
