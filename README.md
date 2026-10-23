@@ -1,5 +1,11 @@
 # Firma Randevu Sistemi
 
+## CI çalışma düzeni
+
+Geliştirme dalına `push` CI başlatmaz; main hedefli PR ve main'e birleşme kontrol edilir. PR'ın eski çalışması yeni sürüm gelince iptal edilir; main çalışmaları iptal edilmez. `CI / verify` kontrolü korunur. Yalnız `README.md`, `DESIGN.md` ve `docs/**/*.md` değişirse diff ve yerel belge bağlantıları doğrulanır; diğer yollar, karma değişiklik veya belirlenemeyen kapsam mevcut tam web/sunucu/Compose kapılarını çalıştırır. Workflow bütünü atlanmadığından belge PR'ında da sonuç oluşur.
+
+Yerel CI yardımcı kontrolleri: `python -m unittest discover -s .github/scripts -p "test_*.py"` ve PowerShell 7 ile `pwsh -NoProfile -File .github/scripts/Validate-Documentation.ps1`. Geliştirmede değişen kodun ilgili testlerini seç; yeni değişiklik/hata yoksa başarılı kontrolleri tekrarlama. CI takibinde sonuç özeti ve hata logu yeterlidir. Yalnız CI/belge değiştiğinde çalışan ürün kaynağı aynıysa ana 8080 imajı yeniden derlenmez; kaynak eşitliği ve sağlık doğrulanır.
+
 ## Misafir rezervasyonu
 
 20.10.2026 UI/API entegrasyonu [UI PR #121](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/121) ve [tekrar düzeltmesi PR #122](https://github.com/fatihemrertekin/firma_randevu_sistemi/pull/122) ile main'e teslim edildi; exact-head ve birleşme CI 424 web/407 sunucu testiyle başarılı. Ana 8080 sağlık/tarayıcı kabulü ve 51 tablonun veri/anahtar/ayar koruması geçti. Ana OTP/erişim ve gerçek SMS kapalıdır; [kanıt/geri dönüş](docs/plans/P04.md#misafir-ekranı-kabul-ve-ana-8080-teslimi--20102026).
