@@ -19,6 +19,12 @@ class ScopeTests(unittest.TestCase):
             command = ["pwsh", "-NoProfile", "-File", str(script), "-RepositoryRoot", directory]
             valid = subprocess.run(command, capture_output=True, text=True)
             self.assertEqual(valid.returncode, 0, valid.stderr)
+            (root / ".gitignore").write_text(".impeccable/mocks/\n.local/\n", encoding="utf-8")
+            document.write_text("[Local design](.impeccable/mocks/draft.md)\n", encoding="utf-8")
+            local_design = subprocess.run(command, capture_output=True, text=True)
+            self.assertEqual(local_design.returncode, 0, local_design.stderr)
+            document.write_text("[Missing ordinary ignored file](.local/missing.md)\n", encoding="utf-8")
+            self.assertNotEqual(subprocess.run(command, capture_output=True).returncode, 0)
             document.write_text("[Broken](missing.md)\n", encoding="utf-8")
             invalid = subprocess.run(command, capture_output=True, text=True)
             self.assertNotEqual(invalid.returncode, 0)

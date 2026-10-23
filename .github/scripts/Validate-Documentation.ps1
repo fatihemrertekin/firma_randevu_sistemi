@@ -32,6 +32,7 @@ function GetAnchors([string]$path) {
 }
 $failures = [Collections.Generic.List[string]]::new()
 $links = 0
+$localDesignLinks = 0
 foreach ($path in $paths) {
     $sourceDirectory = Split-Path (Join-Path $repoRoot $path) -Parent
     foreach ($match in [regex]::Matches((ReadDocument $path), '\]\(([^\s)]+)\)')) {
@@ -40,6 +41,12 @@ foreach ($path in $paths) {
         $links++
         $parts = $target.Split('#', 2)
         $absolutePath = if ($parts[0] -eq '') { Join-Path $repoRoot $path } else { [IO.Path]::GetFullPath((Join-Path $sourceDirectory $parts[0])) }
+        $relativePath = [IO.Path]::GetRelativePath($repoRoot, $absolutePath).Replace('\', '/')
+        # These ignored local design drafts are not portable delivery evidence.
+        if ($relativePath.StartsWith('.impeccable/mocks/', [StringComparison]::Ordinal)) {
+            git check-ignore --quiet -- $relativePath
+            if ($LASTEXITCODE -eq 0) { $localDesignLinks++; $links--; continue }
+        }
         if (!(Test-Path -LiteralPath $absolutePath)) { $failures.Add("$path -> $target (dosya yok)"); continue }
         if ($parts.Count -eq 2 -and $parts[1] -ne '' -and $absolutePath.EndsWith('.md')) {
             $targetPath = [IO.Path]::GetRelativePath($repoRoot, $absolutePath).Replace('\', '/')
@@ -50,3 +57,4 @@ foreach ($path in $paths) {
 }
 if ($failures.Count -gt 0) { $failures | Write-Output; throw "$($failures.Count) geçersiz bağlantı." }
 Write-Output "$($paths.Count) Markdown belgesinde $links yerel dosya/başlık bağlantısı doğrulandı."
+Write-Output "$localDesignLinks Git dışında tutulan yerel tasarım referansı ortak depo kontrolüne dahil edilmedi; CI kabul kanıtı değildir."
