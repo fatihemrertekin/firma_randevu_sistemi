@@ -118,6 +118,7 @@ it('bekleyen POST çift tıklamada tekrarlanmaz ve ana ekrana busy bildirir', as
   await render(); await click('Bu randevuda hatırlatmayı kapat')
   await act(async () => { button('Hatırlatmayı kapat').click(); button('Hatırlatmayı kapat').click() })
   expect(post).toHaveBeenCalledTimes(1); expect(busy).toHaveBeenLastCalledWith(true)
+  expect(container.textContent).toContain('Hatırlatma bilgisi doğrulanıyor…')
   await act(async () => { data.suppressed = true; finish?.(new Response(null, { status: 204 })) })
   expect(busy).toHaveBeenLastCalledWith(false)
 })

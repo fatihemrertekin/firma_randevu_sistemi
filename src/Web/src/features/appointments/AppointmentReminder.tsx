@@ -78,6 +78,7 @@ export default function AppointmentReminder({ id, version, disabled, post, onBus
   }}>
     <h3 id="appointment-reminder-title" className={styles.sectionTitle}>SMS hatırlatması</h3>
     {loading && <p role="status">Hatırlatma bilgisi yükleniyor…</p>}
+    {busy && <p role="status">Hatırlatma bilgisi doğrulanıyor…</p>}
     <ErrorMessage message={error} />
     {notice && <p role="status" ref={status} tabIndex={-1}>{notice}</p>}
     {current && <>
