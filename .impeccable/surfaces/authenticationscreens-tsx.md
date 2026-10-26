@@ -36,3 +36,7 @@ Yalnız ilk girişte önceki 18 px ana işlem, 16 px yardımcı metin ve genişl
 ## Beni hatırla — 16.10.2026
 
 Kullanıcı mevcut giriş formuna “Beni hatırla” eklenmesini istedi. Parola ile giriş düğmesi arasında varsayılan kapalı, klavyeyle kullanılabilir ve en az 44 px etiket hedefli kutu bulunur; altındaki açıklama 8 saatlik süreyi ve yalnız kişisel cihazda kullanımı belirtir. Mevcut tek sütun/mobil yerleşim, fotoğraf, renkler ve tokenlar korunur. Tercih parola, MFA ve kurtarma kodu isteklerine gider; başarı yalnız mevcut API onayıyla gösterilir. İkinci adım atlanmaz; yükleme sırasında kutu kilitlenir, hata mesajları ve CSRF korunur. Yeni ekran veya görsel sistem değişikliği yoktur.
+
+## Form altı düğme hizası — 27.10.2026
+
+Kullanıcı mevcut parola yenileme, çalışan parola sıfırlama/davet ve MFA uygulama/kurtarma kodu ekranlarında input altındaki iki düğmenin aynı satırda input genişliğini eşit paylaşmasını istedi. Form içindeki işlem satırı 320/390/768/1280 px'te iki eşit sütundur; arada mevcut token boşluğu kalır, dış kenarlar inputla hizalanır. Ortak parola sıfırlama formunun işletme sahibi sürümü de aynı davranır. Kompakt yazı/boyut, renkler, fotoğraf ve ayrı satırdaki alternatif işlemler korunur. İlk giriş ve form dışında duran hesap e-postası doğrulama satırı değişmez. Bu doğrudan kullanıcı düzeltmesi önceki kompakt düğme kararının yalnız genişlik/yerleşim kısmını günceller; yeni ekran veya API değişikliği değildir.
