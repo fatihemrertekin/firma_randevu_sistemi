@@ -1,16 +1,20 @@
 {
   "compose": false,
-  "reason": "Only AuthenticationScreens.module.css changes. Form-contained confirmation rows fill two equal input-aligned columns at all widths. Top-level OwnerEmailConfirmation and login layout stay unchanged. Existing PasswordReset, OwnerSelfServiceReset, StaffInvitations, ManagementLayout (MFA/app/recovery) and OwnerRecoveryEmail tests cover all direct callers and busy/error/navigation contracts. Browser geometry checks cover CSS, not a new implementation-mirroring unit test. No backend/API/schema/dependency/Compose change; no server suite.",
-  "server": [],
+  "reason": "Remember-me duration changes only for persistent application cookies in the shared Identity OnSigningIn callback, including the existing recovery-code persistence bridge. Nonpersistent/default sessions remain eight hours, pending MFA five minutes and sliding expiration false. RememberMeTests covers password Staff, Owner authenticator and recovery true/false/omitted, cookie expiry at 8/12h, CSRF, logout and recovery reuse. OwnerMfaTests, OwnerMfaRecoveryTests and AuthReadinessTests cover shared identity callers/readiness/revocation; AuthReadiness web tests cover checkbox default/propagation and 12h copy. No API DTO/schema/dependency/Compose change. Identity stamp validation remains active while automatic cookie lifetime renewal is suppressed; new persistent-session stamp-revocation/inactive-account cases protect that boundary, and 4h/8h reads must not renew cookies.",
+  "server": [
+    "Server.Tests.RememberMeTests",
+    "Server.Tests.OwnerMfaTests",
+    "Server.Tests.OwnerMfaRecoveryTests",
+    "Server.Tests.AuthReadinessTests"
+  ],
   "web": [
-    "src/features/auth/PasswordReset.test.tsx",
-    "src/features/auth/OwnerSelfServiceReset.test.tsx",
-    "src/features/staff/StaffInvitations.test.tsx",
-    "src/app/ManagementLayout.test.tsx",
-    "src/features/auth/OwnerRecoveryEmail.test.tsx"
+    "src/features/auth/AuthReadiness.test.tsx"
   ],
   "files": [
-    "src/Web/src/features/auth/AuthenticationScreens.module.css",
+    "src/Server/Features/Identity/IdentityStartupExtensions.cs",
+    "src/Web/src/features/auth/AuthenticationScreens.tsx",
+    "tests/Server.Tests/RememberMeTests.cs",
+    "src/Web/src/features/auth/AuthReadiness.test.tsx",
     ".impeccable/surfaces/authenticationscreens-tsx.md"
   ]
 }

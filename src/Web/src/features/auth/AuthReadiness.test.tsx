@@ -49,6 +49,7 @@ it.each([false, true])('beni hatırla tercihini parola ve MFA isteklerine taşı
   await act(async () => root.render(<App />))
   const checkbox = container.querySelector<HTMLInputElement>('input[type="checkbox"]')
   expect(checkbox?.checked).toBe(false)
+  expect(container.querySelector('#remember-me-help')?.textContent).toContain('12 saat')
   if (rememberMe) await act(async () => checkbox?.click())
   await input('email', 'owner@example.test'); await input('password', 'Synthetic!Owner123'); await submit()
   expect(requests).toHaveBeenCalledWith('/api/auth/login', expect.objectContaining({

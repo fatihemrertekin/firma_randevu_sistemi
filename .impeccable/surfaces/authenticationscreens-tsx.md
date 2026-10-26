@@ -40,3 +40,7 @@ Kullanıcı mevcut giriş formuna “Beni hatırla” eklenmesini istedi. Parola
 ## Form altı düğme hizası — 27.10.2026
 
 Kullanıcı mevcut parola yenileme, çalışan parola sıfırlama/davet ve MFA uygulama/kurtarma kodu ekranlarında input altındaki iki düğmenin aynı satırda input genişliğini eşit paylaşmasını istedi. Form içindeki işlem satırı 320/390/768/1280 px'te iki eşit sütundur; arada mevcut token boşluğu kalır, dış kenarlar inputla hizalanır. Ortak parola sıfırlama formunun işletme sahibi sürümü de aynı davranır. Kompakt yazı/boyut, renkler, fotoğraf ve ayrı satırdaki alternatif işlemler korunur. İlk giriş ve form dışında duran hesap e-postası doğrulama satırı değişmez. Bu doğrudan kullanıcı düzeltmesi önceki kompakt düğme kararının yalnız genişlik/yerleşim kısmını günceller; yeni ekran veya API değişikliği değildir.
+
+## Beni hatırla süresi — 27.10.2026
+
+Kullanıcı seçili “Beni hatırla” oturumunun 8 yerine 12 saat sürmesini istedi. Yardım metni 12 saati söyler; varsayılan kapalı kutu ve mevcut yerleşim korunur. Yeni başarılı parola/MFA uygulama kodu/MFA kurtarma kodu girişinde seçili oturum 12 saatlik kalıcı çerez kullanır. Seçilmeyen veya tercih gönderilmeyen girişte 8 saatlik geçici oturum korunur; bekleyen ikinci adım 5 dakika kalır. MFA ve çıkış davranışı değişmez; mevcut açık çerezlerin süresi geriye dönük uzatılmaz. Bu karar 16.10.2026 kaydındaki seçili süreyi günceller; yeni ekran veya görsel sistem değildir.

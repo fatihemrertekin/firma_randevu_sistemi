@@ -110,7 +110,15 @@ public static class IdentityStartupExtensions
             {
                 if (context.HttpContext.Items[MfaEndpoints.PersistentRecoveryLogin] is true)
                     context.Properties.IsPersistent = true;
+                if (context.Properties.IsPersistent && context.Properties.IssuedUtc is { } issuedUtc)
+                    context.Properties.ExpiresUtc = issuedUtc.AddHours(12);
                 return Task.CompletedTask;
+            };
+            options.Events.OnValidatePrincipal = async context =>
+            {
+                await SecurityStampValidator.ValidatePrincipalAsync(context);
+                // Identity'nin hesap kontrolü sabit oturum süresini uzatmamalı.
+                context.ShouldRenew = false;
             };
             options.Events.OnRedirectToLogin = context =>
             {
