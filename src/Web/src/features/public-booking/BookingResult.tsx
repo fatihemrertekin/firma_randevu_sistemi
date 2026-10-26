@@ -14,6 +14,7 @@ export default function BookingResult({ id, initialResult, initialToken, receipt
   const cancelCommand = useRef<{ version: string; requestKey: string } | null>(null), pending = useRef(false), readPending = useRef(false), automaticIssue = useRef(false), epoch = useRef(0)
   const guard = useRef({ dirty: false, profileDirty: false, busy: false })
   const heading = useRef<HTMLHeadingElement>(null)
+  const cancelTrigger = useRef<HTMLButtonElement>(null), returningFocus = useRef(false)
   const now = useClock(), [unknownCancel, setUnknownCancel] = useState(false)
   useEffect(() => { guard.current = { dirty: !!receipt && !token || unknownCancel, profileDirty: false, busy } }, [receipt, token, unknownCancel, busy])
   useNavigationGuard(guard, () => {})
@@ -39,6 +40,9 @@ export default function BookingResult({ id, initialResult, initialToken, receipt
     return () => document.removeEventListener('visibilitychange', focus)
   }, [token, retryAt])
   useEffect(() => { heading.current?.focus() }, [result?.status])
+  useEffect(() => {
+    if (!confirm && returningFocus.current) { cancelTrigger.current?.focus(); returningFocus.current = false }
+  }, [confirm])
   const issue = useCallback(async (replaceExisting: boolean) => {
     if (!receipt || pending.current || Date.now() < retryAt) return
     pending.current = true; epoch.current++; setBusy(true); setFailure(null); setNotice('')
@@ -101,8 +105,8 @@ export default function BookingResult({ id, initialResult, initialToken, receipt
       {showLink && <><label htmlFor="result-link">Kopyalanacak sonuç bağlantısı</label><input id="result-link" readOnly value={link} onFocus={e => e.target.select()}/></>}
       {receipt && !token && <><p>Randevunuz kaydedildi; sonuç bağlantısı henüz hazırlanamadı. Sayfayı kapatmadan bağlantıyı hazırlayın. Oluşturma yetkisi en fazla 24 saat geçerlidir.</p><button disabled={busy || now < retryAt} onClick={() => { setRotate(false); void issue(false) }}>Bağlantıyı yeniden hazırla</button></>}
       {receipt && rotate && <div className={styles.note}><p>İlk bağlantı hazırlanmış olabilir. Yeni bağlantı oluşturursanız önceki bağlantı geçersiz olacak; randevunuz değişmez.</p><div className={styles.actions}><button disabled={busy} onClick={() => setRotate(false)}>Vazgeç</button><button disabled={busy || now < retryAt} onClick={() => void issue(true)}>Yeni bağlantı oluştur</button></div></div>}
-      {canCancel && !confirm && !unknownCancel && <button className={styles.danger} disabled={busy || reading || noAuthority} onClick={() => setConfirm(true)}>Randevuyu iptal et</button>}
-      {(confirm || unknownCancel) && <div className={styles.note}><h2>{busy ? 'İptal işleniyor…' : unknownCancel ? 'İptal sonucu doğrulanamadı' : 'Bu randevuyu iptal etmek istiyor musunuz?'}</h2><p>{result.serviceName} · {formatBusinessDateTime(result.startsAt)}</p><div className={styles.actions}>{!unknownCancel && <button disabled={busy} onClick={() => setConfirm(false)}>Vazgeç</button>}<button className={styles.danger} disabled={busy || now < retryAt} onClick={() => void cancel()}>{busy ? 'İşleniyor…' : unknownCancel ? 'Aynı iptali yeniden dene' : 'Evet, randevuyu iptal et'}</button></div></div>}
+      {canCancel && !confirm && !unknownCancel && <button ref={cancelTrigger} className={styles.danger} disabled={busy || reading || noAuthority} onClick={() => setConfirm(true)}>Randevuyu iptal et</button>}
+      {(confirm || unknownCancel) && <div className={styles.note}><h2>{busy ? 'İptal işleniyor…' : unknownCancel ? 'İptal sonucu doğrulanamadı' : 'Bu randevuyu iptal etmek istiyor musunuz?'}</h2><p>{result.serviceName} · {formatBusinessDateTime(result.startsAt)}</p><div className={styles.actions}>{!unknownCancel && <button disabled={busy} onClick={() => { returningFocus.current = true; setConfirm(false) }}>Vazgeç</button>}<button className={styles.danger} disabled={busy || now < retryAt} onClick={() => void cancel()}>{busy ? 'İşleniyor…' : unknownCancel ? 'Aynı iptali yeniden dene' : 'Evet, randevuyu iptal et'}</button></div></div>}
     </div><aside className={styles.summary} aria-label="Randevu özeti"><h2>Randevunuz</h2><div><span>Hizmet</span><strong>{result.serviceName}</strong><p>Hizmet tutarı: {priceLabel(result.price, result.currency)}</p></div><div><span>Çalışan</span><strong>{result.staffName}</strong></div><div><span>Tarih ve saat · İstanbul saati</span><strong>{formatBusinessDateTime(result.startsAt)}–{formatBusinessDateTime(result.endsAt)}</strong></div></aside></div>}
     {!result && token && <button disabled={reading || now < retryAt} onClick={() => { setReading(true); void reload() }}>Yeniden dene</button>}
     {now < retryAt && <p role="status">Yaklaşık {Math.ceil((retryAt - now) / 1000)} saniye bekleyin.</p>}
