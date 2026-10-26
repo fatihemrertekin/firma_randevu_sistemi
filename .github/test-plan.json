@@ -1,20 +1,14 @@
 {
   "compose": false,
-  "reason": "P04-13 moves existing RetryAfter metadata emission before the shared public-only 429 response branch. AppointmentListTests covers real Owner limits/no writes, PublicBookingTests public privacy and global limits, AuthReadinessTests login-policy MFA recovery limits and rollback. Appointments and appointmentsApi web tests cover the unchanged header consumer, disabled date/filter/refresh controls and expiry/reload. Shared Identity startup warrants these three related server groups; no limit value, auth policy, schema or Compose change and no full suite.",
-  "server": [
-    "Server.Tests.AppointmentListTests",
-    "Server.Tests.PublicBookingTests",
-    "Server.Tests.AuthReadinessTests"
-  ],
+  "reason": "P04-14 changes only the locked dev transitive undici (jsdom) and zod (React Hooks ESLint) patches. Representative jsdom callers cover Owner appointment date/filter/retry forms, public booking async validation and token/cancellation states, and Identity session/MFA/error flows; api tests cover native Response/fetch/CSRF controls. Full lint executes the zod-backed Hooks rules; typecheck/build verify unchanged production bundling. No server, DB, runtime source or Compose change; no automatic full suite.",
+  "server": [],
   "web": [
     "src/features/appointments/Appointments.test.tsx",
-    "src/features/appointments/appointmentsApi.test.tsx"
+    "src/features/public-booking/PublicBooking.test.tsx",
+    "src/features/auth/AuthReadiness.test.tsx",
+    "src/app/api.test.tsx"
   ],
   "files": [
-    "src/Server/Features/Identity/IdentityStartupExtensions.cs",
-    "tests/Server.Tests/AppointmentListTests.cs",
-    "tests/Server.Tests/PublicBookingTests.cs",
-    "tests/Server.Tests/AuthReadinessTests.cs",
-    "src/Web/src/features/appointments/Appointments.test.tsx"
+    "src/Web/package-lock.json"
   ]
 }
