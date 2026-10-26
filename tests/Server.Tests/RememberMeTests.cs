@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Microsoft.Net.Http.Headers;
+using Server.Infrastructure;
 using Xunit;
 using static Server.Tests.Support.AuthenticationTestSupport;
 using static Server.Tests.Support.IdentityTestEnvironment;
@@ -26,7 +27,7 @@ public sealed class RememberMeTests
     [InlineData("password", null)]
     [InlineData("authenticator", null)]
     [InlineData("recovery", null)]
-    public async Task PersistenceIsOptInForEveryLoginAndExpiresAfterEightHours(string flow, bool? rememberMe)
+    public async Task PersistenceIsOptInAndUsesTwelveHoursOnlyWhenRemembered(string flow, bool? rememberMe)
     {
         await using var database = RecoveryDatabase();
         await database.StartAsync(TestContext.Current.CancellationToken);
@@ -79,14 +80,25 @@ public sealed class RememberMeTests
         var ticket = options.TicketDataFormat.Unprotect(authCookie.Value.ToString());
         Assert.NotNull(ticket);
         Assert.Equal(rememberMe == true, ticket.Properties.IsPersistent);
-        Assert.Equal(TimeSpan.FromHours(8), ticket.Properties.ExpiresUtc - ticket.Properties.IssuedUtc);
+        Assert.Equal(TimeSpan.FromHours(rememberMe == true ? 12 : 8), ticket.Properties.ExpiresUtc - ticket.Properties.IssuedUtc);
+        if (rememberMe == true)
+            Assert.Equal(ticket.Properties.ExpiresUtc, authCookie.Expires);
         using var account = await client.GetAsync("/api/auth/me", TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.OK, account.StatusCode);
         var profile = await account.Content.ReadFromJsonAsync<AccountResponse>(TestContext.Current.CancellationToken);
         Assert.NotNull(profile);
         Assert.Equal(flow != "password", profile.OwnerAccess);
 
-        clock.Advance(TimeSpan.FromHours(8) + TimeSpan.FromSeconds(1));
+        clock.Advance(TimeSpan.FromHours(4) + TimeSpan.FromSeconds(1));
+        using var active = await client.GetAsync("/api/auth/me", TestContext.Current.CancellationToken);
+        Assert.Equal(HttpStatusCode.OK, active.StatusCode);
+        Assert.False(active.Headers.Contains("Set-Cookie"));
+        clock.Advance(TimeSpan.FromHours(4));
+        using var afterEightHours = await client.GetAsync("/api/auth/me", TestContext.Current.CancellationToken);
+        Assert.Equal(rememberMe == true ? HttpStatusCode.OK : HttpStatusCode.Unauthorized, afterEightHours.StatusCode);
+        if (rememberMe != true) return;
+        Assert.False(afterEightHours.Headers.Contains("Set-Cookie"));
+        clock.Advance(TimeSpan.FromHours(4));
         using var expired = await client.GetAsync("/api/auth/me", TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.Unauthorized, expired.StatusCode);
     }
@@ -114,6 +126,35 @@ public sealed class RememberMeTests
         using var reused = await PostAsync(client, "/api/auth/mfa/recovery-login",
             new { code = seeded.Codes[0], rememberMe = true }, await GetCsrfAsync(client));
         Assert.Equal(HttpStatusCode.Unauthorized, reused.StatusCode);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task PersistentSessionStillRejectsRevokedStampOrInactiveAccount(bool deactivate)
+    {
+        await using var database = RecoveryDatabase();
+        await database.StartAsync(TestContext.Current.CancellationToken);
+        var seeded = await CreateRecoveryAppAsync(database.GetConnectionString());
+        await using var app = seeded.App;
+        await CreatePasswordStaffAsync(app);
+        using var client = app.CreateClient();
+        using var login = await PostAsync(client, "/api/auth/login",
+            new { email = StaffEmail, password = Password, rememberMe = true }, await GetCsrfAsync(client));
+        Assert.Equal(HttpStatusCode.NoContent, login.StatusCode);
+        using var before = await client.GetAsync("/api/auth/me", TestContext.Current.CancellationToken);
+        Assert.Equal(HttpStatusCode.OK, before.StatusCode);
+        using (var scope = app.Services.CreateScope())
+        {
+            var users = scope.ServiceProvider.GetRequiredService<UserManager<AppUser>>();
+            var user = await users.FindByEmailAsync(StaffEmail);
+            Assert.NotNull(user);
+            if (deactivate) user.IsActive = false;
+            var changed = deactivate ? await users.UpdateAsync(user) : await users.UpdateSecurityStampAsync(user);
+            Assert.True(changed.Succeeded);
+        }
+        using var revoked = await client.GetAsync("/api/auth/me", TestContext.Current.CancellationToken);
+        Assert.Equal(HttpStatusCode.Unauthorized, revoked.StatusCode);
     }
 
     private sealed class LoginClock : TimeProvider

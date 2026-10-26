@@ -168,7 +168,7 @@ export default function AuthenticationScreens({ auth }: { auth: ReturnType<typeo
                   onChange={event => setRememberMe(event.target.checked)} />
                 Beni hatırla
               </label>
-              <p id="remember-me-help" className={styles.rememberMeHelp}>Bu tarayıcıda 8 saat boyunca açık kal. Yalnız kendi cihazınızda seçin.</p>
+              <p id="remember-me-help" className={styles.rememberMeHelp}>Bu tarayıcıda 12 saat boyunca açık kal. Yalnız kendi cihazınızda seçin.</p>
               <button type="submit" disabled={busy}>
                 {busy ? 'Giriş yapılıyor…' : 'Giriş yap'}
               </button>
