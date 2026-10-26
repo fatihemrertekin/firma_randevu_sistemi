@@ -58,3 +58,5 @@ foreach ($path in $paths) {
 if ($failures.Count -gt 0) { $failures | Write-Output; throw "$($failures.Count) geçersiz bağlantı." }
 Write-Output "$($paths.Count) Markdown belgesinde $links yerel dosya/başlık bağlantısı doğrulandı."
 Write-Output "$localDesignLinks Git dışında tutulan yerel tasarım referansı ortak depo kontrolüne dahil edilmedi; CI kabul kanıtı değildir."
+# A tracked draft's normal check-ignore exit 1 must not fail the caller's CI shell.
+if ($LASTEXITCODE -eq 1) { $global:LASTEXITCODE = 0 }

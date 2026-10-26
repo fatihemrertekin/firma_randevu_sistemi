@@ -28,6 +28,25 @@ class ScopeTests(unittest.TestCase):
             document.write_text("[Broken](missing.md)\n", encoding="utf-8")
             invalid = subprocess.run(command, capture_output=True, text=True)
             self.assertNotEqual(invalid.returncode, 0)
+            tracked = root / ".impeccable/mocks/tracked.md"
+            tracked.parent.mkdir(parents=True)
+            tracked.write_text("# Kept\n", encoding="utf-8")
+            subprocess.run(["git", "-C", directory, "add", "-f", str(tracked)], check=True)
+            wrapper = root / "ci.ps1"
+            wrapper.write_text(
+                "param([string]$Validator, [string]$Root)\n"
+                "$ErrorActionPreference = 'Stop'\n"
+                "& $Validator -RepositoryRoot $Root\n"
+                "if (Test-Path variable:LASTEXITCODE) { exit $LASTEXITCODE }\n",
+                encoding="utf-8")
+            ci_command = ["pwsh", "-NoProfile", "-File", str(wrapper),
+                          "-Validator", str(script), "-Root", directory]
+            document.write_text("[Local](.impeccable/mocks/draft.md)\n"
+                                "[Tracked](.impeccable/mocks/tracked.md#kept)\n", encoding="utf-8")
+            valid_ci = subprocess.run(ci_command, capture_output=True, text=True)
+            self.assertEqual(valid_ci.returncode, 0, valid_ci.stdout + valid_ci.stderr)
+            document.write_text("[Broken heading](.impeccable/mocks/tracked.md#missing)\n", encoding="utf-8")
+            self.assertNotEqual(subprocess.run(ci_command, capture_output=True).returncode, 0)
 
     def plan(self, files, web=None, server=None, compose=False):
         return dict(files=files, web=web or [], server=server or [], compose=compose,
