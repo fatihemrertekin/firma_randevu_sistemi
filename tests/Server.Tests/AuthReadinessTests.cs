@@ -118,6 +118,8 @@ public sealed class AuthReadinessTests
         }
         using var limited = await PostAsync(client, "/api/auth/mfa/recovery-codes", new { currentPassword = Password }, await GetCsrfAsync(client));
         Assert.Equal(HttpStatusCode.TooManyRequests, limited.StatusCode);
+        Assert.InRange(Assert.IsType<TimeSpan>(limited.Headers.RetryAfter?.Delta).TotalSeconds, 1, 300);
+        Assert.Empty(await limited.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
         await AssertOriginalStateAsync(app, seeded);
         var users = scope.ServiceProvider.GetRequiredService<UserManager<AppUser>>();
         Assert.True(await users.IsLockedOutAsync(Assert.IsType<AppUser>(await users.FindByIdAsync(seeded.OwnerId.ToString()))));

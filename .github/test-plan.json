@@ -1,18 +1,20 @@
 {
-  "files": [
-    "src/Server/Features/Scheduling/NetgsmAppointmentReminderDelivery.cs",
-    "src/Server/Program.cs",
-    "src/Server/appsettings.json",
-    "tests/Server.Tests/NetgsmAppointmentReminderDeliveryTests.cs",
-    "tests/Server.Tests/AppointmentReminderTests.cs"
-  ],
-  "reason": "P05-11 wires an independently closed Netgsm normal-SMS reminder adapter into the existing worker. Adapter/OTP tests cover fixed HTTP contracts, credentials, unit prices, dates, bounded responses and unknown outcomes. AppointmentReminderTests exercise actual DI closed/fail-closed startup plus real-adapter fake HTTP through persistent PostgreSQL budget, restart, ret, restore and worker callers. BookingSmsBudgetTests cover shared spending and invalid/revoked budget startup. No UI, schema, Identity or Compose change; no full suite.",
-  "web": [],
   "compose": false,
+  "reason": "P04-13 moves existing RetryAfter metadata emission before the shared public-only 429 response branch. AppointmentListTests covers real Owner limits/no writes, PublicBookingTests public privacy and global limits, AuthReadinessTests login-policy MFA recovery limits and rollback. Appointments and appointmentsApi web tests cover the unchanged header consumer, disabled date/filter/refresh controls and expiry/reload. Shared Identity startup warrants these three related server groups; no limit value, auth policy, schema or Compose change and no full suite.",
   "server": [
-    "Server.Tests.NetgsmAppointmentReminderDeliveryTests",
-    "Server.Tests.NetgsmBookingSmsDeliveryTests",
-    "Server.Tests.AppointmentReminderTests",
-    "Server.Tests.BookingSmsBudgetTests"
+    "Server.Tests.AppointmentListTests",
+    "Server.Tests.PublicBookingTests",
+    "Server.Tests.AuthReadinessTests"
+  ],
+  "web": [
+    "src/features/appointments/Appointments.test.tsx",
+    "src/features/appointments/appointmentsApi.test.tsx"
+  ],
+  "files": [
+    "src/Server/Features/Identity/IdentityStartupExtensions.cs",
+    "tests/Server.Tests/AppointmentListTests.cs",
+    "tests/Server.Tests/PublicBookingTests.cs",
+    "tests/Server.Tests/AuthReadinessTests.cs",
+    "src/Web/src/features/appointments/Appointments.test.tsx"
   ]
 }

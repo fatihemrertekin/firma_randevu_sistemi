@@ -36,7 +36,7 @@ beforeEach(() => {
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true); vi.stubGlobal('fetch', vi.fn(api)); vi.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-10-16T06:00:00Z'))
   container = document.createElement('div'); document.body.append(container); root = createRoot(container)
 })
-afterEach(async () => { await act(async () => root.unmount()); container.remove(); vi.unstubAllGlobals(); vi.restoreAllMocks() })
+afterEach(async () => { await act(async () => root.unmount()); container.remove(); vi.useRealTimers(); vi.unstubAllGlobals(); vi.restoreAllMocks() })
 async function render(path = '/yonetim/randevular?tarih=2026-10-16', post = vi.fn<typeof postWithCsrf>(async () => Response.json(appointment))) {
   const dirty = vi.fn(), busy = vi.fn(), unauthorized = vi.fn()
   const router = createMemoryRouter([{ path: '*', element: <Appointments post={post} onDirtyChange={dirty} onBusyChange={busy} onUnauthorized={unauthorized} /> }], { initialEntries: [path] })
@@ -72,6 +72,30 @@ async function fillCreation() {
 }
 
 describe('İşletmenin günlük randevu akışı', () => {
+  it('429 Retry-After boyunca gün/filtre/yenilemeyi kilitler ve süre sonunda yeniden okumayı açar', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'setInterval', 'clearInterval'] })
+    let now = Date.parse('2026-10-16T06:00:00Z'), limited = true
+    vi.mocked(Date.now).mockImplementation(() => now)
+    vi.mocked(fetch).mockImplementation(input => new URL(String(input), 'http://test.local').pathname === '/api/appointments/' && limited
+      ? Promise.resolve(new Response(null, { status: 429, headers: { 'Retry-After': '2' } })) : api(input))
+    await render()
+    const previous = container.querySelector<HTMLButtonElement>('[aria-label="Önceki gün"]')
+    const date = container.querySelector<HTMLInputElement>('#appointment-day')
+    const staff = container.querySelector<HTMLSelectElement>('#appointment-filter')
+    const refresh = [...container.querySelectorAll('button')].find(button => button.textContent === 'Listeyi yenile')
+    expect(container.querySelector('[role=alert]')?.textContent).toContain('Çok sık denendi')
+    for (const control of [previous, date, staff, refresh]) expect(control?.disabled).toBe(true)
+    const requests = vi.mocked(fetch).mock.calls.length
+    await click('Önceki gün'); await click('Listeyi yenile')
+    expect(fetch).toHaveBeenCalledTimes(requests)
+    now += 1000; await act(async () => { await vi.advanceTimersByTimeAsync(1000) })
+    expect(previous?.disabled).toBe(true)
+    now += 1000; await act(async () => { await vi.advanceTimersByTimeAsync(1000) })
+    for (const control of [previous, date, staff, refresh]) expect(control?.disabled).toBe(false)
+    limited = false; await click('Listeyi yenile')
+    expect(container.querySelector('[role=alert]')).toBeNull()
+    expect(container.textContent).toContain(appointment.customerName)
+  })
   it('aynı randevu sürümü yeniden yüklenince hatırlatma tercihini de yeniden okur', async () => {
     let stale = true
     vi.mocked(fetch).mockImplementation(input => String(input).endsWith('/reminder') && stale
