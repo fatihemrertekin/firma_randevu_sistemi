@@ -164,6 +164,20 @@ it.each(['rate', 'csrf'])('kayıp iptal sonrası %s reddinde aynı sürüm/anaht
   const writes = calls.filter(c => c.url.endsWith('/cancel')); expect(writes).toHaveLength(3); expect(writes[0].body).toEqual(writes[1].body); expect(writes[1].body).toEqual(writes[2].body)
   expect(container.textContent).toContain('Randevu iptal edildi')
 })
+it.each([
+  ['customerName', 'name-error', 'Ad 2–100 karakter olmalı.'],
+  ['customerPhone', 'phone-help', 'Geçerli bir Türkiye cep numarası girin.'],
+])('OTP talebindeki %s alan hatasını açıklar, odaklar ve düzeltmede temizler', async (name, description, message) => {
+  override = c => c.url.endsWith('/verification/request') ? Response.json({ errors: { [name]: [message] } }, { status: 400 }) : undefined
+  await throughContact()
+  const field = container.querySelector<HTMLInputElement>('#booking-' + name)!
+  expect(field.getAttribute('aria-invalid')).toBe('true'); expect(document.activeElement).toBe(field)
+  expect(field.getAttribute('aria-describedby')).toBe(description); expect(container.querySelector('#' + description)?.textContent).toContain(message)
+  expect(calls.some(c => c.url.endsWith('/appointments') || c.url.endsWith('/verification/verify'))).toBe(false)
+  override = undefined; await input('booking-' + name, name === 'customerName' ? 'Düzeltilen ad' : '05000000002')
+  expect(field.getAttribute('aria-invalid')).toBe('false'); expect(container.querySelector('#' + description)?.textContent ?? '').not.toContain(message)
+  await submit(); expect(container.querySelector('#booking-code')).not.toBeNull()
+})
 it('gerçek uygunluk sözleşmesindeki tarih alan hatasını alanla bağlar ve odaklar', async () => {
   override = c => c.url.includes('/availability') ? Response.json({ errors: { date: ['Bugünden başlayarak geçerli aralıkta bir tarih seçin.'] } }, { status: 400 }) : undefined
   await mount(<BookingWizard onCreated={() => {}} onBusiness={() => {}}/>); await radio('service'); await click('Devam et'); await radio('member'); await click('Devam et')

@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
@@ -46,6 +47,18 @@ public sealed class PublicAppointmentTests
             intent.StaffMemberId, intent.StartsAt, intent.CustomerName, intent.CustomerPhone);
     private static async Task<HttpResponseMessage> Post(HttpClient client, object body) =>
         await PostAsync(client, Path, body, await GetCsrfAsync(client));
+    [Fact]
+    public async Task MalformedContactKeepsTheGenericCreationResponseAndDoesNotWrite()
+    {
+        await using var f = new Fixture(); await f.StartAsync(); using var client = f.Client();
+        var intent = f.Request("123") with { CustomerName = "A" };
+        using var response = await Post(client, Create(intent, Guid.NewGuid(), new string('a', 43)));
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.False((await response.Content.ReadFromJsonAsync<JsonElement>(Token)).TryGetProperty("errors", out _));
+        await using var db = f.Db(); Assert.Empty(await db.Appointments.ToArrayAsync(Token));
+        Assert.Empty(await db.BookingVerifications.ToArrayAsync(Token)); Assert.Empty(await db.BookingSmsAttempts.ToArrayAsync(Token));
+    }
+
     private static async Task<PublicAppointmentEndpoints.Response> Read(HttpResponseMessage response, HttpStatusCode status)
     {
         Assert.Equal(status, response.StatusCode); Assert.True(response.Headers.CacheControl?.NoStore);

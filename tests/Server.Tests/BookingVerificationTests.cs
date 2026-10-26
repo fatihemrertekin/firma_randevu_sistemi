@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
@@ -149,6 +150,44 @@ public sealed class BookingVerificationTests
     }
 
     [Fact]
+    public async Task RequestContactErrorsAreScopedAndNeverWrite()
+    {
+        await using var f = new Fixture(); await f.StartAsync(); using var client = f.Client();
+        var cases = new (string? Name, string? Phone, string[] Fields)[]
+        {
+            ("Sentetik müşteri", "123", ["customerPhone"]),
+            ("Sentetik müşteri", "02120000001", ["customerPhone"]),
+            ("Sentetik müşteri", null, ["customerPhone"]),
+            (" ", "05000000001", ["customerName"]),
+            (new string('x', 101), "05000000001", ["customerName"]),
+            ("Ad\nSoyad", "05000000001", ["customerName"]),
+            ("A", "abc", ["customerName", "customerPhone"])
+        };
+        foreach (var entry in cases)
+        {
+            using var response = await f.Post(client, "request", f.Request() with { CustomerName = entry.Name, CustomerPhone = entry.Phone });
+            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+            Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+            var body = await response.Content.ReadFromJsonAsync<JsonElement>(Token);
+            Assert.True(body.TryGetProperty("errors", out var errors));
+            Assert.Equal(entry.Fields.Order(), errors.EnumerateObject().Select(x => x.Name).Order());
+            Assert.All(errors.EnumerateObject(), field => Assert.All(field.Value.EnumerateArray(), message => Assert.False(string.IsNullOrWhiteSpace(message.GetString()))));
+            if (errors.TryGetProperty("customerPhone", out var phoneErrors))
+            {
+                Assert.Contains("cep", phoneErrors[0].GetString());
+                Assert.DoesNotContain("sabit", phoneErrors[0].GetString());
+            }
+        }
+        using var malformed = await f.Post(client, "request", f.Request("abc") with { RequestKey = Guid.Empty });
+        Assert.Equal(HttpStatusCode.BadRequest, malformed.StatusCode);
+        Assert.False((await malformed.Content.ReadFromJsonAsync<JsonElement>(Token)).TryGetProperty("errors", out _));
+        await using var db = f.Db();
+        Assert.Empty(await db.BookingVerifications.ToArrayAsync(Token)); Assert.Empty(await db.BookingSmsJobs.ToArrayAsync(Token));
+        Assert.Empty(await db.BookingVerificationQuotaEvents.ToArrayAsync(Token)); Assert.Empty(await db.BookingSmsPeriods.ToArrayAsync(Token));
+        Assert.Empty(await db.BookingSmsAttempts.ToArrayAsync(Token)); Assert.Empty(await db.Appointments.ToArrayAsync(Token)); Assert.Empty(f.Sms.Calls);
+    }
+
+    [Fact]
     public async Task DifferentValidKeyCannotHidePersistedQuotasAtStartupOrWhileRunning()
     {
         await using var f = new Fixture(); await f.StartAsync(); using var client = f.Client();
@@ -249,6 +288,8 @@ public sealed class BookingVerificationTests
         using var unknown = await f.Post(enabled, "request", new { requestKey = Guid.NewGuid(), unexpected = true }); Assert.Equal(HttpStatusCode.BadRequest, unknown.StatusCode);
         using var large = await f.Post(enabled, "request", new { payload = new string('x', 4100) }); Assert.Equal(HttpStatusCode.RequestEntityTooLarge, large.StatusCode);
         using var secret = await f.Post(enabled, "verify", new BookingVerificationEndpoints.Verify(Guid.NewGuid(), new string('a', 43), "123456")); Assert.Equal(HttpStatusCode.Forbidden, secret.StatusCode);
+        foreach (var response in new[] { noCsrf, missing, wrongOrigin, unknown, large, secret })
+            Assert.False((await response.Content.ReadFromJsonAsync<JsonElement>(Token)).TryGetProperty("errors", out _));
         foreach (var phone in new[] { "02120000001", "+12000000000", "abc" })
         { using var invalid = await f.Post(enabled, "request", f.Request(phone)); Assert.Equal(HttpStatusCode.BadRequest, invalid.StatusCode); }
         await using var db = f.Db(); Assert.Empty(await db.BookingVerifications.ToArrayAsync(Token)); Assert.Empty(await db.BookingSmsJobs.ToArrayAsync(Token)); Assert.Empty(await db.BookingVerificationQuotaEvents.ToArrayAsync(Token));
