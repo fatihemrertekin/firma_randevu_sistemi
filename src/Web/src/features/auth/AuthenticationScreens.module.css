@@ -54,6 +54,7 @@
 .confirmationActions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--action-row-gap) var(--auth-space-2); }
 .confirmationActions form { min-width: 0; }
 .confirmationActions :is(button, a[data-navigation]) { width: fit-content; margin: 0; }
+.card form > .confirmationActions > button { width: 100%; }
 .secret { overflow-wrap: anywhere; padding: var(--auth-space-3); background: var(--auth-input); border-radius: var(--auth-radius); }
 .codes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--auth-space-3); padding-left: var(--auth-space-5); }
 .hero { position: relative; isolation: isolate; flex: 1 1 var(--auth-panel-min); min-width: 0; display: flex; align-items: center; padding: var(--auth-space-7) var(--auth-space-6); }
@@ -87,5 +88,5 @@
   .branding { position: absolute; bottom: calc(100% - var(--auth-mobile-photo-height) + var(--auth-space-5) + var(--auth-space-4)); left: max(var(--auth-space-5), calc((100% - var(--auth-form-width)) / 2 + var(--auth-space-5))); right: var(--auth-space-5); margin: 0; z-index: 1; }
   .loginOptions { display: grid; justify-items: start; gap: var(--action-row-gap); }
   .login .loginOptions { justify-items: stretch; }
-  .confirmationActions { grid-template-columns: minmax(0, 1fr); }
+  .formContent > .confirmationActions { grid-template-columns: minmax(0, 1fr); }
 }

@@ -1,12 +1,16 @@
 {
   "compose": false,
-  "reason": "P04-19 restores focus only after explicit dismissal of the public BookingResult cancellation confirmation, reusing the existing reminder return-focus pattern. PublicBooking.test.tsx covers the result route caller, dismissal/no cancel POST/reopening, actual cancel, lost response/idempotency, CSRF and conflict paths. No backend, shared API, schema, dependency or Compose changes; no server suite is needed.",
+  "reason": "Only AuthenticationScreens.module.css changes. Form-contained confirmation rows fill two equal input-aligned columns at all widths. Top-level OwnerEmailConfirmation and login layout stay unchanged. Existing PasswordReset, OwnerSelfServiceReset, StaffInvitations, ManagementLayout (MFA/app/recovery) and OwnerRecoveryEmail tests cover all direct callers and busy/error/navigation contracts. Browser geometry checks cover CSS, not a new implementation-mirroring unit test. No backend/API/schema/dependency/Compose change; no server suite.",
   "server": [],
   "web": [
-    "src/features/public-booking/PublicBooking.test.tsx"
+    "src/features/auth/PasswordReset.test.tsx",
+    "src/features/auth/OwnerSelfServiceReset.test.tsx",
+    "src/features/staff/StaffInvitations.test.tsx",
+    "src/app/ManagementLayout.test.tsx",
+    "src/features/auth/OwnerRecoveryEmail.test.tsx"
   ],
   "files": [
-    "src/Web/src/features/public-booking/BookingResult.tsx",
-    "src/Web/src/features/public-booking/PublicBooking.test.tsx"
+    "src/Web/src/features/auth/AuthenticationScreens.module.css",
+    ".impeccable/surfaces/authenticationscreens-tsx.md"
   ]
 }
