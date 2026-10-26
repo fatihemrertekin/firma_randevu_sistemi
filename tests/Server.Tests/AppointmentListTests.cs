@@ -136,7 +136,12 @@ public sealed class AppointmentListTests
         for (var index = 0; index < 61; index++)
         {
             using var response = await owner.GetAsync("/api/appointments/", Token);
-            if (response.StatusCode == HttpStatusCode.TooManyRequests) { limited = true; break; }
+            if (response.StatusCode == HttpStatusCode.TooManyRequests)
+            {
+                Assert.InRange(Assert.IsType<TimeSpan>(response.Headers.RetryAfter?.Delta).TotalSeconds, 1, 60);
+                Assert.Empty(await response.Content.ReadAsStringAsync(Token));
+                limited = true; break;
+            }
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         }
         Assert.True(limited);

@@ -237,7 +237,7 @@ public sealed class PublicBookingTests
     }
 
     [Fact]
-    public async Task GlobalLimitAlsoGivesPublicClientsRetryAfterWithoutChangingOtherResponses()
+    public async Task GlobalLimitGivesBothPublicAndOtherResponsesFiniteRetryAfter()
     {
         await using var database = RecoveryDatabase(); await database.StartAsync(Token);
         var seed = await CreateRecoveryAppAsync(database.GetConnectionString(), new Clock()); await using var app = seed.App;
@@ -249,5 +249,8 @@ public sealed class PublicBookingTests
         Assert.InRange(Assert.IsType<TimeSpan>(limited.Headers.RetryAfter?.Delta).TotalSeconds, 1, 60);
         using var health = await client.GetAsync("/health/live", Token);
         Assert.Equal(HttpStatusCode.TooManyRequests, health.StatusCode); Assert.Empty(await health.Content.ReadAsStringAsync(Token));
+        Assert.InRange(Assert.IsType<TimeSpan>(health.Headers.RetryAfter?.Delta).TotalSeconds, 1, 60);
+        Assert.Equal("no-referrer", limited.Headers.GetValues("Referrer-Policy").Single());
+        Assert.Equal("application/problem+json", limited.Content.Headers.ContentType?.MediaType);
     }
 }
