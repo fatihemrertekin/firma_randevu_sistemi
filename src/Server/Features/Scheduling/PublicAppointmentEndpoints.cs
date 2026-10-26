@@ -59,7 +59,7 @@ public static class PublicAppointmentEndpoints
     {
         var intent = new BookingVerificationEndpoints.Request(body.RequestKey, body.ServiceId, body.ServiceVersion,
             body.PolicyVersion, body.StaffMemberId, body.StartsAt, body.CustomerName, body.CustomerPhone);
-        if (!BookingVerificationEndpoints.TryNormalize(intent, out var name, out var phone, out var start))
+        if (!BookingVerificationEndpoints.TryNormalize(intent, out var name, out var phone, out var start, out _))
             return Results.Problem(statusCode: 400, title: "Geçerli randevu bilgileri gerekli.");
         var hash = BookingVerificationEndpoints.RequestHash(intent, name, phone, start, security);
         var item = await db.BookingVerifications.AsNoTracking().SingleOrDefaultAsync(x => x.Id == body.ChallengeId, token);

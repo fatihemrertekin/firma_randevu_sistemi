@@ -76,14 +76,18 @@ public static class BookingVerificationEndpoints
     private static bool Active(BookingVerification item, DateTimeOffset now) =>
         item.ConsumedAt is null && item.VerifiedAt is null && item.FailedAttempts < 5 && now < item.ExpiresAt;
 
-    internal static bool TryNormalize(Request body, out string name, out string phone, out DateTime start)
+    internal static bool TryNormalize(Request body, out string name, out string phone, out DateTime start,
+        out Dictionary<string, string[]> errors)
     {
         name = body.CustomerName?.Trim() ?? "";
-        phone = ""; start = default;
-        return body.RequestKey != Guid.Empty && body.ServiceId != Guid.Empty && body.ServiceVersion != Guid.Empty &&
-            body.PolicyVersion != Guid.Empty && body.StaffMemberId != Guid.Empty && name is { Length: >= 2 and <= 100 } && !name.Any(char.IsControl) &&
-            TurkishPhone.TryNormalize(body.CustomerPhone, out phone, out _) && phone.StartsWith("+905", StringComparison.Ordinal) &&
-            AppointmentRules.TryStart(body.StartsAt, out start);
+        phone = ""; start = default; errors = [];
+        if (body.RequestKey == Guid.Empty || body.ServiceId == Guid.Empty || body.ServiceVersion == Guid.Empty ||
+            body.PolicyVersion == Guid.Empty || body.StaffMemberId == Guid.Empty || !AppointmentRules.TryStart(body.StartsAt, out start)) return false;
+        if (name is not { Length: >= 2 and <= 100 } || name.Any(char.IsControl))
+            errors["customerName"] = ["Ad 2–100 karakter olmalı ve kontrol karakteri içermemeli."];
+        if (!TurkishPhone.TryNormalize(body.CustomerPhone, out phone, out _) || !phone.StartsWith("+905", StringComparison.Ordinal))
+            errors["customerPhone"] = ["Geçerli bir Türkiye cep telefonu numarası girin."];
+        return errors.Count == 0;
     }
 
     internal static string RequestHash(Request body, string name, string phone, DateTime start, BookingVerificationSecurity security) =>
@@ -105,7 +109,8 @@ public static class BookingVerificationEndpoints
     private static async Task<IResult> RequestAsync(Request body, HttpContext ctx, AppDbContext db, BookingVerificationSecurity security,
         IDataProtectionProvider protection, TimeProvider clock, CancellationToken token)
     {
-        if (!TryNormalize(body, out var name, out var phone, out var start)) return Invalid();
+        if (!TryNormalize(body, out var name, out var phone, out var start, out var errors))
+            return errors.Count > 0 ? Results.ValidationProblem(errors) : Invalid();
         var now = clock.GetUtcNow();
         await using var transaction = await db.Database.BeginTransactionAsync(token);
         // Bu yalnız ön kontroldür; OTP bir slot kilidi veya rezervasyon değildir.

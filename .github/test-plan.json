@@ -1,14 +1,18 @@
 {
   "compose": false,
-  "reason": "P04-14 changes only the locked dev transitive undici (jsdom) and zod (React Hooks ESLint) patches. Representative jsdom callers cover Owner appointment date/filter/retry forms, public booking async validation and token/cancellation states, and Identity session/MFA/error flows; api tests cover native Response/fetch/CSRF controls. Full lint executes the zod-backed Hooks rules; typecheck/build verify unchanged production bundling. No server, DB, runtime source or Compose change; no automatic full suite.",
-  "server": [],
+  "reason": "P04-18 adds scoped contact errors to the shared pure BookingVerificationEndpoints.TryNormalize helper. The OTP request caller emits ValidationProblem only for customerName/customerPhone; the public creation caller discards fields to retain its generic response. BookingVerificationTests covers invalid inputs/no OTP-budget-quota writes, security/disabled responses and valid request/resend/verify; PublicAppointmentTests covers the second caller and atomic create/replay contracts. PublicBooking web tests cover existing field text/aria/focus and correction flow. No limits, CSRF, token, schema or Compose change; no unrelated or automatic full suite.",
+  "server": [
+    "Server.Tests.BookingVerificationTests",
+    "Server.Tests.PublicAppointmentTests"
+  ],
   "web": [
-    "src/features/appointments/Appointments.test.tsx",
-    "src/features/public-booking/PublicBooking.test.tsx",
-    "src/features/auth/AuthReadiness.test.tsx",
-    "src/app/api.test.tsx"
+    "src/features/public-booking/PublicBooking.test.tsx"
   ],
   "files": [
-    "src/Web/package-lock.json"
+    "src/Server/Features/Scheduling/BookingVerificationEndpoints.cs",
+    "src/Server/Features/Scheduling/PublicAppointmentEndpoints.cs",
+    "tests/Server.Tests/BookingVerificationTests.cs",
+    "tests/Server.Tests/PublicAppointmentTests.cs",
+    "src/Web/src/features/public-booking/PublicBooking.test.tsx"
   ]
 }
