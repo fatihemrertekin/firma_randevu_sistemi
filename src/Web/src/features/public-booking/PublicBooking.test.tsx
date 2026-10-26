@@ -91,6 +91,19 @@ it('kayıp erişim yanıtından sonra tokenı otomatik döndürmez, açık yenil
   await mount(<BookingResult id={result.id} initialResult={result} receipt={challenge}/>); expect(calls.filter(c => c.url.endsWith('/access'))).toHaveLength(1)
   await click('Yeni bağlantı oluştur'); expect(calls.filter(c => c.url.endsWith('/access')).map(c => c.body.replaceExisting)).toEqual([false,true])
 })
+it('iptalden Vazgeç odağı iptal düğmesine döndürür ve iptal isteği göndermez', async () => {
+  await mount(<BookingResult id={result.id} initialToken={access.token}/>);
+  await click('Randevuyu iptal et')
+  const dismiss = [...container.querySelectorAll('button')].find(b => b.textContent === 'Vazgeç')
+  if (!dismiss) throw new Error('Vazgeç düğmesi bulunamadı')
+  dismiss.focus(); expect(document.activeElement).toBe(dismiss)
+  await click('Vazgeç')
+  const trigger = [...container.querySelectorAll('button')].find(b => b.textContent === 'Randevuyu iptal et')
+  expect(document.activeElement).toBe(trigger)
+  expect(calls.filter(c => c.url.endsWith('/cancel'))).toHaveLength(0)
+  await click('Randevuyu iptal et')
+  expect(container.textContent).toContain('Evet, randevuyu iptal et')
+})
 it('iptal açık onay gerektirir ve kayıp yanıtta aynı version/requestKey kullanır', async () => {
   let requests = 0; override = c => c.url.endsWith('/cancel') && ++requests === 1 ? Promise.reject(new TypeError('lost')) : undefined
   await mount(<BookingResult id={result.id} initialToken={access.token}/>); expect(calls.filter(c => c.url.endsWith('/cancel'))).toHaveLength(0)

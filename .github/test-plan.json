@@ -1,18 +1,12 @@
 {
   "compose": false,
-  "reason": "P04-18 adds scoped contact errors to the shared pure BookingVerificationEndpoints.TryNormalize helper. The OTP request caller emits ValidationProblem only for customerName/customerPhone; the public creation caller discards fields to retain its generic response. BookingVerificationTests covers invalid inputs/no OTP-budget-quota writes, security/disabled responses and valid request/resend/verify; PublicAppointmentTests covers the second caller and atomic create/replay contracts. PublicBooking web tests cover existing field text/aria/focus and correction flow. No limits, CSRF, token, schema or Compose change; no unrelated or automatic full suite.",
-  "server": [
-    "Server.Tests.BookingVerificationTests",
-    "Server.Tests.PublicAppointmentTests"
-  ],
+  "reason": "P04-19 restores focus only after explicit dismissal of the public BookingResult cancellation confirmation, reusing the existing reminder return-focus pattern. PublicBooking.test.tsx covers the result route caller, dismissal/no cancel POST/reopening, actual cancel, lost response/idempotency, CSRF and conflict paths. No backend, shared API, schema, dependency or Compose changes; no server suite is needed.",
+  "server": [],
   "web": [
     "src/features/public-booking/PublicBooking.test.tsx"
   ],
   "files": [
-    "src/Server/Features/Scheduling/BookingVerificationEndpoints.cs",
-    "src/Server/Features/Scheduling/PublicAppointmentEndpoints.cs",
-    "tests/Server.Tests/BookingVerificationTests.cs",
-    "tests/Server.Tests/PublicAppointmentTests.cs",
+    "src/Web/src/features/public-booking/BookingResult.tsx",
     "src/Web/src/features/public-booking/PublicBooking.test.tsx"
   ]
 }
