@@ -11,7 +11,7 @@
 .dayHeading { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: center; gap: var(--auth-space-4); }
 .closed { display: flex; align-items: center; justify-self: start; gap: var(--auth-space-2); min-height: var(--auth-control-height); min-width: var(--target-min); cursor: pointer; }
 .editor .closed input { width: var(--auth-space-5); height: var(--auth-space-5); min-width: var(--auth-space-5); min-height: var(--auth-space-5); padding: 0; margin: 0; accent-color: var(--auth-petrol); }
-.times { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--auth-space-4); }
+.times { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--hours-time-min)), 1fr)); gap: var(--auth-space-4); }
 .times > div { min-width: 0; }
 .times label { position: absolute; width: var(--auth-rule); height: var(--auth-rule); overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .times input { display: block; width: 100%; min-width: 0; min-height: var(--auth-control-height); font-variant-numeric: tabular-nums; }

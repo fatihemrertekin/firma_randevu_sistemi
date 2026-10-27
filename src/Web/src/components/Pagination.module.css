@@ -1,6 +1,7 @@
 .pagination { container: pager / inline-size; width: 100%; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--auth-space-4); margin-block: var(--auth-space-4); font-size: var(--button-font-size); }
 .range { color: var(--muted); font-variant-numeric: tabular-nums; }
 .pages, .numberGroup, .size { display: flex; align-items: center; gap: var(--auth-space-1); }
+.pages { flex-wrap: wrap; }
 .size { gap: var(--auth-space-2); color: var(--muted); }
 .pagination .pages button[type='button'] { padding: var(--auth-space-2); min-width: var(--target-min); min-height: var(--target-min); border: var(--auth-rule) solid var(--border); background: var(--surface); color: var(--text); font-weight: 500; font-variant-numeric: tabular-nums; }
 .pagination .pages button[type='button']:is(:hover, :active):not(:disabled):not([aria-disabled='true']) { background: var(--button-navigation-bg); color: var(--text); }
