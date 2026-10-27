@@ -36,7 +36,7 @@ export default function BusinessProfile({ post, disabled = false, onDirtyChange,
   const [confirmReload, setConfirmReload] = useState(false)
   const [invalidField, setInvalidField] = useState('')
   const [fieldError, setFieldError] = useState('')
-  const pending = useRef(false), form = useRef<HTMLFormElement>(null)
+  const pending = useRef(false), form = useRef<HTMLFormElement>(null), reloadTrigger = useRef<HTMLButtonElement>(null)
   useEffect(() => { if (invalidField) form.current?.querySelector<HTMLInputElement | HTMLTextAreaElement>('#' + invalidField)?.focus() }, [invalidField])
 
   useEffect(() => { onDirtyChange?.(dirty) }, [dirty, onDirtyChange])
@@ -169,13 +169,13 @@ export default function BusinessProfile({ post, disabled = false, onDirtyChange,
     {notice && <p className={styles.notice} role="status">{notice}</p>}
     <div className={styles.actions}>
       {profile && !loading && <button type="submit" form="business-profile-form" disabled={disabled || busy || reloadRequired}>{busy ? 'Profil kaydediliyor…' : 'Profili kaydet'}</button>}
-      {(error || reloadRequired) && <button type="button" disabled={disabled || busy || loading} onClick={() => dirty ? setConfirmReload(true) : reloadProfile()}>Güncel bilgileri yükle</button>}
+      {(error || reloadRequired) && <button ref={reloadTrigger} type="button" disabled={disabled || busy || loading} onClick={() => dirty ? setConfirmReload(true) : reloadProfile()}>Güncel bilgileri yükle</button>}
     </div>
     {confirmReload && <div className={styles.confirm} role="group" aria-label="Kaydedilmemiş değişiklikler">
       <p>Kaydedilmemiş değişiklikleriniz var. Güncel bilgileri yüklemek bu değişiklikleri siler.</p>
       <div className={styles.actions}>
       <button type="button" disabled={disabled || busy || loading} onClick={reloadProfile}>Değişiklikleri sil ve yükle</button>
-      <button type="button" disabled={disabled || busy || loading} onClick={() => setConfirmReload(false)}>Değişiklikleri koru</button>
+      <button type="button" disabled={disabled || busy || loading} onClick={() => { setConfirmReload(false); reloadTrigger.current?.focus() }}>Değişiklikleri koru</button>
       </div>
     </div>}
     </div>
