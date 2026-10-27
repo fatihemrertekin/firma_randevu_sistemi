@@ -1,13 +1,13 @@
 .editor { container: policy / inline-size; min-width: 0; }
 .paper { border: var(--auth-rule) solid var(--border); border-radius: var(--auth-radius); padding: var(--auth-space-5); background: var(--surface); }
 .context { margin: 0 0 var(--auth-space-5); }
-.form { gap: 0; }
+.form { gap: 0; grid-template-columns: minmax(0, 1fr); overflow-wrap: anywhere; }
 .setting { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); align-items: start; gap: var(--auth-space-6); padding-block: var(--auth-space-5); border-top: var(--auth-rule) solid var(--border); }
 .setting > div { min-width: 0; }
 .setting label { display: block; margin-bottom: var(--auth-space-2); }
 .setting p { margin: 0; }
-.inputGroup { display: flex; align-items: center; gap: var(--auth-space-3); }
-.inputGroup input { flex: 1; text-align: left; font-variant-numeric: tabular-nums; }
+.inputGroup { display: flex; flex-wrap: wrap; align-items: center; gap: var(--auth-space-3); }
+.inputGroup input { flex: 1 1 calc(var(--auth-control-height) + var(--auth-space-4) * 2); text-align: left; font-variant-numeric: tabular-nums; }
 .unit { color: var(--muted); flex-shrink: 0; width: var(--auth-control-height); }
 .fieldError { color: var(--error); margin-top: var(--auth-space-2) !important; }
 .example { margin-top: var(--auth-space-2) !important; font-size: var(--button-font-size); font-variant-numeric: tabular-nums; }

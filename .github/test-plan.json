@@ -1,16 +1,15 @@
 {
   "compose": false,
-  "reason": "P04-23 adds overflow-wrap:anywhere only to the existing form-contained equal-width authentication action buttons. PasswordReset (Owner/Staff), OwnerSelfServiceReset, StaffInvitations, ManagementLayout (MFA), AuthReadiness and OwnerRecoveryEmail tests cover direct callers/busy/error/navigation contracts and the excluded top-level email confirmation. Real browser checks cover the actual 320px/root200 clipping regression and preserve equal input-aligned columns; no CSS-mirroring unit test. No backend/API/identity lifetime/schema/dependency/Compose change; no server suite.",
+  "reason": "P04-27 fixes both P04-26 findings: BusinessProfile returns keyboard focus to its existing reload trigger when Keep dismisses confirmation; BookingPolicy constrains its form grid, wraps long text and lets number/unit groups wrap when padding leaves insufficient input width. BusinessProfile includes a failing-before focus/draft/no-extra-GET-or-POST regression; BookingPolicy covers radio/dirty/error/CSRF/busy persistence; ManagementLayout is the direct parent and guards navigation/loading/confirmed name. Actual browser checks cover both fixes at four widths and 200% root, readable numeric values, normal policy layout and real held POST/CSRF behavior; no CSS-mirroring unit test. No backend/API/schema/identity lifetime/dependency/Compose change; no server suite.",
   "server": [],
   "web": [
-    "src/features/auth/PasswordReset.test.tsx",
-    "src/features/auth/OwnerSelfServiceReset.test.tsx",
-    "src/features/staff/StaffInvitations.test.tsx",
-    "src/app/ManagementLayout.test.tsx",
-    "src/features/auth/OwnerRecoveryEmail.test.tsx",
-    "src/features/auth/AuthReadiness.test.tsx"
+    "src/features/business/BusinessProfile.test.tsx",
+    "src/features/booking-policy/BookingPolicy.test.tsx",
+    "src/app/ManagementLayout.test.tsx"
   ],
   "files": [
-    "src/Web/src/features/auth/AuthenticationScreens.module.css"
+    "src/Web/src/features/business/BusinessProfile.tsx",
+    "src/Web/src/features/business/BusinessProfile.test.tsx",
+    "src/Web/src/features/booking-policy/BookingPolicy.module.css"
   ]
 }
