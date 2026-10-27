@@ -1,15 +1,23 @@
 {
   "compose": false,
-  "reason": "P04-27 fixes both P04-26 findings: BusinessProfile returns keyboard focus to its existing reload trigger when Keep dismisses confirmation; BookingPolicy constrains its form grid, wraps long text and lets number/unit groups wrap when padding leaves insufficient input width. BusinessProfile includes a failing-before focus/draft/no-extra-GET-or-POST regression; BookingPolicy covers radio/dirty/error/CSRF/busy persistence; ManagementLayout is the direct parent and guards navigation/loading/confirmed name. Actual browser checks cover both fixes at four widths and 200% root, readable numeric values, normal policy layout and real held POST/CSRF behavior; no CSS-mirroring unit test. No backend/API/schema/identity lifetime/dependency/Compose change; no server suite.",
+  "reason": "P04-30 closes three P04-29 scaled-layout defects with CSS only: wrap Pagination controls, wrap personnel task links without shrinking their labels, and size shared time columns from a rem token so values stay readable at200% root. Selected tests cover all seven direct Pagination callers (Appointments, Services, StaffMembers, StaffServicesEditor, StaffAccounts, AuditLog, BookingWizard through PublicBooking), both WeeklyHoursEditor callers (BusinessHours, StaffHoursEditor) and the direct ManagementLayout navigation/busy parent. Browser confirmation checks normal geometry at four widths and320px root pagination/task/time active/busy/read-only plus business-hours caller. No DTO/API/backend/schema/identity/Compose/dependency change; no server suite or CSS-mirroring unit test.",
   "server": [],
   "web": [
-    "src/features/business/BusinessProfile.test.tsx",
-    "src/features/booking-policy/BookingPolicy.test.tsx",
+    "src/features/appointments/Appointments.test.tsx",
+    "src/features/services/Services.test.tsx",
+    "src/features/staff/StaffMembers.test.tsx",
+    "src/features/staff/StaffServicesEditor.test.tsx",
+    "src/features/staff/StaffAccounts.test.tsx",
+    "src/features/audit/AuditLog.test.tsx",
+    "src/features/public-booking/PublicBooking.test.tsx",
+    "src/features/business/BusinessHours.test.tsx",
+    "src/features/staff/StaffHoursEditor.test.tsx",
     "src/app/ManagementLayout.test.tsx"
   ],
   "files": [
-    "src/Web/src/features/business/BusinessProfile.tsx",
-    "src/Web/src/features/business/BusinessProfile.test.tsx",
-    "src/Web/src/features/booking-policy/BookingPolicy.module.css"
+    "src/Web/src/components/Pagination.module.css",
+    "src/Web/src/features/staff/StaffMembers.module.css",
+    "src/Web/src/components/WeeklyHoursEditor.module.css",
+    "src/Web/src/styles/tokens.css"
   ]
 }
