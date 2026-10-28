@@ -22,6 +22,8 @@ public sealed class OwnerMfaRecoveryAudit
 public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     : IdentityDbContext<AppUser, IdentityRole<Guid>, Guid>(options)
 {
+    public DbSet<SubscriptionPeriod> SubscriptionPeriods => Set<SubscriptionPeriod>();
+    public DbSet<SubscriptionPayment> SubscriptionPayments => Set<SubscriptionPayment>();
     public DbSet<BookingVerification> BookingVerifications => Set<BookingVerification>();
     public DbSet<BookingSmsJob> BookingSmsJobs => Set<BookingSmsJob>();
     public DbSet<BookingVerificationQuotaEvent> BookingVerificationQuotaEvents => Set<BookingVerificationQuotaEvent>();
@@ -101,6 +103,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
+        builder.ConfigureSubscriptions();
         BookingVerificationModel.Configure(builder);
         AppointmentReminderModel.Configure(builder);
         ConfigureDateCalendar(builder);

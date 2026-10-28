@@ -2136,6 +2136,114 @@ namespace Server.Infrastructure.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Server.Infrastructure.SubscriptionPayment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("AmountTry")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)");
+
+                    b.Property<DateOnly>("PaidOn")
+                        .HasColumnType("date");
+
+                    b.Property<Guid>("PeriodId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<DateTime>("RecordedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("RecordedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Reference")
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
+
+                    b.Property<string>("RequestHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<Guid>("RequestKey")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ReversesPaymentId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PeriodId");
+
+                    b.HasIndex("Reference")
+                        .IsUnique();
+
+                    b.HasIndex("RequestKey")
+                        .IsUnique();
+
+                    b.HasIndex("ReversesPaymentId")
+                        .IsUnique();
+
+                    b.ToTable("SubscriptionPayments", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_SubscriptionPayments_Amount", "\"AmountTry\" <> 0 AND \"AmountTry\" <> 'NaN'::numeric");
+
+                            t.HasCheckConstraint("CK_SubscriptionPayments_Identity", "\"Id\" <> '00000000-0000-0000-0000-000000000000'::uuid AND \"RequestKey\" <> '00000000-0000-0000-0000-000000000000'::uuid AND \"RecordedBy\" <> '00000000-0000-0000-0000-000000000000'::uuid AND \"RequestHash\" ~ '^[0-9A-F]{64}$' AND isfinite(\"RecordedAt\") AND \"PaidOn\" BETWEEN DATE '0001-01-01' AND DATE '9999-12-31'");
+
+                            t.HasCheckConstraint("CK_SubscriptionPayments_Kind", "(\"ReversesPaymentId\" IS NULL AND \"AmountTry\" > 0 AND \"Reference\" IS NOT NULL AND \"Reference\" ~ '^[A-Za-z0-9][A-Za-z0-9._:/-]{0,79}$' AND \"Reason\" IS NULL) OR (\"ReversesPaymentId\" IS NOT NULL AND \"AmountTry\" < 0 AND \"Reference\" IS NULL AND \"Reason\" IS NOT NULL AND length(btrim(\"Reason\")) > 0)");
+                        });
+                });
+
+            modelBuilder.Entity("Server.Infrastructure.SubscriptionPeriod", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("AmountTry")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)");
+
+                    b.Property<DateOnly>("DueOn")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly>("EndsOn")
+                        .HasColumnType("date");
+
+                    b.Property<DateTime>("RecordedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("RecordedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateOnly>("StartsOn")
+                        .HasColumnType("date");
+
+                    b.Property<Guid>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StartsOn")
+                        .IsUnique();
+
+                    b.ToTable("SubscriptionPeriods", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_SubscriptionPeriods_Amount", "\"AmountTry\" > 0 AND \"AmountTry\" <> 'NaN'::numeric");
+
+                            t.HasCheckConstraint("CK_SubscriptionPeriods_Dates", "\"StartsOn\" >= DATE '0001-01-01' AND \"EndsOn\" <= DATE '9999-12-31' AND \"StartsOn\" < \"EndsOn\" AND \"EndsOn\" = (date_trunc('month', \"StartsOn\"::timestamp) + INTERVAL '1 month')::date AND \"DueOn\" BETWEEN DATE '0001-01-01' AND DATE '9999-12-31'");
+
+                            t.HasCheckConstraint("CK_SubscriptionPeriods_Identity", "\"Id\" <> '00000000-0000-0000-0000-000000000000'::uuid AND \"Version\" <> '00000000-0000-0000-0000-000000000000'::uuid AND \"RecordedBy\" <> '00000000-0000-0000-0000-000000000000'::uuid AND isfinite(\"RecordedAt\")");
+                        });
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<System.Guid>", null)
@@ -2600,6 +2708,20 @@ namespace Server.Infrastructure.Migrations
                         .HasForeignKey("StaffMemberId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Server.Infrastructure.SubscriptionPayment", b =>
+                {
+                    b.HasOne("Server.Infrastructure.SubscriptionPeriod", null)
+                        .WithMany()
+                        .HasForeignKey("PeriodId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Server.Infrastructure.SubscriptionPayment", null)
+                        .WithMany()
+                        .HasForeignKey("ReversesPaymentId")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 #pragma warning restore 612, 618
         }

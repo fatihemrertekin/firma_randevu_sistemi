@@ -6,6 +6,7 @@ using Server.Features.Identity;
 using Server.Features.Staff;
 using Server.Features.Services;
 using Server.Features.Scheduling;
+using Server.Features.Subscriptions;
 using Server.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -82,6 +83,7 @@ app.MapStaffMemberEndpoints();
 app.MapServiceDefinitionEndpoints();
 app.MapAppointmentEndpoints();
 app.MapBookingPolicyEndpoints();
+app.MapSubscriptionEndpoints();
 app.MapPublicBookingEndpoints();
 app.MapBookingVerificationEndpoints();
 app.MapPublicAppointmentEndpoints();
