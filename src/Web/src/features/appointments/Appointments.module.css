@@ -6,6 +6,8 @@
 .views { display: flex; flex-wrap: wrap; gap: var(--auth-space-2); margin-bottom: var(--auth-space-4); }
 .surface .views :global(a[data-navigation]) { background: var(--button-navigation-bg); border-color: var(--border); color: var(--muted); }
 .surface :global(a[data-navigation])[aria-current='page'] { background: var(--primary-soft); border-color: var(--primary); color: var(--text); }
+.surface .views :global(a[data-navigation]):is(:hover,:active):not([aria-disabled='true']) { background: var(--button-navigation-bg); color: var(--text); }
+.surface .views :global(a[data-navigation])[aria-current='page']:is(:hover,:active):not([aria-disabled='true']) { background: var(--primary-soft); color: var(--text); }
 .weekActions { display: flex; align-items: center; flex-wrap: wrap; gap: var(--auth-space-2); min-width: 0; }
 .weekActions h2 { font-size: var(--auth-body-size); margin: 0; overflow-wrap: anywhere; }
 .weekActions button { min-height: var(--auth-control-height); width: var(--auth-control-height); }

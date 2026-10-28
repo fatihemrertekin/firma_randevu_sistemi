@@ -2,6 +2,8 @@
 .days { display: grid; grid-template-columns: repeat(7,minmax(0,1fr)); gap: var(--auth-space-2); margin-bottom: var(--auth-space-5); }
 .days button { display: grid; gap: var(--auth-space-1); width: 100%; min-width: 0; height: auto; padding: var(--auth-space-3) var(--auth-space-2); background: var(--surface); border-color: var(--border); color: var(--muted); overflow-wrap: anywhere; }
 .days button[aria-pressed='true'] { background: var(--primary-soft); border-color: var(--primary); color: var(--text); }
+.week .days button:is(:hover,:active):enabled { background: var(--button-navigation-bg); color: var(--text); border-color: var(--control-border); }
+.week .days button[aria-pressed='true']:is(:hover,:active):enabled { background: var(--primary-soft); color: var(--text); border-color: var(--primary); }
 .days strong { font-size: var(--auth-body-size); }
 .count { font-size: var(--button-font-size); font-weight: 400; }
 .shortDay { display: none; }
