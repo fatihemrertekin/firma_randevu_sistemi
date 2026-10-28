@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
 using Server.Infrastructure;
 
@@ -11,7 +12,7 @@ public static class AppointmentExportEndpoints
     internal static void MapAppointmentExportEndpoints(this RouteGroupBuilder appointments) =>
         appointments.MapGet("/export", ExportAsync);
 
-    private static async Task<IResult> ExportAsync(HttpContext context, AppDbContext db,
+    private static async Task<IResult> ExportAsync(HttpContext context, AppDbContext db, ILoggerFactory loggerFactory,
         string? from = null, string? to = null, Guid? staffMemberId = null)
     {
         using var timeout = AppointmentEndpoints.Timeout(context);
@@ -37,7 +38,11 @@ public static class AppointmentExportEndpoints
             return Results.ValidationProblem(new Dictionary<string, string[]>
             { ["date"] = ["Seçiminizde 5.000'den fazla randevu var. Tarih aralığını daraltın veya bir çalışan seçin."] });
 
-        return Results.File(AppointmentExcel.Create(rows), AppointmentExcel.ContentType,
+        var file = AppointmentExcel.Create(rows);
+        loggerFactory.CreateLogger("AppointmentExport").LogInformation(
+            "Appointment workbook prepared. UserId: {UserId}, Rows: {Rows}, CorrelationId: {CorrelationId}",
+            context.User.FindFirstValue(ClaimTypes.NameIdentifier), rows.Length, context.TraceIdentifier);
+        return Results.File(file, AppointmentExcel.ContentType,
             $"randevular_{first:yyyy-MM-dd}_{last:yyyy-MM-dd}.xlsx");
     }
 }
