@@ -13,7 +13,8 @@ P00–P07 ilk satılabilir sürüm; P08–P17 sonraki plandır. İleri aşamayı
 | Takvim, durumlar, mesai | P02–P04 |
 | Markalı rezervasyon, doğrulama | P04–P05 |
 | Müşteri engelleme | P08 |
-| Aktarım, birleştirme, dışa aktarım | P08 |
+| Temel randevu CSV ihracı | P07 pilot gereksinimi; dar P04-45 adayı |
+| Toplu aktarım, birleştirme, gelişmiş dışa aktarım | P08 |
 | Değerlendirme, doğum günü | P08, P12 |
 | Hatırlatma, değişiklik bildirimi | P05 |
 | WhatsApp, sesli arama, kanal yedeği | P12 |
@@ -57,6 +58,7 @@ Pilot kapsamı [PRODUCT](PRODUCT.md#2-ürün-kararları) ile kararlaştırıldı
 ### P03 — Randevu motoru (P02)
 
 - İş: Uygunluk, mola/izin/istisna/tampon; oluştur/taşı/iptal/durum; constraint, concurrency, idempotency. [P03 planı ve kabulü](plans/P03.md) ile [ADR-005](adr/005-appointment-time-blocks.md) tek hizmet/personel Owner API'sini ve zaman bloğu modelini tanımlar. P03-03 A–D, P03-04A iptal/durum ve B atomik taşıma ana teslimi tamamlandı; P03-04C Pending geliştirme/GitHub/ana teslimi de tamamlandı; P03-04 A–C done. P03-05A ön süre/ufuk/adım Owner API'si geliştirme/GitHub/ana teslimi tamamlandı; P03-05 bütünü `in_progress`. P03-05B müşteri iptal/onay ürün kararları kaydedildi; GitHub teslim şartı planındadır. P03-05C mevcut üç ayar ekranının geliştirme/GitHub/ana yerel teslimi tamamlandı. P03-06 mevcut Owner motorunun yerel son kabulü tamamlandı; müşteri iptal/onay tercihlerinin çalışan uygulaması P04/P05 akışına bağlı açık iştir, P03 bütünü done değildir.
+- 29.10.2026 güncel değerlendirme: iptal süresi/işletme onay tercihi ve misafir token/iptal uygulaması P04 içinde teslim edildi; eski P03 açık-uygulama ifadeleri tarihsel kayıttır. Genel faz/pilot kapanışı değildir. [P04-44 kaynak ve kanıt eşlemesi](plans/P04.md#p04-44--ilk-sürümün-zorunlu-eksiklerinin-kaynak-ve-kanıt-değerlendirmesi--29102026).
 - Çıkış: Gerçek PostgreSQL'de aynı çalışan/zamana 20 farklı anahtarlı paralel istekten biri kaydolur. Bitişik slot, farklı çalışan, iptal sonrası boşalma, tampon, fiyat snapshot'ı, atomik taşıma ve izin ekleme yarışı testlidir. Pasif hizmet/personel yeni rezervasyonda seçilemez; mevcut P02 saat/yetkinlik tanımları uygunlukta uygulanır, geçmiş randevunun hizmet/fiyat/süre bilgisi korunur. Bunlar P02 tanım kabulüyle doğrulanmış sayılmaz.
 
 ### P04 — Rezervasyon ve panel (P03)
@@ -64,12 +66,14 @@ Pilot kapsamı [PRODUCT](PRODUCT.md#2-ürün-kararları) ile kararlaştırıldı
 - İlk kapsam: 16.10.2026 onaylı çalışanlara göre günlük Owner yönetimi ve Yeni randevu/Ayrıntı/Taşıma formları. Günlük liste API ve dört yüzey geliştirme/GitHub/ana 8080 teslimi tamamlandı; [kanıt ve sınırlar](plans/P04.md#github-ve-ana-yerel-teslim). P04 bütünü ve müşteri politikaları açık kalır.
 - İş: Markalı misafir sayfası/token yönetimi; gün/hafta görünümü, çalışan filtresi, form/sürükleme ile taşıma ve günlük özet.
 - 28.10.2026 kapsam kararı: aylık görünüm ve müşteri kartı/geçmişi ürün sahibinin isteğiyle çıkarıldı; günlük/haftalık teslim korunur. [P04-43R güncel karar](plans/P04.md#p04-43r--müşteri-kartı-ve-geçmişinin-kapsamdan-çıkarılması--28102026): müşteri taslağı tarihsel kayıttır, uygulama/görsel onay adayı değildir. Kalan özellik satırları ihtiyaç doğrulanmadan otomatik başlamaz.
+- P04-44 ilk sürüm değerlendirmesi tamamlandı; tek sonraki aday P04-45 mevcut randevuların güvenli CSV ihracıdır (`planned`, başlamadı). Sürükleme/ayrı günlük özet ihtiyaç doğrulanmadan başlamaz.
 - Çıkış: Mobil rezervasyon panelde yönetilir; çift tıklama çoğaltmaz; çakışan taşıma eski kaydı kaybettirmez. Telefon/ID tahmini geçmişi açmaz. Playwright akışı geçer.
 
 ### P05 — Doğrulama/bildirim (P04)
 
 - 23.10.2026: P05-08 gönderim kapalı tek hatırlatma geliştirme/GitHub/ana 8080 teslimi tamamlandı; hedef **3 saat önce**, tek iş ve ortak bütçe. [Kabul/geri dönüş](plans/P05.md#p05-08-kabul-ve-ana-8080-teslimi). Ücretli gerçek kabul proje sonunda, normal SMS/ret ve UI görsel kapanışı ayrı kapılardır; P05 bütünü done değildir.
 - 20.10.2026 sıra kararı: ücret gerektiren P05-05 gerçek SMS/OTP kabulü proje geliştirmelerinin sonuna ertelendi; kapanışta hatırlatılıp güncel maliyet/alıcı/koşul onayıyla ele alınır. P05-06 gerçek pilotu bunun önüne geçmez. Sıradaki maliyetsiz aday P05-07 gönderim kapalı tek hatırlatmanın dar planıdır; gerçek SMS gerektirmeyen geliştirme/sentetik kabul sürer, P05 bütünü done sayılmaz. Ayrıntı ve kapanış tetiği [P05 planındadır](plans/P05.md#ücretli-gerçek-sms-kabulünün-proje-sonuna-ertelenmesi--20102026).
+- 29.10.2026 eşleme: P05-10 seçili-randevu ret ve P05-11 varsayılan kapalı normal SMS adaptörü tamamlandı; gönderim/gerçek kabul proje sonunda kalır. Üstteki 20.10.2026 sonraki plan ifadesi tarihsel kayıttır. [Güncel P05](plans/P05.md).
 - İş: Outbox/worker; tek resmi SMS adaptörü + test sahtesi; misafir için OTP ve onaylı randevuya tek hatırlatma. İşletmenin gerektiğinde manuel onayı vardır; bekleyen istek 30 dakikada onaylanmazsa iptal edilip slot serbest kalır. İşletme e-postası için işlemsel servis. Hesap yoksa sandbox/gönderim kapalı. SMS gönderici başlığı/operatör onayı süresini erken başlat.
 - Çıkış: Restart, tekrar, timeout ve eski hatırlatma testleri; SMS kotası/harcama tavanı. Kamu rezervasyonunda OTP var; manuel onay akışı tanımlıdır ve mesaj maliyeti ölçülür.
 
