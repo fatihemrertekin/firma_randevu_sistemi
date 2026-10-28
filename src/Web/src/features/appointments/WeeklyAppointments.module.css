@@ -44,3 +44,6 @@
   .separator { display: inline; }
   .worker, .status, .details { grid-column: 1; grid-row: auto; }
 }
+@container appointments (max-width: 16rem) {
+  .days { grid-template-columns: repeat(2,minmax(0,1fr)); }
+}
