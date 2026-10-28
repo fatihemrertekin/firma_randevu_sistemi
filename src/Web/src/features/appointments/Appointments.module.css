@@ -2,6 +2,16 @@
 .surface h1 { font-size: var(--management-title); line-height: var(--auth-heading-line); margin: 0 0 var(--auth-space-3); overflow-wrap: anywhere; }
 .titleRow { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--auth-space-4); margin-bottom: var(--auth-space-5); }
 .titleRow p { margin: 0; }
+.titleRow > div { min-width: 0; max-width: 100%; }
+.views { display: flex; flex-wrap: wrap; gap: var(--auth-space-2); margin-bottom: var(--auth-space-4); }
+.surface .views :global(a[data-navigation]) { background: var(--button-navigation-bg); border-color: var(--border); color: var(--muted); }
+.surface :global(a[data-navigation])[aria-current='page'] { background: var(--primary-soft); border-color: var(--primary); color: var(--text); }
+.surface .views :global(a[data-navigation]):is(:hover,:active):not([aria-disabled='true']) { background: var(--button-navigation-bg); color: var(--text); }
+.surface .views :global(a[data-navigation])[aria-current='page']:is(:hover,:active):not([aria-disabled='true']) { background: var(--primary-soft); color: var(--text); }
+.weekActions { display: flex; align-items: center; flex-wrap: wrap; gap: var(--auth-space-2); min-width: 0; }
+.weekActions h2 { font-size: var(--auth-body-size); margin: 0; overflow-wrap: anywhere; }
+.weekActions button { min-height: var(--auth-control-height); width: var(--auth-control-height); }
+.weekActions svg { width: var(--management-menu-icon); height: var(--management-menu-icon); }
 .primary { composes: primary from '../../components/DefinitionManagement.module.css'; }
 .danger { composes: danger from '../../components/DefinitionManagement.module.css'; }
 .toolbar { display: flex; align-items: flex-end; flex-wrap: wrap; gap: var(--auth-space-3); padding: var(--auth-space-4); margin-bottom: var(--auth-space-5); border: var(--auth-rule) solid var(--border); border-radius: var(--auth-radius); background: var(--surface); }
@@ -70,6 +80,8 @@
   .toolbar > .field { margin-inline-start: 0; }
 }
 @container appointments (max-width: 30rem) {
+  .weekActions { width: 100%; }
+  .weekActions h2 { flex: 1; min-width: 0; text-align: center; }
   .fields, .detailGrid { grid-template-columns: minmax(0,1fr); }
   .paper, .staffHeader { padding: var(--auth-space-4); }
   .appointments { padding-inline: var(--auth-space-4); }

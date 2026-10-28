@@ -1,17 +1,29 @@
 {
   "compose": false,
-  "reason": "P04-39 fixes two scoped200% root clipping findings and shared-busy wording without identity or API changes. OwnerRecoveryEmail uses a wrapping local action row; PasswordChangeForm uses a truthful shorter shared pending label. PasswordChange covers Owner/Staff callers and duplicate-submit/session behavior; OwnerRecoveryEmail covers delivery/status/error controls; AuthReadiness exercises the actual ManagementLayout MFA-body gate and now asserts the password action stays disabled with a neutral label during MFA-only renewal; ManagementLayout covers direct parent navigation/busy integration. Eight real-browser frames check four normal widths and320px root email closed/open/password/MFA waiting with real CSRF rejections and unchanged database snapshots. No backend/schema/dependency/global CSS change, no server or Compose suite, no CSS-mirroring unit test.",
-  "server": [],
+  "reason": "P04-42 adds an approved single-selected-day weekly Owner view and bounded GET. AppointmentList/AppointmentWeek real PostgreSQL tests cover the shared daily query, seven counts, Istanbul/week/year boundaries, snapshot fields, max50 paging, empty/invalid inputs, MFA/Staff/anonymous authorization and shared read quota. Appointments and appointmentsApi cover daily/week parsing, view/day/page/filter/back/late-response and form/detail return context; URLNavigation covers safe auth return query allowlisting; ManagementLayout and AuthReadiness cover the direct parent and Application auth/navigation callers. Local CSS and approved surface brief only; no schema, dependency, identity rule, or deployment source change. Real synthetic browser/API acceptance and immutable image/main delivery are recorded separately; no full suite or CSS-mirroring test. Real-browser review also closes root200 day-label readability with two narrow columns and the approved inactive-view navigation tone; this final CSS-only fix does not change behavior. Final image review also requires explicit local hover/active foreground-background pairs for day and view controls; global hover CSS remains unchanged.",
+  "server": [
+    "Server.Tests.AppointmentListTests",
+    "Server.Tests.AppointmentWeekTests"
+  ],
   "web": [
-    "src/features/auth/PasswordChange.test.tsx",
-    "src/features/auth/OwnerRecoveryEmail.test.tsx",
-    "src/features/auth/AuthReadiness.test.tsx",
-    "src/app/ManagementLayout.test.tsx"
+    "src/features/appointments/Appointments.test.tsx",
+    "src/features/appointments/appointmentsApi.test.tsx",
+    "src/app/URLNavigation.test.tsx",
+    "src/app/ManagementLayout.test.tsx",
+    "src/features/auth/AuthReadiness.test.tsx"
   ],
   "files": [
-    "src/Web/src/features/auth/OwnerRecoveryEmail.module.css",
-    "src/Web/src/features/auth/PasswordChangeForm.tsx",
-    "src/Web/src/features/auth/PasswordChange.test.tsx",
-    "src/Web/src/features/auth/AuthReadiness.test.tsx"
+    ".impeccable/surfaces/appointments-week.md",
+    "src/Server/Features/Scheduling/AppointmentListEndpoints.cs",
+    "src/Web/src/app/URLNavigation.test.tsx",
+    "src/Web/src/app/routes.ts",
+    "src/Web/src/features/appointments/Appointments.module.css",
+    "src/Web/src/features/appointments/Appointments.test.tsx",
+    "src/Web/src/features/appointments/Appointments.tsx",
+    "src/Web/src/features/appointments/WeeklyAppointments.module.css",
+    "src/Web/src/features/appointments/WeeklyAppointments.tsx",
+    "src/Web/src/features/appointments/appointmentsApi.test.tsx",
+    "src/Web/src/features/appointments/appointmentsApi.ts",
+    "tests/Server.Tests/AppointmentWeekTests.cs"
   ]
 }

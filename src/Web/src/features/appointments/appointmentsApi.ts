@@ -7,6 +7,7 @@ export type AppointmentRow = { id: string; version: string; staffMemberId: strin
 export type Appointment = AppointmentRow & { serviceId: string; durationMinutes: number; price: number; currency: 'TRY'; customerPhone: string }
 export type Reminder = { appointmentVersion: string; suppressed: boolean; hasStarted: boolean; scheduledFor: string | null; dispatchEnabled: boolean }
 export type AppointmentPage = PageMetadata & { items: AppointmentRow[]; date: string; timeZone: 'Europe/Istanbul' }
+export type AppointmentWeekPage = AppointmentPage & { weekStart: string; weekEndExclusive: string; days: { date: string; totalCount: number }[] }
 export type Availability = { timeZone: 'Europe/Istanbul'; startsAt: string[]; unavailableReasons: { code: string; message: string }[]; version?: string; serviceVersion?: string }
 const record = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null
 const isUnavailableReason = (value: unknown): value is Availability['unavailableReasons'][number] => record(value) && typeof value.code === 'string' && /^[A-Za-z]{1,40}$/u.test(value.code) &&
@@ -26,9 +27,25 @@ export function nextDay(day: string, offset: number) {
   const value = next.toISOString().slice(0, 10)
   return isDay(value) ? value : day
 }
+export function weekDates(day: string): string[] {
+  if (!isDay(day)) return []
+  const value = new Date(day + 'T12:00:00Z'), offset = (value.getUTCDay() + 6) % 7
+  value.setUTCDate(value.getUTCDate() - offset)
+  const start = value.toISOString().slice(0, 10)
+  if (!isDay(start)) return []
+  const days = Array.from({ length: 7 }, (_, index) => nextDay(start, index))
+  return days.every((date, index) => index === 0 || date > days[index - 1]) && nextDay(start, 7) > days[6] ? days : []
+}
 const time = new Intl.DateTimeFormat('tr-TR', { timeZone: 'Europe/Istanbul', hour: '2-digit', minute: '2-digit' })
 export const formatTime = (value: string) => time.format(new Date(value)).replace(':', '.')
 export const formatDay = (value: string) => new Intl.DateTimeFormat('tr-TR', { timeZone: 'Europe/Istanbul', dateStyle: 'full' }).format(new Date(value + 'T12:00:00Z'))
+export function formatWeek(day: string) {
+  const dates = weekDates(day)
+  if (dates.length !== 7) return 'Hafta'
+  const first = new Intl.DateTimeFormat('tr-TR', { timeZone: 'Europe/Istanbul', day: 'numeric', month: 'long' })
+  const last = new Intl.DateTimeFormat('tr-TR', { timeZone: 'Europe/Istanbul', day: 'numeric', month: 'long', year: 'numeric' })
+  return first.format(new Date(dates[0] + 'T12:00:00Z')) + ' – ' + last.format(new Date(dates[6] + 'T12:00:00Z'))
+}
 export class AppointmentError extends Error {
   constructor(public status: number, public fields: Record<string, string> = {}, public retryAfter = 0, message?: string) {
     super(message ?? (status === 400 ? (Object.keys(fields).length ? 'İşaretli alanları kontrol edip yeniden deneyin.' : 'İstek doğrulanamadı. Bilgilerinizi koruyarak yeniden deneyin.') : status === 401 ? 'Oturumunuz sona erdi. Yeniden giriş yapın.'
@@ -57,13 +74,27 @@ function isRow(value: unknown): value is AppointmentRow {
     Date.parse(value.endsAt) > Date.parse(value.startsAt) && typeof value.status === 'string' && Object.hasOwn(statusLabels, value.status) &&
     (value.pendingExpiresAt === null || timestamp(value.pendingExpiresAt))
 }
-export async function readAppointmentPage(response: Response): Promise<AppointmentPage> {
-  const value = await body(response)
+function appointmentPage(value: unknown): AppointmentPage {
   if (!isPageMetadata(value)) throw new AppointmentError(500)
   if (!('items' in value) || !Array.isArray(value.items) || !value.items.every(isRow) ||
     !('date' in value) || typeof value.date !== 'string' || !isDay(value.date) || !('timeZone' in value) || value.timeZone !== 'Europe/Istanbul' ||
     value.items.length > value.pageSize) throw new AppointmentError(500)
   return { ...value, items: value.items, date: value.date, timeZone: value.timeZone }
+}
+export async function readAppointmentPage(response: Response): Promise<AppointmentPage> {
+  return appointmentPage(await body(response))
+}
+export async function readAppointmentWeekPage(response: Response): Promise<AppointmentWeekPage> {
+  const value = await body(response), page = appointmentPage(value), dates = weekDates(page.date)
+  if (!record(value) || dates.length !== 7 || value.weekStart !== dates[0] || value.weekEndExclusive !== nextDay(dates[0], 7) ||
+    !Array.isArray(value.days) || value.days.length !== 7) throw new AppointmentError(500)
+  const days = value.days.map((day: unknown, index) => {
+    if (!record(day) || day.date !== dates[index] || typeof day.totalCount !== 'number' || !Number.isSafeInteger(day.totalCount) || day.totalCount < 0)
+      throw new AppointmentError(500)
+    return { date: dates[index], totalCount: day.totalCount }
+  })
+  if (days.find(day => day.date === page.date)?.totalCount !== page.totalCount) throw new AppointmentError(500)
+  return { ...page, weekStart: dates[0], weekEndExclusive: nextDay(dates[0], 7), days }
 }
 export async function readAppointment(response: Response): Promise<Appointment> {
   const value = await body(response)
@@ -93,10 +124,11 @@ export async function readAvailability(response: Response, moving: boolean): Pro
   return { timeZone: value.timeZone, startsAt: value.startsAt, unavailableReasons: value.unavailableReasons, version: moving ? String(value.version) : undefined, serviceVersion: moving ? undefined : String(value.serviceVersion) }
 }
 export const signal = (controller: AbortController) => AbortSignal.any([controller.signal, AbortSignal.timeout(15000)])
-export function appointmentSearch(day: string, staff = '', page = 1, size = 20) {
+export function appointmentSearch(day: string, staff = '', page = 1, size = 20, weekly = false) {
   const query = new URLSearchParams({ tarih: day })
+  if (weekly) query.set('gorunum', 'hafta')
   if (staff) query.set('calisan', staff)
   if (page > 1) query.set('sayfa', String(page))
-  if (size !== 20) query.set('boyut', String(size))
+  if (size !== (weekly ? 10 : 20)) query.set('boyut', String(size))
   return '?' + query
 }

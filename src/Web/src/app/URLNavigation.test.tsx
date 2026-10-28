@@ -260,4 +260,13 @@ describe('Ekran URL ve geçmiş kabulü', () => {
   it('dönüş adresindeki bilinmeyen parametreleri taşımadan liste sayfasını tutar', () => {
     expect(safeReturnPath('/yonetim/personel?sayfa=2&token=discard')).toBe('/yonetim/personel?sayfa=2')
   })
+  it('haftalık randevu dönüşünde açık sayfa boyutunu ve günü korur; bilinmeyen alanları atar', () => {
+    for (const size of [10, 20, 50]) {
+      const path = safeReturnPath(`/yonetim/randevular?tarih=2026-10-28&gorunum=hafta&sayfa=2&boyut=${size}&token=discard`)
+      const query = new URLSearchParams(path?.split('?')[1])
+      expect(query.get('gorunum')).toBe('hafta'); expect(query.get('tarih')).toBe('2026-10-28')
+      expect(query.get('sayfa')).toBe('2'); expect(query.get('boyut')).toBe(size === 10 ? null : String(size))
+      expect(query.has('token')).toBe(false)
+    }
+  })
 })
