@@ -12,7 +12,7 @@ P00–P07 ilk satılabilir sürüm; P08–P17 sonraki plandır. İleri aşamayı
 | --- | --- |
 | Takvim, durumlar, mesai | P02–P04 |
 | Markalı rezervasyon, doğrulama | P04–P05 |
-| Müşteri kartı, engelleme | P04, P08 |
+| Müşteri engelleme | P08 |
 | Aktarım, birleştirme, dışa aktarım | P08 |
 | Değerlendirme, doğum günü | P08, P12 |
 | Hatırlatma, değişiklik bildirimi | P05 |
@@ -62,8 +62,8 @@ Pilot kapsamı [PRODUCT](PRODUCT.md#2-ürün-kararları) ile kararlaştırıldı
 ### P04 — Rezervasyon ve panel (P03)
 
 - İlk kapsam: 16.10.2026 onaylı çalışanlara göre günlük Owner yönetimi ve Yeni randevu/Ayrıntı/Taşıma formları. Günlük liste API ve dört yüzey geliştirme/GitHub/ana 8080 teslimi tamamlandı; [kanıt ve sınırlar](plans/P04.md#github-ve-ana-yerel-teslim). P04 bütünü ve müşteri politikaları açık kalır.
-- İş: Markalı misafir sayfası/token yönetimi; gün/hafta görünümü, çalışan filtresi, form/sürükleme ile taşıma; müşteri kartı/geçmişi ve günlük özet.
-- 28.10.2026 kapsam kararı: aylık görünüm ürün sahibinin isteğiyle çıkarıldı; günlük/haftalık teslim korunur. [P04-43 müşteri kartı/geçmişi kapsamı ve yerel taslak](plans/P04.md#p04-43--müşteri-kartıgeçmişi-kapsamı-kişi-ilişkilendirme-kararı-ve-görsel-taslak--28102026) hazır; eski/yeni randevu yalnız Owner açık seçimiyle bağlanacak, görsel/kod onayı beklenir.
+- İş: Markalı misafir sayfası/token yönetimi; gün/hafta görünümü, çalışan filtresi, form/sürükleme ile taşıma ve günlük özet.
+- 28.10.2026 kapsam kararı: aylık görünüm ve müşteri kartı/geçmişi ürün sahibinin isteğiyle çıkarıldı; günlük/haftalık teslim korunur. [P04-43R güncel karar](plans/P04.md#p04-43r--müşteri-kartı-ve-geçmişinin-kapsamdan-çıkarılması--28102026): müşteri taslağı tarihsel kayıttır, uygulama/görsel onay adayı değildir. Kalan özellik satırları ihtiyaç doğrulanmadan otomatik başlamaz.
 - Çıkış: Mobil rezervasyon panelde yönetilir; çift tıklama çoğaltmaz; çakışan taşıma eski kaydı kaybettirmez. Telefon/ID tahmini geçmişi açmaz. Playwright akışı geçer.
 
 ### P05 — Doğrulama/bildirim (P04)

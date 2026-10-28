@@ -68,7 +68,7 @@ Türkçe, görünür alan etiketleri, klavye kullanımı ve görünür odak gere
 
 ### Yönetim kapsamı ve müşteri kartı kararı (28.10.2026)
 
-Ürün sahibi aylık randevu görünümünü gereksiz bularak kapsamdan çıkardı; günlük ve haftalık yönetim korunur. Müşteri kartı/randevu geçmişi için hazırlık başlatıldı: eski ve yeni randevular yalnız Owner'ın açık kişi seçimiyle bağlanır; isim/telefon benzerliğinden otomatik birleştirme veya eski kayıt backfill'i yapılmaz. Aynı telefon farklı kişilerde olabilir, kişi kimliği değildir. Kart değişimi geçmiş randevunun ad/telefon snapshot'ını veya bildirim hedefini değiştirmez. Bu karar uygulama veya görsel onay değildir; [dar plan ve onay sınırı](plans/P04.md#p04-43--müşteri-kartıgeçmişi-kapsamı-kişi-ilişkilendirme-kararı-ve-görsel-taslak--28102026).
+Ürün sahibi aylık randevu görünümünü, ardından müşteri kartı/randevu geçmişini gereksiz bularak kapsamdan çıkardı; günlük ve haftalık yönetim korunur. Müşteri kartı için hazırlanmış P04-43 taslağı tarihsel kayıttır; görsel onay beklenmez ve müşteri uygulaması adayı geri çekilmiştir. Mevcut randevulardaki ad/telefon bilgileri korunur. [Güncel kapsam kararı](plans/P04.md#p04-43r--müşteri-kartı-ve-geçmişinin-kapsamdan-çıkarılması--28102026).
 
 ### Satış sonrası destek ekranı kararı (02.10.2026)
 
