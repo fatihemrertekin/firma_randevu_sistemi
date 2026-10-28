@@ -77,7 +77,7 @@ describe.each([['Owner', owner], ['Staff', staff]] as const)('%s parola değişi
     }
     await fillForm()
     await submit()
-    expect(container.textContent).toContain('Parola değiştiriliyor…')
+    expect(container.textContent).toContain('İşlem sürüyor…')
     const inputs = Array.from(container.querySelectorAll<HTMLInputElement>('form[aria-label="Parola değiştirme"] input'))
     expect(inputs.every(input => input.disabled)).toBe(true)
     expect(inputs.map(input => input.autocomplete)).toEqual(['current-password', 'new-password', 'new-password'])

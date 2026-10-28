@@ -37,7 +37,7 @@ export default function PasswordChangeForm(props: Props) {
         onChange={event => props.onConfirmPassword(event.target.value)} />
       {props.mismatch && <ErrorMessage id="password-mismatch" message="Yeni parola ve tekrarı aynı olmalı." />}
       <button type="submit" disabled={props.busy}>
-        {props.busy ? 'Parola değiştiriliyor…' : 'Parolayı değiştir'}
+        {props.busy ? 'İşlem sürüyor…' : 'Parolayı değiştir'}
       </button>
     </form>
   )
