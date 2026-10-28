@@ -77,6 +77,12 @@ export function safeReturnPath(value: string | null) {
   }
   if (route.section === 'appointments') {
     const source = new URLSearchParams(search), day = source.get('tarih'), staff = source.get('calisan')
+    if (source.get('gorunum') === 'hafta') {
+      query.set('gorunum', 'hafta')
+      query.delete('boyut')
+      const size = readPageSize('?' + search, 10)
+      if (size !== 10) query.set('boyut', String(size))
+    }
     if (day && /^\d{4}-\d{2}-\d{2}$/u.test(day)) query.set('tarih', day)
     if (staff && /^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/iu.test(staff)) query.set('calisan', staff)
   }

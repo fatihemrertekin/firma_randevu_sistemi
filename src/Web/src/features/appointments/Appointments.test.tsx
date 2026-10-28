@@ -7,6 +7,7 @@ import { RouterProvider } from 'react-router/dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import Appointments from './Appointments'
 import type { Appointment, AppointmentRow } from './appointmentsApi'
+import { formatDay, nextDay, weekDates } from './appointmentsApi'
 import type { postWithCsrf } from '../../app/api'
 import { NavigationEvents } from '../../app/NavigationEvents'
 
@@ -19,6 +20,15 @@ const appointment: Appointment = { id: '00000004-0000-0000-0000-000000000001', v
 let container: HTMLDivElement, root: Root
 const pageOf = <T,>(items: T[]) => ({ items, page: 1, pageSize: 50, totalCount: items.length, hasMore: false })
 function list(items: AppointmentRow[] = [appointment]) { return { ...pageOf(items), pageSize: 20, date: '2026-10-16', timeZone: 'Europe/Istanbul' } }
+function weekList(day: string, pageSize = 10, page = 1, total = day.endsWith('18') ? 0 : 1) {
+  const dates = weekDates(day), items = Array.from({ length: total }, (_, index) => ({ ...appointment,
+    id: `00000004-0000-0000-0000-${String(index + 1).padStart(12, '0')}`, customerName: `Haftalık müşteri ${index + 1}`,
+    startsAt: day + 'T06:30:00Z', endsAt: day + 'T06:55:00Z' }))
+  const current = Math.min(page, Math.max(1, Math.ceil(total / pageSize)))
+  return { items: items.slice((current - 1) * pageSize, current * pageSize), page: current, pageSize, totalCount: total, hasMore: current * pageSize < total,
+    date: day, timeZone: 'Europe/Istanbul', weekStart: dates[0], weekEndExclusive: nextDay(dates[0], 7),
+    days: dates.map(date => ({ date, totalCount: date === day ? total : new Date(date + 'T12:00:00Z').getUTCDay() === 0 ? 0 : 1 })) }
+}
 function api(input: RequestInfo | URL): Promise<Response> {
   const url = new URL(String(input), 'http://test.local'), path = url.pathname
   if (path === '/api/staff-members/') return Promise.resolve(Response.json(pageOf([member, other])))
@@ -26,6 +36,7 @@ function api(input: RequestInfo | URL): Promise<Response> {
   if (path === '/api/services/' + service.id) return Promise.resolve(Response.json(service))
   if (path === '/api/appointments/availability') return Promise.resolve(Response.json({ startsAt: [appointment.startsAt, '2026-10-16T07:00:00Z'], unavailableReasons: [], serviceVersion: service.version, timeZone: 'Europe/Istanbul' }))
   if (path.endsWith('/move-availability')) return Promise.resolve(Response.json({ startsAt: ['2026-10-16T08:00:00Z'], unavailableReasons: [], version: appointment.version, timeZone: 'Europe/Istanbul' }))
+  if (path === '/api/appointments/week') return Promise.resolve(Response.json(weekList(url.searchParams.get('date') ?? '2026-10-16', Number(url.searchParams.get('pageSize') ?? 10), Number(url.searchParams.get('page') ?? 1))))
   if (path === '/api/appointments/') return Promise.resolve(Response.json({ ...list(), date: url.searchParams.get('date') ?? '2026-10-16' }))
   if (path === '/api/appointments/' + appointment.id) return Promise.resolve(Response.json(appointment))
   if (path === '/api/appointments/' + appointment.id + '/reminder') return Promise.resolve(Response.json({ appointmentVersion: appointment.version,
@@ -286,4 +297,81 @@ it('durum işlemindeki güvenlik reddinde mevcut durumu ve yeniden deneme olana�
   expect(confirm?.disabled).toBe(false)
   await click('Randevuyu iptal et'); expect(post).toHaveBeenCalledTimes(2)
   expect(container.textContent).toContain('Güncel durum: İptal edildi')
+})
+
+describe('Onaylı sade haftalık görünüm', () => {
+  it('yalnız seçili günü açar; yedi günün sayımı ve klavye odağı korunur', async () => {
+    const { router } = await render('/yonetim/randevular?tarih=2026-10-16&gorunum=hafta')
+    expect(container.querySelectorAll('[aria-label="Haftanın günleri"] button')).toHaveLength(7)
+    expect(container.querySelectorAll('[aria-label="Seçili günün randevuları"] li')).toHaveLength(1)
+    expect(container.textContent).toContain('Haftalık müşteri 1')
+    expect(container.querySelector('#appointment-day')).toBeNull()
+    await click(formatDay('2026-10-12') + ', 1 randevu')
+    expect(new URLSearchParams(router.state.location.search).get('tarih')).toBe('2026-10-12')
+    expect(document.activeElement?.getAttribute('aria-pressed')).toBe('true')
+    expect(container.querySelectorAll('[aria-label="Seçili günün randevuları"]')).toHaveLength(1)
+    await click(formatDay('2026-10-18') + ', 0 randevu')
+    expect(container.textContent).toContain('Seçili günde randevu yok')
+    expect(container.textContent).toContain('Uygun saatler yeni randevu formunda kontrol edilir')
+    expect(container.querySelector('[aria-label="Seçili günün randevuları"]')).toBeNull()
+  })
+  it('sayfa/çalışan/hafta seçimini URL ve geri gezinmeyle korur; gün değişince sayfayı sıfırlar', async () => {
+    vi.mocked(fetch).mockImplementation(input => {
+      const url = new URL(String(input), 'http://test.local')
+      if (url.pathname !== '/api/appointments/week') return api(input)
+      const day = url.searchParams.get('date') ?? '2026-10-16'
+      return Promise.resolve(Response.json(weekList(day, Number(url.searchParams.get('pageSize')), Number(url.searchParams.get('page')), day === '2026-10-16' ? 23 : 1)))
+    })
+    const { router } = await render('/yonetim/randevular?tarih=2026-10-16&gorunum=hafta&sayfa=2')
+    expect(container.textContent).toContain('Haftalık müşteri 11')
+    expect(container.textContent).not.toContain('Haftalık müşteri 1Saç')
+    await choose('appointment-filter', member.id)
+    let query = new URLSearchParams(router.state.location.search)
+    expect(query.get('sayfa')).toBeNull(); expect(query.get('calisan')).toBe(member.id); expect(query.get('gorunum')).toBe('hafta')
+    await act(async () => { await router.navigate(-1) })
+    expect(container.textContent).toContain('Haftalık müşteri 11')
+    await click(formatDay('2026-10-12') + ', 1 randevu')
+    query = new URLSearchParams(router.state.location.search)
+    expect(query.get('sayfa')).toBeNull(); expect(query.get('tarih')).toBe('2026-10-12')
+    await click('Sonraki hafta')
+    expect(new URLSearchParams(router.state.location.search).get('tarih')).toBe('2026-10-19')
+    await click('Günlük')
+    expect(new URLSearchParams(router.state.location.search).has('gorunum')).toBe(false)
+    expect(container.querySelector('#appointment-day')).not.toBeNull()
+  })
+  it('geri gezinme sonrasında geç biten eski gün yanıtını göstermez', async () => {
+    let release: ((response: Response) => void) | undefined
+    vi.mocked(fetch).mockImplementation(input => String(input).startsWith('/api/appointments/week?date=2026-10-12')
+      ? new Promise<Response>(resolve => { release = resolve }) : api(input))
+    const { router } = await render('/yonetim/randevular?tarih=2026-10-16&gorunum=hafta')
+    await click(formatDay('2026-10-12') + ', 1 randevu')
+    expect(container.textContent).not.toContain('Haftalık müşteri 1')
+    await act(async () => { await router.navigate(-1) })
+    if (!release) throw new Error('Eski gün isteği beklemiyor')
+    const delayed = weekList('2026-10-12'); delayed.items[0].customerName = 'Eski gün müşterisi'
+    await act(async () => release?.(Response.json(delayed)))
+    expect(container.textContent).not.toContain('Eski gün müşterisi')
+    expect(container.textContent).toContain('Haftalık müşteri 1')
+  })
+  it.each([401, 403, 503])('gerçek hata sözleşmesini boş gün gibi göstermez: %s', async status => {
+    vi.mocked(fetch).mockImplementation(input => String(input).startsWith('/api/appointments/week')
+      ? Promise.resolve(new Response(null, { status })) : api(input))
+    const { unauthorized } = await render('/yonetim/randevular?tarih=2026-10-16&gorunum=hafta')
+    expect(container.querySelector('[role=alert]')).not.toBeNull()
+    expect(container.textContent).not.toContain('Seçili günde randevu yok')
+    expect(container.querySelector('[aria-label="Seçili günün randevuları"]')).toBeNull()
+    expect(unauthorized).toHaveBeenCalledTimes(status === 401 ? 1 : 0)
+  })
+  it('ayrıntı ve yeni form dönüşlerinde haftalık bağlamı kaybetmez', async () => {
+    const search = '?tarih=2026-10-16&gorunum=hafta&boyut=20'
+    const { router, post } = await render('/yonetim/randevular/' + appointment.id + search)
+    expect(container.querySelector<HTMLAnchorElement>('a')?.getAttribute('href')).toBe('/yonetim/randevular' + search)
+    await click('Randevulara dön')
+    expect(new URLSearchParams(router.state.location.search).get('gorunum')).toBe('hafta')
+    await click('Yeni randevu'); await click('Vazgeç')
+    expect(router.state.location.pathname).toBe('/yonetim/randevular')
+    expect(new URLSearchParams(router.state.location.search).get('gorunum')).toBe('hafta')
+    expect(new URLSearchParams(router.state.location.search).get('boyut')).toBe('20')
+    expect(post).not.toHaveBeenCalled()
+  })
 })

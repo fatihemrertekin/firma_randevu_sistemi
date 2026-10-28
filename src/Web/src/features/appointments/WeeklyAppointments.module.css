@@ -1,0 +1,46 @@
+.week { min-width: 0; }
+.days { display: grid; grid-template-columns: repeat(7,minmax(0,1fr)); gap: var(--auth-space-2); margin-bottom: var(--auth-space-5); }
+.days button { display: grid; gap: var(--auth-space-1); width: 100%; min-width: 0; height: auto; padding: var(--auth-space-3) var(--auth-space-2); background: var(--surface); border-color: var(--border); color: var(--muted); overflow-wrap: anywhere; }
+.days button[aria-pressed='true'] { background: var(--primary-soft); border-color: var(--primary); color: var(--text); }
+.days strong { font-size: var(--auth-body-size); }
+.count { font-size: var(--button-font-size); font-weight: 400; }
+.shortDay { display: none; }
+.heading { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: var(--auth-space-3); margin-bottom: var(--auth-space-3); }
+.heading h2 { margin: 0; font-size: var(--section-title-size); overflow-wrap: anywhere; }
+.heading p { margin: 0; font-size: var(--button-font-size); }
+.list { list-style: none; margin: 0; padding: 0; background: var(--surface); border-top: var(--auth-rule) solid var(--border); }
+.row { display: grid; grid-template-columns: var(--appointment-time-width) minmax(0,1fr) var(--appointment-filter-width) var(--personnel-action-width) var(--personnel-action-width); gap: var(--auth-space-4); align-items: center; min-width: 0; padding: var(--auth-space-4); border-bottom: var(--auth-rule) solid var(--border); }
+.row > * { min-width: 0; overflow-wrap: anywhere; }
+.row p { margin: 0; font-size: var(--button-font-size); }
+.identity strong, .time strong, .time > span { display: block; }
+.identity p { margin-top: var(--auth-space-1); }
+.time { font-variant-numeric: tabular-nums; font-size: var(--button-font-size); }
+.time > span { color: var(--muted); margin-top: var(--auth-space-1); }
+.separator { display: none; }
+.status { font-size: var(--button-font-size); font-weight: 600; }
+.details { display: flex; align-items: center; min-height: var(--target-min); min-width: var(--target-min); font-size: var(--button-font-size); font-weight: 600; }
+.week :global(a[data-navigation]).details { background: var(--surface); border-color: var(--surface); color: var(--primary); text-decoration: underline; text-underline-offset: var(--auth-space-1); }
+.week :global(a[data-navigation]).details:hover { background: var(--primary-soft); color: var(--text); }
+.empty { padding: var(--auth-space-5); margin: 0; background: var(--surface); border: var(--auth-rule) solid var(--border); border-radius: var(--auth-radius); }
+@container appointments (max-width: 54rem) {
+  .row { grid-template-columns: var(--appointment-time-width) minmax(0,1fr) var(--personnel-action-width); }
+  .worker { grid-column: 2; }
+  .status { grid-column: 3; grid-row: 1; }
+  .details { grid-column: 3; grid-row: 2; }
+}
+@container appointments (max-width: 30rem) {
+  .days { grid-template-columns: repeat(4,minmax(0,1fr)); }
+  .longDay { display: none; }
+  .shortDay { display: inline; }
+  .row { grid-template-columns: var(--appointment-time-width) minmax(0,1fr); gap: var(--auth-space-2) var(--auth-space-4); }
+  .time { grid-row: 1 / 5; align-self: start; }
+  .worker, .status, .details { grid-column: 2; grid-row: auto; }
+  .details { justify-self: start; }
+}
+@container appointments (max-width: 20rem) {
+  .row { grid-template-columns: minmax(0,1fr); }
+  .time { grid-row: auto; display: flex; gap: var(--auth-space-2); align-items: baseline; }
+  .time > span { margin: 0; }
+  .separator { display: inline; }
+  .worker, .status, .details { grid-column: 1; grid-row: auto; }
+}
