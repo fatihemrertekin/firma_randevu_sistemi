@@ -10,7 +10,7 @@ web
 
 ## Users
 
-İlk hedef Türkiye'deki tek şubeli berber/kuaför işletmeleridir. Owner işletme tanımlarını ve yetkili yönetim işlemlerini yürütür; Staff yalnız izinli işlemleri kullanır. Sonraki hedef güzellik salonları ve benzer randevulu hizmet işletmeleridir. Ürünün planlanan misafir rezervasyon akışını salon müşterileri kullanacaktır; bu akış henüz teslim edilmiş değildir.
+İlk hedef Türkiye'deki tek şubeli berber/kuaför işletmeleridir. Owner işletme tanımlarını ve yetkili yönetim işlemlerini yürütür; Staff yalnız izinli işlemleri kullanır. Sonraki hedef güzellik salonları ve benzer randevulu hizmet işletmeleridir. Misafir rezervasyon akışının yerel/sentetik uygulaması vardır; gerçek gönderim ve pilot kabulü ayrı kapılardır.
 
 ## Product Purpose
 
@@ -26,13 +26,13 @@ Her firmaya ayrı kurulumla sunulan, firmanın markasına uyarlanabilen ortak bi
 
 ## Operating Context
 
-Yönetim, işletme sahibi ve yetkili personelin günlük işi için Türkçe responsive web üzerinden kullanılır. Mevcut giriş, MFA ve yönetim akışları aynı origin'deki API ile çalışır; masaüstü ve mobil kullanım birlikte ele alınır. İşletme zamanı varsayılan `Europe/Istanbul`dur. Misafir rezervasyonunun planlanan hizmet → çalışan → zaman → iletişim → onay akışı, ilgili aşamada gerçek backend desteğiyle kurulacaktır.
+Yönetim, işletme sahibi ve yetkili personelin günlük işi için Türkçe responsive web üzerinden kullanılır. Mevcut giriş, MFA ve yönetim akışları aynı origin'deki API ile çalışır; masaüstü ve mobil kullanım birlikte ele alınır. İşletme zamanı varsayılan `Europe/Istanbul`dur. Misafirin hizmet → çalışan → zaman → iletişim → onay akışı backend ve sentetik doğrulama ile kabul edilmiştir; gerçek SMS/gönderim kapıları ana kurulumda kapalıdır.
 
 ## Capabilities and Constraints
 
-Mevcut teslim kimlik/giriş/MFA/kurtarma, çalışan erişimleri, işletme bilgileri/saatleri, personel/hizmet tanımları ve değişiklik kayıtlarını kapsar. Owner yönetimi ile Staff yetkileri ayrıdır. Güncel kabul ve ortam sınırlarının kaynağı [STATUS](STATUS.md), ayrıntılı kanıtın kaynağı [P02](plans/P02.md)dir.
+Mevcut teslim kimlik/MFA/kurtarma, çalışan erişimleri, işletme/personel/hizmet/audit yönetimi, Owner günlük/haftalık randevu yönetimi, müşteri rezervasyon/sonuç/iptal akışının gönderim kapalı sentetik kabulü ve kapalı OTP/hatırlatma/tek-randevu ret/normal SMS adaptörünü kapsar. Randevu API'si Owner içindir; Staff kimliği ayrı takvim yetkisi teslimi değildir. Güncel sınırlar [STATUS](STATUS.md), dar kabuller [P04](plans/P04.md) ve [P05](plans/P05.md) içindedir.
 
-Randevu motoru ve müşteri rezervasyonu sonraki aşamalardır; tasarımda uygulanmış gibi sunulmaz. MVP tek şube ve randevu başına tek hizmet/çalışandır. Firma izolasyonu, mevcut teknoloji, backend doğrulaması, cookie/CSRF/MFA ve mahremiyet sözleşmeleri tasarım yenilenirken korunur; teknik kurallar [AGENTS](../AGENTS.md)dedir. AI, WhatsApp ve salon adına kart tahsilatı ilk sürümün dışındadır. Ürün sahibinin görsel üretim izni, ürüne AI özelliği ekleme izni değildir.
+Motor ve yerel/sentetik rezervasyon teslimleri, gerçek gönderim veya ücretli pilotun hazır olduğu anlamına gelmez. Temel CSV ihracı ve abonelik dönem/ödeme kaydı henüz uygulanmadı; kurulum/izolasyon/host dışı yedek-restore ve ticari/mahremiyet kapıları ayrıca tamamlanır. [İlk sürüm eksiklerinin değerlendirmesi](plans/P04.md#p04-44--ilk-sürümün-zorunlu-eksiklerinin-kaynak-ve-kanıt-değerlendirmesi--29102026). MVP tek şube ve randevu başına tek hizmet/çalışandır. Firma izolasyonu, mevcut teknoloji, backend doğrulaması, cookie/CSRF/MFA ve mahremiyet sözleşmeleri tasarım yenilenirken korunur; teknik kurallar [AGENTS](../AGENTS.md)dedir. AI, WhatsApp ve salon adına kart tahsilatı ilk sürümün dışındadır. Ürün sahibinin görsel üretim izni, ürüne AI özelliği ekleme izni değildir.
 
 ## Evidence on Hand
 
