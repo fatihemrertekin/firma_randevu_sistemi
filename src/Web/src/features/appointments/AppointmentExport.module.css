@@ -1,0 +1,11 @@
+.panel { width: min(calc(100% - var(--auth-space-6)), var(--auth-form-width)); max-height: calc(100dvh - var(--auth-space-6)); overflow: auto; padding: var(--auth-space-4); background: var(--surface); color: var(--text); border: var(--auth-rule) solid var(--control-border); border-radius: var(--auth-radius); container: excel-export / inline-size; }
+.panel form { display: block; margin: 0; }
+.fields, .actions { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: var(--auth-space-3); }
+.fields > div { min-width: 0; }
+.panel label { display: block; margin-bottom: var(--auth-space-2); font-size: var(--button-font-size); }
+.panel input { width: 100%; min-width: 0; }
+.panel p { font-size: var(--button-font-size); margin: var(--auth-space-3) 0; }
+.actions button { width: 100%; }
+.panel fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+@container excel-export (max-width: 18rem) { .fields { grid-template-columns: minmax(0,1fr); } }
+@container excel-export (max-width: 12rem) { .actions { grid-template-columns: minmax(0,1fr); } }

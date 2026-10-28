@@ -3,6 +3,7 @@
 .titleRow { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--auth-space-4); margin-bottom: var(--auth-space-5); }
 .titleRow p { margin: 0; }
 .titleRow > div { min-width: 0; max-width: 100%; }
+.titleActions { display: flex; align-items: center; flex-wrap: wrap; gap: var(--auth-space-3); }
 .views { display: flex; flex-wrap: wrap; gap: var(--auth-space-2); margin-bottom: var(--auth-space-4); }
 .surface .views :global(a[data-navigation]) { background: var(--button-navigation-bg); border-color: var(--border); color: var(--muted); }
 .surface :global(a[data-navigation])[aria-current='page'] { background: var(--primary-soft); border-color: var(--primary); color: var(--text); }

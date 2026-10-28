@@ -84,6 +84,16 @@ function appointmentPage(value: unknown): AppointmentPage {
 export async function readAppointmentPage(response: Response): Promise<AppointmentPage> {
   return appointmentPage(await body(response))
 }
+export async function readAppointmentWorkbook(response: Response): Promise<Blob> {
+  if (!response.ok) await body(response)
+  if (response.headers.get('Content-Type')?.split(';')[0] !== 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    throw new AppointmentError(500)
+  const file = await response.blob()
+  if (file.size < 4 || file.size > 8 * 1024 * 1024) throw new AppointmentError(500)
+  const signature = new Uint8Array(await file.slice(0, 4).arrayBuffer())
+  if (!signature.every((byte, index) => byte === [80, 75, 3, 4][index])) throw new AppointmentError(500)
+  return file
+}
 export async function readAppointmentWeekPage(response: Response): Promise<AppointmentWeekPage> {
   const value = await body(response), page = appointmentPage(value), dates = weekDates(page.date)
   if (!record(value) || dates.length !== 7 || value.weekStart !== dates[0] || value.weekEndExclusive !== nextDay(dates[0], 7) ||

@@ -1,29 +1,31 @@
 {
   "compose": false,
-  "reason": "P04-42 adds an approved single-selected-day weekly Owner view and bounded GET. AppointmentList/AppointmentWeek real PostgreSQL tests cover the shared daily query, seven counts, Istanbul/week/year boundaries, snapshot fields, max50 paging, empty/invalid inputs, MFA/Staff/anonymous authorization and shared read quota. Appointments and appointmentsApi cover daily/week parsing, view/day/page/filter/back/late-response and form/detail return context; URLNavigation covers safe auth return query allowlisting; ManagementLayout and AuthReadiness cover the direct parent and Application auth/navigation callers. Local CSS and approved surface brief only; no schema, dependency, identity rule, or deployment source change. Real synthetic browser/API acceptance and immutable image/main delivery are recorded separately; no full suite or CSS-mirroring test. Real-browser review also closes root200 day-label readability with two narrow columns and the approved inactive-view navigation tone; this final CSS-only fix does not change behavior. Final image review also requires explicit local hover/active foreground-background pairs for day and view controls; global hover CSS remains unchanged.",
+  "reason": "P04-45 adds bounded read-only Owner/MFA XLSX export. Export/List/Week PostgreSQL classes cover shared authorization/rate quota, Istanbul boundaries, stable snapshot ordering, 31-day/5000-row limits, native spreadsheet dates, literal formula-safe text and unchanged full-table snapshots. AppointmentExport covers validation, cancellation/unmount/late responses, duplicate suppression, Blob validation and errors. Appointments tests cover title placement left of New appointment and unchanged list/editor flow; API parsing tests and ManagementLayout/AuthReadiness cover direct parent/auth callers. No schema, dependencies, global identity, background job or deployment configuration changes. Final immutable image assets, synthetic browser/download and backed-up main delivery are recorded separately.",
   "server": [
+    "Server.Tests.AppointmentExportTests",
     "Server.Tests.AppointmentListTests",
     "Server.Tests.AppointmentWeekTests"
   ],
   "web": [
+    "src/features/appointments/AppointmentExport.test.tsx",
     "src/features/appointments/Appointments.test.tsx",
     "src/features/appointments/appointmentsApi.test.tsx",
-    "src/app/URLNavigation.test.tsx",
     "src/app/ManagementLayout.test.tsx",
     "src/features/auth/AuthReadiness.test.tsx"
   ],
   "files": [
-    ".impeccable/surfaces/appointments-week.md",
-    "src/Server/Features/Scheduling/AppointmentListEndpoints.cs",
-    "src/Web/src/app/URLNavigation.test.tsx",
-    "src/Web/src/app/routes.ts",
+    ".impeccable/surfaces/appointment-export.md",
+    "src/Server/Features/Scheduling/AppointmentEndpoints.cs",
+    "src/Server/Features/Scheduling/AppointmentExcel.cs",
+    "src/Server/Features/Scheduling/AppointmentExportEndpoints.cs",
+    "src/Web/src/features/appointments/AppointmentExport.module.css",
+    "src/Web/src/features/appointments/AppointmentExport.test.tsx",
+    "src/Web/src/features/appointments/AppointmentExport.tsx",
     "src/Web/src/features/appointments/Appointments.module.css",
     "src/Web/src/features/appointments/Appointments.test.tsx",
     "src/Web/src/features/appointments/Appointments.tsx",
-    "src/Web/src/features/appointments/WeeklyAppointments.module.css",
-    "src/Web/src/features/appointments/WeeklyAppointments.tsx",
     "src/Web/src/features/appointments/appointmentsApi.test.tsx",
     "src/Web/src/features/appointments/appointmentsApi.ts",
-    "tests/Server.Tests/AppointmentWeekTests.cs"
+    "tests/Server.Tests/AppointmentExportTests.cs"
   ]
 }
