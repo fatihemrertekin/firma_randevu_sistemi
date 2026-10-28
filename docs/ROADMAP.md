@@ -13,7 +13,7 @@ P00–P07 ilk satılabilir sürüm; P08–P17 sonraki plandır. İleri aşamayı
 | Takvim, durumlar, mesai | P02–P04 |
 | Markalı rezervasyon, doğrulama | P04–P05 |
 | Müşteri engelleme | P08 |
-| Temel randevu CSV ihracı | P07 pilot gereksinimi; dar P04-45 adayı |
+| Temel randevu Excel (.xlsx) ihracı | P04-45 yerel teslim;31 gün/5000 kayıt ve mevcut çalışan filtresi |
 | Toplu aktarım, birleştirme, gelişmiş dışa aktarım | P08 |
 | Değerlendirme, doğum günü | P08, P12 |
 | Hatırlatma, değişiklik bildirimi | P05 |
@@ -66,7 +66,7 @@ Pilot kapsamı [PRODUCT](PRODUCT.md#2-ürün-kararları) ile kararlaştırıldı
 - İlk kapsam: 16.10.2026 onaylı çalışanlara göre günlük Owner yönetimi ve Yeni randevu/Ayrıntı/Taşıma formları. Günlük liste API ve dört yüzey geliştirme/GitHub/ana 8080 teslimi tamamlandı; [kanıt ve sınırlar](plans/P04.md#github-ve-ana-yerel-teslim). P04 bütünü ve müşteri politikaları açık kalır.
 - İş: Markalı misafir sayfası/token yönetimi; gün/hafta görünümü, çalışan filtresi, form/sürükleme ile taşıma ve günlük özet.
 - 28.10.2026 kapsam kararı: aylık görünüm ve müşteri kartı/geçmişi ürün sahibinin isteğiyle çıkarıldı; günlük/haftalık teslim korunur. [P04-43R güncel karar](plans/P04.md#p04-43r--müşteri-kartı-ve-geçmişinin-kapsamdan-çıkarılması--28102026): müşteri taslağı tarihsel kayıttır, uygulama/görsel onay adayı değildir. Kalan özellik satırları ihtiyaç doğrulanmadan otomatik başlamaz.
-- P04-44 ilk sürüm değerlendirmesi tamamlandı; tek sonraki aday P04-45 mevcut randevuların güvenli CSV ihracıdır (`planned`, başlamadı). Sürükleme/ayrı günlük özet ihtiyaç doğrulanmadan başlamaz.
+- P04-45 gerçek Excel ihracı yerelde teslim edildi; kullanıcı CSV istemedi. Tek sonraki aday P07-01 B2B abonelik dönem/ödeme/erişim kaydının dar kapsam ve görsel taslağıdır (`planned`, başlamadı). Sürükleme/ayrı günlük özet ihtiyaç doğrulanmadan başlamaz.
 - Çıkış: Mobil rezervasyon panelde yönetilir; çift tıklama çoğaltmaz; çakışan taşıma eski kaydı kaybettirmez. Telefon/ID tahmini geçmişi açmaz. Playwright akışı geçer.
 
 ### P05 — Doğrulama/bildirim (P04)
