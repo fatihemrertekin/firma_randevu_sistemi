@@ -83,6 +83,16 @@ async function fillCreation() {
 }
 
 describe('İşletmenin günlük randevu akışı', () => {
+  it('Excel düğmesini Yeni randevu solunda tutar; form açıldığında göstermez', async () => {
+    await render()
+    const actions = [...container.querySelectorAll('button,a')].map(element => element.textContent?.trim())
+    expect(actions.indexOf("Excel'e aktar")).toBeGreaterThanOrEqual(0)
+    expect(actions.indexOf("Excel'e aktar")).toBeLessThan(actions.indexOf('Yeni randevu'))
+    expect(container.querySelector('[popover] form')).toBeNull()
+    expect(vi.mocked(fetch).mock.calls.some(([url]) => String(url).includes('/export'))).toBe(false)
+    await click('Yeni randevu')
+    expect([...container.querySelectorAll('button')].some(button => button.textContent === "Excel'e aktar")).toBe(false)
+  })
   it('429 Retry-After boyunca gün/filtre/yenilemeyi kilitler ve süre sonunda yeniden okumayı açar', async () => {
     vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'setInterval', 'clearInterval'] })
     let now = Date.parse('2026-10-16T06:00:00Z'), limited = true

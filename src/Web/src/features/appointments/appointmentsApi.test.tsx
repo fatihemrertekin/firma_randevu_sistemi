@@ -1,7 +1,26 @@
 import { describe, expect, it } from 'vitest'
-import { appointmentSearch, businessDay, formatWeek, isDay, nextDay, readAppointmentPage, readAppointmentWeekPage, readAvailability, readReminder, readReminderDisabled, weekDates } from './appointmentsApi'
+import { AppointmentError, appointmentSearch, businessDay, formatWeek, isDay, nextDay, readAppointmentPage, readAppointmentWorkbook, readAppointmentWeekPage, readAvailability, readReminder, readReminderDisabled, weekDates } from './appointmentsApi'
 
 describe('Randevu veri sınırı', () => {
+  it('Excel yanıtının tür/boyut/ZIP imzasını doğrular; CSV veya hata gövdesini indirmez', async () => {
+    const headers = { 'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }
+    const signature = new Uint8Array([80, 75, 3, 4, 0])
+    expect((await readAppointmentWorkbook(new Response(signature, { headers }))).size).toBe(5)
+    for (const response of [new Response(signature), new Response('', { headers }), new Response('Ad,Telefon\nÖrnek,+90', { headers }),
+      new Response(new Uint8Array(8 * 1024 * 1024 + 1), { headers })])
+      await expect(readAppointmentWorkbook(response)).rejects.toMatchObject({ status: 500 })
+  })
+  it('Excel isteğinde alan, yetki ve gerçek Retry-After hata sözleşmesini korur', async () => {
+    await expect(readAppointmentWorkbook(Response.json({ errors: { date: ['Aralığı daraltın.'] } }, { status: 400 })))
+      .rejects.toMatchObject({ status: 400, fields: { date: 'Aralığı daraltın.' } })
+    for (const status of [401, 403]) await expect(readAppointmentWorkbook(new Response(null, { status }))).rejects.toMatchObject({ status })
+    const before = Date.now()
+    const failure: unknown = await readAppointmentWorkbook(new Response(null, { status: 429, headers: { 'Retry-After': '30' } })).catch((problem: unknown) => problem)
+    if (!(failure instanceof AppointmentError)) throw new Error('Excel yanıtı hız sınırını korumadı.')
+    expect(failure.status).toBe(429)
+    expect(failure.retryAfter).toBeGreaterThanOrEqual(before + 30000)
+    expect(failure.retryAfter).toBeLessThanOrEqual(Date.now() + 30000)
+  })
   it('hafta ay/yıl sınırını korur ve temsil edilemeyen sınır haftaları açmaz', () => {
     expect(weekDates('2026-12-30')).toEqual(['2026-12-28', '2026-12-29', '2026-12-30', '2026-12-31', '2027-01-01', '2027-01-02', '2027-01-03'])
     expect(formatWeek('2026-10-28')).toBe('26 Ekim – 1 Kasım 2026')

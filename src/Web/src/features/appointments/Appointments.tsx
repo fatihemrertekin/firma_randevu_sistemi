@@ -11,6 +11,7 @@ import AppointmentChoices from './AppointmentChoices'
 import AppointmentEditor from './AppointmentEditor'
 import AppointmentRecord from './AppointmentRecord'
 import WeeklyAppointments from './WeeklyAppointments'
+import AppointmentExport from './AppointmentExport'
 import { appointmentEndpoint, appointmentSearch, AppointmentError, businessDay, formatDay, formatTime, formatWeek, isDay, isId, nextDay, readAppointmentPage, readAppointmentWeekPage, signal, statusLabels, weekDates, type Appointment, type AppointmentPage, type AppointmentWeekPage } from './appointmentsApi'
 import styles from './Appointments.module.css'
 
@@ -81,7 +82,9 @@ export default function Appointments({ post, onDirtyChange, onBusyChange, onUnau
   </section>
   return <section className={styles.surface} aria-labelledby="appointments-title" aria-busy={loading}>
     <div className={styles.titleRow}><div><h1 id="appointments-title" ref={heading} tabIndex={-1}>Randevular</h1><p>{weekly ? 'Haftayı seçin; yalnız seçili günün randevularını görün.' : 'Günlük randevuları çalışanlara göre görüntüleyin ve yönetin.'}</p></div>
-      <NavigationLink className={styles.primary} to={sectionPaths.appointments + '/yeni' + search} disabled={loading}>Yeni randevu</NavigationLink></div>
+      <div className={styles.titleActions}><AppointmentExport key={day + staff} day={day} staff={staff} disabled={loading || !!retryUntil}
+        onUnauthorized={onUnauthorized} onRateLimit={setRetryUntil} onDownloaded={() => setNotice('Excel dosyası indirmeye gönderildi.')} />
+        <NavigationLink className={styles.primary} to={sectionPaths.appointments + '/yeni' + search} disabled={loading}>Yeni randevu</NavigationLink></div></div>
     <nav className={styles.views} aria-label="Randevu görünümü">
       <NavigationLink to={sectionPaths.appointments + appointmentSearch(day, staff)} aria-current={!weekly ? 'page' : undefined} disabled={loading || !!retryUntil}>Günlük</NavigationLink>
       <NavigationLink to={sectionPaths.appointments + appointmentSearch(day, staff, 1, 10, true)} aria-current={weekly ? 'page' : undefined} disabled={loading || !!retryUntil}>Haftalık</NavigationLink>
