@@ -91,3 +91,8 @@
   .appointmentContent > .status { grid-column: 1; grid-row: auto; justify-self: start; }
   .toolbar { padding: var(--auth-space-3); }
 }
+@container appointments (max-width: 14rem) {
+  .appointment { grid-template-columns: minmax(0,1fr); gap: var(--auth-space-3); }
+  .time { display: flex; flex-wrap: wrap; border: 0; padding-inline-end: 0; }
+  .time::after { display: none; }
+}
