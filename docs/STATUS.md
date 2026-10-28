@@ -1,9 +1,9 @@
 # STATUS — Güncel durum ve sıradaki iş
 
-**P04-39 ürün/test/GitHub/yedekli ana8080 teslimi `done` (28.10.2026); P04-38-01/02/03 kapalı, tanımlı Hesap ve güvenlik dar kabulü tamamlandı.** [İki yerel düzeltme/72 test/8 görüntü ve ana teslim](plans/P04.md#p04-39--üç-hesap-ve-güvenlik-bulgusunun-dar-düzeltmesi-ve-ana-teslim--28102026). E-posta işlemi sığıyor; ortak İşlem sürüyor… metni kırpılmıyor/yanlış parola iddiası yok. Önceki dar kabuller/kapalı bulgular korunur.
+**P04-40 dar kaynak/kanıt envanteri ve kalan iş seçimi `done` (28.10.2026).** [Altı yönetim grubu / 80 eski görüntü / sekiz kapalı bulgu](plans/P04.md#p04-40--mevcut-yönetim-kabullerinin-kaynak-envanteri-ve-kalan-iş-seçimi--28102026). Mevcut dar kabuller güncel kaynakla eşleşir; P04 bütünü açık.
 
-**Tek sonraki aday P04-40: mevcut yönetim yüzeylerinin dar kabul envanteri ve kalan P04 işinin seçimi** (`planned`, başlamadı). Yalnız kaynak/kanıt eşlemesi; yeni ekran/özellik veya geçmiş başarılı kontrollerin tekrarı yok.
+**Tek sonraki aday P04-41: Owner haftalık randevu görünümünün dar kapsamı ve görsel taslağı** (`planned`, başlamadı). Günlük akış genişlemesi için API/sayfalama sınırı ve ekran durumları planlanacak; yeni ekran kodu ayrı görsel onayından sonra. Ay/sürükleme/müşteri kartı/günlük özet bu işin dışında.
 
-Ürün PR #177 ve main CI başarılı; kabul imajı ana8080/live-ready200/restart ile doğrulandı. Şifreli yedek tam geri okundu;54 tablo/hesap-MFA/key/ayar-SMTP aynı, restore/migration yok. Ana anonim tarayıcı/asset kabulü geçti; ana Owner login/POST/gerçek ileti yok. Son iki belge tesliminin kendi head/main CI ve değişmezliği ayrıca doğrulanır; kullanıcı P04 farkı PR dışında.
+Ürün/CI kaynağı P04-39 kabulüyle aynı; belge tesliminin kendi son head/main CI ve mevcut imaj/8080 sağlık eşitliği ayrıca doğrulanır. Uygulama testi, görüntü, build/deploy/yedek/migration/restore tekrarı ve ana Owner login/POST yok; kullanıcının P04 farkı PR dışında korunur.
 
-Genel UI/P04/P05/WCAG/native finish/pilot kapanışı yok; [gerçek SMS proje sonunda](plans/P05.md#ücretli-gerçek-sms-kabulünün-proje-sonuna-ertelenmesi--20102026). Önceki durum [sabit Git arşivinde](https://github.com/fatihemrertekin/firma_randevu_sistemi/blob/e25654cf7e1b6cc82f922eec17054ca077fe5a61/docs/STATUS.md) korunur.
+Önceki dar kabuller ve [gerçek SMS proje sonu kararı](plans/P05.md#ücretli-gerçek-sms-kabulünün-proje-sonuna-ertelenmesi--20102026) korunur. Genel UI/P04/P05/WCAG/native finish/pilot kapanışı yok. Önceki durum [sabit Git arşivinde](https://github.com/fatihemrertekin/firma_randevu_sistemi/blob/7b8ca6264014082171ecbb5b4aa3916f4545b23f/docs/STATUS.md).
