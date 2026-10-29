@@ -86,6 +86,7 @@ Pilot kapsamı [PRODUCT](PRODUCT.md#2-ürün-kararları) ile kararlaştırıldı
 ### P07 — Ticari hazırlık ve pilot (P06)
 
 - 29.10.2026 P07-01: [dar B2B kapsamı ve görsel taslak](plans/P07.md#p07-01--b2b-abonelik-kayıtlarının-kapsam-ve-görsel-taslağı--29102026). Kullanıcı ilk dilimde kayıt/gecikme uyarısı, otomatik kısıtlama olmaması ve operatör kayıt alanı+Owner salt okunur durumunu seçti. Bu bir plan/taslak teslimidir; yeni operatör yetkisi/API/şema/ekran uygulaması yok. Sonraki P07-02 öncesi ayrı görsel onayı gerekir; gerçek pilot kapıları kapanmaz.
+- 29.10.2026 görsel onayı sonrası P07-02 veri/Owner okuma temeli yerelde teslim edildi:iki ek tablo, app_user SELECT-only,58 ilgili test, güvenli migration54→56 ve yedekli ana8080. Ayrı operatör MFA/yazma kanalı P07-03; Owner UI bağlantısı P07-04 planned. Otomatik erişim kısıtlaması yok. [Kabul](plans/P07.md#p07-02-kabul-ve-yedekli-ana8080-teslimi).
 - İş: Manuel tahsilat, dönem/vade/paid-through/erişim durumları; temel veri ihracı, onboarding/offboarding, sözleşme taslağı, eğitim/destek ve gerçek maliyet hesabı.
 - Destek ekranının onaylanan iş dilimleri için satış sonrası kullanım rehberi, operatör erişimi ve yanlış firma/kimlik doğrulama/hata/geri dönüş kabulü hazırlanır; henüz yapılmamış ekran veya canlı işletim tamamlandı sayılmaz.
 - Çıkış: Ayın 1'i, ay ortası, gecikme, iptal/yeniden açma testleri. Ticari/hukuki hazırlık sonrası 1–3 gerçek pilot; öncesinde sentetik demo. MFA, yedek alarmı, destek ve ihracat çalışmadan satış yok. İleri modüller ilk satışın şartı değil.
