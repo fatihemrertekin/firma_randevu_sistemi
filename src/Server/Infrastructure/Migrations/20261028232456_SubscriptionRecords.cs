@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -42,6 +42,7 @@ namespace Server.Infrastructure.Migrations
                     PaidOn = table.Column<DateOnly>(type: "date", nullable: false),
                     Reference = table.Column<string>(type: "character varying(80)", maxLength: 80, nullable: true),
                     ReversesPaymentId = table.Column<Guid>(type: "uuid", nullable: true),
+                    ReplacesPaymentId = table.Column<Guid>(type: "uuid", nullable: true),
                     Reason = table.Column<string>(type: "character varying(300)", maxLength: 300, nullable: true),
                     RequestKey = table.Column<Guid>(type: "uuid", nullable: false),
                     RequestHash = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: false),
@@ -53,7 +54,13 @@ namespace Server.Infrastructure.Migrations
                     table.PrimaryKey("PK_SubscriptionPayments", x => x.Id);
                     table.CheckConstraint("CK_SubscriptionPayments_Amount", "\"AmountTry\" <> 0 AND \"AmountTry\" <> 'NaN'::numeric");
                     table.CheckConstraint("CK_SubscriptionPayments_Identity", "\"Id\" <> '00000000-0000-0000-0000-000000000000'::uuid AND \"RequestKey\" <> '00000000-0000-0000-0000-000000000000'::uuid AND \"RecordedBy\" <> '00000000-0000-0000-0000-000000000000'::uuid AND \"RequestHash\" ~ '^[0-9A-F]{64}$' AND isfinite(\"RecordedAt\") AND \"PaidOn\" BETWEEN DATE '0001-01-01' AND DATE '9999-12-31'");
-                    table.CheckConstraint("CK_SubscriptionPayments_Kind", "(\"ReversesPaymentId\" IS NULL AND \"AmountTry\" > 0 AND \"Reference\" IS NOT NULL AND \"Reference\" ~ '^[A-Za-z0-9][A-Za-z0-9._:/-]{0,79}$' AND \"Reason\" IS NULL) OR (\"ReversesPaymentId\" IS NOT NULL AND \"AmountTry\" < 0 AND \"Reference\" IS NULL AND \"Reason\" IS NOT NULL AND length(btrim(\"Reason\")) > 0)");
+                    table.CheckConstraint("CK_SubscriptionPayments_Kind", "(\"ReversesPaymentId\" IS NULL AND \"AmountTry\" > 0 AND \"Reference\" IS NOT NULL AND \"Reference\" ~ '^[A-Za-z0-9][A-Za-z0-9._:/-]{0,79}$' AND ((\"ReplacesPaymentId\" IS NULL AND \"Reason\" IS NULL) OR (\"ReplacesPaymentId\" IS NOT NULL AND \"Reason\" IS NOT NULL AND length(btrim(\"Reason\")) > 0))) OR (\"ReversesPaymentId\" IS NOT NULL AND \"ReplacesPaymentId\" IS NULL AND \"AmountTry\" < 0 AND \"Reference\" IS NULL AND \"Reason\" IS NOT NULL AND length(btrim(\"Reason\")) > 0)");
+                    table.ForeignKey(
+                        name: "FK_SubscriptionPayments_SubscriptionPayments_ReplacesPaymentId",
+                        column: x => x.ReplacesPaymentId,
+                        principalTable: "SubscriptionPayments",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_SubscriptionPayments_SubscriptionPayments_ReversesPaymentId",
                         column: x => x.ReversesPaymentId,
@@ -77,6 +84,13 @@ namespace Server.Infrastructure.Migrations
                 name: "IX_SubscriptionPayments_Reference",
                 table: "SubscriptionPayments",
                 column: "Reference",
+                unique: true,
+                filter: "\"ReplacesPaymentId\" IS NULL");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SubscriptionPayments_ReplacesPaymentId",
+                table: "SubscriptionPayments",
+                column: "ReplacesPaymentId",
                 unique: true);
 
             migrationBuilder.CreateIndex(
@@ -119,6 +133,14 @@ namespace Server.Infrastructure.Migrations
                     IF NOT FOUND OR NEW."AmountTry" <> -original."AmountTry"
                       OR NEW."RecordedAt" < original."RecordedAt" OR NEW."PaidOn" < original."PaidOn" THEN
                       RAISE EXCEPTION 'Invalid subscription reversal' USING ERRCODE = '23514';
+                    END IF;
+                  END IF;
+                  IF NEW."ReplacesPaymentId" IS NOT NULL THEN
+                    SELECT * INTO original FROM public."SubscriptionPayments"
+                      WHERE "Id" = NEW."ReplacesPaymentId" AND "AmountTry" > 0 AND "Reference" = NEW."Reference";
+                    IF NOT FOUND OR NEW."RecordedAt" < original."RecordedAt" OR NOT EXISTS
+                      (SELECT 1 FROM public."SubscriptionPayments" WHERE "ReversesPaymentId" = original."Id") THEN
+                      RAISE EXCEPTION 'Original payment must be reversed before replacement' USING ERRCODE = '23514';
                     END IF;
                   END IF;
                   SELECT COALESCE(SUM("AmountTry"), 0) INTO total FROM public."SubscriptionPayments" WHERE "PeriodId" = NEW."PeriodId";

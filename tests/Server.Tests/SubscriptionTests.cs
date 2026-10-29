@@ -38,6 +38,7 @@ public sealed class SubscriptionTests
         var second = SubscriptionData.Payment(october.Id, 400m, "SYNTHETIC-BANK-02");
         db.SubscriptionPayments.AddRange(first, second); await db.SaveChangesAsync(Token);
         db.SubscriptionPayments.Add(SubscriptionData.Reversal(second)); await db.SaveChangesAsync(Token);
+        db.SubscriptionPayments.Add(SubscriptionData.Replacement(second, october.Id, 200m)); await db.SaveChangesAsync(Token);
         db.SubscriptionPayments.Add(SubscriptionData.Payment(november.Id, 1000m, "SYNTHETIC-FUTURE-PAID")); await db.SaveChangesAsync(Token);
         var before = await SubscriptionData.Snapshot(db);
         using var response = await owner.GetAsync("/api/subscription?page=1&pageSize=12", Token);
@@ -50,9 +51,9 @@ public sealed class SubscriptionTests
         Assert.Equal(12, body.Periods.Length); Assert.Equal(new DateOnly(2026, 11, 1), body.Periods[0].StartsOn);
         Assert.Equal("Paid", body.Periods[0].PaymentState);
         var current = Assert.IsType<SubscriptionEndpoints.PeriodResponse>(body.CurrentPeriod);
-        Assert.Equal("1000.00", current.AmountTry); Assert.Equal("600.00", current.PaidTry); Assert.Equal("400.00", current.OutstandingTry);
+        Assert.Equal("1000.00", current.AmountTry); Assert.Equal("800.00", current.PaidTry); Assert.Equal("200.00", current.OutstandingTry);
         Assert.Equal("Partial", current.PaymentState); Assert.True(current.Overdue);
-        foreach (var secret in new[] { "SYNTHETIC-BANK", "RecordedBy", "RequestKey", "RequestHash", "Reason", "Reference" })
+        foreach (var secret in new[] { "SYNTHETIC-BANK", "RecordedBy", "RequestKey", "RequestHash", "Reason", "Reference", "ReplacesPaymentId" })
             Assert.DoesNotContain(secret, json, StringComparison.OrdinalIgnoreCase);
         using var pageResponse = await owner.GetAsync("/api/subscription?page=2&pageSize=5", Token);
         var page = await pageResponse.Content.ReadFromJsonAsync<SubscriptionEndpoints.SubscriptionResponse>(Token);
@@ -152,6 +153,12 @@ internal static class SubscriptionData
         RecordedBy = Guid.NewGuid(),
         RecordedAt = original.RecordedAt.AddMinutes(1)
     };
+    internal static SubscriptionPayment Replacement(SubscriptionPayment original, Guid period, decimal amount)
+    {
+        var payment = Payment(period, amount, original.Reference ?? throw new InvalidOperationException("Original reference missing"));
+        payment.ReplacesPaymentId = original.Id; payment.Reason = "Sentetik tutar/dönem düzeltmesi"; payment.RecordedAt = original.RecordedAt.AddMinutes(2);
+        return payment;
+    }
     internal static async Task<Dictionary<string, string>> Snapshot(AppDbContext db)
     {
         await db.Database.OpenConnectionAsync(TestContext.Current.CancellationToken);

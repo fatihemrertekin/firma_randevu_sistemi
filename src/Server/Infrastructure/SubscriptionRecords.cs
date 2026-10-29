@@ -22,6 +22,7 @@ public sealed class SubscriptionPayment
     public DateOnly PaidOn { get; set; }
     public string? Reference { get; set; }
     public Guid? ReversesPaymentId { get; set; }
+    public Guid? ReplacesPaymentId { get; set; }
     public string? Reason { get; set; }
     public Guid RequestKey { get; set; }
     public required string RequestHash { get; set; }
@@ -52,13 +53,15 @@ internal static class SubscriptionSchema
         payment.Property(p => p.RequestHash).HasMaxLength(64);
         payment.HasOne<SubscriptionPeriod>().WithMany().HasForeignKey(p => p.PeriodId).OnDelete(DeleteBehavior.Restrict);
         payment.HasOne<SubscriptionPayment>().WithMany().HasForeignKey(p => p.ReversesPaymentId).OnDelete(DeleteBehavior.Restrict);
+        payment.HasOne<SubscriptionPayment>().WithMany().HasForeignKey(p => p.ReplacesPaymentId).OnDelete(DeleteBehavior.Restrict);
         payment.HasIndex(p => p.RequestKey).IsUnique();
-        payment.HasIndex(p => p.Reference).IsUnique();
+        payment.HasIndex(p => p.Reference).IsUnique().HasFilter("\"ReplacesPaymentId\" IS NULL");
         payment.HasIndex(p => p.ReversesPaymentId).IsUnique();
+        payment.HasIndex(p => p.ReplacesPaymentId).IsUnique();
         payment.ToTable("SubscriptionPayments", table =>
         {
             table.HasCheckConstraint("CK_SubscriptionPayments_Amount", "\"AmountTry\" <> 0 AND \"AmountTry\" <> 'NaN'::numeric");
-            table.HasCheckConstraint("CK_SubscriptionPayments_Kind", "(\"ReversesPaymentId\" IS NULL AND \"AmountTry\" > 0 AND \"Reference\" IS NOT NULL AND \"Reference\" ~ '^[A-Za-z0-9][A-Za-z0-9._:/-]{0,79}$' AND \"Reason\" IS NULL) OR (\"ReversesPaymentId\" IS NOT NULL AND \"AmountTry\" < 0 AND \"Reference\" IS NULL AND \"Reason\" IS NOT NULL AND length(btrim(\"Reason\")) > 0)");
+            table.HasCheckConstraint("CK_SubscriptionPayments_Kind", "(\"ReversesPaymentId\" IS NULL AND \"AmountTry\" > 0 AND \"Reference\" IS NOT NULL AND \"Reference\" ~ '^[A-Za-z0-9][A-Za-z0-9._:/-]{0,79}$' AND ((\"ReplacesPaymentId\" IS NULL AND \"Reason\" IS NULL) OR (\"ReplacesPaymentId\" IS NOT NULL AND \"Reason\" IS NOT NULL AND length(btrim(\"Reason\")) > 0))) OR (\"ReversesPaymentId\" IS NOT NULL AND \"ReplacesPaymentId\" IS NULL AND \"AmountTry\" < 0 AND \"Reference\" IS NULL AND \"Reason\" IS NOT NULL AND length(btrim(\"Reason\")) > 0)");
             table.HasCheckConstraint("CK_SubscriptionPayments_Identity", "\"Id\" <> '00000000-0000-0000-0000-000000000000'::uuid AND \"RequestKey\" <> '00000000-0000-0000-0000-000000000000'::uuid AND \"RecordedBy\" <> '00000000-0000-0000-0000-000000000000'::uuid AND \"RequestHash\" ~ '^[0-9A-F]{64}$' AND isfinite(\"RecordedAt\") AND \"PaidOn\" BETWEEN DATE '0001-01-01' AND DATE '9999-12-31'");
         });
     }

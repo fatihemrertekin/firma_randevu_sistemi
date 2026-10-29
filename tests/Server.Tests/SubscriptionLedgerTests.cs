@@ -25,10 +25,12 @@ public sealed class SubscriptionLedgerTests
         await using var database = RecoveryDatabase(); await database.StartAsync(Token);
         await using var db = Context(database.GetConnectionString()); await db.Database.MigrateAsync(Token);
         var october = SubscriptionData.Period(new(2026, 10, 1)); var november = SubscriptionData.Period(new(2026, 11, 1));
+        november.AmountTry = 2000m;
         db.SubscriptionPeriods.AddRange(october, november); await db.SaveChangesAsync(Token);
         var initialVersion = october.Version;
         var original = SubscriptionData.Payment(october.Id, 1000m, "SYNTHETIC-REF-01"); db.SubscriptionPayments.Add(original); await db.SaveChangesAsync(Token);
         await db.Entry(october).ReloadAsync(Token); Assert.NotEqual(initialVersion, october.Version);
+        db.SubscriptionPayments.Add(SubscriptionData.Replacement(original, november.Id, 600m)); await Error(db, "23514", () => db.SaveChangesAsync(Token));
         db.SubscriptionPayments.Add(SubscriptionData.Payment(october.Id, .01m, "SYNTHETIC-OVERPAY")); await Error(db, "23514", () => db.SaveChangesAsync(Token));
         var wrong = SubscriptionData.Reversal(original); wrong.AmountTry = -999m; db.SubscriptionPayments.Add(wrong); await Error(db, "23514", () => db.SaveChangesAsync(Token));
         wrong = SubscriptionData.Reversal(original); wrong.PeriodId = november.Id; db.SubscriptionPayments.Add(wrong); await Error(db, "23514", () => db.SaveChangesAsync(Token));
@@ -38,7 +40,12 @@ public sealed class SubscriptionLedgerTests
         db.SubscriptionPayments.Add(SubscriptionData.Payment(october.Id, 1000m, "SYNTHETIC-REF-01")); await Error(db, "23505", () => db.SaveChangesAsync(Token));
         var corrected = SubscriptionData.Payment(october.Id, 1000m, "SYNTHETIC-CORRECTED"); corrected.RequestKey = original.RequestKey;
         db.SubscriptionPayments.Add(corrected); await Error(db, "23505", () => db.SaveChangesAsync(Token));
-        corrected.RequestKey = Guid.NewGuid(); db.SubscriptionPayments.Add(corrected); await db.SaveChangesAsync(Token);
+        var wrongReference = SubscriptionData.Replacement(original, november.Id, 600m); wrongReference.Reference = "WRONG-BANK-REFERENCE";
+        db.SubscriptionPayments.Add(wrongReference); await Error(db, "23514", () => db.SaveChangesAsync(Token));
+        corrected = SubscriptionData.Replacement(original, november.Id, 600m); db.SubscriptionPayments.Add(corrected); await db.SaveChangesAsync(Token);
+        db.SubscriptionPayments.Add(SubscriptionData.Replacement(original, november.Id, 600m)); await Error(db, "23505", () => db.SaveChangesAsync(Token));
+        db.SubscriptionPayments.Add(SubscriptionData.Reversal(corrected)); await db.SaveChangesAsync(Token);
+        db.SubscriptionPayments.Add(SubscriptionData.Replacement(corrected, november.Id, 700m)); await db.SaveChangesAsync(Token);
         var before = await SubscriptionData.Snapshot(db);
         var stored = await db.SubscriptionPayments.SingleAsync(p => p.Id == original.Id, Token); stored.AmountTry = 2m;
         await Error(db, "23514", () => db.SaveChangesAsync(Token));
@@ -46,8 +53,9 @@ public sealed class SubscriptionLedgerTests
         await Error(db, "23514", () => db.SaveChangesAsync(Token));
         var period = await db.SubscriptionPeriods.SingleAsync(p => p.Id == october.Id, Token); period.AmountTry = 2000m;
         await Error(db, "23514", () => db.SaveChangesAsync(Token));
-        Assert.Equal(before, await SubscriptionData.Snapshot(db)); Assert.Equal(1000m, await db.SubscriptionPayments.Where(p => p.PeriodId == october.Id).SumAsync(p => p.AmountTry, Token));
-        Assert.Equal(3, await db.SubscriptionPayments.CountAsync(Token));
+        Assert.Equal(before, await SubscriptionData.Snapshot(db)); Assert.Equal(0m, await db.SubscriptionPayments.Where(p => p.PeriodId == october.Id).SumAsync(p => p.AmountTry, Token));
+        Assert.Equal(700m, await db.SubscriptionPayments.Where(p => p.PeriodId == november.Id).SumAsync(p => p.AmountTry, Token));
+        Assert.Equal(5, await db.SubscriptionPayments.CountAsync(Token));
         db.SubscriptionPeriods.Add(SubscriptionData.Period(new(2026, 10, 20))); await Error(db, "23P01", () => db.SaveChangesAsync(Token));
         var invalid = SubscriptionData.Period(new(2027, 2, 1)); invalid.EndsOn = new(2027, 2, 28);
         db.SubscriptionPeriods.Add(invalid); await Error(db, "23514", () => db.SaveChangesAsync(Token));

@@ -14,7 +14,7 @@ Onaylanan abonelik taslağı operatörün dönem/ödeme kaydı yapmasını, firm
 
 ## Karar
 
-P07-02 iki ek tablo ve gerçek Owner+MFA salt okunur API içerir. Dönem, doğrulanmış ödeme ve düzeltme hareketi firma veritabanındadır; finansal tutarlar decimal/TRY, tarihler İstanbul takvimidir. Pozitif ödeme ve ona bağlı tek negatif ters hareket değiştirilemez. DB constraint/trigger; çakışan dönem, fazla ödeme, çift ters kayıt, mükerrer referans ve eşzamanlı bakiye yarışını engeller. Read API tutarlı snapshot ve sonlu sayfalama kullanır; operatör kimliği/banka referansı/notlar Owner DTO'suna girmez.
+P07-02 iki ek tablo ve gerçek Owner+MFA salt okunur API içerir. Dönem, doğrulanmış ödeme ve düzeltme hareketi firma veritabanındadır; finansal tutarlar decimal/TRY, tarihler İstanbul takvimidir. Pozitif ödeme ve ona bağlı tek negatif ters hareket değiştirilemez. Ters çevrilmiş ödeme, aynı gerçek banka referansını koruyan tek bağlantılı yeni tutar/dönem kaydıyla düzeltilebilir; zincir dallanamaz. DB constraint/trigger; çakışan dönem, fazla ödeme, çift ters kayıt, mükerrer referans ve eşzamanlı bakiye yarışını engeller. Read API tutarlı snapshot ve sonlu sayfalama kullanır; operatör kimliği/banka referansı/notlar Owner DTO'suna girmez.
 
 `app_user` iki tabloya yalnız SELECT alır; INSERT/UPDATE/DELETE/TRUNCATE alamaz. Owner/Staff cookie'si veya müşteri HTTP isteği ödeme/dönem yazamaz; bu dilimde public operatör endpoint'i/hesabı/ortak admin sırrı yoktur. Test verileri yalnız ayrı sentetik DB'de hazırlanır. Yeni operatör hesabı/MFA bu dilimde teslim edilmiş sayılmaz.
 

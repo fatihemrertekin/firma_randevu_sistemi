@@ -2166,6 +2166,9 @@ namespace Server.Infrastructure.Migrations
                         .HasMaxLength(80)
                         .HasColumnType("character varying(80)");
 
+                    b.Property<Guid?>("ReplacesPaymentId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("RequestHash")
                         .IsRequired()
                         .HasMaxLength(64)
@@ -2182,6 +2185,10 @@ namespace Server.Infrastructure.Migrations
                     b.HasIndex("PeriodId");
 
                     b.HasIndex("Reference")
+                        .IsUnique()
+                        .HasFilter("\"ReplacesPaymentId\" IS NULL");
+
+                    b.HasIndex("ReplacesPaymentId")
                         .IsUnique();
 
                     b.HasIndex("RequestKey")
@@ -2196,7 +2203,7 @@ namespace Server.Infrastructure.Migrations
 
                             t.HasCheckConstraint("CK_SubscriptionPayments_Identity", "\"Id\" <> '00000000-0000-0000-0000-000000000000'::uuid AND \"RequestKey\" <> '00000000-0000-0000-0000-000000000000'::uuid AND \"RecordedBy\" <> '00000000-0000-0000-0000-000000000000'::uuid AND \"RequestHash\" ~ '^[0-9A-F]{64}$' AND isfinite(\"RecordedAt\") AND \"PaidOn\" BETWEEN DATE '0001-01-01' AND DATE '9999-12-31'");
 
-                            t.HasCheckConstraint("CK_SubscriptionPayments_Kind", "(\"ReversesPaymentId\" IS NULL AND \"AmountTry\" > 0 AND \"Reference\" IS NOT NULL AND \"Reference\" ~ '^[A-Za-z0-9][A-Za-z0-9._:/-]{0,79}$' AND \"Reason\" IS NULL) OR (\"ReversesPaymentId\" IS NOT NULL AND \"AmountTry\" < 0 AND \"Reference\" IS NULL AND \"Reason\" IS NOT NULL AND length(btrim(\"Reason\")) > 0)");
+                            t.HasCheckConstraint("CK_SubscriptionPayments_Kind", "(\"ReversesPaymentId\" IS NULL AND \"AmountTry\" > 0 AND \"Reference\" IS NOT NULL AND \"Reference\" ~ '^[A-Za-z0-9][A-Za-z0-9._:/-]{0,79}$' AND ((\"ReplacesPaymentId\" IS NULL AND \"Reason\" IS NULL) OR (\"ReplacesPaymentId\" IS NOT NULL AND \"Reason\" IS NOT NULL AND length(btrim(\"Reason\")) > 0))) OR (\"ReversesPaymentId\" IS NOT NULL AND \"ReplacesPaymentId\" IS NULL AND \"AmountTry\" < 0 AND \"Reference\" IS NULL AND \"Reason\" IS NOT NULL AND length(btrim(\"Reason\")) > 0)");
                         });
                 });
 
@@ -2717,6 +2724,11 @@ namespace Server.Infrastructure.Migrations
                         .HasForeignKey("PeriodId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("Server.Infrastructure.SubscriptionPayment", null)
+                        .WithMany()
+                        .HasForeignKey("ReplacesPaymentId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("Server.Infrastructure.SubscriptionPayment", null)
                         .WithMany()
