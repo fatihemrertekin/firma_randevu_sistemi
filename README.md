@@ -420,3 +420,16 @@ dotnet run --project tests/Server.Tests/Server.Tests.csproj --no-build -- -class
 ```
 
 Bu komut gerçek PostgreSQL/Testcontainers için çalışan Docker ister. Paralel API/DB yazımları, snapshot/idempotency, takvim/politika yarışları, durum/Pending, yetki ve migration korumaları [P03-06 kabul kaydında](docs/plans/P03.md#p03-06-son-motor-kabulü--16102026) izlenir. Yeni müşteri ekranı veya anonim rezervasyon kabulü değildir; yayın için son commit'in tam CI kapıları da zorunludur.
+
+
+### Abonelik okuma API temeli (P07-02)
+
+`GET /api/subscription?page=1&pageSize=12` yalnız Owner+MFA içindir; en fazla24 kayıt, no-store ve bağımsız30/dakika kota. TRY tutarlar ondalık metin, `EndsOn` hariç bitiş; İstanbul `asOf`, güncel dönem ve sayfalı dönemler döner. Kayıt yok/gecikmiş durumda aboneliğe bağlı kısıtlama uygulanmaz. Operatör referansı/not/hash/kimliği yanıtta yoktur. Normal uygulama DB rolü iki yeni tabloya yalnız SELECT alır; public yazma API'si, operatör MFA/ekranı ve Owner UI bağlantısı henüz yoktur.
+
+Yeni mali veri testleri depo kökünden (Docker açıkken):
+
+```powershell
+dotnet run --project tests/Server.Tests/Server.Tests.csproj --no-build -- -class Server.Tests.SubscriptionTests -class Server.Tests.SubscriptionLedgerTests
+```
+
+Önce yukarıdaki mevcut restore/build kapıları çalışmış olmalıdır. Eklemeli migration ve `Apply-LocalMigration.ps1` yeni tabloları/grant'leri hazırlar; gerçek kurulumda yedek ve kontrollü migration sırası geçerlidir. Kayıt varsa Down veri silmez, reddeder; imaj geri dönüşünde ek şema korunur. [Kabul ve sınırlar](docs/plans/P07.md#p07-02-kabul-ve-yedekli-ana8080-teslimi).
