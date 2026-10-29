@@ -23,6 +23,7 @@
 .popup { inset: 0; margin: auto; width: min(calc(100% - var(--auth-space-5)),var(--auth-form-width)); max-height: calc(100dvh - var(--auth-space-5)); overflow: auto; color: var(--text); background: var(--surface); border: var(--auth-rule) solid var(--control-border); border-radius: var(--auth-radius); padding: var(--auth-space-4); }
 .fields { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: var(--auth-space-3); }
 .page fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
+.page summary { min-height: var(--target-min); padding-block: var(--auth-space-2); cursor: pointer; }
 .wide { grid-column: 1 / -1; }
 .formActions { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: var(--auth-space-3); margin-top: var(--auth-space-4); }
 .formActions button { width: 100%; }

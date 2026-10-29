@@ -63,11 +63,18 @@ describe('Ayrı operatör abonelik akışı', () => {
     expect(container.textContent).toContain('Doğruladığınız ödeme kaydedildi.'); expect(container.querySelector('[role=dialog]')).toBeNull()
   })
   it('409 sonrası güncel sürüm yüklenmeden yeniden yazmayı engeller ve vazgeçmede bilgileri korur', async () => {
-    const fetch = requests(async (_path, init) => init?.method === 'POST' ? Response.json({ title: 'Dönem değişti.' }, { status: 409 }) : Response.json(data))
+    let writes = 0
+    const fetch = requests(async (_path, init) => init?.method === 'POST' ? ++writes === 1 ? Response.json({ title: 'Dönem değişti.' }, { status: 409 }) : Response.json({ id: 'payment-1' }) : Response.json(data))
     await act(async () => root.render(<SubscriptionOperator onExpired={vi.fn()} />)); await click('Ödeme kaydet'); await fill('payment-reference', 'SYNTHETIC-REF'); await submit()
     expect(container.textContent).toContain('Dönem değişti.'); const count = fetch.mock.calls.filter(([, i]) => i?.method === 'POST').length
     await submit(); expect(fetch.mock.calls.filter(([, i]) => i?.method === 'POST')).toHaveLength(count)
     vi.mocked(window.confirm).mockReturnValue(false); await click('Vazgeç'); expect(container.querySelector('[role=dialog]')).not.toBeNull()
+    const originalKey = JSON.parse(String(fetch.mock.calls.find(([, i]) => i?.method === 'POST')?.[1]?.body)).requestKey
+    await click('Güncel kayıtları yükle'); expect(container.querySelector<HTMLInputElement>('#payment-reference')?.value).toBe('SYNTHETIC-REF')
+    await submit(); expect(container.textContent).toContain('Doğruladığınız ödeme kaydedildi.')
+    const lastKey = JSON.parse(String(fetch.mock.calls.filter(([, i]) => i?.method === 'POST').at(-1)?.[1]?.body)).requestKey
+    expect(lastKey).not.toBe(originalKey)
+    await click('Ödeme kaydet'); await fill('payment-reference', 'SYNTHETIC-NEXT')
     vi.mocked(window.confirm).mockReturnValue(true); await click('Vazgeç'); expect(container.querySelector('[role=dialog]')).toBeNull()
   })
   it('boş, hata ve yetkisizlik durumlarında uydurma dönem veya ödeme göstermez', async () => {

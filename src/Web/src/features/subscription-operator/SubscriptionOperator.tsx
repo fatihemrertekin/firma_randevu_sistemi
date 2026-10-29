@@ -65,7 +65,8 @@ export default function SubscriptionOperator({ onExpired, onUnsaved, onBusy }: {
     window.addEventListener('beforeunload', unload); window.addEventListener('keydown', escape)
     return () => { window.removeEventListener('beforeunload', unload); window.removeEventListener('keydown', escape) }
   }, [editor, dirty, close])
-  useEffect(() => { if (editor) { popup.current?.showPopover(); popup.current?.querySelector<HTMLInputElement>('input')?.focus() } }, [editor, data?.targetId])
+  const editing = editor !== null
+  useEffect(() => { if (editing) { popup.current?.showPopover(); popup.current?.querySelector<HTMLInputElement>('input')?.focus() } }, [editing, data?.targetId])
   function open(kind: Editor['kind'], payment?: Payment) {
     if (!data || loading) return
     opener.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
