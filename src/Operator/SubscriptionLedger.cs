@@ -66,12 +66,31 @@ internal static class SubscriptionLedger
             var paymentCount = await paymentsQuery.CountAsync(timeout.Token);
             paymentsPage = Math.Min(paymentsPage, Math.Max(1, (paymentCount + 19) / 20));
             var payments = await paymentsQuery.OrderByDescending(p => p.RecordedAt).ThenByDescending(p => p.Id).Skip((paymentsPage - 1) * 20).Take(20)
-                .Select(p => new { p.Id, p.PaidOn, p.AmountTry, p.Reference, p.Reason, p.ReversesPaymentId, p.ReplacesPaymentId, p.RecordedBy, p.RecordedAt,
-                    Reversed = db.SubscriptionPayments.Any(x => x.ReversesPaymentId == p.Id) }).ToArrayAsync(timeout.Token);
+                .Select(p => new
+                {
+                    p.Id,
+                    p.PaidOn,
+                    p.AmountTry,
+                    p.Reference,
+                    p.Reason,
+                    p.ReversesPaymentId,
+                    p.ReplacesPaymentId,
+                    p.RecordedBy,
+                    p.RecordedAt,
+                    Reversed = db.SubscriptionPayments.Any(x => x.ReversesPaymentId == p.Id)
+                }).ToArrayAsync(timeout.Token);
             await transaction.CommitAsync(timeout.Token);
             return Results.Ok(new
             {
-                targetId = target.Id, targetName = target.Name, asOf = Today(clock), currency = "TRY", page, total, selectedPeriodId = selected, paymentsPage, paymentCount,
+                targetId = target.Id,
+                targetName = target.Name,
+                asOf = Today(clock),
+                currency = "TRY",
+                page,
+                total,
+                selectedPeriodId = selected,
+                paymentsPage,
+                paymentCount,
                 periods = periods.Select(p => new { p.Id, p.StartsOn, p.EndsOn, p.DueOn, p.Version, amountTry = Money(p.AmountTry), paidTry = Money(p.Paid), outstandingTry = Money(p.AmountTry - p.Paid), overdue = Today(clock) > p.DueOn && p.Paid < p.AmountTry }),
                 payments = payments.Select(p => new { p.Id, p.PaidOn, amountTry = Money(p.AmountTry), p.Reference, p.Reason, p.ReversesPaymentId, p.ReplacesPaymentId, p.RecordedBy, p.RecordedAt, p.Reversed })
             });
@@ -135,8 +154,15 @@ internal static class SubscriptionLedger
     private static bool Reason(string? reason) => !string.IsNullOrWhiteSpace(reason) && reason.Length <= 300;
     private static SubscriptionPayment Reversal(SubscriptionPayment original, Guid actor, Guid key, string hash, string reason, TimeProvider clock) => new()
     {
-        PeriodId = original.PeriodId, AmountTry = -original.AmountTry, PaidOn = Today(clock), ReversesPaymentId = original.Id,
-        Reason = reason, RequestKey = key, RequestHash = hash, RecordedBy = actor, RecordedAt = clock.GetUtcNow().UtcDateTime
+        PeriodId = original.PeriodId,
+        AmountTry = -original.AmountTry,
+        PaidOn = Today(clock),
+        ReversesPaymentId = original.Id,
+        Reason = reason,
+        RequestKey = key,
+        RequestHash = hash,
+        RecordedBy = actor,
+        RecordedAt = clock.GetUtcNow().UtcDateTime
     };
     private static async Task<IResult> ReverseAsync(Guid id, ReverseInput r, AppDbContext db, Guid actor, TimeProvider clock, CancellationToken token)
     {
@@ -161,8 +187,19 @@ internal static class SubscriptionLedger
         if (targetPeriod.Version != r.Version) return Conflict("Dönem değişti. Güncel bilgileri yükleyin.");
         var reverseKey = new Guid(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(new { r.RequestKey, kind = "correction-reversal" })).AsSpan(0, 16));
         db.SubscriptionPayments.Add(Reversal(original, actor, reverseKey, hash, r.Reason.Trim(), clock)); await db.SaveChangesAsync(token);
-        var replacement = new SubscriptionPayment { PeriodId = r.PeriodId, AmountTry = amount, PaidOn = r.PaidOn, Reference = original.Reference,
-            ReplacesPaymentId = original.Id, Reason = r.Reason.Trim(), RequestKey = r.RequestKey, RequestHash = hash, RecordedBy = actor, RecordedAt = clock.GetUtcNow().UtcDateTime };
+        var replacement = new SubscriptionPayment
+        {
+            PeriodId = r.PeriodId,
+            AmountTry = amount,
+            PaidOn = r.PaidOn,
+            Reference = original.Reference,
+            ReplacesPaymentId = original.Id,
+            Reason = r.Reason.Trim(),
+            RequestKey = r.RequestKey,
+            RequestHash = hash,
+            RecordedBy = actor,
+            RecordedAt = clock.GetUtcNow().UtcDateTime
+        };
         db.SubscriptionPayments.Add(replacement); await db.SaveChangesAsync(token); return Results.Ok(new { replacement.Id });
     }
 }
