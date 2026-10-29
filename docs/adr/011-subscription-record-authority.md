@@ -22,6 +22,16 @@ P07-03'te kayıt işlemleri, ayrı operatör kimliği+MFA ve açık firma hedefi
 
 ## Bedel ve kabul
 
+### P07-03 somut taşıyıcı kararı — 29.10.2026
+
+Kullanıcı operatör alanına internetten bilgisayar ve telefonla erişmek istedi. Ayrı `src/Operator` ASP.NET uygulaması, ayrı yedi tabloluk Identity DB'si, cookie/Data Protection kimliği/anahtar volume'u ve zorunlu MFA kullanılır. Mevcut firma `AppUser`/Owner/Staff kimliği genişletilmez. Aynı özel PostgreSQL sunucusunda farklı DB ve roller kullanılabilir; başka firmanın kayıtları merkezileştirilmez. İlk dilim tek açık firma hedefidir; çok firmalı filo/kurulum/kurtarma paneli geliştirilmez.
+
+Operatör kimlik rolü yalnız kendi Identity DB'sine; `subscription_operator` yalnız hedef firmanın iki abonelik tablosunda SELECT/INSERT ve dönem `Version` sütununda UPDATE alır. Randevu/kişi/Owner kimlik tablolarına erişmez. DB'de kontrollü provisioning ile kalıcı kurulum işaretçisi bulunur; HTTP gövdesindeki hedef ve gerçek DB işaretçisi uyuşmadan yazılmaz. Rol, süper kullanıcı veya başka rolün üyesi olamaz. Ayrı kimlik DB işaretçisi her API isteğinde doğrulanır. Normal `app_user` salt okunur kalır. Sırlar operatörün özel env dosyasındadır; firma web uygulamasına verilmez.
+
+İlk operatör hesabı açık kayıt endpoint'inden oluşturulmaz. Yalnız doğru işaretçili, boş ayrı Identity kurulumunda kontrollü `initialize-operator` komutu çalışır; mevcut hesap yenilenmez. Şema v1 için yedi Identity tablosu yalnız bu açık komutla oluşturulur; HTTP başlangıcında DDL/migration yoktur. Sonraki Identity şema değişimi ayrı migration planı ister. Production host allowlist ve HTTPS zorunludur; forwarded başlıklar yalnız açık tek proxy IP'sinden kabul edilir. Yeni imaj/yerel sentetik TLS kabulü, P06 internet/VPS/HTTPS/host dışı restore/pilot kabulü sayılmaz.
+
+Tekrarlanan mali istek anahtarı aynı içerikte aynı sonucu verir, farklı içerikte409'dur. Dönem anahtarı dönem ID'sidir; ödeme/ters/düzeltme anahtarları hash ile kayıttadır. Tek firma için transaction advisory kilidi, DB sürümü ve mevcut trigger'lar birlikte kullanılır; başka yazıcının bakiye güvencesi kaldırılmaz. Düzeltmenin ters/yeni hareketi tek transaction'dır. Ters kayıt banka iadesi değildir. Gecikmede otomatik erişim kısıtlaması yeni ürün kararıdır; bu operatör diliminde rezervasyon gate'i açılmaz, Owner görünümü ve kısıtlama/açılma kabulü sıradaki bağımlı dilimlerdir.
+
 Operatör özetleri ileride firma hedefi üzerinden okunur; merkezi tek sorgu yerine firma bazında izinli erişim gerekir. Tam operatör ekranı ve Owner ekranının gerçek UI bağlantısı sonraki dar işlerdir. P07-02 API hazırlığı bunları yapılmış göstermez. Şema eklemelidir; eski imajla uyumlu kalır. Veri varsa Down kayıtları silmez, açık hata verir; imaj geri dönüşünde ek tablolar korunur.
 
 Mevcut54 tablonun tüm eski satır/kolonları ve anahtar/ayarlar korunarak migration uygulanır. Yeni iki tablo ana kurulumda boş kalır; gerçek ödeme, Owner POST veya SMS yoktur. Gerçek PostgreSQL'de tutar/ters hareket/yarış/rollback/rol ve gerçek auth API kabulü gerekir. Abonelik yok/gecikmiş/okuma hatasında randevu/Excel davranışına gate eklenmez.

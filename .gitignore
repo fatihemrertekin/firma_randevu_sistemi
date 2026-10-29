@@ -12,6 +12,7 @@ coverage/
 **/node_modules/
 src/Web/dist/
 src/Server/wwwroot/
+src/Operator/wwwroot/
 .npm-cache/
 .nuget/
 .local/

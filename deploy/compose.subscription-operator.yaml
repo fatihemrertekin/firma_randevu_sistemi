@@ -1,0 +1,32 @@
+name: firma-randevu-subscription-operator
+services:
+  operator:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.operator
+    image: firma-randevu-operator:local
+    env_file:
+      - ${OPERATOR_ENV_FILE:?Sırları içeren özel operatör env dosyası gerekli}
+    environment:
+      Operator__KeysDirectory: /app/keys
+      Logging__LogLevel__Microsoft.EntityFrameworkCore.Database.Command: Warning
+    ports:
+      - "127.0.0.1:${OPERATOR_PORT:-8092}:8080"
+    volumes:
+      - operator_keys:/app/keys
+    networks:
+      - subscription_db
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    restart: unless-stopped
+networks:
+  subscription_db:
+    external: true
+    name: ${SUBSCRIPTION_DB_NETWORK:?İzin verilen tek firmanın DB ağı gerekli}
+volumes:
+  operator_keys:

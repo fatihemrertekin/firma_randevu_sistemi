@@ -60,6 +60,8 @@ Envanter mevcut `deploy/*.ps1` yardımcılarının tamamını kapsar. Bunlar bug
 
 ### Güvenlik ve kabul hedefleri
 
+29.10.2026 dar istisna: kullanıcı P07-03'te ayrı operatör abonelik dönem/ödeme alanına internetten bilgisayar ve telefon erişimini seçti. Yalnız bu işlem ailesi için ayrı uygulama/kimlik DB'si/MFA ve tek firma yazma sınırı [P07-03](plans/P07.md#p07-03--ayrı-operatör-kimliği-ve-tek-firma-abonelik-kayıt-akışı--29102026) ve [ADR-011](adr/011-subscription-record-authority.md#p07-03-somut-taşıyıcı-kararı--29102026)'de somutlaştırıldı. Envanterdeki kurulum/kurtarma/filo işlemleri hâlâ plandır; bu abonelik dilimi tam işletim platformunu veya internet/P06 kabulünü tamamlamaz.
+
 - Müşterinin Owner/Staff panelinden ayrı, yalnız yetkili operatöre açık erişim ve MFA; ortak gizli müşteri admin hesabı veya firma izolasyonunu aşan giriş yolu yok. Merkezde randevu/müşteri verisi biriktirmez; firma hedefi ve gerekli işletim referanslarıyla sınırlıdır.
 - Her işlem için açık firma/hesap hedefi ve sunucu tarafı yetki kontrolü; kurtarmada bağımsız sahiplik doğrulaması ve destek referansı, yıkıcı işlemde etki/geri dönüş bilgisi ve açık onay. Sadece onay kutusu sahiplik kanıtı sayılmaz.
 - Yalnız önceden tanımlı eylemler; kullanıcı girdisini shell komutu yapma, serbest PowerShell/terminal/SQL çalıştırma yok. Müşteri uygulamasına Docker socket veya diğer firmaların sır/volume erişimi verilmez. Operatör yürütme yöntemi ilgili aşamada seçilir.

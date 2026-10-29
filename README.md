@@ -424,7 +424,7 @@ Bu komut gerçek PostgreSQL/Testcontainers için çalışan Docker ister. Parale
 
 ### Abonelik okuma API temeli (P07-02)
 
-`GET /api/subscription?page=1&pageSize=12` yalnız Owner+MFA içindir; en fazla24 kayıt, no-store ve bağımsız30/dakika kota. TRY tutarlar ondalık metin, `EndsOn` hariç bitiş; İstanbul `asOf`, güncel dönem ve sayfalı dönemler döner. Kayıt yok/gecikmiş durumda aboneliğe bağlı kısıtlama uygulanmaz. Operatör referansı/not/hash/kimliği yanıtta yoktur. Normal uygulama DB rolü iki yeni tabloya yalnız SELECT alır; public yazma API'si, operatör MFA/ekranı ve Owner UI bağlantısı henüz yoktur.
+`GET /api/subscription?page=1&pageSize=12` yalnız Owner+MFA içindir; en fazla24 kayıt, no-store ve bağımsız30/dakika kota. TRY tutarlar ondalık metin, `EndsOn` hariç bitiş; İstanbul `asOf`, güncel dönem ve sayfalı dönemler döner. Mevcut uygulamada aboneliğe bağlı kısıtlama uygulanmaz. Operatör referansı/not/hash/kimliği yanıtta yoktur. Normal uygulama DB rolü iki tabloya yalnız SELECT alır; bu origin'de yazma API'si yoktur. Ayrı operatör uygulaması aşağıdadır. Owner UI bağlantısı ve yeni onaylı vadenin ertesi günü otomatik kısıtlama sonraki kabul işleridir.
 
 Yeni mali veri testleri depo kökünden (Docker açıkken):
 
@@ -433,3 +433,28 @@ dotnet run --project tests/Server.Tests/Server.Tests.csproj --no-build -- -class
 ```
 
 Önce yukarıdaki mevcut restore/build kapıları çalışmış olmalıdır. Eklemeli migration ve `Apply-LocalMigration.ps1` yeni tabloları/grant'leri hazırlar; gerçek kurulumda yedek ve kontrollü migration sırası geçerlidir. Kayıt varsa Down veri silmez, reddeder; imaj geri dönüşünde ek şema korunur. [Kabul ve sınırlar](docs/plans/P07.md#p07-02-kabul-ve-yedekli-ana8080-teslimi).
+
+### Ayrı abonelik operatörü (P07-03)
+
+`src/Operator` işletme Owner/Staff panelinden ayrı ASP.NET uygulamasıdır. Tek açık firma hedefinde dönem/ödeme/ters kayıt/bağlı düzeltme yapar; kendi yedi tabloluk Identity DB'si, cookie/DP anahtarları ve zorunlu MFA'sı vardır. Açık hesap kaydı veya müşteri panelinde operatör yetkisi yoktur. İlk kurulum/gerçek internet yayını normal8080 güncellemesiyle kendiliğinden açılmaz. [Kapsam ve geri dönüş](docs/plans/P07.md#p07-03--ayrı-operatör-kimliği-ve-tek-firma-abonelik-kayıt-akışı--29102026).
+
+Depo kökünden ilgili testler ve bağımsız imaj:
+
+```powershell
+dotnet restore FirmaRandevu.slnx --locked-mode
+dotnet build FirmaRandevu.slnx --no-restore
+dotnet run --project tests/Server.Tests/Server.Tests.csproj --no-build -- -class Server.Tests.SubscriptionOperatorTests -class Server.Tests.SubscriptionTests -class Server.Tests.SubscriptionLedgerTests
+docker build -f deploy/Dockerfile.operator -t firma-randevu-operator:local .
+```
+
+Arayüz ayrı oluşturulur; normal web build modu aynı kalır:
+
+```powershell
+cd src/Web
+npm.cmd run build -- --mode operator
+cd ../..
+```
+
+Kontrollü kurulum sırası: P07-02 firma şeması/yedek → özel operatör Identity DB'sini ayrı oluştur → [kimlik provisioning SQL'i](deploy/subscription-operator-identity.sql) ile adı/işaretçiyi doğrula → yalnız boş kimlik DB'sinde `dotnet Operator.dll initialize-operator` → kimlik SQL'ini dar rol izinleri için tekrar çalıştır → [firma hedef SQL'i](deploy/subscription-operator-target.sql) ile yalnız iki tabloya izin ver → dar runtime rolleriyle [ayrı Compose](deploy/compose.subscription-operator.yaml) → ilk parola girişi/MFA kurulumu/kurtarma kodlarını saklama → normal MFA girişi. SQL'ler `psql -v ON_ERROR_STOP=1` ve dosya başlıklarında belirtilen değişkenlerle çalışır; parola içeren komut satırı veya genel terminal HTTP API'si yoktur. Bootstrap e-posta/parolası yalnız özel `OPERATOR_BOOTSTRAP_EMAIL`/`OPERATOR_BOOTSTRAP_PASSWORD` ortamından alınır; mevcut hesap varsa reddedilir. HTTP başlangıcında şema oluşturulmaz. Gerçek kimlik bilgileri sohbetten veya örnek varsayılan paroladan alınmaz.
+
+Özel `OPERATOR_ENV_FILE`: `ConnectionStrings__OperatorIdentity`, `ConnectionStrings__SubscriptionTarget`, `Operator__InstanceId`, `SubscriptionTarget__InstanceId`, `SubscriptionTarget__Name`, `AllowedHosts` ve ortamı içerir; gerekiyorsa yalnız açık `Operator__TrustedProxy` IP'si eklenir. Production HTTPS zorunludur; localhost portu tek başına internet yayını değildir. Compose ayrıca `SUBSCRIPTION_DB_NETWORK` ve kalıcı ayrı anahtar volume'u ister. Firma uygulamasına operatör sırları veya Docker socket verilmez. İlk gerçek kuruluma ait domain/proxy/sertifika/backup kabulü P06 kapısıdır; sentetik kabul bunların yerine geçmez.

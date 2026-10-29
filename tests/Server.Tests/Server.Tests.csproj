@@ -13,5 +13,6 @@
 
   <ItemGroup>
     <ProjectReference Include="../../src/Server/Server.csproj" />
+    <ProjectReference Include="..\..\src\Operator\Operator.csproj" />
   </ItemGroup>
 </Project>

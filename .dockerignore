@@ -12,6 +12,7 @@
 **/node_modules
 src/Web/dist
 src/Server/wwwroot
+src/Operator/wwwroot
 tests
 docs/*
 !docs/identity-email-licenses.txt
