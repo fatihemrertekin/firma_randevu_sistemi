@@ -99,6 +99,8 @@ GRANT SELECT, INSERT, DELETE ON TABLE "BookingSmsAttempts" TO app_user;
 REVOKE UPDATE, TRUNCATE ON TABLE "BookingSmsAttempts" FROM app_user;
 GRANT UPDATE ("ReservedAt", "StartedAt", "LeaseId", "Outcome", "ProviderReference", "RetainUntil") ON TABLE "BookingSmsAttempts" TO app_user;
 GRANT SELECT, INSERT ON TABLE "AppointmentReminderJobs" TO app_user;
+GRANT SELECT ON TABLE "SubscriptionPeriods", "SubscriptionPayments" TO app_user;
+REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON TABLE "SubscriptionPeriods", "SubscriptionPayments" FROM app_user;
 REVOKE UPDATE, DELETE, TRUNCATE ON TABLE "AppointmentReminderJobs" FROM app_user;
 GRANT UPDATE ("AppointmentVersion", "StartsAt", "DueAt", "Deadline", "Status", "ProtectedPhone", "Attempts", "NextAttemptAt", "LeaseId", "LeaseUntil", "StartedOnceAt", "SuppressedAt", "SuppressedBy") ON TABLE "AppointmentReminderJobs" TO app_user;
 '@ | docker compose --env-file deploy/.env -f deploy/compose.local.yaml exec -T db psql -U postgres -d firma_randevu -v ON_ERROR_STOP=1

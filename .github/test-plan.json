@@ -1,31 +1,30 @@
 {
-  "compose": false,
-  "reason": "P04-45 adds bounded read-only Owner/MFA XLSX export. Export/List/Week PostgreSQL classes cover shared authorization/rate quota, Istanbul boundaries, stable snapshot ordering, 31-day/5000-row limits, native spreadsheet dates, literal formula-safe text and unchanged full-table snapshots. AppointmentExport covers validation, cancellation/unmount/late responses, duplicate suppression, Blob validation and errors. Appointments tests cover title placement left of New appointment and unchanged list/editor flow; API parsing tests and ManagementLayout/AuthReadiness cover direct parent/auth callers. No schema, dependencies, global identity, background job or deployment configuration changes. Final immutable image assets, synthetic browser/download and backed-up main delivery are recorded separately. Final visual review found pre-existing daily time-column collapse at320px/root200; a narrow14rem container rule stacks time/content, verified in final image browser frames. No behavior/test weakening.",
+  "compose": true,
+  "reason": "P07-02 adds two additive subscription tables, constraints/triggers, SELECT-only app grants and an Owner+MFA read endpoint. Subscription/SubscriptionLedger PostgreSQL tests cover exact money/partial/reversal balances, future-payment gaps, immutable history, two isolation-level races, migration preservation/empty Down/data-safe Down rejection, actual deployment grants, auth/read-only scope/quota/paging and full-table read invariance. Shared AppDbContext/migrations/Program and one additive rate-policy name require AuthReadiness/RememberMe and core Appointment/PublicBooking/List/Week/Export regression groups; existing Identity policies are unchanged. Deployment script changes require Compose acceptance. No web source/UI changes: web tests empty, CI server static build and Compose still build assets. Approved surface brief documents visual approval and explicitly leaves operator MFA/write UI for P07-03. No real payments/messages or subscription access gate. Correction chains retain the actual bank reference only after reversing the prior positive entry; one replacement per entry prevents duplicate effective payments across periods. Initial migration remains unreleased.",
   "server": [
+    "Server.Tests.SubscriptionTests",
+    "Server.Tests.SubscriptionLedgerTests",
+    "Server.Tests.AuthReadinessTests",
+    "Server.Tests.RememberMeTests",
+    "Server.Tests.AppointmentTests",
     "Server.Tests.AppointmentExportTests",
     "Server.Tests.AppointmentListTests",
-    "Server.Tests.AppointmentWeekTests"
+    "Server.Tests.AppointmentWeekTests",
+    "Server.Tests.PublicBookingTests"
   ],
-  "web": [
-    "src/features/appointments/AppointmentExport.test.tsx",
-    "src/features/appointments/Appointments.test.tsx",
-    "src/features/appointments/appointmentsApi.test.tsx",
-    "src/app/ManagementLayout.test.tsx",
-    "src/features/auth/AuthReadiness.test.tsx"
-  ],
+  "web": [],
   "files": [
-    ".impeccable/surfaces/appointment-export.md",
-    "src/Server/Features/Scheduling/AppointmentEndpoints.cs",
-    "src/Server/Features/Scheduling/AppointmentExcel.cs",
-    "src/Server/Features/Scheduling/AppointmentExportEndpoints.cs",
-    "src/Web/src/features/appointments/AppointmentExport.module.css",
-    "src/Web/src/features/appointments/AppointmentExport.test.tsx",
-    "src/Web/src/features/appointments/AppointmentExport.tsx",
-    "src/Web/src/features/appointments/Appointments.module.css",
-    "src/Web/src/features/appointments/Appointments.test.tsx",
-    "src/Web/src/features/appointments/Appointments.tsx",
-    "src/Web/src/features/appointments/appointmentsApi.test.tsx",
-    "src/Web/src/features/appointments/appointmentsApi.ts",
-    "tests/Server.Tests/AppointmentExportTests.cs"
+    ".impeccable/surfaces/subscriptions.md",
+    "deploy/Apply-LocalMigration.ps1",
+    "src/Server/Features/Identity/IdentityStartupExtensions.cs",
+    "src/Server/Features/Subscriptions/SubscriptionEndpoints.cs",
+    "src/Server/Infrastructure/AppDbContext.cs",
+    "src/Server/Infrastructure/Migrations/20261028232456_SubscriptionRecords.Designer.cs",
+    "src/Server/Infrastructure/Migrations/20261028232456_SubscriptionRecords.cs",
+    "src/Server/Infrastructure/Migrations/AppDbContextModelSnapshot.cs",
+    "src/Server/Infrastructure/SubscriptionRecords.cs",
+    "src/Server/Program.cs",
+    "tests/Server.Tests/SubscriptionLedgerTests.cs",
+    "tests/Server.Tests/SubscriptionTests.cs"
   ]
 }
