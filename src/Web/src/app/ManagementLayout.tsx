@@ -23,6 +23,7 @@ import MfaRecoveryCodes from '../features/auth/MfaRecoveryCodes'
 import AuditLog from '../features/audit/AuditLog'
 import BookingPolicy from '../features/booking-policy/BookingPolicy'
 import Appointments from '../features/appointments/Appointments'
+import Subscription from '../features/subscriptions/Subscription'
 
 type Group = 'business' | 'team' | 'account'
 const groups = [
@@ -31,7 +32,7 @@ const groups = [
   { id: 'account', title: 'Hesap' },
 ] as const
 const sectionGroups: Record<Exclude<Section, 'audit' | 'appointments'>, Group> = {
-  business: 'business', hours: 'business', services: 'business', bookingPolicy: 'business', personnel: 'team', access: 'team', security: 'account',
+  business: 'business', hours: 'business', services: 'business', bookingPolicy: 'business', personnel: 'team', access: 'team', security: 'account', subscription: 'account',
 }
 
 function NavigationIcon({ kind }: { kind: Section }) {
@@ -42,6 +43,7 @@ function NavigationIcon({ kind }: { kind: Section }) {
     services: 'M9 6h12M9 12h12M9 18h12M3 6h2M3 12h2M3 18h2',
     access: 'M12 3l8 3v6c0 5-8 9-8 9s-8-4-8-9V6zM8 12l3 3 5-6',
     security: 'M5 10h14v11H5zM8 10V7a4 4 0 0 1 8 0v3M12 14v3',
+    subscription: 'M4 4h16v16H4zM4 9h16M8 13h8M8 17h4',
     audit: 'M6 2h9l4 4v16H6zM14 2v5h5M9 11h7M9 15h7M9 19h4',
     bookingPolicy: 'M3 5h18v16H3zM7 3v4M17 3v4M3 11h18M8 15h3M8 18h6',
     appointments: 'M3 5h18v16H3zM7 3v4M17 3v4M3 11h18M7 15h3M14 15h3M7 18h3',
@@ -57,6 +59,7 @@ const sections = [
   { id: 'bookingPolicy', title: 'Rezervasyon ayarları', description: 'Randevu zamanlarını ve çevrim içi rezervasyon koşullarını belirleyin.' },
   { id: 'security', title: 'Hesap ve güvenlik', description: 'Hesabınızı koruyun ve parolanızı değiştirin.' },
   { id: 'access', title: 'Çalışan erişimleri', description: 'Çalışan hesaplarını, davetleri ve parola sıfırlama işlemlerini yönetin.' },
+  { id: 'subscription', title: 'Aboneliğiniz', description: 'Abonelik döneminizi, son ödeme tarihini ve doğrulanan ödeme bilgilerini görün.' },
   { id: 'audit', title: 'Değişiklik kayıtları', description: 'Yapılan işlemlerin zamanını, yapan hesabı ve ilgili kaydı görüntüleyin.' },
 ] as const
 
@@ -196,6 +199,7 @@ export default function ManagementLayout({ auth, account }: Props) {
         {owner && section === 'services' && <div className={styles.profilePanel}>
           <Services post={post} onDirtyChange={setDefinitionDirty} onBusyChange={setDefinitionBusy} headingRef={heading} />
         </div>}
+        {owner && section === 'subscription' && <Subscription key={location.search} onUnauthorized={appointmentUnauthorized} />}
         {owner && section === 'audit' && <div className={styles.panel}><AuditLog /></div>}
         {section === 'security' && <div className={styles.taskPanels + ' ' + styles.securityPanels}>
         {owner && <div className={styles.panel}>

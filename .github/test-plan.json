@@ -1,43 +1,22 @@
 {
   "compose": true,
-  "reason": "P07-03 adds a separate single-firm operator host with isolated Identity database/cookies/keys/MFA, marker-checked restricted billing role, transaction/idempotency/version/atomic correction endpoints, actual React forms and separate Docker/Compose packaging. Four real PostgreSQL SubscriptionOperator tests cover auth/MFA/recovery/stamp/CSRF, restricted grants and wrong markers/roles, exact retries/concurrent balance/rollback and all other firm tables unchanged. Existing Subscription/SubscriptionLedger classes preserve Owner read privacy and DB constraints. Operator UI/API tests cover MFA gating, unknown network result replay, 409 reload and unsaved/empty/error states; money and Services tests cover the explicitly wider subscription decimal input while preserving the service parser default and callers. CI scope/format/locked restore plus both frontend modes, operator image packaging, related normal Compose, isolated TLS/browser/restart/data/rollback and backed-up main8080 acceptance are required. Owner UI and the newly approved next-day automatic restriction/reopening remain dependent P07-04/05, not activated by this operator slice. No real accounts/payments/messages or public VPS deployment.",
+  "reason": "P07-04 connects the approved read-only Owner subscription surface to the existing same-origin GET contract and account navigation/return routes. Subscription web tests cover decimal/date schema, empty/current-missing/partial/paid/overdue, no writes, stale-data removal, unmount, pagination/history,401/403/400 and429 Retry-After. ManagementLayout and URLNavigation tests cover Owner/Staff isolation, existing navigation/guards and return paths. Existing real PostgreSQL SubscriptionTests preserve MFA/Owner/Staff/anonymous privacy, read-only balances and rate limits; server/DB/identity code and schema are unchanged. Normal Compose image plus synthetic real browser API/mobile/keyboard/error acceptance and backed-up main8080 are required. No automatic restriction or multi-firm operator/network deployment.",
   "server": [
-    "Server.Tests.SubscriptionOperatorTests",
-    "Server.Tests.SubscriptionTests",
-    "Server.Tests.SubscriptionLedgerTests"
+    "Server.Tests.SubscriptionTests"
   ],
   "web": [
-    "src/features/subscription-operator/SubscriptionOperator.test.tsx",
-    "src/app/api.test.tsx",
-    "src/app/money.test.tsx",
-    "src/features/services/Services.test.tsx"
+    "src/features/subscriptions/Subscription.test.tsx",
+    "src/app/ManagementLayout.test.tsx",
+    "src/app/URLNavigation.test.tsx"
   ],
   "files": [
-    ".dockerignore",
     ".impeccable/surfaces/subscriptions.md",
-    "FirmaRandevu.slnx",
-    "deploy/Dockerfile.operator",
-    "deploy/compose.subscription-operator.yaml",
-    "deploy/subscription-operator-identity.sql",
-    "deploy/subscription-operator-target.sql",
-    "src/Operator/Operator.csproj",
-    "src/Operator/OperatorIdentity.cs",
-    "src/Operator/OperatorProgram.cs",
-    "src/Operator/SubscriptionLedger.cs",
-    "src/Operator/SubscriptionTarget.cs",
-    "src/Operator/packages.lock.json",
-    "src/Web/operator.html",
-    "src/Web/src/app/money.test.tsx",
-    "src/Web/src/app/money.ts",
-    "src/Web/src/features/subscription-operator/OperatorApplication.tsx",
-    "src/Web/src/features/subscription-operator/SubscriptionOperator.module.css",
-    "src/Web/src/features/subscription-operator/SubscriptionOperator.test.tsx",
-    "src/Web/src/features/subscription-operator/SubscriptionOperator.tsx",
-    "src/Web/src/features/subscription-operator/main.tsx",
-    "src/Web/vite.config.ts",
-    "tests/Server.Tests/Server.Tests.csproj",
-    "tests/Server.Tests/SubscriptionOperatorTests.cs",
-    "tests/Server.Tests/Support/OperatorTestEnvironment.cs",
-    "tests/Server.Tests/packages.lock.json"
+    "src/Web/src/app/ManagementLayout.test.tsx",
+    "src/Web/src/app/ManagementLayout.tsx",
+    "src/Web/src/app/routes.ts",
+    "src/Web/src/features/subscriptions/Subscription.module.css",
+    "src/Web/src/features/subscriptions/Subscription.test.tsx",
+    "src/Web/src/features/subscriptions/Subscription.tsx",
+    "src/Web/src/features/subscriptions/subscriptionApi.ts"
   ]
 }

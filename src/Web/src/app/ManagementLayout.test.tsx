@@ -74,7 +74,7 @@ describe('Yönetim gezinmesi', () => {
     await click(title)
     expect(container.querySelector('h1')?.textContent).toBe(title)
     expect(container.querySelector('#management-navigation a[aria-current="page"]')?.textContent).toBe(title)
-    expect(container.querySelectorAll('#management-navigation a[data-navigation]')).toHaveLength(9)
+    expect(container.querySelectorAll('#management-navigation a[data-navigation]')).toHaveLength(10)
     expect(container.querySelector('#management-navigation a[aria-label="Randevular"]')?.getAttribute('href')).toBe('/yonetim/randevular')
   })
   it('başlıkta sunucudan gelen işletme adını gösterir; taslak ve başarısız kayıt başlığı değiştirmez', async () => {
@@ -373,5 +373,34 @@ describe('Yönetim gezinmesi', () => {
     expect(container.querySelector('nav')).not.toBeNull()
     expect(container.querySelector('h1')?.textContent).toBe('İşletme bilgileri')
     expect(requests.mock.calls.filter(([path]) => path === '/api/auth/csrf')).toHaveLength(2)
+  })
+})
+
+
+describe('Abonelik gezinmesi ve yetki', () => {
+  it('Owner abonelik bağlantısını Hesap grubunda açar ve doğrudan adresi çözer', async () => {
+    const original = vi.mocked(fetch).getMockImplementation()
+    vi.mocked(fetch).mockImplementation(async (input, options) => {
+      if (String(input).startsWith('/api/subscription?')) return Response.json({ asOf: '2026-10-30', timeZone: 'Europe/Istanbul', currency: 'TRY', recorded: false, restrictionsApplied: false, currentPeriod: null, periods: [], page: 1, pageSize: 12, totalCount: 0, hasMore: false })
+      if (!original) throw new Error('Test isteği yok')
+      return original(input, options)
+    })
+    window.history.replaceState(null, '', '/yonetim/isletme'); await render(); await click('Aboneliğiniz')
+    expect(location.pathname).toBe('/yonetim/abonelik')
+    expect(container.querySelector('h1')?.textContent).toBe('Aboneliğiniz')
+    expect(container.textContent).toContain('Henüz abonelik kaydı yok')
+    expect(container.querySelector('a[aria-label="Aboneliğiniz"]')?.closest('section')?.querySelector('h2')?.textContent).toBe('Hesap')
+  })
+  it('Staff doğrudan abonelik adresinde bile bilgiyi istemez veya menü bağlantısı göstermez', async () => {
+    const original = vi.mocked(fetch).getMockImplementation()
+    vi.mocked(fetch).mockImplementation(async (input, options) => {
+      if (input === '/api/auth/me') return Response.json({ email: 'staff@example.test', mfaEnabled: false, ownerAccess: false, staffAccess: true })
+      if (!original) throw new Error('Test isteği yok')
+      return original(input, options)
+    })
+    window.history.replaceState(null, '', '/yonetim/abonelik'); await render()
+    expect(container.querySelector('h1')?.textContent).toBe('Erişim izni yok')
+    expect(container.querySelector('a[aria-label="Aboneliğiniz"]')).toBeNull()
+    expect(vi.mocked(fetch).mock.calls.some(([url]) => String(url).startsWith('/api/subscription'))).toBe(false)
   })
 })
