@@ -83,3 +83,9 @@ describe('İşletme sahibinin aboneliği', () => {
     await expect(readSubscription(Response.json({ ...original, ...invalid }))).rejects.toThrow()
   })
 })
+
+it('bugünkü dönem ödenmiş olsa da sunucunun geçmiş borç kısıtlamasını gösterir', async () => {
+  vi.mocked(fetch).mockResolvedValue(Response.json({ ...original, restrictionsApplied: true, currentPeriod: { ...period, paidTry: '1000.00', outstandingTry: '0.00', paymentState: 'Paid', overdue: false } }))
+  await render(); expect(container.textContent).toContain('Abonelik nedeniyle kullanım salt okunur')
+  expect(container.textContent).toContain('0,00 ₺'); expect(container.querySelector('details')).not.toBeNull()
+})

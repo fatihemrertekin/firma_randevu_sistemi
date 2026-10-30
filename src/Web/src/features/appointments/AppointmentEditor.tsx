@@ -10,10 +10,10 @@ import { appointmentEndpoint, AppointmentError, businessDay, formatDay, formatTi
 import styles from './Appointments.module.css'
 
 type Attempt = { path: string; payload: Record<string, string> }
-type Props = { appointment?: Appointment; initialDay: string; post: typeof postWithCsrf; onSaved: (value: Appointment) => void;
+type Props = { readOnly?: boolean; appointment?: Appointment; initialDay: string; post: typeof postWithCsrf; onSaved: (value: Appointment) => void;
   onDirtyChange: (value: boolean) => void; onBusyChange: (value: boolean) => void; onUnauthorized: () => void;
   onReload: () => void; onCancel: () => void }
-export default function AppointmentEditor({ appointment, initialDay, post, onSaved, onDirtyChange, onBusyChange, onUnauthorized, onReload, onCancel }: Props) {
+export default function AppointmentEditor({ readOnly = false, appointment, initialDay, post, onSaved, onDirtyChange, onBusyChange, onUnauthorized, onReload, onCancel }: Props) {
   const [service, setService] = useState<Service | null>(null), [staff, setStaff] = useState(appointment?.staffMemberId ?? '')
   const [staffName, setStaffName] = useState(appointment?.staffName ?? ''), [day, setDay] = useState(appointment ? businessDay(new Date(appointment.startsAt)) : initialDay)
   const [startsAt, setStartsAt] = useState(''), [name, setName] = useState(''), [phone, setPhone] = useState('')
@@ -24,7 +24,7 @@ export default function AppointmentEditor({ appointment, initialDay, post, onSav
   const moving = !!appointment, serviceId = appointment?.serviceId ?? service?.id ?? ''
   const dirty = moving ? staff !== appointment.staffMemberId || day !== businessDay(new Date(appointment.startsAt)) || !!startsAt
     : !!service || !!staff || day !== initialDay || !!startsAt || !!name || !!phone
-  const disabled = busy || !!attempt || !!retryUntil
+  const disabled = readOnly || busy || !!attempt || !!retryUntil
   useUnsavedChanges(dirty || !!attempt, onDirtyChange)
   useEffect(() => { onBusyChange(busy); return () => onBusyChange(false) }, [busy, onBusyChange])
   useEffect(() => { if (!retryUntil) return; const timer = setTimeout(() => setRetryUntil(0), Math.max(0, retryUntil - Date.now())); return () => clearTimeout(timer) }, [retryUntil])

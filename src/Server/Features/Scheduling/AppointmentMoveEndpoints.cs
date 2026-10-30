@@ -52,11 +52,12 @@ public static class AppointmentMoveEndpoints
         if (id == Guid.Empty || request.Version == Guid.Empty || request.RequestKey == Guid.Empty || request.StaffMemberId == Guid.Empty || !AppointmentRules.TryStart(request.StartsAt, out var start))
             return Results.Problem(statusCode: 400, title: "Randevu, güncel sürüm, işlem anahtarı, personel ve saat dilimli tam dakika gerekli.");
         await using var transaction = await db.Database.BeginTransactionAsync(token);
-        var owner = await OwnerMutationAuthorization.LockAsync(context, db, users, token); if (owner is null) return Results.Unauthorized();
+        var owner = await OwnerMutationAuthorization.LockAsync(context, db, users, token, checkSubscription: false); if (owner is null) return Results.Unauthorized();
         var previous = await db.AppointmentMoveCommands.AsNoTracking().SingleOrDefaultAsync(item => item.ActorId == owner.Id && item.RequestKey == request.RequestKey, token);
         if (previous is not null)
             return previous.AppointmentId != id || previous.ExpectedVersion != request.Version || previous.StaffMemberId != request.StaffMemberId || previous.StartsAt != start
                 ? Conflict("Aynı taşıma anahtarı farklı bilgilerle kullanılamaz.") : Results.Ok(await AppointmentEndpoints.ResponseAsync(db, id, token));
+        await Server.Features.Subscriptions.SubscriptionAccess.EnsureWritableAsync(context, db, token);
         var original = await db.AppointmentTimeBlocks.AsNoTracking().Where(item => item.AppointmentId == id).Select(item => new { item.StaffMemberId, item.ServiceDefinitionId }).SingleOrDefaultAsync(token);
         if (original is null) return Results.NotFound();
         var policy = await db.BookingPolicies.FromSqlRaw("SELECT * FROM \"BookingPolicies\" WHERE \"Id\"=1 FOR SHARE").SingleAsync(token);

@@ -69,6 +69,7 @@ public static class PublicAppointmentEndpoints
         try
         {
             await using var transaction = await db.Database.BeginTransactionAsync(token);
+            await Server.Features.Subscriptions.SubscriptionAccess.EnsureWritableAsync(ctx, db, token);
             await db.Database.ExecuteSqlRawAsync("SET LOCAL lock_timeout = '5s'", token);
             var creation = await AppointmentCreation.LockAsync(db, body.StaffMemberId, body.ServiceId, token);
             // OTP kilidinden sonra takvim/personel kilidi alınmaz; worker aynı sırayı tersine çeviremez.

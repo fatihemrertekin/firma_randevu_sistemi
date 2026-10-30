@@ -31,6 +31,7 @@ function weekList(day: string, pageSize = 10, page = 1, total = day.endsWith('18
 }
 function api(input: RequestInfo | URL): Promise<Response> {
   const url = new URL(String(input), 'http://test.local'), path = url.pathname
+  if (path === '/api/subscription/access') return Promise.resolve(Response.json({ restrictionsApplied: false }))
   if (path === '/api/staff-members/') return Promise.resolve(Response.json(pageOf([member, other])))
   if (path === '/api/services/') return Promise.resolve(Response.json(pageOf([service])))
   if (path === '/api/services/' + service.id) return Promise.resolve(Response.json(service))
@@ -384,4 +385,15 @@ describe('Onaylı sade haftalık görünüm', () => {
     expect(new URLSearchParams(router.state.location.search).get('boyut')).toBe('20')
     expect(post).not.toHaveBeenCalled()
   })
+})
+
+it('salt okunur durumda yeni randevuyu durdurur; liste ve Excel açık kalır, borç kapanınca yeniden açılır', async () => {
+  let restricted = true
+  vi.mocked(fetch).mockImplementation(input => String(input) === '/api/subscription/access' ? Promise.resolve(Response.json({ restrictionsApplied: restricted })) : api(input))
+  await render()
+  expect(container.querySelector('a[href*="/yeni"]')?.getAttribute('aria-disabled')).toBe('true')
+  expect(container.textContent).toContain('kullanım salt okunur')
+  expect([...container.querySelectorAll<HTMLButtonElement>('button')].find(b => b.textContent === "Excel'e aktar")?.disabled).toBe(false)
+  restricted = false; await click('Erişimi yeniden kontrol et')
+  expect(container.querySelector('a[href*="/yeni"]')?.getAttribute('aria-disabled')).not.toBe('true')
 })

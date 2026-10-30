@@ -28,13 +28,14 @@ public static class AppointmentStatusEndpoints
         if (id == Guid.Empty || request.Version == Guid.Empty || request.RequestKey == Guid.Empty)
             return Results.Problem(statusCode: 400, title: "Randevu, güncel sürüm ve işlem anahtarı gerekli.");
         await using var transaction = await db.Database.BeginTransactionAsync(token);
-        var owner = await OwnerMutationAuthorization.LockAsync(context, db, users, token);
+        var owner = await OwnerMutationAuthorization.LockAsync(context, db, users, token, checkSubscription: false);
         if (owner is null) return Results.Unauthorized();
         var previous = await db.AppointmentStatusCommands.AsNoTracking().SingleOrDefaultAsync(item => item.ActorId == owner.Id && item.RequestKey == request.RequestKey, token);
         if (previous is not null)
             return previous.AppointmentId != id || previous.ExpectedVersion != request.Version || previous.Status != status
                 ? Conflict("Aynı işlem anahtarı farklı işlem için kullanılamaz.")
                 : Results.Ok(await AppointmentEndpoints.ResponseAsync(db, id, token));
+        await Server.Features.Subscriptions.SubscriptionAccess.EnsureWritableAsync(context, db, token);
         var memberId = await db.AppointmentTimeBlocks.AsNoTracking().Where(item => item.AppointmentId == id).Select(item => (Guid?)item.StaffMemberId).SingleOrDefaultAsync(token);
         if (memberId is null) return Results.NotFound();
         // Rezervasyon ve takvim değişiklikleri de personelden önce randevu kilidi almaz.

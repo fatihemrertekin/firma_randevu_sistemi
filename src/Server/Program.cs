@@ -75,6 +75,7 @@ app.Use(async (context, next) =>
 app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
+app.Use(SubscriptionAccess.HandleAsync);
 app.MapAuthEndpoints();
 app.MapBusinessProfileEndpoints();
 app.MapBusinessHoursEndpoints();

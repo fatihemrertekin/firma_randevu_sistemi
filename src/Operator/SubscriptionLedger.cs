@@ -111,7 +111,7 @@ internal static class SubscriptionLedger
             await using var db = await target.OpenAsync(timeout.Token);
             await using var transaction = await db.Database.BeginTransactionAsync(timeout.Token);
             // Düşük hacimli tek firma mali işlemleri aynı kilidi alır; DB trigger'ları diğer yazıcıları da korur.
-            await db.Database.ExecuteSqlRawAsync("SELECT pg_advisory_xact_lock(70703)", timeout.Token);
+            await db.Database.ExecuteSqlInterpolatedAsync($"SELECT pg_advisory_xact_lock({Server.Features.Subscriptions.SubscriptionAccess.LedgerLock})", timeout.Token);
             var result = await action(db, actor, timeout.Token);
             if (result is not Microsoft.AspNetCore.Http.IStatusCodeHttpResult status || status.StatusCode is >= 200 and < 300)
                 await transaction.CommitAsync(timeout.Token);

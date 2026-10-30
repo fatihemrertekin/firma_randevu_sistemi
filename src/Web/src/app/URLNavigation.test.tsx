@@ -14,6 +14,7 @@ beforeEach(() => {
   account = owner
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true)
   vi.stubGlobal('fetch', vi.fn(async (input: string, options?: RequestInit) => {
+    if (input === '/api/subscription/access') return Response.json({ restrictionsApplied: false })
     if (input === '/api/auth/me') return account ? Response.json(account) : new Response(null, { status: 401 })
     if (input === '/api/auth/csrf') return Response.json({ token: 'synthetic-csrf' })
     if (input === '/api/auth/login') return new Response(null, { status: 202 })

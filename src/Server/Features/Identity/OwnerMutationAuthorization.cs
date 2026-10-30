@@ -9,14 +9,17 @@ internal static class OwnerMutationAuthorization
 {
     // Çağıran endpoint transaction açar. Kilit beklerken iptal edilen oturum yazamasın.
     internal static async Task<AppUser?> LockAsync(HttpContext context, AppDbContext db,
-        UserManager<AppUser> users, CancellationToken token)
+        UserManager<AppUser> users, CancellationToken token, bool checkSubscription = true)
     {
         if (!Guid.TryParse(context.User.FindFirstValue(ClaimTypes.NameIdentifier), out var id)) return null;
         db.ChangeTracker.Clear();
         var owner = await db.Users.FromSqlInterpolated($"SELECT * FROM \"AspNetUsers\" WHERE \"Id\" = {id} FOR UPDATE")
             .SingleOrDefaultAsync(token);
-        return owner is not null && owner.IsActive && owner.TwoFactorEnabled && context.User.HasClaim("amr", "mfa") &&
+        var authorized = owner is not null && owner.IsActive && owner.TwoFactorEnabled && context.User.HasClaim("amr", "mfa") &&
             await users.IsInRoleAsync(owner, "Owner") && !await users.IsLockedOutAsync(owner) &&
-            owner.SecurityStamp == context.User.FindFirst(users.Options.ClaimsIdentity.SecurityStampClaimType)?.Value ? owner : null;
+            owner.SecurityStamp == context.User.FindFirst(users.Options.ClaimsIdentity.SecurityStampClaimType)?.Value;
+        if (!authorized) return null;
+        if (checkSubscription) await Server.Features.Subscriptions.SubscriptionAccess.EnsureWritableAsync(context, db, token);
+        return owner;
     }
 }

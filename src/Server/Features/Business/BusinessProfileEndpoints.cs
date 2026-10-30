@@ -60,6 +60,7 @@ public static class BusinessProfileEndpoints
             !context.User.HasClaim("amr", "mfa") || await users.IsLockedOutAsync(owner) || owner.SecurityStamp !=
             context.User.FindFirst(users.Options.ClaimsIdentity.SecurityStampClaimType)?.Value)
             return Results.Unauthorized();
+        await Server.Features.Subscriptions.SubscriptionAccess.EnsureWritableAsync(context, db, timeout.Token);
         var profile = await db.BusinessProfiles.SingleAsync(entry => entry.Id == 1, timeout.Token);
         if (profile.Version != request.Version) return Conflict();
         profile.Name = name;

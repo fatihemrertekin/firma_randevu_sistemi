@@ -91,7 +91,7 @@ public sealed class AppointmentReminders
         if (!await AuthEndpoints.HasValidCsrfAsync(csrf, context)) return AuthEndpoints.InvalidCsrf();
         if (id == Guid.Empty || request.Version == Guid.Empty) return Results.Problem(statusCode: 400, title: "Randevu ve güncel sürüm gerekli.");
         await using var transaction = await db.Database.BeginTransactionAsync(token);
-        var owner = await OwnerMutationAuthorization.LockAsync(context, db, users, token);
+        var owner = await OwnerMutationAuthorization.LockAsync(context, db, users, token, checkSubscription: false);
         if (owner is null) return Results.Unauthorized();
         var appointment = await db.Appointments.FromSqlInterpolated($"SELECT * FROM \"Appointments\" WHERE \"Id\"={id} FOR UPDATE").SingleOrDefaultAsync(token);
         if (appointment is null) return Results.NotFound();

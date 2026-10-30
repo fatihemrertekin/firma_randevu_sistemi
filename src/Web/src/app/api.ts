@@ -42,5 +42,17 @@ export async function postWithCsrf(path: string, body: object, signal?: AbortSig
       throw new RequestVerificationError('İstek güvenlik doğrulaması geçersiz veya süresi dolmuş; işlem uygulanmadı. Bu ekranda yeniden deneyin. Sayfayı yenilerseniz kaydedilmemiş bilgileri yeniden girmeniz gerekebilir.')
     }
   }
+  if (response.status === 403 || response.status === 503) {
+    const problem: unknown = await response.clone().json().catch(() => null)
+    if (typeof problem === 'object' && problem !== null && 'code' in problem &&
+      (problem.code === 'subscription_read_only' || problem.code === 'subscription_unavailable')) {
+      if (typeof window !== 'undefined') window.dispatchEvent(new Event('subscription-access-changed'))
+      throw new RequestVerificationError(path.startsWith('/api/public-booking')
+        ? 'İşletme şu anda yeni çevrim içi randevu alamıyor. İşletmeyle iletişime geçin.'
+        : problem.code === 'subscription_read_only'
+          ? 'Vadesi geçmiş abonelik borcu nedeniyle kayıt yapılamıyor. Mevcut randevuları görüntüleyebilir ve Excel alabilirsiniz. Ödeme durumunuz için hizmet sağlayıcınızla iletişime geçin.'
+          : 'Abonelik durumu doğrulanamadı; bu işlem uygulanmadı. Bağlantıyı kontrol edip yeniden deneyin.')
+    }
+  }
   return response
 }
