@@ -5,6 +5,7 @@ export const sectionPaths = {
   business: '/yonetim/isletme', hours: '/yonetim/isletme/saatler',
   bookingPolicy: '/yonetim/rezervasyon-ayarlari',
   personnel: '/yonetim/personel', services: '/yonetim/hizmetler',
+  subscription: '/yonetim/abonelik',
   access: '/yonetim/calisan-erisimleri', security: '/yonetim/hesap', audit: '/yonetim/degisiklik-kayitlari',
 } as const
 export type Section = keyof typeof sectionPaths
