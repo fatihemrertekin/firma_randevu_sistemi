@@ -434,6 +434,10 @@ dotnet run --project tests/Server.Tests/Server.Tests.csproj --no-build -- -class
 
 Önce yukarıdaki mevcut restore/build kapıları çalışmış olmalıdır. Eklemeli migration ve `Apply-LocalMigration.ps1` yeni tabloları/grant'leri hazırlar; gerçek kurulumda yedek ve kontrollü migration sırası geçerlidir. Kayıt varsa Down veri silmez, reddeder; imaj geri dönüşünde ek şema korunur. [Kabul ve sınırlar](docs/plans/P07.md#p07-02-kabul-ve-yedekli-ana8080-teslimi).
 
+### İşletme sahibinin abonelik ekranı (P07-04)
+
+Owner+MFA için **Hesap → Aboneliğiniz** veya `/yonetim/abonelik`: mevcut dönem,vade,doğrulanan ödeme/kalan borç ve kapalı geçmişte12'li sayfalama. Yalnız GET `/api/subscription?page=...&pageSize=12`; ödeme yazma/tahsilat/banka referansı yoktur. Staff menüde veya doğrudan adreste erişemez. Hata/yenilemede eski bakiye kaldırılır;401 normal girişe,403 yetki açıklamasına,429 beklemeye bağlanır. Otomatik kısıtlama ve merkezi çok firma yönetimi etkinleşmez. [Gerçek kabul ve geri dönüş](docs/plans/P07.md#p07-04-kabul-ve-yedekli-ana8080-teslimi).
+
 ### Ayrı abonelik operatörü (P07-03)
 
 `src/Operator` işletme Owner/Staff panelinden ayrı ASP.NET uygulamasıdır. Tek açık firma hedefinde dönem/ödeme/ters kayıt/bağlı düzeltme yapar; kendi yedi tabloluk Identity DB'si, cookie/DP anahtarları ve zorunlu MFA'sı vardır. Açık hesap kaydı veya müşteri panelinde operatör yetkisi yoktur. İlk kurulum/gerçek internet yayını normal8080 güncellemesiyle kendiliğinden açılmaz. [Kapsam ve geri dönüş](docs/plans/P07.md#p07-03--ayrı-operatör-kimliği-ve-tek-firma-abonelik-kayıt-akışı--29102026).
