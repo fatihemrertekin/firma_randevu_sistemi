@@ -26,25 +26,29 @@ internal static class SubscriptionLedger
     }
     private static string Hash(Guid actor, string kind, object input) => Convert.ToHexString(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(new { actor, kind, input })));
     private static IResult Conflict(string title) => Results.Problem(statusCode: 409, title: title);
+    private static IResult TargetRequired() => Results.Problem(statusCode: 409, title: "Firma seçimi gerekli. Çok firma ekranı bağlanana kadar kayıt yapılamaz.",
+        extensions: new Dictionary<string, object?> { ["code"] = "subscription_target_required" });
     private static IResult Invalid(string title) => Results.Problem(statusCode: 400, title: title);
 
     internal static void MapSubscriptionLedger(this WebApplication app)
     {
         var group = app.MapGroup("/api/subscription").RequireAuthorization("Operator").RequireRateLimiting("ledger");
         group.MapGet("/", ReadAsync);
-        group.MapPost("/periods", (PeriodInput request, HttpContext c, IAntiforgery a, SubscriptionTarget target, UserManager<OperatorUser> users, TimeProvider clock) =>
-            WriteAsync(request.TargetId, c, a, target, users, (db, actor, token) => AddPeriodAsync(request, db, actor, clock, token)));
-        group.MapPost("/payments", (PaymentInput request, HttpContext c, IAntiforgery a, SubscriptionTarget target, UserManager<OperatorUser> users, TimeProvider clock) =>
-            WriteAsync(request.TargetId, c, a, target, users, (db, actor, token) => AddPaymentAsync(request, db, actor, clock, token)));
-        group.MapPost("/payments/{id:guid}/reverse", (Guid id, ReverseInput request, HttpContext c, IAntiforgery a, SubscriptionTarget target, UserManager<OperatorUser> users, TimeProvider clock) =>
-            WriteAsync(request.TargetId, c, a, target, users, (db, actor, token) => ReverseAsync(id, request, db, actor, clock, token)));
-        group.MapPost("/payments/{id:guid}/correct", (Guid id, CorrectionInput request, HttpContext c, IAntiforgery a, SubscriptionTarget target, UserManager<OperatorUser> users, TimeProvider clock) =>
-            WriteAsync(request.TargetId, c, a, target, users, (db, actor, token) => CorrectAsync(id, request, db, actor, clock, token)));
+        group.MapPost("/periods", (PeriodInput request, HttpContext c, IAntiforgery a, SubscriptionTargets targets, UserManager<OperatorUser> users, TimeProvider clock) =>
+            WriteAsync(request.TargetId, c, a, targets, users, (db, actor, token) => AddPeriodAsync(request, db, actor, clock, token)));
+        group.MapPost("/payments", (PaymentInput request, HttpContext c, IAntiforgery a, SubscriptionTargets targets, UserManager<OperatorUser> users, TimeProvider clock) =>
+            WriteAsync(request.TargetId, c, a, targets, users, (db, actor, token) => AddPaymentAsync(request, db, actor, clock, token)));
+        group.MapPost("/payments/{id:guid}/reverse", (Guid id, ReverseInput request, HttpContext c, IAntiforgery a, SubscriptionTargets targets, UserManager<OperatorUser> users, TimeProvider clock) =>
+            WriteAsync(request.TargetId, c, a, targets, users, (db, actor, token) => ReverseAsync(id, request, db, actor, clock, token)));
+        group.MapPost("/payments/{id:guid}/correct", (Guid id, CorrectionInput request, HttpContext c, IAntiforgery a, SubscriptionTargets targets, UserManager<OperatorUser> users, TimeProvider clock) =>
+            WriteAsync(request.TargetId, c, a, targets, users, (db, actor, token) => CorrectAsync(id, request, db, actor, clock, token)));
     }
 
-    private static async Task<IResult> ReadAsync(HttpContext c, SubscriptionTarget target, TimeProvider clock,
+    private static async Task<IResult> ReadAsync(HttpContext c, SubscriptionTargets targets, TimeProvider clock,
         int page = 1, Guid? periodId = null, int paymentsPage = 1)
     {
+        var target = targets.Single;
+        if (target is null) return TargetRequired();
         if (page is < 1 or > 1000000 || paymentsPage is < 1 or > 1000000 || c.Request.Query.Keys.Any(k => k is not ("page" or "periodId" or "paymentsPage"))) return Invalid("Sayfa bilgilerini kontrol edin.");
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(c.RequestAborted); timeout.CancelAfter(TimeSpan.FromSeconds(15));
         try
@@ -99,10 +103,12 @@ internal static class SubscriptionLedger
         { return Results.Problem(statusCode: 503, title: "Firma kayıtları okunamadı. Hedefi ve bağlantıyı kontrol edip yeniden deneyin."); }
     }
 
-    private static async Task<IResult> WriteAsync(string targetId, HttpContext c, IAntiforgery a, SubscriptionTarget target, UserManager<OperatorUser> users,
+    private static async Task<IResult> WriteAsync(string targetId, HttpContext c, IAntiforgery a, SubscriptionTargets targets, UserManager<OperatorUser> users,
         Func<AppDbContext, Guid, CancellationToken, Task<IResult>> action)
     {
         if (!await OperatorIdentity.Csrf(c, a)) return OperatorIdentity.InvalidCsrf();
+        var target = targets.Single;
+        if (target is null) return TargetRequired();
         if (targetId != target.Id) return Results.NotFound();
         if (!Guid.TryParse(users.GetUserId(c.User), out var actor) || actor == Guid.Empty) return Results.Unauthorized();
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(c.RequestAborted); timeout.CancelAfter(TimeSpan.FromSeconds(15));
