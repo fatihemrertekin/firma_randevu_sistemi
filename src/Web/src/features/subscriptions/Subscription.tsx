@@ -65,7 +65,10 @@ export default function Subscription({ onUnauthorized }: { onUnauthorized: () =>
         <summary>Dönem kayıtları</summary>
         <h2>Kayıtlı dönemler</h2>
         <ul>{data.periods.map(period => <li key={period.id}>
-          <h3>{date(period.startsOn)} – {endDate(period.endsOn)}</h3><p className={styles.state}>{status(period)}</p><Facts period={period} />
+          <h3>{date(period.startsOn)} – {endDate(period.endsOn)}</h3>
+          <p className={styles.state}>{status(period)} · {formatTryPrice(period.amountTry)}</p>
+          <p>Ödenen: {formatTryPrice(period.paidTry)} · Kalan: {formatTryPrice(period.outstandingTry)}</p>
+          <p className={styles.muted}>Son ödeme: {date(period.dueOn)}</p>
         </li>)}</ul>
         {data.totalCount > 12 && <nav className={styles.paging} aria-label="Abonelik dönem sayfaları">
           <button disabled={loading || retry > 0 || data.page === 1} onClick={() => load(data.page - 1)}>Önceki sayfa</button>

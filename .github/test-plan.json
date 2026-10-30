@@ -11,6 +11,7 @@
   ],
   "files": [
     ".impeccable/surfaces/subscriptions.md",
+    "src/Web/index.html",
     "src/Web/src/app/ManagementLayout.test.tsx",
     "src/Web/src/app/ManagementLayout.tsx",
     "src/Web/src/app/routes.ts",
