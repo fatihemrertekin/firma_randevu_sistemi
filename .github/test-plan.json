@@ -1,7 +1,8 @@
 {
   "compose": false,
-  "reason": "P07-07 replaces the operator singleton target configuration with an explicit server allowlist and authenticated metadata-only target catalog. Startup/readiness and four legacy financial routes now use the registry; single-firm config remains supported and multiple targets never select the first. SubscriptionTargetsTests cover config ambiguity, identity/duplicate destinations, production TLS, Development numeric-loopback exception, two real PostgreSQL firms, MFA/catalog privacy, legacy write guards, all56-table snapshots, wrong markers/roles and one-firm outage. SubscriptionOperatorTests preserve provisioning, login/MFA/revocation/CSRF and financial replay/correction behavior; SubscriptionTests and SubscriptionAccessTests preserve Owner privacy, immutable ledger and payment/read-only coordination. Existing operator UI/common API suites cover unchanged single-firm callers and errors. No Server/Web source, deploy/network/schema/grant or dependency changes; normal8080 runtime source/image are preserved. Operator image packaging and isolated startup acceptance are required; normal Compose rebuild/DB restart is unrelated. Review regressions replace session-overridable current_setting markers with the persistent database-scoped catalog value for both targets and all operator identity checks. Real Options-forgery tests and unavailable-identity request/bootstrap image acceptance cover the shared identity boundary; only known EF-wrapped Npgsql outages become503/controlled bootstrap failure.",
+  "reason": "P07-08 reuses the existing operator ledger handlers for explicit allowlisted target routes, validates URL/body targets before connecting, and adds a repeatable-read summary of the latest started period and all started overdue balances independent of history pagination. SubscriptionTargetLedgerTests exercise two real PostgreSQL firms, same keys and references in separate firms, target/version mismatches, exact replay after commit, parallel payments, atomic failed/successful corrections and reversals, all56-table business-data preservation, Istanbul midnight, future-only/empty and older-than-page debts, legacy summary parity, MFA/CSRF/validation/429 and isolated firm outage. SubscriptionTargetsTests retain allowlist, marker, role and legacy fail-closed checks. SubscriptionOperatorTests retain existing single-firm financial callers, provisioning and identity revocation. SubscriptionAccessTests and SubscriptionTests cover agreement with normal firm read-only rules and unchanged Owner privacy. Existing operator UI and common API tests cover backward compatibility of the additive single-firm response. No normal Server/Web, schema, migration, grants, dependency or deployment configuration changes; normal8080 source/image remains unchanged, and the operator image gets an exact-source packaging/startup acceptance.",
   "server": [
+    "Server.Tests.SubscriptionTargetLedgerTests",
     "Server.Tests.SubscriptionTargetsTests",
     "Server.Tests.SubscriptionOperatorTests",
     "Server.Tests.SubscriptionTests",
@@ -12,13 +13,7 @@
     "src/app/api.test.tsx"
   ],
   "files": [
-    ".impeccable/surfaces/subscriptions.md",
-    "src/Operator/DatabaseInstance.cs",
-    "src/Operator/OperatorProgram.cs",
     "src/Operator/SubscriptionLedger.cs",
-    "src/Operator/SubscriptionTarget.cs",
-    "src/Operator/SubscriptionTargets.cs",
-    "tests/Server.Tests/SubscriptionTargetsTests.cs",
-    "tests/Server.Tests/Support/OperatorTestEnvironment.cs"
+    "tests/Server.Tests/SubscriptionTargetLedgerTests.cs"
   ]
 }
