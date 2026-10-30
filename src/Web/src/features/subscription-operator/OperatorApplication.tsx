@@ -46,7 +46,7 @@ export default function OperatorApplication() {
         setCodes(value.recoveryCodes as string[]); setKey(''); setAccount(null); setMfa(false); return
       }
       await load(); setMfa(false)
-    } catch (problem) { setError(requestErrorMessage(problem, problem instanceof Error ? problem.message : 'Giriş sonucu doğrulanamadı. Yeniden deneyin.')) }
+    } catch (problem) { setError(requestErrorMessage(problem, problem instanceof Error && !(problem instanceof TypeError) ? problem.message : 'Giriş sonucu doğrulanamadı. Bağlantıyı kontrol edip yeniden deneyin.')) }
     finally { pending.current = false; setBusy(false) }
   }
   async function logout() {

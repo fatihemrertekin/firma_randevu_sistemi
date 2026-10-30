@@ -10,6 +10,8 @@
 .page button { min-height: var(--target-min); font: inherit; padding: var(--auth-space-2) var(--auth-space-3); border: var(--auth-rule) solid var(--control-border); border-radius: var(--auth-radius); background: var(--button-secondary-bg); color: var(--button-secondary-text); cursor: pointer; }
 .page button:disabled { color: var(--button-secondary-text); background: var(--muted); cursor: default; }
 .page button:hover:enabled { background: var(--button-secondary-hover); }
+.page .primary { background: var(--button-primary-bg); color: var(--button-primary-text); }
+.page .primary:hover:enabled { background: var(--button-primary-hover); }
 .page :is(button,input,select,textarea,summary):focus-visible { outline: var(--auth-focus-width) solid var(--focus); outline-offset: var(--auth-focus-offset); }
 .page :is(input,textarea,select) { margin-bottom: var(--auth-space-3); }
 .auth form { display: grid; gap: var(--auth-space-2); margin-bottom: var(--auth-space-4); }

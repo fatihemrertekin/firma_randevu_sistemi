@@ -10,6 +10,8 @@ type Data = { targetId: string; targetName: string; asOf: string; page: number; 
 type Editor = { kind: 'period' | 'payment' | 'reverse' | 'correct'; payment?: Payment; key: string }
 const money = formatTryPrice
 const date = (value: string) => new Intl.DateTimeFormat('tr-TR', { dateStyle: 'long', timeZone: 'Europe/Istanbul' }).format(new Date(value + 'T12:00:00Z'))
+const month = (value: string) => new Intl.DateTimeFormat('tr-TR', { month: 'long', year: 'numeric', timeZone: 'Europe/Istanbul' }).format(new Date(value + 'T12:00:00Z'))
+function inclusiveEnd(value: string) { const end = new Date(value + 'T12:00:00Z'); end.setUTCDate(end.getUTCDate() - 1); return end.toISOString().slice(0, 10) }
 const record = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null
 const validDate = (v: unknown) => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v) && Number.isFinite(Date.parse(v + 'T12:00:00Z'))
 const validMoney = (v: unknown) => typeof v === 'string' && /^-?\d{1,10}\.\d{2}$/.test(v)
@@ -44,12 +46,12 @@ export default function SubscriptionOperator({ onExpired, onUnsaved, onBusy }: {
     const version = ++generation.current; setLoading(true); setError('')
     try {
       const result = await readData(page, periodId, paymentsPage); if (version === generation.current) { setData(result); return result }
-    } catch (problem) { if (version === generation.current) { if (problem instanceof SessionExpired) onExpired(); setData(null); setError(problem instanceof Error ? problem.message : 'Kayıtlar okunamadı.') } }
+    } catch (problem) { if (version === generation.current) { if (problem instanceof SessionExpired) onExpired(); setData(null); setError(problem instanceof Error && !(problem instanceof TypeError) ? problem.message : 'Kayıtlar okunamadı. Bağlantıyı kontrol edip yeniden deneyin.') } }
     finally { if (version === generation.current) setLoading(false) }
   }, [onExpired])
   useEffect(() => {
     let active = true
-    void readData().then(value => { if (active) setData(value) }).catch(problem => { if (active) { if (problem instanceof SessionExpired) onExpired(); setError(problem instanceof Error ? problem.message : 'Kayıtlar okunamadı.') } }).finally(() => { if (active) setLoading(false) })
+    void readData().then(value => { if (active) setData(value) }).catch(problem => { if (active) { if (problem instanceof SessionExpired) onExpired(); setError(problem instanceof Error && !(problem instanceof TypeError) ? problem.message : 'Kayıtlar okunamadı. Bağlantıyı kontrol edip yeniden deneyin.') } }).finally(() => { if (active) setLoading(false) })
     return () => { active = false }
   }, [onExpired])
   const selected = data?.periods.find(p => p.id === data.selectedPeriodId)
@@ -115,25 +117,25 @@ export default function SubscriptionOperator({ onExpired, onUnsaved, onBusy }: {
       await load(data.page, selected?.id)
     } catch (problem) {
       if (savedRequest.current) setUncertain(true)
-      setFormError(requestErrorMessage(problem, problem instanceof Error ? problem.message : 'Sonuç doğrulanamadı. Aynı işlemle yeniden deneyin.'))
+      setFormError(requestErrorMessage(problem, problem instanceof Error && !(problem instanceof TypeError) ? problem.message : 'Sonuç doğrulanamadı. Aynı işlemle yeniden deneyin.'))
     } finally { pending.current = false; setBusy(false) }
   }
   const edit = (setter: (s: string) => void) => (value: string) => { setter(value); setDirty(true); savedRequest.current = null }
   return <main className={styles.main}>
     <div className={styles.heading}><div><h1>Abonelik kaydı</h1>{data && <p>{data.targetName} · {data.targetId}</p>}</div><div className={styles.actions}>
       <button disabled={!data || loading || !!editor} onClick={() => open('period')}>Dönem ekle</button>
-      {selected && <button disabled={loading || !!editor || selected.outstandingTry === '0.00'} onClick={() => open('payment')}>Ödeme kaydet</button>}
+      {selected && <button className={styles.primary} disabled={loading || !!editor || selected.outstandingTry === '0.00'} onClick={() => open('payment')}>Ödeme kaydet</button>}
     </div></div>
     {notice && <p role="status">{notice}</p>}
     {loading ? <p role="status">Abonelik kayıtları yükleniyor…</p> : error ? <><p role="alert">{error}</p><button onClick={() => void load()}>Yeniden dene</button></> : data && !data.total ? <p>Bu firma için henüz abonelik dönemi kaydedilmedi. İlk dönemi ekleyin.</p> : data && <>
       <label htmlFor="subscription-period">Dönem</label><select id="subscription-period" value={data.selectedPeriodId ?? ''} disabled={!!editor} onChange={e => void load(data.page, e.target.value)}>
         {data.periods.map(p => <option key={p.id} value={p.id}>{date(p.startsOn)} — {p.outstandingTry === '0.00' ? 'Ödendi' : p.overdue ? 'Vadesi geçti' : 'Ödeme bekleniyor'}</option>)}
       </select>
-      {selected && <><h2>{date(selected.startsOn)}</h2><dl className={styles.facts}>
+      {selected && <><h2>{month(selected.startsOn)}</h2><p>{date(selected.startsOn)} – {date(inclusiveEnd(selected.endsOn))}</p><dl className={styles.facts}>
         <div><dt>Dönem bedeli</dt><dd>{money(selected.amountTry)}</dd></div><div><dt>Son ödeme tarihi</dt><dd>{date(selected.dueOn)}</dd></div>
         <div><dt>Doğrulanan ödeme</dt><dd>{money(selected.paidTry)}</dd></div><div><dt>Kalan borç</dt><dd>{money(selected.outstandingTry)}</dd></div>
       </dl>{selected.overdue && <p>Bu dönemin vadesi geçti; {money(selected.outstandingTry)} ödeme bekleniyor.</p>}</>}
-      <div className={styles.actions}><button disabled={data.page === 1 || !!editor} onClick={() => void load(data.page - 1)}>Daha yeni dönemler</button><span>{data.page} / {Math.max(1, Math.ceil(data.total / 12))}</span><button disabled={data.page * 12 >= data.total || !!editor} onClick={() => void load(data.page + 1)}>Önceki dönemler</button></div>
+      {data.total > 12 && <div className={styles.actions}><button disabled={data.page === 1 || !!editor} onClick={() => void load(data.page - 1)}>Daha yeni dönemler</button><span>{data.page} / {Math.max(1, Math.ceil(data.total / 12))}</span><button disabled={data.page * 12 >= data.total || !!editor} onClick={() => void load(data.page + 1)}>Önceki dönemler</button></div>}
       <details><summary>Ödeme ve düzeltme geçmişi ({data.paymentCount})</summary>{!data.payments.length ? <p>Bu dönem için ödeme hareketi yok.</p> : <ul className={styles.history}>{data.payments.map(p => <li key={p.id}>
         <p><strong>{money(p.amountTry)}</strong> · {date(p.paidOn)}{p.reversed ? ' · Ters kaydı var' : ''}</p>
         <p>Kayıt zamanı: {formatBusinessDateTime(p.recordedAt)}</p>
@@ -158,7 +160,7 @@ export default function SubscriptionOperator({ onExpired, onUnsaved, onBusy }: {
         </div>}
         {editor.kind !== 'period' && editor.kind !== 'reverse' && <div><label htmlFor="payment-date">Ödeme tarihi</label><input id="payment-date" type="date" required max={data.asOf} value={paid} onChange={e => edit(setPaid)(e.target.value)} /></div>}
         {editor.kind !== 'reverse' && <div><label htmlFor="subscription-amount">{editor.kind === 'period' ? 'Dönem bedeli (TL)' : 'Tutar (TL)'}</label><input id="subscription-amount" inputMode="decimal" required value={amount} onChange={e => edit(setAmount)(e.target.value)} /></div>}
-        {editor.kind === 'payment' && <div className={styles.wide}><label htmlFor="payment-reference">Doğrulama referansı</label><input id="payment-reference" required autoComplete="off" maxLength={80} pattern="[A-Za-z0-9][A-Za-z0-9._:/-]{0,79}" value={reference} onChange={e => edit(setReference)(e.target.value)} /></div>}
+        {editor.kind === 'payment' && <div className={styles.wide}><label htmlFor="payment-reference">Doğrulama referansı</label><input id="payment-reference" required autoComplete="off" maxLength={80} pattern={'[A-Za-z0-9][A-Za-z0-9._:\\/\\-]{0,79}'} value={reference} onChange={e => edit(setReference)(e.target.value)} /></div>}
         {(editor.kind === 'correct' || editor.kind === 'reverse') && <div className={styles.wide}><label htmlFor="payment-reason">Düzeltme gerekçesi</label><textarea id="payment-reason" required maxLength={300} value={reason} onChange={e => edit(setReason)(e.target.value)} /></div>}
       </fieldset>{formError && <p role="alert">{formError}</p>}{uncertain && <p>Sonuç belirsiz; bilgiler sabitlendi. Aynı işlemle yeniden deneyin veya kayıtları kontrol edin.</p>}
         {mustReload && <button type="button" disabled={busy} onClick={() => { void load(formPage, destination).then(latest => { if (!latest) return; setFormPeriods(latest.periods); setFormPage(latest.page); setMustReload(false); setEditor({ ...editor, key: crypto.randomUUID() }); setFormError('Güncel kayıtları yükledik. Bilgileri kontrol edip yeniden kaydedin.') }) }}>Güncel kayıtları yükle</button>}
