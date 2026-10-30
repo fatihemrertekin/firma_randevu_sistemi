@@ -30,5 +30,24 @@
 .formActions { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: var(--auth-space-3); margin-top: var(--auth-space-4); }
 .formActions button { width: 100%; }
 .muted { color: var(--muted); }
+.filters { display: flex; flex-wrap: wrap; align-items: end; gap: var(--auth-space-3); }
+.filters > div:first-child { flex: 1; min-width: 0; }
+.filters :is(input,select) { margin-bottom: 0; }
+.firms { width: 100%; border-collapse: collapse; margin-block: var(--auth-space-4); text-align: left; }
+.firms :is(th,td) { padding: var(--auth-space-3); border-bottom: var(--auth-rule) solid var(--border); vertical-align: middle; overflow-wrap: anywhere; }
+.firms th:first-child { padding-left: 0; }
+.firms small { display: block; margin-top: var(--auth-space-1); font-size: var(--button-font-size); font-weight: normal; }
+.accessSummary { padding-block: var(--auth-space-3); border-block: var(--auth-rule) solid var(--border); }
+.srOnly { position: absolute; clip-path: inset(100%); width: 0; height: 0; overflow: hidden; }
+@media (max-width: 48rem) {
+  .firms :is(tbody,tr,th,td) { display: block; }
+  .firms thead { display: none; }
+  .firms tr { padding-block: var(--auth-space-4); border-bottom: var(--auth-rule) solid var(--border); }
+  .firms :is(th,td) { padding: var(--auth-space-2) 0; border: 0; }
+  .firms td[data-label]::before { content: attr(data-label) ': '; font-weight: var(--button-font-weight); }
+  .filters { align-items: end; }
+  .firms th small { display: none; }
+  .filters > div { flex-basis: 100%; }
+}
 @media (max-width: 32rem) { .main, .header, .auth { padding: var(--auth-space-4); } .facts, .fields { grid-template-columns: minmax(0,1fr); } }
 @font-face { font-family: Unna; src: url('../../assets/fonts/Unna-Bold.ttf') format('truetype'); font-weight: 700; font-display: swap; }

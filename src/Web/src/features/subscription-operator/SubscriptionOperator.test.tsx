@@ -4,9 +4,15 @@ import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import SubscriptionOperator from './SubscriptionOperator'
 import OperatorApplication from './OperatorApplication'
+import OperatorFirms from './OperatorFirms'
 
 const period = { id: 'abc8d34f-9159-49b1-b268-64c5d57ff7ec', startsOn: '2026-10-01', endsOn: '2026-11-01', dueOn: '2026-10-01', version: 'abc8d34f-9159-49b1-b268-64c5d57ff7ed', amountTry: '1000.00', paidTry: '0.00', outstandingTry: '1000.00', overdue: true }
 const data = { targetId: 'synthetic-firm', targetName: 'Sentetik Salon', asOf: '2026-10-29', page: 1, total: 1, selectedPeriodId: period.id, periods: [period], payments: [], paymentsPage: 1, paymentCount: 0 }
+const summary = { recorded: true, latestStartedPeriod: { ...period, paymentState: 'Paid' }, overdueOutstandingTry: '2500.00', overduePeriodCount: 3, restrictionsApplied: true }
+const firms = { page: 1, pageSize: 12, total: 2, checkedAt: '2026-10-31T08:00:00Z', asOf: '2026-10-31', filterScope: 'page', items: [
+  { id: data.targetId, name: data.targetName, status: 'available', summary },
+  { id: 'firm-b', name: 'Sentetik B', status: 'unavailable', summary: null },
+] }
 let container: HTMLDivElement, root: Root
 beforeEach(() => {
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true)
@@ -31,16 +37,109 @@ async function fill(id: string, value: string) {
   await act(async () => { setter.call(input, value); input.dispatchEvent(new Event('input', { bubbles: true })) })
 }
 async function submit() {
-  const form = container.querySelector('form'); if (!form) throw new Error('Form bulunamadı')
+  const form = container.querySelector('[role=dialog] form') ?? [...container.querySelectorAll('form')].find(f => !f.closest('[hidden]')); if (!form) throw new Error('Form bulunamadı')
   await act(async () => form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })))
 }
 describe('Ayrı operatör abonelik akışı', () => {
+  it('zaman aşımı ve bozuk JSON yanıtını anlaşılır Türkçe hatayla açıklar', async () => {
+    let malformed = false
+    requests(async () => { if (!malformed) throw new DOMException('The operation was aborted', 'TimeoutError'); return new Response('{') })
+    await act(async () => root.render(<SubscriptionOperator targetId="synthetic-firm" onExpired={vi.fn()} />))
+    expect(container.textContent).toContain('Bağlantıyı kontrol edip yeniden deneyin.'); expect(container.textContent).not.toContain('aborted')
+    malformed = true; await click('Yeniden dene')
+    expect(container.textContent).toContain('Sunucu yanıtı doğrulanamadı.'); expect(container.querySelector('select')).toBeNull()
+  })
+  it('bilinen CSRF hatasını belirsiz ödeme saymaz, önceki belirsiz ödeme varsa hedefi korur', async () => {
+    let csrfFail = true, loseResponse = false
+    const fetch = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      if (String(input) === '/api/auth/csrf') return csrfFail ? new Response(null, { status: 503 }) : Response.json({ token: 'synthetic-csrf' })
+      if (init?.method === 'POST') { if (loseResponse) throw new TypeError('lost'); return Response.json({ id: 'synthetic-payment' }) }
+      return Response.json({ ...data, summary })
+    })
+    vi.stubGlobal('fetch', fetch)
+    await act(async () => root.render(<SubscriptionOperator targetId="synthetic-firm" onExpired={vi.fn()} />))
+    await click('Ödeme kaydet'); await fill('payment-reference', 'SYNTHETIC-CSRF'); await submit()
+    expect(container.textContent).toContain('işlem gönderilmedi'); expect(container.textContent).not.toContain('Sonuç belirsiz;')
+    expect(container.querySelector('fieldset')?.disabled).toBe(false); expect(fetch.mock.calls.filter(([, i]) => i?.method === 'POST')).toHaveLength(0)
+    csrfFail = false; loseResponse = true; await submit()
+    csrfFail = true; await submit()
+    expect(container.textContent).toContain('Sonuç belirsiz;'); expect(container.querySelector('fieldset')?.disabled).toBe(true)
+    expect([...container.querySelectorAll('button')].find(b => b.textContent === 'Vazgeç')?.disabled).toBe(true)
+  })
+  it('firma listesinde ödenen ayın eski borcu gizlemesine ve bağlantı yokken sıfır borç gösterilmesine izin vermez', async () => {
+    const fetch = requests(async () => Response.json(firms))
+    await act(async () => root.render(<OperatorFirms onExpired={vi.fn()} onUnsaved={vi.fn()} onBusy={vi.fn()} />))
+    expect(container.textContent).toContain('2.500,00 ₺'); expect(container.textContent).toContain('Ödendi'); expect(container.textContent).toContain('Salt okunur')
+    const rows = container.querySelectorAll('tbody tr'); expect(rows[1].textContent).toContain('Bilinmiyor'); expect(rows[1].textContent).not.toContain('0,00 ₺')
+    expect(String(fetch.mock.calls[0][0])).toContain('includeSummary=true')
+  })
+  it('yalnız seçilen hedefe yazar, belirsiz işlemde hedefi kilitler ve dönüşte odağı geri verir', async () => {
+    const sent: { path: string; body: string }[] = []
+    requests(async (path, init) => {
+      if (path.startsWith('/api/targets?')) return Response.json(firms)
+      if (init?.method === 'POST') { sent.push({ path, body: String(init.body) }); if (sent.length === 1) throw new TypeError('network'); return Response.json({ id: 'synthetic-payment' }) }
+      return Response.json({ ...data, summary })
+    })
+    await act(async () => root.render(<OperatorFirms onExpired={vi.fn()} onUnsaved={vi.fn()} onBusy={vi.fn()} />))
+    const opener = container.querySelector<HTMLButtonElement>(`button[aria-label="${data.targetName} firmasını aç"]`)
+    if (!opener) throw new Error('Firma düğmesi yok')
+    await act(async () => opener.click()); await click('Ödeme kaydet'); await fill('payment-reference', 'SYNTHETIC-A')
+    vi.mocked(window.confirm).mockReturnValue(false); await click('Firmalara dön'); expect(container.querySelector('[role=dialog]')).not.toBeNull()
+    await submit(); await click('Firmalara dön'); await click('Vazgeç')
+    expect(container.querySelector('[role=dialog]')).not.toBeNull()
+    expect([...container.querySelectorAll('button')].find(b => b.textContent === 'Firmalara dön')?.disabled).toBe(true)
+    await submit(); expect(sent).toHaveLength(2); expect(sent[1]).toEqual(sent[0]); expect(sent[0].path).toBe('/api/targets/synthetic-firm/subscription/payments')
+    expect(JSON.parse(sent[0].body).targetId).toBe('synthetic-firm')
+    await click('Firmalara dön'); expect(document.activeElement).toBe(opener)
+  })
+  it('yanlış firma yanıtını reddeder ve eski/geç gelen liste yanıtını kullanmaz', async () => {
+    requests(async () => Response.json({ ...data, targetId: 'other-firm', summary }))
+    await act(async () => root.render(<SubscriptionOperator targetId="synthetic-firm" onExpired={vi.fn()} />))
+    expect(container.textContent).toContain('Abonelik yanıtı doğrulanamadı'); expect(container.querySelector('select')).toBeNull()
+    await act(async () => root.unmount()); root = createRoot(container)
+    let resolveOld: (value: Response) => void = () => { throw new Error('Eski istek başlamadı') }
+    let count = 0
+    requests(async () => ++count === 1 ? new Promise<Response>(resolve => { resolveOld = resolve }) : Response.json({ ...firms, items: [] }))
+    await act(async () => root.render(<OperatorFirms onExpired={vi.fn()} onUnsaved={vi.fn()} onBusy={vi.fn()} />))
+    const select = container.querySelector<HTMLSelectElement>('#firm-access')
+    if (!select) throw new Error('Filtre yok')
+    await act(async () => { select.value = 'open'; select.dispatchEvent(new Event('change', { bubbles: true })) })
+    await act(async () => resolveOld(Response.json(firms)))
+    expect(container.textContent).toContain('filtreyi değiştirin'); expect(container.querySelector('tbody')).toBeNull()
+  })
+  it('oturum yenilenirken belirsiz mali işlemi bellekte ve aynı hedef/anahtarda korur', async () => {
+    let signed = true, writes = 0
+    const sent: string[] = []
+    requests(async (path, init) => {
+      if (path === '/api/auth/me') return signed ? Response.json({ email: 'operator@example.test', mfaEnabled: true, operatorAccess: true }) : new Response(null, { status: 401 })
+      if (path === '/api/auth/login') return new Response(null, { status: 202 })
+      if (path === '/api/auth/mfa/login') { signed = true; return new Response(null, { status: 204 }) }
+      if (path.startsWith('/api/targets?')) return Response.json(firms)
+      if (init?.method === 'POST') { sent.push(String(init.body)); writes++; if (writes === 1) throw new TypeError('lost'); if (writes === 2) { signed = false; return new Response(null, { status: 401 }) } return Response.json({ id: 'synthetic-payment' }) }
+      return Response.json({ ...data, summary })
+    })
+    await act(async () => root.render(<OperatorApplication />))
+    await act(async () => container.querySelector<HTMLButtonElement>('button[aria-label="Sentetik Salon firmasını aç"]')?.click())
+    await click('Ödeme kaydet'); await fill('payment-reference', 'SYNTHETIC-SESSION'); await submit(); await submit()
+    expect(container.textContent).toContain('Abonelik yönetimine giriş')
+    expect(vi.mocked(HTMLElement.prototype.hidePopover)).toHaveBeenCalled()
+    await fill('operator-email', 'operator@example.test'); await fill('operator-password', 'Synthetic!Password123');
+    const authForm = [...container.querySelectorAll('form')].find(f => !f.closest('[hidden]'))
+    if (!authForm) throw new Error('Giriş formu yok')
+    await act(async () => authForm.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })))
+    await fill('operator-code', '123456')
+    await act(async () => authForm.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })))
+    expect(container.querySelector<HTMLInputElement>('#payment-reference')?.value).toBe('SYNTHETIC-SESSION')
+    await submit(); expect(writes).toBe(3); expect(new Set(sent).size).toBe(1)
+    expect(container.textContent).toContain('Doğruladığınız ödeme kaydedildi.')
+  })
   it('parola adımından sonra MFA olmadan firma bilgilerini yüklemez', async () => {
     let signed = false
     const fetch = requests(async (path) => {
       if (path === '/api/auth/me') return signed ? Response.json({ email: 'operator@example.test', mfaEnabled: true, operatorAccess: true }) : new Response(null, { status: 401 })
       if (path === '/api/auth/login') return Response.json({ requiresTwoFactor: true }, { status: 202 })
       if (path === '/api/auth/mfa/login') { signed = true; return new Response(null, { status: 204 }) }
+      if (path.startsWith('/api/targets?')) return Response.json(firms)
       return Response.json(data)
     })
     await act(async () => root.render(<OperatorApplication />))

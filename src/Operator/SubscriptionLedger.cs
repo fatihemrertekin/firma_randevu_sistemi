@@ -75,9 +75,7 @@ internal static class SubscriptionLedger
                 p.AmountTry,
                 Paid = db.SubscriptionPayments.Where(x => x.PeriodId == p.Id).Sum(x => (decimal?)x.AmountTry) ?? 0m
             });
-            var latest = await balances.Where(p => p.StartsOn <= today).OrderByDescending(p => p.StartsOn).FirstOrDefaultAsync(timeout.Token);
-            var overdue = await balances.Where(p => p.StartsOn <= today && p.DueOn < today && p.Paid < p.AmountTry)
-                .GroupBy(_ => 1).Select(g => new { Count = g.Count(), Outstanding = g.Sum(p => p.AmountTry - p.Paid) }).SingleOrDefaultAsync(timeout.Token);
+            var summary = await SubscriptionSummary.ReadAsync(db, today, timeout.Token);
             var total = await db.SubscriptionPeriods.CountAsync(timeout.Token);
             page = Math.Min(page, Math.Max(1, (total + 11) / 12));
             if (periodId is { } requestedId)
@@ -114,24 +112,7 @@ internal static class SubscriptionLedger
                 checkedAt,
                 timeZone = "Europe/Istanbul",
                 currency = "TRY",
-                summary = new
-                {
-                    recorded = total > 0,
-                    latestStartedPeriod = latest is null ? null : new
-                    {
-                        latest.Id,
-                        latest.StartsOn,
-                        latest.EndsOn,
-                        latest.DueOn,
-                        amountTry = Money(latest.AmountTry),
-                        paidTry = Money(latest.Paid),
-                        outstandingTry = Money(latest.AmountTry - latest.Paid),
-                        paymentState = latest.Paid == latest.AmountTry ? "Paid" : latest.Paid > 0m ? "Partial" : "Unpaid"
-                    },
-                    overdueOutstandingTry = Money(overdue?.Outstanding ?? 0m),
-                    overduePeriodCount = overdue?.Count ?? 0,
-                    restrictionsApplied = overdue is not null
-                },
+                summary,
                 page,
                 total,
                 selectedPeriodId = selected,
