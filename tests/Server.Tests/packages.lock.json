@@ -662,6 +662,12 @@
           "xunit.v3.runner.common": "[4.0.1]"
         }
       },
+      "operator": {
+        "type": "Project",
+        "dependencies": {
+          "Server": "[1.0.0, )"
+        }
+      },
       "server": {
         "type": "Project",
         "dependencies": {

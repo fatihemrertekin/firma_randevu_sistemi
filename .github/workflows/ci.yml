@@ -93,6 +93,18 @@ jobs:
           dotnet run --project tests/Server.Tests/Server.Tests.csproj --no-build -- "${args[@]}"
           dotnet format FirmaRandevu.slnx --verify-no-changes --no-restore
 
+      - name: İlgili operatör imajının paketleme kontrolü
+        if: steps.scope.outputs.server == 'true' || steps.scope.outputs.web == 'true'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          changed="$(git diff --name-only "$BASE_SHA" "$HEAD_SHA" -- src/Operator src/Server src/Web/operator.html src/Web/src/features/subscription-operator src/Web/src/app/api.ts src/Web/src/app/money.ts src/Web/src/app/format.ts src/Web/src/styles src/Web/src/assets/fonts src/Web/vite.config.ts src/Web/package.json src/Web/package-lock.json deploy/Dockerfile.operator deploy/compose.subscription-operator.yaml Directory.Build.props global.json)"
+          if [ -n "$changed" ]; then
+            docker build -f deploy/Dockerfile.operator -t firma-randevu-operator:ci .
+            test "$(docker image inspect firma-randevu-operator:ci --format '{{.Config.User}}')" != root
+          fi
+
       - name: Geçici yerel test parolaları
         if: steps.scope.outputs.compose == 'true'
         run: |

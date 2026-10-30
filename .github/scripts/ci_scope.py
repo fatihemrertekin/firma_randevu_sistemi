@@ -38,7 +38,7 @@ def select_checks(paths, plan, root=Path(".")):
             raise ValueError(f"Unknown server test class: {name}")
     if any(p.startswith("src/Web/") for p in product) and not web:
         raise ValueError("Web changes require related web tests.")
-    if any(p.startswith(("src/Server/", "tests/Server.Tests/")) for p in product) and not server:
+    if any(p.startswith(("src/Server/", "src/Operator/", "tests/Server.Tests/")) for p in product) and not server:
         raise ValueError("Server changes require related server tests.")
     if any(p.startswith("deploy/") for p in product) and not compose:
         raise ValueError("Deployment changes require Compose acceptance.")

@@ -14,6 +14,8 @@ Yazma endpoint'i/operatör oturumu veya ekran bağlantısı bu dilimde yoktur; O
 
 ## Durum ve kabul
 
+29.10.2026 devam kararı: operatör alanı internette bilgisayar/telefon hedeflidir. Kullanıcı otomatik salt okunur kısıtlamayı **vadenin ertesi günü** için seçti. Önceki “otomatik kısıtlama yok” kararı P07-01/02'nin tarihsel teslim sınırıdır; yeni kısıtlı Owner durumu P07-04/05'te gerçek yetki/API ile kabul edilmeden hazır gösterilmez. P07-03 ayrı operatör oturumu, mevcut görsel dilde parola/MFA kurulumu ve onaylı dönem/ödeme formlarını uygular; ödeme düzeltmesi aynı kısa form dilinde gerekçeli ters hareket ve bağlı yeni kayıt kullanır. Operatör UI'si müşteri uygulamasının menüsüne eklenmez.
+
 Loading, kayıt yok, ödeme bekleniyor, vadesi geçmiş, kısmi ödeme, ödenmiş, hata ve yeniden deneme ayrıdır.401 girişe,403 yetki açıklamasına;400/409/429 ölçülmüş API/hata/Retry-After sözleşmesine bağlanır. Hatalı okumada eski tutar doğrulanmış sayılmaz. Para doğrulaması, çift gönderim/iptal/geç yanıt, kaydedilmemiş form ve düzeltmenin değiştirilemez ters kayıt davranışı gerçek yazma diliminde kanıtlanır.
 
 P07-01 yalnız statik14 kare/ölçüm, normal dört genişlik ve klavye/root200 kabulüdür. P07-02 server test/rol/migration/sentetik API kabulü ayrı kaydedilir. Onaylı taslak API entegrasyonu sayılmaz; gerçek ekranlar kendi frontend ve320/390/768/1280 kabulü olmadan tamamlandı sayılmaz. Native comp-led/finish veya tam WCAG iddiası yok; son uygulama kanıtı [P07](../../docs/plans/P07.md)'de tutulur.

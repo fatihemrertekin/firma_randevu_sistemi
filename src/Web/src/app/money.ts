@@ -1,8 +1,9 @@
 // TRY tutarı ondalık metin olarak kalır; para hesabı ve float yuvarlaması yoktur.
-export function parseTryPrice(value: string): string | null {
+export function parseTryPrice(value: string, maxWholeDigits: 6 | 10 = 6): string | null {
   const trimmed = value.trim()
-  if (!/^[0-9]{1,6}([.,][0-9]{1,2})?$/u.test(trimmed)) return null
+  if (!/^[0-9]+([.,][0-9]{1,2})?$/u.test(trimmed)) return null
   const [whole, fraction = ''] = trimmed.replace(',', '.').split('.')
+  if (whole.length > maxWholeDigits) return null
   return `${whole.replace(/^0+(?=\d)/u, '')}.${fraction.padEnd(2, '0')}`
 }
 export function formatTryPrice(value: string): string {

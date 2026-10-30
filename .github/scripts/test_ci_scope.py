@@ -79,6 +79,7 @@ class ScopeTests(unittest.TestCase):
             (["unknown.config", PLAN], self.plan(["unknown.config"])),
             (["src/Web/package.json", PLAN], self.plan(["src/Web/package.json"])),
             (["deploy/compose.local.yaml", PLAN], self.plan(["deploy/compose.local.yaml"])),
+            (["src/Operator/OperatorProgram.cs", PLAN], self.plan(["src/Operator/OperatorProgram.cs"], web=["src/app/api.test.tsx"])),
         ]:
             with self.subTest(plan=plan):
                 with self.assertRaises(ValueError):
