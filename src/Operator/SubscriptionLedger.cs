@@ -32,7 +32,13 @@ internal static class SubscriptionLedger
 
     internal static void MapSubscriptionLedger(this WebApplication app)
     {
-        var group = app.MapGroup("/api/subscription").RequireAuthorization("Operator").RequireRateLimiting("ledger");
+        MapLedger(app.MapGroup("/api/subscription"));
+        MapLedger(app.MapGroup("/api/targets/{targetId}/subscription"));
+    }
+
+    private static void MapLedger(RouteGroupBuilder routes)
+    {
+        var group = routes.RequireAuthorization("Operator").RequireRateLimiting("ledger");
         group.MapGet("/", ReadAsync);
         group.MapPost("/periods", (PeriodInput request, HttpContext c, IAntiforgery a, SubscriptionTargets targets, UserManager<OperatorUser> users, TimeProvider clock) =>
             WriteAsync(request.TargetId, c, a, targets, users, (db, actor, token) => AddPeriodAsync(request, db, actor, clock, token)));
@@ -47,14 +53,31 @@ internal static class SubscriptionLedger
     private static async Task<IResult> ReadAsync(HttpContext c, SubscriptionTargets targets, TimeProvider clock,
         int page = 1, Guid? periodId = null, int paymentsPage = 1)
     {
-        var target = targets.Single;
-        if (target is null) return TargetRequired();
+        var routeTarget = c.Request.RouteValues["targetId"] as string;
+        var target = routeTarget is null ? targets.Single : targets.Find(routeTarget);
+        if (target is null) return routeTarget is null ? TargetRequired() : Results.NotFound();
         if (page is < 1 or > 1000000 || paymentsPage is < 1 or > 1000000 || c.Request.Query.Keys.Any(k => k is not ("page" or "periodId" or "paymentsPage"))) return Invalid("Sayfa bilgilerini kontrol edin.");
+        var checkedAt = clock.GetUtcNow();
+        var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(checkedAt, TimeZoneInfo.FindSystemTimeZoneById("Europe/Istanbul")).DateTime);
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(c.RequestAborted); timeout.CancelAfter(TimeSpan.FromSeconds(15));
         try
         {
             await using var db = await target.OpenAsync(timeout.Token);
             await using var transaction = await db.Database.BeginTransactionAsync(System.Data.IsolationLevel.RepeatableRead, timeout.Token);
+            await db.Database.ExecuteSqlRawAsync("SET TRANSACTION READ ONLY", timeout.Token);
+            var balances = db.SubscriptionPeriods.AsNoTracking().Select(p => new
+            {
+                p.Id,
+                p.StartsOn,
+                p.EndsOn,
+                p.DueOn,
+                p.Version,
+                p.AmountTry,
+                Paid = db.SubscriptionPayments.Where(x => x.PeriodId == p.Id).Sum(x => (decimal?)x.AmountTry) ?? 0m
+            });
+            var latest = await balances.Where(p => p.StartsOn <= today).OrderByDescending(p => p.StartsOn).FirstOrDefaultAsync(timeout.Token);
+            var overdue = await balances.Where(p => p.StartsOn <= today && p.DueOn < today && p.Paid < p.AmountTry)
+                .GroupBy(_ => 1).Select(g => new { Count = g.Count(), Outstanding = g.Sum(p => p.AmountTry - p.Paid) }).SingleOrDefaultAsync(timeout.Token);
             var total = await db.SubscriptionPeriods.CountAsync(timeout.Token);
             page = Math.Min(page, Math.Max(1, (total + 11) / 12));
             if (periodId is { } requestedId)
@@ -63,9 +86,8 @@ internal static class SubscriptionLedger
                 if (requestedStart is null) return Results.NotFound();
                 page = await db.SubscriptionPeriods.CountAsync(p => p.StartsOn > requestedStart.Value, timeout.Token) / 12 + 1;
             }
-            var periods = await db.SubscriptionPeriods.AsNoTracking().OrderByDescending(p => p.StartsOn).Skip((page - 1) * 12).Take(12)
-                .Select(p => new { p.Id, p.StartsOn, p.EndsOn, p.DueOn, p.Version, p.AmountTry, Paid = db.SubscriptionPayments.Where(x => x.PeriodId == p.Id).Sum(x => x.AmountTry) }).ToArrayAsync(timeout.Token);
-            var selected = periodId ?? periods.FirstOrDefault(p => p.StartsOn <= Today(clock) && Today(clock) < p.EndsOn)?.Id ?? periods.FirstOrDefault()?.Id;
+            var periods = await balances.OrderByDescending(p => p.StartsOn).Skip((page - 1) * 12).Take(12).ToArrayAsync(timeout.Token);
+            var selected = periodId ?? periods.FirstOrDefault(p => p.StartsOn <= today && today < p.EndsOn)?.Id ?? periods.FirstOrDefault()?.Id;
             var paymentsQuery = db.SubscriptionPayments.AsNoTracking().Where(p => p.PeriodId == selected);
             var paymentCount = await paymentsQuery.CountAsync(timeout.Token);
             paymentsPage = Math.Min(paymentsPage, Math.Max(1, (paymentCount + 19) / 20));
@@ -88,14 +110,34 @@ internal static class SubscriptionLedger
             {
                 targetId = target.Id,
                 targetName = target.Name,
-                asOf = Today(clock),
+                asOf = today,
+                checkedAt,
+                timeZone = "Europe/Istanbul",
                 currency = "TRY",
+                summary = new
+                {
+                    recorded = total > 0,
+                    latestStartedPeriod = latest is null ? null : new
+                    {
+                        latest.Id,
+                        latest.StartsOn,
+                        latest.EndsOn,
+                        latest.DueOn,
+                        amountTry = Money(latest.AmountTry),
+                        paidTry = Money(latest.Paid),
+                        outstandingTry = Money(latest.AmountTry - latest.Paid),
+                        paymentState = latest.Paid == latest.AmountTry ? "Paid" : latest.Paid > 0m ? "Partial" : "Unpaid"
+                    },
+                    overdueOutstandingTry = Money(overdue?.Outstanding ?? 0m),
+                    overduePeriodCount = overdue?.Count ?? 0,
+                    restrictionsApplied = overdue is not null
+                },
                 page,
                 total,
                 selectedPeriodId = selected,
                 paymentsPage,
                 paymentCount,
-                periods = periods.Select(p => new { p.Id, p.StartsOn, p.EndsOn, p.DueOn, p.Version, amountTry = Money(p.AmountTry), paidTry = Money(p.Paid), outstandingTry = Money(p.AmountTry - p.Paid), overdue = Today(clock) > p.DueOn && p.Paid < p.AmountTry }),
+                periods = periods.Select(p => new { p.Id, p.StartsOn, p.EndsOn, p.DueOn, p.Version, amountTry = Money(p.AmountTry), paidTry = Money(p.Paid), outstandingTry = Money(p.AmountTry - p.Paid), overdue = p.StartsOn <= today && today > p.DueOn && p.Paid < p.AmountTry }),
                 payments = payments.Select(p => new { p.Id, p.PaidOn, amountTry = Money(p.AmountTry), p.Reference, p.Reason, p.ReversesPaymentId, p.ReplacesPaymentId, p.RecordedBy, p.RecordedAt, p.Reversed })
             });
         }
@@ -107,8 +149,9 @@ internal static class SubscriptionLedger
         Func<AppDbContext, Guid, CancellationToken, Task<IResult>> action)
     {
         if (!await OperatorIdentity.Csrf(c, a)) return OperatorIdentity.InvalidCsrf();
-        var target = targets.Single;
-        if (target is null) return TargetRequired();
+        var routeTarget = c.Request.RouteValues["targetId"] as string;
+        var target = routeTarget is null ? targets.Single : targets.Find(routeTarget);
+        if (target is null) return routeTarget is null ? TargetRequired() : Results.NotFound();
         if (targetId != target.Id) return Results.NotFound();
         if (!Guid.TryParse(users.GetUserId(c.User), out var actor) || actor == Guid.Empty) return Results.Unauthorized();
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(c.RequestAborted); timeout.CancelAfter(TimeSpan.FromSeconds(15));
