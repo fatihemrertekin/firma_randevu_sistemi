@@ -93,6 +93,7 @@ public sealed class SubscriptionTargetsTests
         await using var a = new OperatorTestEnvironment("firm-a"); await a.StartAsync();
         await using var b = new OperatorTestEnvironment("firm-b"); await b.StartAsync();
         var settings = Settings(a.TargetConnection, b.TargetConnection);
+        settings["SubscriptionTargets:1:Name"] = "Işık Kuaför";
         settings["ConnectionStrings:OperatorIdentity"] = a.IdentityConnection;
         await using var central = a.Factory(settings: settings); using var anonymous = central.CreateClient();
         using (var denied = await anonymous.GetAsync("/api/targets", Token)) Assert.Equal(HttpStatusCode.Unauthorized, denied.StatusCode);
@@ -119,6 +120,8 @@ public sealed class SubscriptionTargetsTests
         { using var invalid = await client.GetAsync("/api/targets" + query, Token); Assert.Equal(HttpStatusCode.BadRequest, invalid.StatusCode); }
         using (var search = await client.GetAsync("/api/targets?search=firm-b", Token))
         { search.EnsureSuccessStatusCode(); Assert.Equal(1, (await search.Content.ReadFromJsonAsync<JsonElement>(Token)).GetProperty("total").GetInt32()); }
+        using (var turkishSearch = await client.GetAsync("/api/targets?search=" + Uri.EscapeDataString("ışık"), Token))
+        { turkishSearch.EnsureSuccessStatusCode(); Assert.Equal(1, (await turkishSearch.Content.ReadFromJsonAsync<JsonElement>(Token)).GetProperty("total").GetInt32()); }
         using (var read = await client.GetAsync("/api/subscription", Token)) Assert.Equal(HttpStatusCode.Conflict, read.StatusCode);
         var key = Guid.NewGuid(); var period = new { targetId = "firm-a", requestKey = key, startsOn = new DateOnly(2026, 10, 1), endsOn = new DateOnly(2026, 11, 1), dueOn = new DateOnly(2026, 10, 1), amountTry = "1000.00" };
         using (var csrf = await Post(client, "/api/subscription/periods", period, "invalid")) Assert.Equal(HttpStatusCode.BadRequest, csrf.StatusCode);

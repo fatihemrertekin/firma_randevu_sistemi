@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net;
 using Npgsql;
 
@@ -50,7 +51,7 @@ public sealed class SubscriptionTargets
         {
             if (page is < 1 or > 1000000 || search?.Length > 160 || c.Request.Query.Keys.Any(k => k is not ("page" or "search")))
                 return Results.Problem(statusCode: 400, title: "Firma aramasını ve sayfa bilgisini kontrol edin.");
-            var found = targets.Values.Where(t => string.IsNullOrWhiteSpace(search) || t.Name.Contains(search, StringComparison.OrdinalIgnoreCase) || t.Id.Contains(search, StringComparison.OrdinalIgnoreCase))
+            var found = targets.Values.Where(t => string.IsNullOrWhiteSpace(search) || CultureInfo.GetCultureInfo("tr-TR").CompareInfo.IndexOf(t.Name, search, CompareOptions.IgnoreCase) >= 0 || t.Id.Contains(search, StringComparison.OrdinalIgnoreCase))
                 .OrderBy(t => t.Name, StringComparer.Ordinal).ThenBy(t => t.Id, StringComparer.Ordinal).ToArray();
             return Results.Ok(new { page, total = found.Length, items = found.Skip((page - 1) * 12).Take(12).Select(t => new { id = t.Id, name = t.Name }) });
         });
