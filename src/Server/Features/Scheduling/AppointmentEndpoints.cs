@@ -113,12 +113,13 @@ public static class AppointmentEndpoints
         // Confirmed isteklerinin önceki özetleri aynı kalır; diğer uç aynı anahtarla durum değiştiremez.
         if (pending) hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes("Pending:" + hash)));
         await using var transaction = await db.Database.BeginTransactionAsync(timeout.Token);
-        var owner = await OwnerMutationAuthorization.LockAsync(context, db, users, timeout.Token);
+        var owner = await OwnerMutationAuthorization.LockAsync(context, db, users, timeout.Token, checkSubscription: false);
         if (owner is null) return Results.Unauthorized();
         var previous = await db.Appointments.AsNoTracking().SingleOrDefaultAsync(item => item.ActorId == owner.Id && item.RequestKey == request.RequestKey, timeout.Token);
         if (previous is not null)
             return previous.RequestHash != hash ? Conflict("Aynı işlem anahtarı farklı randevu bilgisiyle kullanılamaz.") :
                 Results.Ok(await ResponseAsync(db, previous.Id, timeout.Token));
+        await Server.Features.Subscriptions.SubscriptionAccess.EnsureWritableAsync(context, db, timeout.Token);
         var creation = await AppointmentCreation.LockAsync(db, request.StaffMemberId, request.ServiceId, timeout.Token);
         var now = clock.GetUtcNow().UtcDateTime;
         var (block, invalid) = await creation.PrepareAsync(db, request.ServiceVersion, start, now, pending, timeout.Token);

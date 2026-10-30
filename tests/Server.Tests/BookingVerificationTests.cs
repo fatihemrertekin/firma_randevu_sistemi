@@ -523,7 +523,9 @@ public sealed class BookingVerificationTests
         await using var f = new Fixture(); await f.StartAsync(); using var client = f.Client(); await f.RequestAsync(client);
         Dictionary<string, string> before;
         await using (var db = f.Db()) before = await Fingerprints(db);
-        Assert.Equal(54, before.Count);
+        Assert.Equal(56, before.Count);
+        Assert.Contains("SubscriptionPeriods", before.Keys);
+        Assert.Contains("SubscriptionPayments", before.Keys);
         Assert.Contains("AppointmentReminderJobs", before.Keys);
         foreach (var command in new[]
         {

@@ -47,7 +47,7 @@ public sealed class SubscriptionTests
         var body = JsonSerializer.Deserialize<SubscriptionEndpoints.SubscriptionResponse>(json, new JsonSerializerOptions(JsonSerializerDefaults.Web));
         Assert.NotNull(body); Assert.Equal(new DateOnly(2026, 10, 29), body.AsOf);
         Assert.Equal("Europe/Istanbul", body.TimeZone); Assert.Equal("TRY", body.Currency);
-        Assert.True(body.Recorded); Assert.False(body.RestrictionsApplied); Assert.Equal(12, body.TotalCount);
+        Assert.True(body.Recorded); Assert.True(body.RestrictionsApplied); Assert.Equal(12, body.TotalCount);
         Assert.Equal(12, body.Periods.Length); Assert.Equal(new DateOnly(2026, 11, 1), body.Periods[0].StartsOn);
         Assert.Equal("Paid", body.Periods[0].PaymentState);
         var current = Assert.IsType<SubscriptionEndpoints.PeriodResponse>(body.CurrentPeriod);

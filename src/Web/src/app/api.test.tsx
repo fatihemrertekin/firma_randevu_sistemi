@@ -36,3 +36,16 @@ it('POST sonrası bağlantı hatasını güvenlik reddi saymaz; belirsiz sonucu 
   vi.stubGlobal('fetch', vi.fn().mockResolvedValueOnce(Response.json({ token: 'token' })).mockRejectedValueOnce(problem))
   await expect(postWithCsrf('/api/services/', {})).rejects.toBe(problem)
 })
+
+it.each([[403, 'subscription_read_only'], [503, 'subscription_unavailable']])('abonelik %i reddini yazılmamış işlem olarak açıklar ve sunucu metnini basmaz', async (status, code) => {
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValueOnce(Response.json({ token: 'token' })).mockResolvedValueOnce(Response.json({ code, title: 'UNTRUSTED TITLE' }, { status: Number(status) })))
+  await expect(postWithCsrf('/api/services/', {})).rejects.toBeInstanceOf(RequestVerificationError)
+})
+it('public abonelik reddinde işletmenin ödeme/borç bilgisini açıklamaz', async () => {
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValueOnce(Response.json({ token: 'token' })).mockResolvedValueOnce(Response.json({ code: 'subscription_read_only' }, { status: 403 })))
+  await expect(postWithCsrf('/api/public-booking/appointments', {})).rejects.toThrow('İşletme şu anda yeni çevrim içi randevu alamıyor.')
+})
+it('diğer403 yanıtlarını mevcut nesne-yetki hata okuyucusuna bırakır', async () => {
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValueOnce(Response.json({ token: 'token' })).mockResolvedValueOnce(Response.json({ code: 'other' }, { status: 403 })))
+  expect((await postWithCsrf('/api/services/', {})).status).toBe(403)
+})

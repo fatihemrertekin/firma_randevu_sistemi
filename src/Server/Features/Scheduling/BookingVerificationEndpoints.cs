@@ -113,6 +113,7 @@ public static class BookingVerificationEndpoints
             return errors.Count > 0 ? Results.ValidationProblem(errors) : Invalid();
         var now = clock.GetUtcNow();
         await using var transaction = await db.Database.BeginTransactionAsync(token);
+        await Server.Features.Subscriptions.SubscriptionAccess.EnsureWritableAsync(ctx, db, token);
         // Bu yalnız ön kontroldür; OTP bir slot kilidi veya rezervasyon değildir.
         var service = await db.ServiceDefinitions.AsNoTracking().SingleOrDefaultAsync(x => x.Id == body.ServiceId && x.IsActive && !x.IsDeleted, token);
         var staff = await db.StaffMembers.AsNoTracking().SingleOrDefaultAsync(x => x.Id == body.StaffMemberId && x.IsActive && !x.IsDeleted, token);
@@ -163,6 +164,7 @@ public static class BookingVerificationEndpoints
         IDataProtectionProvider protection, TimeProvider clock, CancellationToken token)
     {
         await using var transaction = await db.Database.BeginTransactionAsync(token);
+        await Server.Features.Subscriptions.SubscriptionAccess.EnsureWritableAsync(ctx, db, token);
         await security.LockAsync(db, token);
         var item = await db.BookingVerifications.SingleOrDefaultAsync(x => x.Id == body.ChallengeId, token);
         if (!Secret(item, body.ChallengeSecret)) return Forbidden();

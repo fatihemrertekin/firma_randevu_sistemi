@@ -12,6 +12,7 @@ import AppointmentEditor from './AppointmentEditor'
 import AppointmentRecord from './AppointmentRecord'
 import WeeklyAppointments from './WeeklyAppointments'
 import AppointmentExport from './AppointmentExport'
+import SubscriptionNotice from '../subscriptions/SubscriptionNotice'
 import { appointmentEndpoint, appointmentSearch, AppointmentError, businessDay, formatDay, formatTime, formatWeek, isDay, isId, nextDay, readAppointmentPage, readAppointmentWeekPage, signal, statusLabels, weekDates, type Appointment, type AppointmentPage, type AppointmentWeekPage } from './appointmentsApi'
 import styles from './Appointments.module.css'
 
@@ -29,6 +30,7 @@ export default function Appointments({ post, onDirtyChange, onBusyChange, onUnau
   const page = readPage(location.search), pageSize = readPageSize(location.search, weekly ? 10 : 20)
   const search = appointmentSearch(day, staff, page, pageSize, weekly), id = route.kind === 'management' ? route.id : undefined
   const creating = route.kind === 'management' && route.create, moving = route.kind === 'management' && route.move
+  const [subscriptionReadOnly, setSubscriptionReadOnly] = useState<boolean | null>(null)
   const [result, setResult] = useState<ListResult | null>(null), [loading, setLoading] = useState(true), [error, setError] = useState('')
   const data = result?.view === (weekly ? 'week' : 'day') && result.page.date === day ? result.page : null
   const weekData = result?.view === 'week' && result.page.date === day ? result.page : null
@@ -74,17 +76,19 @@ export default function Appointments({ post, onDirtyChange, onBusyChange, onUnau
   const groups = new Map<string, NonNullable<AppointmentPage>['items']>()
   for (const item of data?.items ?? []) groups.set(item.staffMemberId, [...(groups.get(item.staffMemberId) ?? []), item])
   if (creating || id) return <section className={styles.surface}>
+    <SubscriptionNotice onChange={setSubscriptionReadOnly} onUnauthorized={onUnauthorized} />
     <NavigationLink to={sectionPaths.appointments + search} className={styles.back}>Randevulara dön</NavigationLink>
-    {creating ? <><h1 ref={heading} tabIndex={-1}>Yeni randevu</h1><AppointmentEditor initialDay={day} post={post} onSaved={saved}
+    {creating ? <><h1 ref={heading} tabIndex={-1}>Yeni randevu</h1><AppointmentEditor readOnly={subscriptionReadOnly !== false} initialDay={day} post={post} onSaved={saved}
       onDirtyChange={onDirtyChange} onBusyChange={onBusyChange} onUnauthorized={onUnauthorized} onReload={() => {}} onCancel={cancel} /></>
-      : id && <AppointmentRecord key={id} id={id} moving={!!moving} initialDay={day} search={search} post={post} onSaved={saved} headingRef={heading}
+      : id && <AppointmentRecord readOnly={subscriptionReadOnly !== false} key={id} id={id} moving={!!moving} initialDay={day} search={search} post={post} onSaved={saved} headingRef={heading}
         onDirtyChange={onDirtyChange} onBusyChange={onBusyChange} onUnauthorized={onUnauthorized} onCancel={cancel} />}
   </section>
   return <section className={styles.surface} aria-labelledby="appointments-title" aria-busy={loading}>
     <div className={styles.titleRow}><div><h1 id="appointments-title" ref={heading} tabIndex={-1}>Randevular</h1><p>{weekly ? 'Haftayı seçin; yalnız seçili günün randevularını görün.' : 'Günlük randevuları çalışanlara göre görüntüleyin ve yönetin.'}</p></div>
       <div className={styles.titleActions}><AppointmentExport key={day + staff} day={day} staff={staff} disabled={loading || !!retryUntil}
         onUnauthorized={onUnauthorized} onRateLimit={setRetryUntil} onDownloaded={() => setNotice('Excel dosyası indirmeye gönderildi.')} />
-        <NavigationLink className={styles.primary} to={sectionPaths.appointments + '/yeni' + search} disabled={loading}>Yeni randevu</NavigationLink></div></div>
+        <NavigationLink className={styles.primary} to={sectionPaths.appointments + '/yeni' + search} disabled={loading || subscriptionReadOnly !== false}>Yeni randevu</NavigationLink></div></div>
+    <SubscriptionNotice onChange={setSubscriptionReadOnly} onUnauthorized={onUnauthorized} />
     <nav className={styles.views} aria-label="Randevu görünümü">
       <NavigationLink to={sectionPaths.appointments + appointmentSearch(day, staff)} aria-current={!weekly ? 'page' : undefined} disabled={loading || !!retryUntil}>Günlük</NavigationLink>
       <NavigationLink to={sectionPaths.appointments + appointmentSearch(day, staff, 1, 10, true)} aria-current={weekly ? 'page' : undefined} disabled={loading || !!retryUntil}>Haftalık</NavigationLink>

@@ -415,4 +415,22 @@ public sealed class PublicAppointmentTests
         f.Enabled = true; await f.RestartAsync(); using var resumed = f.Client();
         using var replay = await Post(resumed, request); Assert.Equal(first.Id, (await Read(replay, HttpStatusCode.OK)).Id);
     }
+    [Fact]
+    public async Task OverdueSubscriptionBlocksNewOtpAndCreationButCommittedPublicReplayStillResolves()
+    {
+        await using var f = new Fixture(); await f.StartAsync(); using var client = f.Client();
+        var first = await Verified(f, client);
+        using var created = await Post(client, first); Assert.Equal(HttpStatusCode.Created, created.StatusCode);
+        var another = await SeedVerified(f, f.Request("05000000002"));
+        await using var db = f.Db(); db.SubscriptionPeriods.Add(SubscriptionData.Period(new(2026, 10, 1))); await db.SaveChangesAsync(Token);
+        var before = await SubscriptionData.Snapshot(db);
+        using var replay = await Post(client, first); Assert.Equal(HttpStatusCode.OK, replay.StatusCode);
+        using var denied = await Post(client, another); Assert.Equal(HttpStatusCode.Forbidden, denied.StatusCode);
+        var text = await denied.Content.ReadAsStringAsync(Token); Assert.Contains("subscription_read_only", text); Assert.DoesNotContain("borç", text, StringComparison.OrdinalIgnoreCase);
+        using var otp = await f.Post(client, "request", f.Request("05000000003")); Assert.Equal(HttpStatusCode.Forbidden, otp.StatusCode);
+        using var resend = await f.Post(client, "resend", new BookingVerificationEndpoints.Resend(first.ChallengeId, first.ChallengeSecret, Guid.NewGuid()));
+        Assert.Equal(HttpStatusCode.Forbidden, resend.StatusCode);
+        Assert.Equal(before, await SubscriptionData.Snapshot(db));
+    }
+
 }
