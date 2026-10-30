@@ -75,7 +75,7 @@ export default function SubscriptionOperator({ onExpired, onUnsaved, onBusy }: {
     const first = new Date(data.asOf + 'T12:00:00Z'); first.setUTCMonth(first.getUTCMonth() + 1, 1)
     const next = first.toISOString().slice(0, 10), last = new Date(first); last.setUTCMonth(last.getUTCMonth() + 1); last.setUTCDate(0)
     setStart(next); setEnd(last.toISOString().slice(0,10)); setDue(next); setPaid(payment?.paidOn ?? data.asOf)
-    setAmount((payment?.amountTry ?? selected?.outstandingTry ?? '').replace('.', ','))
+    setAmount(kind === 'period' ? '' : (payment?.amountTry ?? selected?.outstandingTry ?? '').replace('.', ','))
     setReference(''); setReason(''); setDestination(selected?.id ?? ''); setFormError(''); setDirty(false); setUncertain(false); setMustReload(false); savedRequest.current = null
     setFormPeriods(data.periods); setFormPage(data.page)
     setEditor({ kind, payment, key: crypto.randomUUID() })

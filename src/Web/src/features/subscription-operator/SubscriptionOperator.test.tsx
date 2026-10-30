@@ -55,7 +55,9 @@ describe('Ayrı operatör abonelik akışı', () => {
       if (init?.method === 'POST') { bodies.push(String(init.body)); if (bodies.length === 1) throw new TypeError('network'); return Response.json({ id: 'payment-1' }) }
       return Response.json(data)
     })
-    await act(async () => root.render(<SubscriptionOperator onExpired={vi.fn()} />)); await click('Ödeme kaydet'); await fill('payment-reference', 'SYNTHETIC-REF')
+    await act(async () => root.render(<SubscriptionOperator onExpired={vi.fn()} />))
+    await click('Dönem ekle'); expect(container.querySelector<HTMLInputElement>('#subscription-amount')?.value).toBe(''); await click('Vazgeç')
+    await click('Ödeme kaydet'); await fill('payment-reference', 'SYNTHETIC-REF')
     expect(container.textContent).toContain('1 Ekim 2026 – 31 Ekim 2026')
     expect([...container.querySelectorAll('button')].some(b => b.textContent === 'Önceki dönemler')).toBe(false)
     const pattern = container.querySelector<HTMLInputElement>('#payment-reference')?.pattern
