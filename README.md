@@ -424,7 +424,7 @@ Bu komut gerçek PostgreSQL/Testcontainers için çalışan Docker ister. Parale
 
 ### Abonelik okuma API temeli (P07-02)
 
-`GET /api/subscription?page=1&pageSize=12` yalnız Owner+MFA içindir; en fazla24 kayıt, no-store ve bağımsız30/dakika kota. TRY tutarlar ondalık metin, `EndsOn` hariç bitiş; İstanbul `asOf`, güncel dönem ve sayfalı dönemler döner. Mevcut uygulamada aboneliğe bağlı kısıtlama uygulanmaz. Operatör referansı/not/hash/kimliği yanıtta yoktur. Normal uygulama DB rolü iki tabloya yalnız SELECT alır; bu origin'de yazma API'si yoktur. Ayrı operatör uygulaması aşağıdadır. Owner UI bağlantısı ve yeni onaylı vadenin ertesi günü otomatik kısıtlama sonraki kabul işleridir.
+`GET /api/subscription?page=1&pageSize=12` yalnız Owner+MFA içindir; en fazla24 kayıt, no-store ve bağımsız30/dakika kota. TRY tutarlar ondalık metin, `EndsOn` hariç bitiş; İstanbul `asOf`, güncel dönem ve sayfalı dönemler döner. P07-05 ile başlamış/vadesi geçmiş herhangi bir eksik net dönem borcu salt okunur kısıtlama uygular; borç kapanınca sonraki işlem açılır. Operatör referansı/not/hash/kimliği yanıtta yoktur. Normal uygulama DB rolü iki tabloya yalnız SELECT alır; bu origin'de yazma API'si yoktur. Ayrı operatör uygulaması aşağıdadır. Owner UI ve vadenin ertesi günü otomatik kısıtlama/açılma yerelde kabul edildi; çok firma yönetimi ve internet kurulumu açık kalır.
 
 Yeni mali veri testleri depo kökünden (Docker açıkken):
 
@@ -436,7 +436,13 @@ dotnet run --project tests/Server.Tests/Server.Tests.csproj --no-build -- -class
 
 ### İşletme sahibinin abonelik ekranı (P07-04)
 
-Owner+MFA için **Hesap → Aboneliğiniz** veya `/yonetim/abonelik`: mevcut dönem,vade,doğrulanan ödeme/kalan borç ve kapalı geçmişte12'li sayfalama. Yalnız GET `/api/subscription?page=...&pageSize=12`; ödeme yazma/tahsilat/banka referansı yoktur. Staff menüde veya doğrudan adreste erişemez. Hata/yenilemede eski bakiye kaldırılır;401 normal girişe,403 yetki açıklamasına,429 beklemeye bağlanır. Otomatik kısıtlama ve merkezi çok firma yönetimi etkinleşmez. [Gerçek kabul ve geri dönüş](docs/plans/P07.md#p07-04-kabul-ve-yedekli-ana8080-teslimi).
+Owner+MFA için **Hesap → Aboneliğiniz** veya `/yonetim/abonelik`: mevcut dönem,vade,doğrulanan ödeme/kalan borç ve kapalı geçmişte12'li sayfalama. Yalnız GET `/api/subscription?page=...&pageSize=12`; ödeme yazma/tahsilat/banka referansı yoktur. Staff menüde veya doğrudan adreste erişemez. Hata/yenilemede eski bakiye kaldırılır;401 normal girişe,403 yetki açıklamasına,429 beklemeye bağlanır. P07-05 kısıtlama kararını sunucu verir; merkezi çok firma yönetimi bu ekrana dahil değildir. [Gerçek kabul ve geri dönüş](docs/plans/P07.md#p07-04-kabul-ve-yedekli-ana8080-teslimi).
+
+### Abonelik erişim kuralı (P07-05)
+
+İstanbul gününde başlamış herhangi bir dönemde `DueOn < bugün` ve net ödeme bedelden düşükse yeni randevu/taşıma/durum ve işletme/personel/hizmet/takvim/rezervasyon ayarı yazımları403 `subscription_read_only` döner. Kısmi ödeme yetmez; gecikmiş bütün dönemler kapanınca sonraki yazım restart olmadan açılır. Gelecek dönem veya kayıtsız kurulum kapanmaz; dönemler otomatik üretilmez,bankadan otomatik kontrol yapılmaz. Mevcut okuma/Excel,giriş/kimlik güvenliği,müşterinin mevcut iptal/hatırlatma ret hakkı korunur. Önceden kaydedilmiş randevunun aynı anahtarlı sonucu çözülebilir. Yeni OTP/yeniden gönderim ve yeni public rezervasyon durur; public hata borç/tutar açıklamaz.
+
+`GET /api/subscription/access` Owner+MFA/Staff için no-store boolean'dır; başka mali alan içermez. İşletme yazımı shared,operatör mali yazımı exclusive70703 transaction kilidi alır; ReadCommitted'de bekleme sonrası güncel bakiye,commit'e kadar kilit. En çok5 saniyede doğrulanamazsa503 `subscription_unavailable`,yazmama. Randevu ekranındaki **Erişimi yeniden kontrol et** durumunu yeniler. Yeni schema/config/elle süre uzatma yoktur; eski normal imaj rollback'i yeni kısıtlamayı kaldırır. [Kabul ve güvenli geri dönüş](docs/plans/P07.md#p07-05-kabul-ve-yedekli-ana8080-teslimi).
 
 ### Ayrı abonelik operatörü (P07-03)
 

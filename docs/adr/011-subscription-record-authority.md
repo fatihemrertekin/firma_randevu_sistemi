@@ -1,6 +1,6 @@
 # ADR-011 — Firma içi abonelik kaydı ve ayrı operatör yazma yetkisi
 
-Tarih:29.10.2026. Durum: P07-02 dar temeli ve P07-03 ayrı operatör yazma/MFA kanalı yerelde kabul edildi (30.10.2026). P07-04 Owner salt okunur UI yerelde kabul edildi; otomatik kısıtlama, merkezi çok firma yönetimi ve gerçek internet kurulumu sonraki işlerdir. İlk kararın P07-02 sınırları aşağıda tarihsel olarak korunur.
+Tarih:29.10.2026. Durum: P07-02 dar temeli ve P07-03 ayrı operatör yazma/MFA kanalı yerelde kabul edildi (30.10.2026). P07-04 Owner salt okunur UI yerelde kabul edildi; P07-05 otomatik kısıtlama/açılma da yerelde kabul edildi; merkezi çok firma yönetimi ve gerçek internet kurulumu sonraki işlerdir. İlk kararın P07-02 sınırları aşağıda tarihsel olarak korunur.
 
 ## İhtiyaç
 
