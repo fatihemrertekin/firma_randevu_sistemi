@@ -1,6 +1,6 @@
 {
   "compose": false,
-  "reason": "P07-07 replaces the operator singleton target configuration with an explicit server allowlist and authenticated metadata-only target catalog. Startup/readiness and four legacy financial routes now use the registry; single-firm config remains supported and multiple targets never select the first. SubscriptionTargetsTests cover config ambiguity, identity/duplicate destinations, production TLS, Development numeric-loopback exception, two real PostgreSQL firms, MFA/catalog privacy, legacy write guards, all56-table snapshots, wrong markers/roles and one-firm outage. SubscriptionOperatorTests preserve provisioning, login/MFA/revocation/CSRF and financial replay/correction behavior; SubscriptionTests and SubscriptionAccessTests preserve Owner privacy, immutable ledger and payment/read-only coordination. Existing operator UI/common API suites cover unchanged single-firm callers and errors. No Server/Web source, deploy/network/schema/grant or dependency changes; normal8080 runtime source/image are preserved. Operator image packaging and isolated startup acceptance are required; normal Compose rebuild/DB restart is unrelated.",
+  "reason": "P07-07 replaces the operator singleton target configuration with an explicit server allowlist and authenticated metadata-only target catalog. Startup/readiness and four legacy financial routes now use the registry; single-firm config remains supported and multiple targets never select the first. SubscriptionTargetsTests cover config ambiguity, identity/duplicate destinations, production TLS, Development numeric-loopback exception, two real PostgreSQL firms, MFA/catalog privacy, legacy write guards, all56-table snapshots, wrong markers/roles and one-firm outage. SubscriptionOperatorTests preserve provisioning, login/MFA/revocation/CSRF and financial replay/correction behavior; SubscriptionTests and SubscriptionAccessTests preserve Owner privacy, immutable ledger and payment/read-only coordination. Existing operator UI/common API suites cover unchanged single-firm callers and errors. No Server/Web source, deploy/network/schema/grant or dependency changes; normal8080 runtime source/image are preserved. Operator image packaging and isolated startup acceptance are required; normal Compose rebuild/DB restart is unrelated. Review regressions replace session-overridable current_setting markers with the persistent database-scoped catalog value for both targets and all operator identity checks. Real Options-forgery tests and unavailable-identity request/bootstrap image acceptance cover the shared identity boundary; only known EF-wrapped Npgsql outages become503/controlled bootstrap failure.",
   "server": [
     "Server.Tests.SubscriptionTargetsTests",
     "Server.Tests.SubscriptionOperatorTests",
@@ -13,6 +13,7 @@
   ],
   "files": [
     ".impeccable/surfaces/subscriptions.md",
+    "src/Operator/DatabaseInstance.cs",
     "src/Operator/OperatorProgram.cs",
     "src/Operator/SubscriptionLedger.cs",
     "src/Operator/SubscriptionTarget.cs",

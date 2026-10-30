@@ -17,7 +17,7 @@ public sealed class OperatorProgram
         if (args is ["initialize-operator"])
         {
             try { Environment.ExitCode = await InitializeAsync(app.Services); }
-            catch (Exception e) when (e is Npgsql.NpgsqlException or DbUpdateException or OperationCanceledException)
+            catch (Exception e) when (e is Npgsql.NpgsqlException or DbUpdateException or OperationCanceledException or InvalidOperationException { InnerException: Npgsql.NpgsqlException })
             {
                 Console.Error.WriteLine("Operatör kurulum sonucu doğrulanamadı. Mevcut hesap ve kayıtları kontrol etmeden tekrar kurulum yapmayın.");
                 Environment.ExitCode = 1;
@@ -81,10 +81,10 @@ public sealed class OperatorProgram
                 try
                 {
                     var identity = c.RequestServices.GetRequiredService<OperatorIdentityDb>();
-                    if (await identity.Database.SqlQueryRaw<string>("SELECT current_setting('app.operator_identity', true) AS \"Value\"").SingleOrDefaultAsync(timeout.Token) != app.Configuration["Operator:InstanceId"])
+                    if (await DatabaseInstance.ReadAsync(identity, "app.operator_identity", timeout.Token) != app.Configuration["Operator:InstanceId"])
                     { c.Response.StatusCode = 503; return; }
                 }
-                catch (Exception e) when (e is Npgsql.NpgsqlException or TimeoutException || e is OperationCanceledException && !c.RequestAborted.IsCancellationRequested)
+                catch (Exception e) when (e is Npgsql.NpgsqlException or TimeoutException or InvalidOperationException { InnerException: Npgsql.NpgsqlException } || e is OperationCanceledException && !c.RequestAborted.IsCancellationRequested)
                 { c.Response.StatusCode = 503; return; }
             }
             await next(c);
@@ -99,7 +99,7 @@ public sealed class OperatorProgram
             try
             {
                 if (!await identity.Database.CanConnectAsync(timeout.Token) ||
-                    await identity.Database.SqlQueryRaw<string>("SELECT current_setting('app.operator_identity', true) AS \"Value\"").SingleOrDefaultAsync(timeout.Token) != app.Configuration["Operator:InstanceId"] ||
+                    await DatabaseInstance.ReadAsync(identity, "app.operator_identity", timeout.Token) != app.Configuration["Operator:InstanceId"] ||
                     !await identity.Database.SqlQueryRaw<bool>("SELECT to_regclass('public.\"AspNetUsers\"') IS NOT NULL AS \"Value\"").SingleAsync(timeout.Token)) return Results.StatusCode(503);
                 // Çok firmada bir hedefin kesintisi merkez panelin tamamını sağlıksız yapmaz.
                 if (targets.Single is { } target) { await using var connection = await target.OpenAsync(timeout.Token); }
@@ -122,7 +122,7 @@ public sealed class OperatorProgram
         var db = scope.ServiceProvider.GetRequiredService<OperatorIdentityDb>();
         // Ayrı ve boş kimlik DB'si; firma şeması bu komutla oluşturulamaz/değiştirilemez.
         var config = scope.ServiceProvider.GetRequiredService<IConfiguration>();
-        if (await db.Database.SqlQueryRaw<string>("SELECT current_setting('app.operator_identity', true) AS \"Value\"").SingleOrDefaultAsync(timeout.Token) != config["Operator:InstanceId"]) return 1;
+        if (await DatabaseInstance.ReadAsync(db, "app.operator_identity", timeout.Token) != config["Operator:InstanceId"]) return 1;
         var tables = await db.Database.SqlQueryRaw<string>("SELECT tablename AS \"Value\" FROM pg_tables WHERE schemaname='public'").ToArrayAsync(timeout.Token);
         string[] identityTables = ["AspNetUsers", "AspNetRoles", "AspNetRoleClaims", "AspNetUserClaims", "AspNetUserLogins", "AspNetUserRoles", "AspNetUserTokens"];
         if (tables.Length != 0 && !tables.Order().SequenceEqual(identityTables.Order())) return 1;

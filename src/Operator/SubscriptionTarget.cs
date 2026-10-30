@@ -49,7 +49,7 @@ public sealed class SubscriptionTarget
             await db.Database.OpenConnectionAsync(token);
             var safeRole = await db.Database.SqlQueryRaw<bool>("SELECT current_user = 'subscription_operator' AND NOT (rolsuper OR rolcreatedb OR rolcreaterole OR rolbypassrls) AND NOT EXISTS (SELECT 1 FROM pg_auth_members WHERE member=pg_roles.oid) AS \"Value\" FROM pg_roles WHERE rolname=current_user").SingleAsync(token);
             if (!safeRole) throw new InvalidOperationException("Firma yazma rolü izin verilen dar rol değil.");
-            var actual = await db.Database.SqlQueryRaw<string>("SELECT current_setting('app.subscription_instance', true) AS \"Value\"").SingleOrDefaultAsync(token);
+            var actual = await DatabaseInstance.ReadAsync(db, "app.subscription_instance", token);
             if (actual != Id) throw new InvalidOperationException("Firma hedefi doğrulanamadı. Hiçbir kayıt yazılmadı.");
             return db;
         }

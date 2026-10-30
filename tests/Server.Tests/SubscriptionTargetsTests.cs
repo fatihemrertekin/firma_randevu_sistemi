@@ -136,6 +136,16 @@ public sealed class SubscriptionTargetsTests
         var wrong = Settings(a.TargetConnection, b.TargetConnection); wrong["SubscriptionTargets:0:InstanceId"] = "wrong-marker";
         var wrongRegistry = Registry(wrong, "Development");
         await Assert.ThrowsAsync<InvalidOperationException>(async () => { await using var ignored = await (wrongRegistry.Find("wrong-marker") ?? throw new InvalidOperationException()).OpenAsync(Token); });
+        var spoof = Settings(new NpgsqlConnectionStringBuilder(a.TargetConnection) { Options = "-c app.subscription_instance=forged-marker" }.ConnectionString, b.TargetConnection);
+        spoof["SubscriptionTargets:0:InstanceId"] = "forged-marker";
+        var spoofed = Registry(spoof, "Development");
+        await Assert.ThrowsAsync<InvalidOperationException>(async () => { await using var ignored = await (spoofed.Find("forged-marker") ?? throw new InvalidOperationException()).OpenAsync(Token); });
+        var forgedIdentity = Settings(a.TargetConnection, b.TargetConnection);
+        forgedIdentity["ConnectionStrings:OperatorIdentity"] = new NpgsqlConnectionStringBuilder(a.IdentityConnection) { Options = "-c app.operator_identity=forged-operator" }.ConnectionString;
+        forgedIdentity["Operator:InstanceId"] = "forged-operator";
+        await using (var forgedApp = a.Factory(settings: forgedIdentity))
+        using (var forgedClient = forgedApp.CreateClient())
+        { using var denied = await forgedClient.GetAsync("/api/auth/me", Token); Assert.Equal(HttpStatusCode.ServiceUnavailable, denied.StatusCode); }
         wrong = Settings(new NpgsqlConnectionStringBuilder(a.Database.GetConnectionString()).ConnectionString, b.TargetConnection);
         var broad = Registry(wrong, "Development");
         await Assert.ThrowsAsync<InvalidOperationException>(async () => { await using var ignored = await (broad.Find("firm-a") ?? throw new InvalidOperationException()).OpenAsync(Token); });
@@ -148,5 +158,7 @@ public sealed class SubscriptionTargetsTests
         var offline = await Record.ExceptionAsync(async () => { await using var ignored = await (registry.Find("firm-b") ?? throw new InvalidOperationException()).OpenAsync(bounded.Token); });
         Assert.True(offline is NpgsqlException or InvalidOperationException { InnerException: NpgsqlException });
         Assert.Equal(key, await stillA.SubscriptionPeriods.Select(p => p.Id).SingleAsync(Token));
+        await a.Database.StopAsync(Token);
+        using var identityDown = await client.GetAsync("/api/targets", Token); Assert.Equal(HttpStatusCode.ServiceUnavailable, identityDown.StatusCode);
     }
 }
