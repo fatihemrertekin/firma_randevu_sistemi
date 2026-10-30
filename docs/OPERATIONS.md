@@ -70,3 +70,7 @@ Envanter mevcut `deploy/*.ps1` yardımcılarının tamamını kapsar. Bunlar bug
 - Her eylem kabulünde PowerShell açmadan ekran üzerinden uçtan uca işlem; anonim/yetkisiz/yanlış firma reddi, sır görünmezliği ve gerekli hata/rollback/restart/izolasyon kontrolleri. Yedek/geri yükleme/taşıma için ayrıca gerçek sentetik işletim kanıtı gerekir.
 
 Planın yazılması ekranın veya üretim işletiminin hazır olduğu anlamına gelmez. Özellikler küçük onaylı işlere bölünür; mevcut P02 işleri ve aşama sırası bu kayıtla değiştirilmez.
+
+### Geçici depo görünürlüğü kararı — 30.10.2026
+
+GitHub API depo görünürlüğünü açık doğruladı. Kullanıcı, geliştirme sırasında GitHub erişimini kolaylaştırmak için depoyu kendisinin açtığını ve geliştirme bitince tekrar özel yapacağını açıkça belirtti; bu süreçte kod gönderimine izin verdi. Agent görünürlüğü değiştirmez. AGENTS'ın hedef özel depo kuralı korunur; bu kullanıcı kararı geçici geliştirme istisnasıdır. Sır, kişisel veri, özel yedek veya gerçek hesap bilgisi Git'e gönderilmez.
