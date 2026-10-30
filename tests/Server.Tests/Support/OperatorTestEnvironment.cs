@@ -15,7 +15,7 @@ using Xunit;
 
 namespace Server.Tests.Support;
 
-internal sealed class OperatorTestEnvironment : IAsyncDisposable
+internal sealed class OperatorTestEnvironment(string instanceId = OperatorTestEnvironment.Instance) : IAsyncDisposable
 {
     internal const string Password = "Synthetic!Operator123";
     internal const string Email = "operator@example.test";
@@ -52,7 +52,7 @@ internal sealed class OperatorTestEnvironment : IAsyncDisposable
     internal async Task<int> ProvisionAsync(string kind, string database, string? instance = null)
     {
         var token = TestContext.Current.CancellationToken;
-        var sql = "\\set database_name '" + database + "'\n\\set instance_id '" + (instance ?? (kind == "target" ? Instance : "synthetic-operator")) +
+        var sql = "\\set database_name '" + database + "'\n\\set instance_id '" + (instance ?? (kind == "target" ? instanceId : "synthetic-operator")) +
             "'\n\\set target_password 'Synthetic!Target123'\n\\set identity_password 'Synthetic!Identity123'\n" +
             await File.ReadAllTextAsync(Path.Combine(RepoRoot(), "deploy/subscription-operator-" + kind + ".sql"), token);
         using var process = new Process { StartInfo = new ProcessStartInfo("docker") { RedirectStandardInput = true, RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false } };
@@ -62,7 +62,7 @@ internal sealed class OperatorTestEnvironment : IAsyncDisposable
         await output; await error; return process.ExitCode;
     }
 
-    internal WebApplicationFactory<OperatorProgram> Factory(string? targetId = null) => new WebApplicationFactory<OperatorProgram>().WithWebHostBuilder(builder =>
+    internal WebApplicationFactory<OperatorProgram> Factory(string? targetId = null, Dictionary<string, string?>? settings = null) => new WebApplicationFactory<OperatorProgram>().WithWebHostBuilder(builder =>
     {
         builder.UseEnvironment("Development");
         builder.ConfigureAppConfiguration((_, c) => c.AddInMemoryCollection(new Dictionary<string, string?>
@@ -71,9 +71,9 @@ internal sealed class OperatorTestEnvironment : IAsyncDisposable
             ["Operator:KeysDirectory"] = keys,
             ["ConnectionStrings:OperatorIdentity"] = IdentityConnection,
             ["ConnectionStrings:SubscriptionTarget"] = TargetConnection,
-            ["SubscriptionTarget:InstanceId"] = targetId ?? Instance,
+            ["SubscriptionTarget:InstanceId"] = targetId ?? instanceId,
             ["SubscriptionTarget:Name"] = "Sentetik Salon"
-        }));
+        }).AddInMemoryCollection(settings ?? []));
     });
     internal static string RepoRoot()
     {
@@ -91,9 +91,10 @@ internal sealed class OperatorTestEnvironment : IAsyncDisposable
         using var request = new HttpRequestMessage(HttpMethod.Post, path) { Content = JsonContent.Create(body) };
         request.Headers.Add("X-CSRF-TOKEN", csrf); return await client.SendAsync(request, TestContext.Current.CancellationToken);
     }
-    internal async Task<HttpClient> LoginAsync()
+    internal async Task<HttpClient> LoginAsync(WebApplicationFactory<OperatorProgram>? factory = null)
     {
-        var client = App.CreateClient();
+        var source = factory ?? App;
+        var client = source.CreateClient();
         using var login = await Post(client, "/api/auth/login", new { Email, Password });
         if (login.StatusCode == HttpStatusCode.NoContent)
         {
@@ -104,7 +105,7 @@ internal sealed class OperatorTestEnvironment : IAsyncDisposable
             using var again = await Post(client, "/api/auth/login", new { Email, Password }); Assert.Equal(HttpStatusCode.Accepted, again.StatusCode);
         }
         else Assert.Equal(HttpStatusCode.Accepted, login.StatusCode);
-        using var scope = App.Services.CreateScope(); var users = scope.ServiceProvider.GetRequiredService<Microsoft.AspNetCore.Identity.UserManager<OperatorUser>>();
+        using var scope = source.Services.CreateScope(); var users = scope.ServiceProvider.GetRequiredService<Microsoft.AspNetCore.Identity.UserManager<OperatorUser>>();
         var user = await users.FindByEmailAsync(Email) ?? throw new InvalidOperationException();
         var activeKey = await users.GetAuthenticatorKeyAsync(user) ?? throw new InvalidOperationException();
         using var mfa = await Post(client, "/api/auth/mfa/login", new { value = AuthenticationTestSupport.GenerateAuthenticatorCode(activeKey) }); mfa.EnsureSuccessStatusCode();

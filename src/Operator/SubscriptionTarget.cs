@@ -11,18 +11,34 @@ public sealed class SubscriptionTarget
     public string Name { get; }
     private readonly string connectionString;
 
-    public SubscriptionTarget(IConfiguration config)
+    public SubscriptionTarget(IConfiguration config) : this(config["SubscriptionTarget:InstanceId"], config["SubscriptionTarget:Name"],
+        config.GetConnectionString("SubscriptionTarget"), config.GetConnectionString("OperatorIdentity"))
+    { }
+
+    internal SubscriptionTarget(string? id, string? name, string? connection, string? identityConnection, bool requireTls = false)
     {
-        Id = config["SubscriptionTarget:InstanceId"] ?? "";
-        Name = config["SubscriptionTarget:Name"] ?? "";
-        var target = new NpgsqlConnectionStringBuilder(config.GetConnectionString("SubscriptionTarget"));
-        var identity = new NpgsqlConnectionStringBuilder(config.GetConnectionString("OperatorIdentity"));
+        Id = id ?? "";
+        Name = name ?? "";
+        NpgsqlConnectionStringBuilder target, identity;
+        try { target = new(connection); identity = new(identityConnection); }
+        catch (ArgumentException) { throw new InvalidOperationException("Firma bağlantı yapılandırması geçersiz; sunucu ayarlarını kontrol edin."); }
         if (!Regex.IsMatch(Id, "^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$", RegexOptions.CultureInvariant) || string.IsNullOrWhiteSpace(Name) || Name.Length > 160 ||
             string.IsNullOrWhiteSpace(target.Host) || string.IsNullOrWhiteSpace(target.Database) || string.IsNullOrWhiteSpace(target.Username) ||
-            target.Host == identity.Host && target.Port == identity.Port && target.Database == identity.Database)
-            throw new InvalidOperationException("Ayrı operatör kimlik DB'si ve açık tek firma hedefi gerekli.");
+            string.Equals(target.Host, identity.Host, StringComparison.OrdinalIgnoreCase) && target.Port == identity.Port && target.Database == identity.Database ||
+            requireTls && target.SslMode != SslMode.VerifyFull)
+            throw new InvalidOperationException("Ayrı kimlik DB'si, açık firma hedefi ve çok firma bağlantısında doğrulanmış TLS gerekli.");
         target.Timeout = 5; target.CommandTimeout = 15; target.MaxPoolSize = 8; target.IncludeErrorDetail = false;
+        if (requireTls) target["GSS Encryption Mode"] = "Disable";
         connectionString = target.ConnectionString;
+    }
+
+    internal string Destination
+    {
+        get
+        {
+            var target = new NpgsqlConnectionStringBuilder(connectionString);
+            return $"{target.Host?.ToUpperInvariant()}:{target.Port}/{target.Database}";
+        }
     }
 
     public async Task<AppDbContext> OpenAsync(CancellationToken token)

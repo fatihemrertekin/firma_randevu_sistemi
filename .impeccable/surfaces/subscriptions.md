@@ -12,6 +12,12 @@ P07-02 yalnız veri/okuma temelidir: `GET /api/subscription?page=1&pageSize=12`,
 
 Yazma endpoint'i/operatör oturumu veya ekran bağlantısı bu dilimde yoktur; Owner/Staff kimliğine yeni operatör rolü verilmez. Tam operatör UI ve bağımsız MFA/izinli yazma kanalı P07-03; Owner UI API bağlantısı P07-04 kabulüdür. Taslakta çalışan formlar gerçek kayıt yapmaz. Banka/operatör referansı, düzeltme gerekçesi, request hash/anahtar ve aktör bilgisi Owner DTO'suna girmez. Taslak “Randevu işlevleri açık” metni, canlıda aboneliğe bağlı kısıtlama bulunmadığını anlatır; gönderim/kamu rezervasyonunun diğer kapılarını açıkmış gibi göstermemelidir.
 
+## Merkezi firma seçimi — P07-06 onayı
+
+30.10.2026 kullanıcı “Modeli ve ekranı onaylıyorum” yanıtıyla `.impeccable/mocks/decision/p07-06-firms.html` taslağını ve ADR-012 bağlantı modelini onayladı. Operate modu ve mevcut DESIGN/tokens korunur. Kısa firma araması/erişim filtresi, masaüstü tablo ve mobil kısa satırlar; Aç ile mevcut ödeme akışına geçiş, seçili firma adı+kurulum kodu, toplam eski gecikmiş borç ve bağlantı yok/bilinmiyor ayrımı onaylıdır. Dönem/ödeme eylemleri eşit yan yana kalır. Grafik/KPI kartı ve bütün firmaların açık uzun formları yoktur.
+
+Taslak onayı entegrasyon değildir. P07-07 yalnız hedef kataloğu/izolasyon temelidir; katalog GET'i ad/kod verir, mali özet vermez. Firma seçimi ekranı ve seçili hedef mali API'si sonraki P07-08/09 kabulüne bağlıdır. Mevcut tek firma UI'si bu dilimde değişmez; gerçek çok firma arayüzü tamamlandı sayılmaz. Ayrıntılı brief ve durumlar docs/plans/P07.md P07-06'dadır; kalıcı bağlantı kararı ADR-012'dedir.
+
 ## Durum ve kabul
 
 29.10.2026 devam kararı: operatör alanı internette bilgisayar/telefon hedeflidir. Kullanıcı otomatik salt okunur kısıtlamayı **vadenin ertesi günü** için seçti. Önceki “otomatik kısıtlama yok” kararı P07-01/02'nin tarihsel teslim sınırıdır; yeni kısıtlı Owner durumu P07-04/05'te gerçek yetki/API ile kabul edilmeden hazır gösterilmez. P07-03 ayrı operatör oturumu, mevcut görsel dilde parola/MFA kurulumu ve onaylı dönem/ödeme formlarını uygular; ödeme düzeltmesi aynı kısa form dilinde gerekçeli ters hareket ve bağlı yeni kayıt kullanır. Operatör UI'si müşteri uygulamasının menüsüne eklenmez.

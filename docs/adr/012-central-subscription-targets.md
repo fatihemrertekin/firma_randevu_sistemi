@@ -1,6 +1,6 @@
 # ADR-012 — Merkezi abonelik panelinde açık firma hedefleri
 
-Tarih: 30.10.2026. Durum: **proposed; kullanıcı bağlantı modeli ve görsel taslak onayı bekleniyor.** Bu belge yeni uzak erişim veya ürün uygulaması değildir. [ADR-011](011-subscription-record-authority.md) ile kabul edilen tek firma operatörü çalışmaya devam eder.
+Tarih: 30.10.2026. Durum: **accepted; kullanıcı “Modeli ve ekranı onaylıyorum” yanıtını verdi.** Bağlantı ve ekran kararı onaylıdır; ürün uygulaması küçük bağımlı dilimlerle ilerler. Onay yeni gerçek uzak erişim veya VPS kurulumu değildir. [ADR-011](011-subscription-record-authority.md) ile kabul edilen tek firma operatörü çalışmaya devam eder.
 
 ## İhtiyaç ve alternatifler
 
@@ -12,7 +12,7 @@ Tarih: 30.10.2026. Durum: **proposed; kullanıcı bağlantı modeli ve görsel t
 | Her firmaya ayrı abonelik HTTP servisi ve servis kimliği eklemek | Ek servis, kimlik doğrulama, anahtar yenileme, sürüm ve dağıtım kabulü gerekir | Şimdilik eklenmesin |
 | Merkezi mali DB ve firmalara erişim durumu senkronizasyonu | İki doğruluk kaynağı, kuyruk, kesinti ve olay sırası sorunu yaratır | İlk sürümde kullanılmasın |
 
-## Önerilen model
+## Onaylanan model
 
 - Bir merkezi operatör host'u, ayrı operatör Identity DB'si, zorunlu MFA, host-only cookie ve kendi Data Protection anahtarları. Firma Owner/Staff kimlikleri kullanılmaz. İlk hesap kontrollü bootstrap ile açılır; mevcut tek firma hesabı/kimlik DB'si sessizce taşınmaz veya birleştirilmez.
 - Sunucuda önceden tanımlanan izinli hedefler: değişmez kurulum ID'si, görünen firma adı, özel DB adresi ve firma başına ayrı sır. İlk sürümde panelden sunucu ekleme/parola girme yoktur. Tarayıcı yalnız hedef ID'sini gönderir; host/port/SQL/connection string seçemez. Sırlar Git'e, frontend'e, loga veya özet DTO'suna girmez.
@@ -31,6 +31,8 @@ Yeni ücretli hizmet/paket seçilmedi. Gerçek ağ/sertifika, izleme, yedek ve o
 
 ## Kabul kapısı ve kaynak
 
-Uygulamadan önce bağlantı modeli ve [P07-06 görsel/kabul planı](../plans/P07.md#p07-06--merkezi-çok-firma-abonelik-yönetimi-karar-taslağı--30102026) onaylanır. Ardından ayrı sentetik A/B firma DB'lerinde yanlış marker/rol/route, A→B sızıntısı, paralel mali kayıt ve kısmi bağlantı kesintisi gerçek PostgreSQL ile kanıtlanır. Yerel taslak veya önceki tek firma testleri çok firma kabulü değildir.
+Bağlantı modeli ve [P07-06 görsel/kabul planı](../plans/P07.md#p07-06--merkezi-çok-firma-abonelik-yönetimi-karar-taslağı--30102026) onaylandı. Ardından ayrı sentetik A/B firma DB'lerinde yanlış marker/rol/route, A→B sızıntısı, paralel mali kayıt ve kısmi bağlantı kesintisi gerçek PostgreSQL ile kanıtlanır. Yerel taslak veya önceki tek firma testleri çok firma kabulü değildir.
+
+P07-07 somut sınırı: yeni çoğul hedef yapılandırması Production'da aynı VPS dahil `VerifyFull` zorunlu tutar; GSS fallback yerine TLS yolu seçilir. Yalnız Development'ta sayısal loopback sentetik DB istisnadır; localhost/DNS adı istisna sağlamaz. Eski tek firma ayarı geriye uyumlu kalır. Çok hedefte readiness yalnız merkezi kimliği doğrular; firma bağlantı durumunu vaat etmez. İlk katalog API'si yalnız ad/kurulum kodu döndürür; ödeme/erişim özeti veya çok firma yazma API'si değildir. Eski mali rotalar birden fazla hedefte 409 ile seçim ister; ilk firmaya düşmez. P07-08 seçili firma mali API kabulü ayrı iş olarak kalır.
 
 TLS seçiminin resmi dayanağı: [Npgsql Security and Encryption](https://www.npgsql.org/doc/security.html), [PostgreSQL 18 SSL Support](https://www.postgresql.org/docs/18/libpq-ssl.html), 30.10.2026 kontrolü. Npgsql `Require` yalnız şifreleme sağlar; `VerifyFull` sunucu kimliği/host doğrulamasını da sağlar. Özel ağ ile bu doğrulama birbirinin yerine sayılmaz.

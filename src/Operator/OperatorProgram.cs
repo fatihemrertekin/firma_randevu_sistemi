@@ -47,7 +47,8 @@ public sealed class OperatorProgram
         builder.AddOperatorIdentity();
         builder.Services.AddProblemDetails();
         builder.Services.AddSingleton(TimeProvider.System);
-        builder.Services.AddSingleton<SubscriptionTarget>();
+        builder.Services.AddSingleton<SubscriptionTargets>();
+        builder.Services.AddSingleton(s => s.GetRequiredService<SubscriptionTargets>().Single ?? throw new InvalidOperationException("Açık firma seçimi gerekli."));
         builder.Services.AddRateLimiter(o =>
         {
             o.RejectionStatusCode = 429;
@@ -60,7 +61,7 @@ public sealed class OperatorProgram
                 c.Connection.RemoteIpAddress?.ToString() ?? "unknown", _ => new FixedWindowRateLimiterOptions { PermitLimit = policy == "auth" ? 30 : 60, Window = TimeSpan.FromMinutes(1) }));
         });
         var app = builder.Build();
-        _ = app.Services.GetRequiredService<SubscriptionTarget>();
+        var targets = app.Services.GetRequiredService<SubscriptionTargets>();
         if (!string.IsNullOrWhiteSpace(proxy)) app.UseForwardedHeaders();
         app.UseExceptionHandler();
         app.Use(async (c, next) =>
@@ -90,8 +91,9 @@ public sealed class OperatorProgram
         });
         app.UseRouting(); app.UseRateLimiter(); app.UseAuthentication(); app.UseAuthorization();
         app.MapOperatorIdentity(); app.MapSubscriptionLedger();
+        targets.MapEndpoints(app);
         app.MapGet("/health/live", () => Results.Ok());
-        app.MapGet("/health/ready", async (SubscriptionTarget target, OperatorIdentityDb identity, CancellationToken token) =>
+        app.MapGet("/health/ready", async (OperatorIdentityDb identity, CancellationToken token) =>
         {
             using var timeout = CancellationTokenSource.CreateLinkedTokenSource(token); timeout.CancelAfter(TimeSpan.FromSeconds(5));
             try
@@ -99,7 +101,9 @@ public sealed class OperatorProgram
                 if (!await identity.Database.CanConnectAsync(timeout.Token) ||
                     await identity.Database.SqlQueryRaw<string>("SELECT current_setting('app.operator_identity', true) AS \"Value\"").SingleOrDefaultAsync(timeout.Token) != app.Configuration["Operator:InstanceId"] ||
                     !await identity.Database.SqlQueryRaw<bool>("SELECT to_regclass('public.\"AspNetUsers\"') IS NOT NULL AS \"Value\"").SingleAsync(timeout.Token)) return Results.StatusCode(503);
-                await using var connection = await target.OpenAsync(timeout.Token); return Results.Ok();
+                // Çok firmada bir hedefin kesintisi merkez panelin tamamını sağlıksız yapmaz.
+                if (targets.Single is { } target) { await using var connection = await target.OpenAsync(timeout.Token); }
+                return Results.Ok();
             }
             catch (Exception e) when (e is Npgsql.NpgsqlException or InvalidOperationException or OperationCanceledException or TimeoutException) { return Results.StatusCode(503); }
         });
