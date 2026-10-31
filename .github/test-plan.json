@@ -1,13 +1,16 @@
 {
   "compose": true,
-  "reason": "P06-02 source fingerprints must survive Git LF/CRLF checkout conversion. Only source hashes normalize CRLF; generated credential/certificate/compose files keep exact byte hashes. The assert regression requires LF/CRLF source equality, changed source inequality and continued byte inequality for private artifacts. The complete real Docker first/repeat/MFA/TLS/table/key/target-rejection acceptance exercises initializer callers after the change. Existing SubscriptionLedgerTests/SubscriptionOperatorTests retain the relevant bootstrap/grant/ledger dependency acceptance and provide the current server build used for migration SQL; no application/API/UI/schema change.",
+  "reason": "P06-03 separates application and operator DB networks and bounds only the synthetic fixture CPU/RAM/swap/PIDs/tmpfs/logs. Existing setup/repeat acceptance now calls a real negative network/password/SQL-role/TLS/cookie/CSRF/marker/offline-target matrix and measures cgroups, CPU throttling, tmpfs ENOSPC, log rotation and read latency. SubscriptionTargetsTests/SubscriptionTargetLedgerTests cover allowlist, persistent markers, scoped financial access, cross-target rejection and bounded failure; SubscriptionLedgerTests/SubscriptionOperatorTests preserve bootstrap/grant/ledger callers used by the fixture. No normal application, identity, schema, dependency or frontend source change; no local main8080 rebuild/restart. Persistent DB volume usage is measured, not claimed as hard-quota protected. TCP pg_isready health explicitly waits past the PostgreSQL temporary Unix-only initialization server; a controlled private init probe reproduced Unix ready while TCP unavailable, and the runtime acceptance asserts TCP health configuration before SQL/role checks. After a target DB restart, central/app readiness is not proof that the operator target connection pool has recovered. Acceptance polls the authenticated target route within a bounded 20-second window, permits only transient 503 before mandatory 200, and records statuses/duration; the negative outage and independent A checks remain mandatory.",
   "server": [
+    "Server.Tests.SubscriptionTargetsTests",
+    "Server.Tests.SubscriptionTargetLedgerTests",
     "Server.Tests.SubscriptionLedgerTests",
     "Server.Tests.SubscriptionOperatorTests"
   ],
   "web": [],
   "files": [
     "deploy/initialize_synthetic.py",
-    "tests/Deployment/verify_synthetic.py"
+    "tests/Deployment/verify_synthetic.py",
+    "tests/Deployment/verify_isolation.py"
   ]
 }
