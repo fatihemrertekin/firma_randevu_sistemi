@@ -152,6 +152,8 @@ def read_package(package, key, expected_firm):
         files = {n: stream.read(n) for n in names}
     manifest = json.loads(files.pop('manifest.json'))
     fixture.require(manifest['version'] == 1 and manifest['firm'] == expected_firm and re.fullmatch(r'fr-synthetic-[a-z0-9-]+-a', expected_firm), 'Paket firma/sürüm eşleşmesi yanlış.')
+    fixture.require(isinstance(manifest['images'],list) and len(manifest['images'])==2 and
+        all(isinstance(image,str) and re.fullmatch(r'sha256:[0-9a-f]{64}',image) for image in manifest['images']), 'Paket iki sabit imaj kimliği içermeli.')
     fixture.require(manifest['files'] == {n:hashlib.sha256(v).hexdigest() for n,v in files.items()}, 'Paket bütünlüğü yanlış.')
     fixture.require(hashlib.sha256(files['schema.sql']).hexdigest() == manifest['snapshot']['schema'], 'Kaynak şema snapshot eşleşmesi yanlış.')
     fixture.require(re.fullmatch(b'[0-9a-f]{64}',files['target-password']), 'Mali rol parolası biçimi yanlış.')
@@ -253,5 +255,5 @@ if __name__ == '__main__':
     for p in (b,r):p.add_argument('--package',required=True);p.add_argument('--key',required=True)
     args=vars(parser.parse_args());operation=args.pop('operation')
     try:print(json.dumps((backup if operation=='backup' else restore)(**args)))
-    except (RuntimeError,ValueError,KeyError,OSError,zipfile.BadZipFile,tarfile.TarError):
+    except (RuntimeError,ValueError,TypeError,KeyError,OSError,zipfile.BadZipFile,tarfile.TarError):
         print('Sentetik kurtarma reddedildi/başarısız; mevcut kaynaklar korunuyor. Sır içerebilen ayrıntılar gizlendi.',file=sys.stderr);sys.exit(1)

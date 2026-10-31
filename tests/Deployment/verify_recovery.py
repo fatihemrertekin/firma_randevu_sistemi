@@ -113,7 +113,7 @@ def verify(options):
         bad=report_root/'bad.frbk';data=bytearray(copied.read_bytes());data[-1]^=1;bad.write_bytes(data);reject(p=bad)
         reject(f=firm+'-wrong');reject(port=8080);reject(t='firma-randevu-local')
         # Geçerli şifreleme fakat eksik bileşen, hash hatası, yol enjeksiyonu ve bozuk dump da reddedilir.
-        for kind in ('missing','hash','path','dump','schema','role-password','config'):
+        for kind in ('missing','hash','path','dump','schema','images','role-password','config'):
             changed=dict(entries)
             if kind=='missing':changed.pop('db.key')
             elif kind=='hash':changed['db.key']+=b'x'
@@ -122,6 +122,8 @@ def verify(options):
                 changed['database.dump']=b'not-pgdump';meta=json.loads(changed['manifest.json']);meta['files']['database.dump']=hashlib.sha256(changed['database.dump']).hexdigest();changed['manifest.json']=json.dumps(meta).encode()
             elif kind=='schema':
                 meta=json.loads(changed['manifest.json']);meta['snapshot']['schema']='0'*64;changed['manifest.json']=json.dumps(meta).encode()
+            elif kind=='images':
+                meta=json.loads(changed['manifest.json']);meta['images']=meta['images'][:1];changed['manifest.json']=json.dumps(meta).encode()
             else:
                 name='target-password' if kind=='role-password' else 'app.env'
                 changed[name]=b'bad' if kind=='role-password' else changed[name].replace(b'ASPNETCORE_ENVIRONMENT=Development',b'ASPNETCORE_ENVIRONMENT=Production')
