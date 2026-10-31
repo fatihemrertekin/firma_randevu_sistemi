@@ -6,6 +6,8 @@ Restore sonrası eski müşteri yetkileri ve SMS bütçesi yeniden açılmaz: uy
 
 Hazırlanma: 2026-09-29. Bu dosya plandır; çalışan altyapının kanıtı değildir. Uygulandıkça gerçek komutlar, adresler ve ölçümlerle güncellenir (sırlar hariç). Kısa ilkeler AGENTS.md Bölüm 8'dedir.
 
+31.10.2026 P06 hazırlığı: kullanıcı henüz VPS/depolama seçmedi, ücretsiz yerel sentetik hazırlıkla devamı seçti. Güncel kaynak/kanıt boşlukları, P06-02'den başlayan küçük işler ve kurulum/izolasyon/şifreli restore/izleme kabulü [aktif P06 planında](plans/P06.md) tutulur. Buradaki genel işletim ilkeleri gerçek uzak kurulum veya host dışı yedek kabulü değildir.
+
 ## 1. Kurulum ve kapasite
 
 P05 telefon doğrulaması ana kurulumda kapalıdır. `BookingVerification:Enabled`, `BookingSms:DispatchEnabled`, `Netgsm:Enabled`, `AppointmentReminders:Enabled` ve `PublicBooking:AccessEnabled` verilmez veya false kalır. HMAC/Netgsm sırları testten ana ortama kopyalanmaz. Enabled fakat kullanılabilir taşıyıcı/32 bayt anahtar eksikse veya kayıtlı kota anahtar kimliği farklıysa açılış reddedilir; dispatch ayrıca geçerli süreli DB bütçe onayı ve bedel uyumu ister. [Sözleşme, migration ve kabul](plans/P05.md), [bütçe kararı](adr/009-booking-sms-budget.md).
@@ -74,3 +76,5 @@ Planın yazılması ekranın veya üretim işletiminin hazır olduğu anlamına 
 ### Geçici depo görünürlüğü kararı — 30.10.2026
 
 GitHub API depo görünürlüğünü açık doğruladı. Kullanıcı, geliştirme sırasında GitHub erişimini kolaylaştırmak için depoyu kendisinin açtığını ve geliştirme bitince tekrar özel yapacağını açıkça belirtti; bu süreçte kod gönderimine izin verdi. Agent görünürlüğü değiştirmez. AGENTS'ın hedef özel depo kuralı korunur; bu kullanıcı kararı geçici geliştirme istisnasıdır. Sır, kişisel veri, özel yedek veya gerçek hesap bilgisi Git'e gönderilmez.
+
+31.10.2026 kullanıcı, bu depoya onaylı işin gönderilmesi, PR açılması ve başarılı head/main CI sonrasında birleştirilmesi sorusuna **“bu tarz işlemler için her zaman iznin var”** yanıtını verdi. `github.com/fatihemrertekin/firma_randevu_sistemi` hedefindeki onaylı iş kapsamının rutin GitHub teslimlerinde yeniden izin istenmez. Bu yetki depo görünürlüğünü değiştirme, sır/kişisel veri paylaşma, kapsam dışı geliştirme, ücretli hizmet veya gerçek üretim verisine işlem izni değildir; mevcut korunmuş dal/CI ve veri güvenliği sınırları sürer.

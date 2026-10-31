@@ -79,6 +79,7 @@ Pilot kapsamı [PRODUCT](PRODUCT.md#2-ürün-kararları) ile kararlaştırıldı
 
 ### P06 — İzolasyon/deploy/kurtarma (P05)
 
+- 31.10.2026 P06-01: kullanıcı VPS/depolama seçmedi; ücretsiz yerel sentetik hazırlığı seçti. [Aktif kabul planı ve yerel doğrulaması](plans/P06.md#p06-01-yerel-kabul-kaydı) done (yalnız plan); kendi son head/main CI belge teslimi kapanışıdır, P06 bütünü done değildir. Sıradaki tek uygulama işi P06-02, ana kurulumdan bağımsız A/B firma ve operatörün tekrar güvenli yerel kurulum temelidir. Gerçek sunucu/host dışı depolama/izleme seçimi ve ücretli işlemler ayrıca kapıdır.
 - İş: Aynı imajla A/B sentetik firma; ayrı sır/ağ/volume/anahtar, Compose/Coolify şablonu, HTTPS, migration, yedek/restore, alarm/geri dönüş. Filo yönetimi: N firmaya toplu sürüm dağıtımı ve migration için runbook/script (sırayla, yedek sonrası, firma başına sonuç raporu).
 - Planlanan destek ve işletim ekranı: ürün sahibinin kurulum/bakım/destek işlemlerini PowerShell yazmadan firma seçimi ve izinli eylemlerle yürütmesi. Mevcut tüm ürün işletim yardımcıları ve ileride gereken operasyonlar envantere alınır; hedef yalnız parola sıfırlama değildir. Kapsam ve kabul sınırları [OPERATIONS §5](OPERATIONS.md#5-planlanan-destek-ve-işletim-ekranı) içindedir. 02.10.2026 kararı yalnız planlamadır; uygulama ayrıca onaylanır.
 - Çıkış: A cookie/token/DB parolası B'de geçmez; A uygulaması B DB/dosyasına erişemez. Deploy/restart veri/anahtar korur; temiz ortamda restore süresi/kayıp aralığı ölçülür. Canlı yetki yoksa yerel kanıtı tamamla.
