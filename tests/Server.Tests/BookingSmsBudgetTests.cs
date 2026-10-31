@@ -246,9 +246,8 @@ public sealed class BookingSmsBudgetTests
             await db.Database.MigrateAsync(Token);
             Assert.False(db.Database.HasPendingModelChanges());
             await db.Database.ExecuteSqlRawAsync("CREATE ROLE app_user LOGIN PASSWORD 'SyntheticApp!123'; GRANT USAGE ON SCHEMA public TO app_user", Token);
-            var script = await File.ReadAllTextAsync(FilePath("deploy/Apply-LocalMigration.ps1"), Token);
-            var start = script.IndexOf("@'", StringComparison.Ordinal) + 2;
-            await db.Database.ExecuteSqlRawAsync(script[start..script.IndexOf("'@ |", start, StringComparison.Ordinal)], Token);
+            var script = await File.ReadAllTextAsync(FilePath("deploy/app-user-grants.sql"), Token);
+            await db.Database.ExecuteSqlRawAsync(script, Token);
         }
         f.AppConnectionString = new NpgsqlConnectionStringBuilder(f.Database.GetConnectionString()) { Username = "app_user", Password = "SyntheticApp!123" }.ConnectionString;
         await f.RestartAsync(); using var client = f.Client(); await f.RequestAsync(client); await f.Work();

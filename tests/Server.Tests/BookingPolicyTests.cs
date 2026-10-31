@@ -209,7 +209,7 @@ public sealed class BookingPolicyTests
         await using var database = RecoveryDatabase(); await database.StartAsync(Token);
         var seed = await CreateRecoveryAppAsync(database.GetConnectionString()); await using var app = seed.App;
         using var scope = app.Services.CreateScope(); var db = scope.ServiceProvider.GetRequiredService<AppDbContext>(); await db.Database.ExecuteSqlRawAsync("CREATE ROLE app_user LOGIN PASSWORD 'SyntheticApp!123'; GRANT USAGE ON SCHEMA public TO app_user", Token);
-        var grants = File.ReadAllText(System.IO.Path.GetFullPath(System.IO.Path.Combine(AppContext.BaseDirectory, "../../../../../deploy/Apply-LocalMigration.ps1"))); var start = grants.IndexOf("@'", StringComparison.Ordinal) + 2; var end = grants.IndexOf("'@ |", start, StringComparison.Ordinal); Assert.True(start >= 2 && end > start); await db.Database.ExecuteSqlRawAsync(grants[start..end], Token);
+        var grants = File.ReadAllText(System.IO.Path.GetFullPath(System.IO.Path.Combine(AppContext.BaseDirectory, "../../../../../deploy/app-user-grants.sql"))); await db.Database.ExecuteSqlRawAsync(grants, Token);
         var limitedConnection = new NpgsqlConnectionStringBuilder(database.GetConnectionString()) { Username = "app_user", Password = "SyntheticApp!123" }.ConnectionString;
         await using var limited = app.WithWebHostBuilder(builder => builder.ConfigureAppConfiguration((_, configuration) => configuration.AddInMemoryCollection(new Dictionary<string, string?> { ["ConnectionStrings:AppDatabase"] = limitedConnection })));
         using var owner = limited.CreateClient(); await PasswordStepAsync(owner); await CompleteMfaAsync(owner, seed.Key); var before = await Read(owner); using var update = await PostAsync(owner, Path, new BookingPolicyEndpoints.UpdateRequest(before.Version, 120, 7, 20, 120, true), await GetCsrfAsync(owner)); var after = await Body(update);
@@ -217,7 +217,7 @@ public sealed class BookingPolicyTests
         foreach (var sql in new[] { "DELETE FROM \"BookingPolicies\"", "TRUNCATE \"BookingPolicies\"", "INSERT INTO \"BookingPolicies\" SELECT * FROM \"BookingPolicies\"", "UPDATE \"BookingPolicyAudits\" SET \"LeadMinutes\"=0", "DELETE FROM \"BookingPolicyAudits\"", "TRUNCATE \"BookingPolicyAudits\"" })
         { await using var command = new NpgsqlCommand(sql, connection); var denied = await Assert.ThrowsAsync<PostgresException>(() => command.ExecuteNonQueryAsync(Token)); Assert.Equal("42501", denied.SqlState); }
         await using (var invalid = new NpgsqlCommand("UPDATE \"BookingPolicies\" SET \"Id\"=2", connection)) Assert.Equal("23514", (await Assert.ThrowsAsync<PostgresException>(() => invalid.ExecuteNonQueryAsync(Token))).SqlState);
-        await db.Database.ExecuteSqlRawAsync(grants[start..end], Token); Assert.Equal(after, await Read(owner)); Assert.Single(await db.BookingPolicyAudits.ToArrayAsync(Token)); await AssertOriginalStateAsync(app, seed);
+        await db.Database.ExecuteSqlRawAsync(grants, Token); Assert.Equal(after, await Read(owner)); Assert.Single(await db.BookingPolicyAudits.ToArrayAsync(Token)); await AssertOriginalStateAsync(app, seed);
     }
 
     [Fact]

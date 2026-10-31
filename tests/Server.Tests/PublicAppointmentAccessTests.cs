@@ -478,9 +478,8 @@ public sealed class PublicAppointmentAccessTests
         await using (var db = f.Db())
         {
             await db.Database.ExecuteSqlRawAsync("CREATE ROLE app_user LOGIN PASSWORD 'SyntheticApp!123'; GRANT USAGE ON SCHEMA public TO app_user", Token);
-            var script = await File.ReadAllTextAsync(System.IO.Path.GetFullPath(System.IO.Path.Combine(AppContext.BaseDirectory, "../../../../../deploy/Apply-LocalMigration.ps1")), Token);
-            var start = script.IndexOf("@'", StringComparison.Ordinal) + 2;
-            await db.Database.ExecuteSqlRawAsync(script[start..script.IndexOf("'@ |", start, StringComparison.Ordinal)], Token);
+            var script = await File.ReadAllTextAsync(System.IO.Path.GetFullPath(System.IO.Path.Combine(AppContext.BaseDirectory, "../../../../../deploy/app-user-grants.sql")), Token);
+            await db.Database.ExecuteSqlRawAsync(script, Token);
         }
         var connection = new Npgsql.NpgsqlConnectionStringBuilder(f.Database.GetConnectionString()) { Username = "app_user", Password = "SyntheticApp!123" }.ConnectionString;
         await using var limited = f.App.WithWebHostBuilder(builder => builder.ConfigureAppConfiguration((_, config) =>

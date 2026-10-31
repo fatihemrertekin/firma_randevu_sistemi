@@ -495,3 +495,25 @@ python tests/Deployment/verify_synthetic.py --instance fr-synthetic-check --port
 ```
 
 P06-03 aynı kabul komutunda [negatif izolasyon ve kaynak ölçümünü](docs/plans/P06.md#p06-03--izolasyon-matrisi-ve-kaynak-sınırları) de çalıştırır; sonuç fixture içindeki `isolation.json` dosyasındadır. Yalnız sentetik servislere0,5 CPU/128 süreç; DB384MiB/uygulama512MiB bellek, ek swap olmaması, uygulamada64MiB tmpfs ve serviste1MiB×2 log sınırı uygulanır. Kalıcı DB volume disk kullanımı ölçülür; hard kota yoktur. Eski fixture yeniden yazılmaz; yeni bir `fr-synthetic-*` kimliği seçilir.
+
+### P06 sentetik şifreli kurtarma provası
+
+Depo kökünde, mevcut kabul imajlarının tam yerel `sha256:...` ID'leriyle (gerçek veri/sır kullanılmaz):
+
+```powershell
+$recoveryAppImage = docker image inspect firma-randevu:local --format '{{.Id}}'
+$recoveryOperatorImage = docker image inspect firma-randevu-operator:local --format '{{.Id}}'
+$recoveryPostgresImage = docker image inspect postgres:18.6-trixie --format '{{.Id}}'
+python tests/Deployment/verify_recovery.py --instance fr-synthetic-recovery-demo --ports 8243 8244 8245 --app-image $recoveryAppImage --operator-image $recoveryOperatorImage --postgres-image $recoveryPostgresImage
+```
+
+Üç kaynak portuna ek olarak ilk port+3 hedef için kullanılır (örnekte 8246). ID/portlar yeni ve boş olmalı; Docker/Python3.12+/PowerShell7.4+/dotnet tool/build ön koşulları önceki sentetik kurulumla aynıdır. Test kendi kaynaklarını ve hedefini sonunda durdurur; volume/paket/anahtar silmez. Yedi ilgili PostgreSQL test sınıfı `.github/test-plan.json` içindedir. [Kapsam, güvenlik ve kabul](docs/plans/P06.md#p06-04--şifreli-tek-firma-paketi-ve-temiz-restore).
+
+Tekil komutlar yalnız manifesti doğrulanan yeni sentetik kurulum içindir:
+
+```powershell
+python deploy/synthetic_recovery.py backup --source .local/synthetic/fr-synthetic-example --package .local/recovery-packages/example/firm.frbk --key .local/recovery-keys/example/recovery.key
+python deploy/synthetic_recovery.py restore --package .local/recovery-packages/example/firm.frbk --key .local/recovery-keys/example/recovery.key --expected-firm fr-synthetic-example-a --target fr-restore-example --port 8246
+```
+
+Yedek komutu A uygulamasını ve fixture operatörünü durdurur; otomatik tekrar açmaz. Paket/anahtar dizinleri yeni ve ayrı olmalıdır. Restore yeni hedef ister, mevcut hedef/ana8080 üzerine yazamaz. Araç yalnız 64MiB bellek içi sentetik paketi destekler; üretim veya host dışı yedek aracı değildir. Kaynak dosyaları ve kurtarma anahtarları Git'e gönderilmez; anahtar kaybolursa paket açılamaz. Paket şifreli olsa da anahtarı aynı kayıp alanında tutmak host kaybına karşı koruma sağlamaz.
