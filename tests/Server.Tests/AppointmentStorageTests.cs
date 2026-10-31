@@ -155,11 +155,8 @@ public sealed class AppointmentStorageTests
         await AppointmentTests.ConfigureAsync(app);
         using var scope = app.Services.CreateScope(); var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         await db.Database.ExecuteSqlRawAsync("CREATE ROLE app_user LOGIN PASSWORD 'SyntheticApp!123'; GRANT USAGE ON SCHEMA public TO app_user", Token);
-        var grantsScript = File.ReadAllText(Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../deploy/Apply-LocalMigration.ps1")));
-        var grantStart = grantsScript.IndexOf("@'", StringComparison.Ordinal) + 2;
-        var grantEnd = grantsScript.IndexOf("'@ |", grantStart, StringComparison.Ordinal);
-        Assert.True(grantStart >= 2 && grantEnd > grantStart);
-        await db.Database.ExecuteSqlRawAsync(grantsScript[grantStart..grantEnd], Token);
+        var grantsScript = File.ReadAllText(Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../deploy/app-user-grants.sql")));
+        await db.Database.ExecuteSqlRawAsync(grantsScript, Token);
         var limitedConnection = new NpgsqlConnectionStringBuilder(database.GetConnectionString()) { Username = "app_user", Password = "SyntheticApp!123" }.ConnectionString;
         await using var limited = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
         {

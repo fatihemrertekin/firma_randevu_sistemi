@@ -461,9 +461,8 @@ public sealed class AppointmentReminderTests
         await using (var db = f.Db())
         {
             await db.Database.ExecuteSqlRawAsync("CREATE ROLE app_user LOGIN PASSWORD 'SyntheticApp!123'; GRANT USAGE ON SCHEMA public TO app_user", Token);
-            var script = await File.ReadAllTextAsync(Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../deploy/Apply-LocalMigration.ps1")), Token);
-            var start = script.IndexOf("@'", StringComparison.Ordinal) + 2;
-            await db.Database.ExecuteSqlRawAsync(script[start..script.IndexOf("'@ |", start, StringComparison.Ordinal)], Token);
+            var script = await File.ReadAllTextAsync(Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../deploy/app-user-grants.sql")), Token);
+            await db.Database.ExecuteSqlRawAsync(script, Token);
         }
         f.AppConnectionString = new NpgsqlConnectionStringBuilder(f.Database.GetConnectionString()) { Username = "app_user", Password = "SyntheticApp!123" }.ConnectionString;
         await f.RestartAsync(); await Due(f); await Work(f); Assert.Single(Carrier(f).Calls);

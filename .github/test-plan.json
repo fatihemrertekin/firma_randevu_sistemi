@@ -1,16 +1,25 @@
 {
   "compose": true,
-  "reason": "P06-03 separates application and operator DB networks and bounds only the synthetic fixture CPU/RAM/swap/PIDs/tmpfs/logs. Existing setup/repeat acceptance now calls a real negative network/password/SQL-role/TLS/cookie/CSRF/marker/offline-target matrix and measures cgroups, CPU throttling, tmpfs ENOSPC, log rotation and read latency. SubscriptionTargetsTests/SubscriptionTargetLedgerTests cover allowlist, persistent markers, scoped financial access, cross-target rejection and bounded failure; SubscriptionLedgerTests/SubscriptionOperatorTests preserve bootstrap/grant/ledger callers used by the fixture. No normal application, identity, schema, dependency or frontend source change; no local main8080 rebuild/restart. Persistent DB volume usage is measured, not claimed as hard-quota protected. TCP pg_isready health explicitly waits past the PostgreSQL temporary Unix-only initialization server; a controlled private init probe reproduced Unix ready while TCP unavailable, and the runtime acceptance asserts TCP health configuration before SQL/role checks. After a target DB restart, central/app readiness is not proof that the operator target connection pool has recovered. Acceptance polls the authenticated target route within a bounded 20-second window, permits only transient 503 before mandatory 200, and records statuses/duration; the negative outage and independent A checks remain mandatory.",
+  "reason": "P06-04 adds bounded synthetic-only authenticated encryption and clean single-firm restore tooling. verify_recovery exercises wrong key/tamper/missing/hash/path/dump/firm/target rejection before resource creation, a copied package/key with all source services stopped and original paths unavailable, full table/schema/index/constraint/extension/sequence/role/column-grant/marker equality, existing DP cookie plus fresh MFA, subscription debt, invalidation and two restarts. PublicAppointmentAccessTests, BookingSmsBudgetTests and AppointmentReminderTests cover the unchanged invalidation SQL callers with real PostgreSQL and fake deliveries, including expired receipt/token 403 and stale budget startup refusal; SubscriptionLedgerTests covers restored financial history/grants. No application, identity, migration, normal Compose or dependency source changes. CI adds a scoped recovery gate, keeps existing setup/isolation gate for its own callers, and builds the operator image whenever either gate needs it. The selected pre-existing grant tests still parsed an inline PowerShell here-string removed in P06-02. All six such callers now read the existing canonical app-user-grants.sql directly, retaining every permission assertion; changed classes plus their role/transaction callers are selected.",
   "server": [
-    "Server.Tests.SubscriptionTargetsTests",
-    "Server.Tests.SubscriptionTargetLedgerTests",
+    "Server.Tests.PublicAppointmentAccessTests",
+    "Server.Tests.BookingSmsBudgetTests",
+    "Server.Tests.AppointmentReminderTests",
     "Server.Tests.SubscriptionLedgerTests",
-    "Server.Tests.SubscriptionOperatorTests"
+    "Server.Tests.AppointmentStorageTests",
+    "Server.Tests.AppointmentPendingTests",
+    "Server.Tests.BookingPolicyTests"
   ],
   "web": [],
   "files": [
-    "deploy/initialize_synthetic.py",
-    "tests/Deployment/verify_synthetic.py",
-    "tests/Deployment/verify_isolation.py"
+    "deploy/Protect-SyntheticRecovery.ps1",
+    "deploy/synthetic_recovery.py",
+    "tests/Deployment/verify_recovery.py",
+    "tests/Server.Tests/PublicAppointmentAccessTests.cs",
+    "tests/Server.Tests/AppointmentReminderTests.cs",
+    "tests/Server.Tests/BookingSmsBudgetTests.cs",
+    "tests/Server.Tests/AppointmentStorageTests.cs",
+    "tests/Server.Tests/AppointmentPendingTests.cs",
+    "tests/Server.Tests/BookingPolicyTests.cs"
   ]
 }

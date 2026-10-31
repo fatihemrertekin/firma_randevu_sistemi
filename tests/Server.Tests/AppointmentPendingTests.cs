@@ -243,7 +243,7 @@ public sealed class AppointmentPendingTests
         var seed = await CreateRecoveryAppAsync(database.GetConnectionString(), clock); await using var app = seed.App; await AppointmentTests.ConfigureAsync(app);
         using var scope = app.Services.CreateScope(); var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         await db.Database.ExecuteSqlRawAsync("CREATE ROLE app_user LOGIN PASSWORD 'SyntheticApp!123'; GRANT USAGE ON SCHEMA public TO app_user", Token);
-        var grants = File.ReadAllText(System.IO.Path.GetFullPath(System.IO.Path.Combine(AppContext.BaseDirectory, "../../../../../deploy/Apply-LocalMigration.ps1"))); var start = grants.IndexOf("@'", StringComparison.Ordinal) + 2; var end = grants.IndexOf("'@ |", start, StringComparison.Ordinal); await db.Database.ExecuteSqlRawAsync(grants[start..end], Token);
+        var grants = File.ReadAllText(System.IO.Path.GetFullPath(System.IO.Path.Combine(AppContext.BaseDirectory, "../../../../../deploy/app-user-grants.sql"))); await db.Database.ExecuteSqlRawAsync(grants, Token);
         var limitedConnection = new NpgsqlConnectionStringBuilder(database.GetConnectionString()) { Username = "app_user", Password = "SyntheticApp!123" }.ConnectionString;
         await using var limited = app.WithWebHostBuilder(builder => builder.ConfigureAppConfiguration((_, configuration) => configuration.AddInMemoryCollection(new Dictionary<string, string?> { ["ConnectionStrings:AppDatabase"] = limitedConnection })));
         using var owner = await InviteOwnerAsync(seed with { App = limited }); var csrf = await GetCsrfAsync(owner); var confirmed = await Book(owner, db); var expired = await Book(owner, db, "2026-10-15T12:00:00+03:00");
