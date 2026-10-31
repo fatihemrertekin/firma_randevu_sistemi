@@ -28,7 +28,7 @@ from verify_isolation import request
 def check(value,message):fixture.require(value,message)
 
 
-def seed(container,firm):
+def seed(container,firm,due_on=None):
     uid=lambda:str(uuid.uuid4())
     now=datetime.now(timezone.utc).replace(microsecond=0)
     at=lambda minutes:(now+timedelta(minutes=minutes)).isoformat()
@@ -56,7 +56,7 @@ def seed(container,firm):
         Status='Processing',ProtectedPhone='SYNTHETIC-UNSENT',Attempts=1,NextAttemptAt=at(0),LeaseId=uid(),LeaseUntil=at(1),StartedOnceAt=at(0)))
     insert('BookingSmsAttempts',dict(Purpose='Reminder',JobId=job,Number=1,PolicyId=budget,ReservedTry=.10,ReservedAt=at(-1),StartedAt=at(0),LeaseId=uid(),Outcome='Started',RetainUntil=at(44640)))
     first=now.date().replace(day=1);following=(first.replace(day=28)+timedelta(days=4)).replace(day=1)
-    insert('SubscriptionPeriods',dict(Id=period,StartsOn=str(first),EndsOn=str(following),DueOn=str(first),AmountTry=1000,Version=uid(),RecordedBy=uid(),RecordedAt=at(-3)))
+    insert('SubscriptionPeriods',dict(Id=period,StartsOn=str(first),EndsOn=str(following),DueOn=str(due_on or first),AmountTry=1000,Version=uid(),RecordedBy=uid(),RecordedAt=at(-3)))
     insert('SubscriptionPayments',dict(Id=uid(),PeriodId=period,AmountTry=400,PaidOn=str(now.date()),Reference='SYNTHETIC-RESTORE',RequestKey=uid(),RequestHash=digest('payment'),RecordedBy=uid(),RecordedAt=at(-2)))
     return dict(appointment=appointment,token=token,receiptHash=digest(receipt),version=version)
 

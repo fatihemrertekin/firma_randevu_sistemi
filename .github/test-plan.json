@@ -1,25 +1,14 @@
 {
   "compose": true,
-  "reason": "P06-04 adds bounded synthetic-only authenticated encryption and clean single-firm restore tooling. verify_recovery exercises wrong key/tamper/missing/hash/path/dump/firm/target rejection before resource creation, a copied package/key with all source services stopped and original paths unavailable, full table/schema/index/constraint/extension/sequence/role/column-grant/marker equality, existing DP cookie plus fresh MFA, subscription debt, invalidation and two restarts. PublicAppointmentAccessTests, BookingSmsBudgetTests and AppointmentReminderTests cover the unchanged invalidation SQL callers with real PostgreSQL and fake deliveries, including expired receipt/token 403 and stale budget startup refusal; SubscriptionLedgerTests covers restored financial history/grants. No application, identity, migration, normal Compose or dependency source changes. CI adds a scoped recovery gate, keeps existing setup/isolation gate for its own callers, and builds the operator image whenever either gate needs it. The selected pre-existing grant tests still parsed an inline PowerShell here-string removed in P06-02. All six such callers now read the existing canonical app-user-grants.sql directly, retaining every permission assertion; changed classes plus their role/transaction callers are selected.",
+  "reason": "P06-05 adds synthetic firm-A image-only transitions using explicit immutable image IDs/source revisions, same-schema migration inventory gates, verified encrypted backup and DP/config ownership, a journal with expected-image concurrency guard, exact DB/key checks and unchanged other containers including start times. verify_update builds a known P07-05 baseline and current source into distinct image IDs, exercises foreign/stale/config/catalog/schema rejection, a genuine HTTP-unready candidate with safe automatic image rollback, successful upgrade, no-op, post-upgrade payment/profile write and explicit rollback without DB restore. SubscriptionAccessTests covers overdue read-only/reopening behavior that must survive both releases; SubscriptionLedgerTests covers financial history/grant preservation. Existing initializer/recovery helpers are reused unchanged. CI adds only this scoped gate; no application, migration, dependency, frontend, normal Compose/Dockerfile or main8080 runtime change. The shared recovery seed accepts an optional due date at INSERT for an always-overdue canary; its existing default is unchanged. Immutable ledger UPDATE remains forbidden; the existing recovery gate runs for the changed seed caller. Rollback direction is bound to the last successful upgrade, preventing a forward image change with stale backup under rollback mode; positive/reverse/no-history/already-rolled-back policy checks and the real preflight rejection cover it. A separate real PostgreSQL fault-injection fixture commits a new payment during a controlled readiness failure; A must remain stopped with review state and the payment intact, while B data, start time and HTTP readiness remain healthy.",
   "server": [
-    "Server.Tests.PublicAppointmentAccessTests",
-    "Server.Tests.BookingSmsBudgetTests",
-    "Server.Tests.AppointmentReminderTests",
-    "Server.Tests.SubscriptionLedgerTests",
-    "Server.Tests.AppointmentStorageTests",
-    "Server.Tests.AppointmentPendingTests",
-    "Server.Tests.BookingPolicyTests"
+    "Server.Tests.SubscriptionAccessTests",
+    "Server.Tests.SubscriptionLedgerTests"
   ],
   "web": [],
   "files": [
-    "deploy/Protect-SyntheticRecovery.ps1",
-    "deploy/synthetic_recovery.py",
-    "tests/Deployment/verify_recovery.py",
-    "tests/Server.Tests/PublicAppointmentAccessTests.cs",
-    "tests/Server.Tests/AppointmentReminderTests.cs",
-    "tests/Server.Tests/BookingSmsBudgetTests.cs",
-    "tests/Server.Tests/AppointmentStorageTests.cs",
-    "tests/Server.Tests/AppointmentPendingTests.cs",
-    "tests/Server.Tests/BookingPolicyTests.cs"
+    "deploy/synthetic_update.py",
+    "tests/Deployment/verify_update.py",
+    "tests/Deployment/verify_recovery.py"
   ]
 }
