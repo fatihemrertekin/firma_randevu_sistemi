@@ -42,8 +42,8 @@ def build(revision,root,tag):
     return json.loads(fixture.run(['docker','image','inspect',tag]))[0]['Id']
 
 
-def review_guard(args,baseline,candidate,catalog):
-    options=argparse.Namespace(instance=args.instance+'-review',ports=[p+10 for p in args.ports],app_image=baseline,operator_image=args.operator_image,postgres_image=args.postgres_image)
+def review_guard(args,baseline,candidate,catalog,rollback_failure=False):
+    options=argparse.Namespace(instance=args.instance+('-fallback' if rollback_failure else '-review'),ports=[p+(20 if rollback_failure else 10) for p in args.ports],app_image=baseline,operator_image=args.operator_image,postgres_image=args.postgres_image)
     root=ROOT/'.local/synthetic'/options.instance
     command=['docker','compose','-f',str(root/'compose.json')]
     try:
@@ -55,8 +55,12 @@ def review_guard(args,baseline,candidate,catalog):
         before_b=recovery.snapshot(options.instance+'-db-b')
         b_start=fixture.run(['docker','inspect','--format','{{.State.StartedAt}}',options.instance+'-app-b'])
         original_ready=recovery.ready
+        ready_calls=0
         def committed_change(port):
+            nonlocal ready_calls
             original_ready(port)
+            ready_calls+=1
+            if rollback_failure and ready_calls==1:raise RuntimeError('Kontrollü aday sağlık hatası; önceki imaj denenmeli.')
             recovery.sql(options.instance+'-db-a',f'''INSERT INTO "SubscriptionPayments" ("Id","PeriodId","AmountTry","PaidOn","Reference","RequestKey","RequestHash","RecordedBy","RecordedAt") SELECT '{uuid.uuid4()}',"Id",600,CURRENT_DATE,'SYNTHETIC-IN-FLIGHT','{uuid.uuid4()}',repeat('B',64),'{uuid.uuid4()}',clock_timestamp() FROM "SubscriptionPeriods";''')
             raise RuntimeError('Kontrollü sağlık hatası; bu sırada yeni mali kayıt commit edildi.')
         with patch.object(recovery,'ready',side_effect=committed_change):
@@ -172,10 +176,11 @@ def verify(args):
         check(recovery.snapshot(args.instance+'-db-b')==b_before,'B verisi değişti.')
         check(update.switch(**dict(params,image=baseline,mode='rollback'))['state']=='verified','Tekrar rollback gereksiz işlem yaptı.')
         review_instance=review_guard(args,baseline,candidate,catalog)
+        fallback_instance=review_guard(args,baseline,candidate,catalog,rollback_failure=True)
         fixture.write_json(folder/'acceptance.json',dict(pass_=True,instance=args.instance,baseline=baseline,candidate=candidate,baselineRevision=update.MINIMUM_REVISION,candidateRevision=revision,
             distinctImmutableImages=True,backupVerified=True,migrationExecuted=False,dbRestored=False,tableCount=len(before['tables']),failedCandidateRolledBack=True,upgradeAndRollback=True,
             newPaymentAndProfilePreserved=True,oldCookieWorks=True,subscriptionPolicyPreserved=True,otherFirmDataAndRuntimePreserved=True,noOpVerified=True,
-            results=results,seconds=round(time.monotonic()-started,3),reviewOnCommittedDataDrift=True,reviewInstance=review_instance,mainTouched=False,registryOrVpsProven=False))
+            results=results,seconds=round(time.monotonic()-started,3),reviewOnCommittedDataDrift=True,reviewInstance=review_instance,rollbackRecoveryFailureClosed=True,fallbackInstance=fallback_instance,mainTouched=False,registryOrVpsProven=False))
         print('P06-05: İki ayrı imaj arasında upgrade/rollback, yeni ödeme+profil, DP/borç politikası ve B koruması geçti.',flush=True)
     finally:
         if (source/'compose.json').exists():fixture.run(compose+['stop'])
