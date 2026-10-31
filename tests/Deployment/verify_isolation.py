@@ -217,7 +217,18 @@ def verify_isolation(options, folder, compose, sessions, sql, before, snapshot):
     finally:
         fixture.run(compose + ['start', 'db-b'])
         fixture.ready(options.ports, private/'ca.pem')
-    check(request(operator, route('b'))[0] == 200, 'DB kesintisinden sonra toparlanma yok.')
+    # Merkez sağlığı hedef havuzundaki kesilmiş bağlantıların toparlandığını göstermez.
+    start = time.monotonic()
+    recovery_statuses = []
+    while True:
+        status = request(operator, route('b'))[0]
+        recovery_statuses.append(status)
+        if status == 200:
+            break
+        check(status == 503 and time.monotonic()-start < 20, 'DB kesintisinden sonra hedef 20 saniyede toparlanmadı: '+str(status))
+        time.sleep(.25)
+    report['measurements']['targetRecoverySeconds'] = round(time.monotonic()-start, 3)
+    report['measurements']['targetRecoveryStatuses'] = recovery_statuses
     passed('Bilinmeyen hedef, firma/Identity marker, geniş rol ve kapalı DB reddi', 5)
 
     limits = inside('app-a', 'sh', '-c', 'cat /sys/fs/cgroup/cpu.max /sys/fs/cgroup/memory.max /sys/fs/cgroup/memory.swap.max /sys/fs/cgroup/pids.max').splitlines()
