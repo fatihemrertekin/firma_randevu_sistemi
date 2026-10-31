@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import { postWithCsrf, requestErrorMessage } from '../../app/api'
-import SubscriptionOperator from './SubscriptionOperator'
+import OperatorFirms from './OperatorFirms'
 import styles from './SubscriptionOperator.module.css'
 
 type Account = { email: string; mfaEnabled: boolean; operatorAccess: boolean }
@@ -18,9 +18,9 @@ export default function OperatorApplication() {
   const [email, setEmail] = useState(''), [password, setPassword] = useState(''), [code, setCode] = useState('')
   const [mfa, setMfa] = useState(false), [recovery, setRecovery] = useState(false), [key, setKey] = useState('')
   const [codes, setCodes] = useState<string[]>([]), [busy, setBusy] = useState(false), [error, setError] = useState('')
-  const [unsaved, setUnsaved] = useState(false)
+  const [unsaved, setUnsaved] = useState(false), [ledgerLocked, setLedgerLocked] = useState(false)
   const pending = useRef(false)
-  const expired = useCallback(() => { setAccount(null); setMfa(false); setUnsaved(false) }, [])
+  const expired = useCallback(() => { setAccount(null); setMfa(false) }, [])
   async function load() { setAccount(await readAccount()) }
   useEffect(() => { let active = true; void readAccount().then(value => { if (active) setAccount(value) }).catch(() => { if (active) setError('Oturum bilgisi alınamadı. Yeniden deneyin.') }).finally(() => { if (active) setLoading(false) }); return () => { active = false } }, [])
   async function submit(event: FormEvent) {
@@ -50,7 +50,7 @@ export default function OperatorApplication() {
     finally { pending.current = false; setBusy(false) }
   }
   async function logout() {
-    if (pending.current) return
+    if (pending.current || ledgerLocked) return
     if (unsaved && !window.confirm('Kaydedilmemiş bilgiler silinip çıkış yapılsın mı?')) return
     pending.current = true; setBusy(true); setError('')
     try {
@@ -61,12 +61,13 @@ export default function OperatorApplication() {
     finally { pending.current = false; setBusy(false) }
   }
   return <div className={`management-theme ${styles.page}`}>
-    <header className={styles.header}><span className={styles.brand}>Randevu</span><span>Abonelik yönetimi</span>{account?.operatorAccess && <button disabled={busy} onClick={() => void logout()}>Çıkış yap</button>}</header>
+    <header className={styles.header}><span className={styles.brand}>Randevu</span><span>Abonelik yönetimi</span>{account?.operatorAccess && <button disabled={busy || ledgerLocked} onClick={() => void logout()}>Çıkış yap</button>}</header>
     {error && <p className={styles.error} role="alert">{error}</p>}
+    {(account?.operatorAccess || unsaved) && <div hidden={!account?.operatorAccess}><OperatorFirms active={!!account?.operatorAccess} onExpired={expired} onUnsaved={setUnsaved} onBusy={setLedgerLocked} /></div>}
     {loading ? <main className={styles.main}><h1>Oturum kontrol ediliyor…</h1></main> : codes.length ? <main className={styles.auth}>
       <h1>Kurtarma kodlarını saklayın</h1><p>Bu kodlar bir kez gösterilir. Her biri yalnız bir kez kullanılabilir.</p><ul>{codes.map(c => <li key={c}><code>{c}</code></li>)}</ul>
       <button onClick={() => setCodes([])}>Kodları kaydettim</button>
-    </main> : account?.operatorAccess ? <SubscriptionOperator onExpired={expired} onUnsaved={setUnsaved} onBusy={setBusy} /> : <main className={styles.auth}>
+    </main> : account?.operatorAccess ? null : <main className={styles.auth}>
       <h1>{account ? 'İki aşamalı girişi kurun' : mfa ? 'İkinci adımı tamamlayın' : 'Abonelik yönetimine giriş'}</h1>
       {error && !account && !mfa && <button disabled={busy} onClick={() => { setLoading(true); void load().catch(() => setError('Oturum bilgisi alınamadı.')).finally(() => setLoading(false)) }}>Oturumu yeniden kontrol et</button>}
       <p>{account ? 'Doğrulayıcı uygulamanıza operatör hesabınızı ekleyin. Kurulum tamamlanmadan firma kayıtları açılamaz.' : mfa ? (recovery ? 'Sakladığınız kurtarma kodlarından birini girin.' : 'Doğrulayıcı uygulamanızdaki altı haneli kodu girin.') : 'Bu alan yalnız yazılım aboneliklerini yöneten operatöre aittir.'}</p>
@@ -78,7 +79,7 @@ export default function OperatorApplication() {
         <button disabled={busy} type="submit">{busy ? 'Doğrulanıyor…' : account ? key ? 'İki aşamalı girişi aç' : 'Kuruluma başla' : mfa ? 'Doğrula' : 'Giriş yap'}</button>
       </form>
       {mfa && <button disabled={busy} onClick={() => { setRecovery(!recovery); setCode('') }}>{recovery ? 'Uygulama kodu kullan' : 'Kurtarma kodu kullan'}</button>}
-      {account && <button disabled={busy} onClick={() => void logout()}>Çıkış yap</button>}
+      {account && <button disabled={busy || ledgerLocked} onClick={() => void logout()}>Çıkış yap</button>}
     </main>}
   </div>
 }

@@ -1,7 +1,8 @@
 {
   "compose": false,
-  "reason": "P07-08 reuses the existing operator ledger handlers for explicit allowlisted target routes, validates URL/body targets before connecting, and adds a repeatable-read summary of the latest started period and all started overdue balances independent of history pagination. SubscriptionTargetLedgerTests exercise two real PostgreSQL firms, same keys and references in separate firms, target/version mismatches, exact replay after commit, parallel payments, atomic failed/successful corrections and reversals, all56-table business-data preservation, Istanbul midnight, future-only/empty and older-than-page debts, legacy summary parity, MFA/CSRF/validation/429 and isolated firm outage. SubscriptionTargetsTests retain allowlist, marker, role and legacy fail-closed checks. SubscriptionOperatorTests retain existing single-firm financial callers, provisioning and identity revocation. SubscriptionAccessTests and SubscriptionTests cover agreement with normal firm read-only rules and unchanged Owner privacy. Existing operator UI and common API tests cover backward compatibility of the additive single-firm response. No normal Server/Web, schema, migration, grants, dependency or deployment configuration changes; normal8080 source/image remains unchanged, and the operator image gets an exact-source packaging/startup acceptance.",
+  "reason": "P07-09 connects the approved firm selector to explicit scoped financial routes, retains pending/uncertain target and replay across authentication, and adds opt-in page-bounded summaries with a shared3-connection bound across concurrent list requests,5s per-firm and15s overall limits. Shared summary extraction affects legacy and scoped ledger readers. SubscriptionTargetSummariesTests covers two real firms, metadata compatibility, page/search/access filters, complete older debt,5s lock timeout/recovery, two concurrent requests sharing the3-connection bound, privacy and all56-table read invariance. Existing target/ledger/operator/access/Owner tests retain allowlist markers, MFA/CSRF, retries/corrections/races and read-only coordination. Operator UI/API tests cover selected route and body, foreign response rejection, stale requests, dirty/uncertain target lock, auth renewal, empty/errors and single-firm compatibility. Real packaged API/browser four-width acceptance and operator image are required. Only operator Web modules change; normal backend and normal web bundle equality will be verified without rebuilding/restarting normal8080. No schema/grant/dependency or deploy configuration changes.",
   "server": [
+    "Server.Tests.SubscriptionTargetSummariesTests",
     "Server.Tests.SubscriptionTargetLedgerTests",
     "Server.Tests.SubscriptionTargetsTests",
     "Server.Tests.SubscriptionOperatorTests",
@@ -14,6 +15,14 @@
   ],
   "files": [
     "src/Operator/SubscriptionLedger.cs",
-    "tests/Server.Tests/SubscriptionTargetLedgerTests.cs"
+    "src/Operator/SubscriptionSummary.cs",
+    "src/Operator/SubscriptionTargets.cs",
+    "src/Web/src/features/subscription-operator/OperatorApplication.tsx",
+    "src/Web/src/features/subscription-operator/OperatorFirms.tsx",
+    "src/Web/src/features/subscription-operator/SubscriptionOperator.module.css",
+    "src/Web/src/features/subscription-operator/SubscriptionOperator.test.tsx",
+    "src/Web/src/features/subscription-operator/SubscriptionOperator.tsx",
+    "src/Web/src/features/subscription-operator/operatorApi.ts",
+    "tests/Server.Tests/SubscriptionTargetSummariesTests.cs"
   ]
 }

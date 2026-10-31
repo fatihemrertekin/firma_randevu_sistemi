@@ -1,38 +1,18 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
-import { postWithCsrf, requestErrorMessage } from '../../app/api'
+import { postWithCsrf, requestErrorMessage, RequestVerificationError } from '../../app/api'
 import { parseTryPrice, formatTryPrice } from '../../app/money'
 import { formatBusinessDateTime } from '../../app/format'
+import { readData, ledgerPath, SessionExpired, validDate, type Data, type Period, type Payment } from './operatorApi'
 import styles from './SubscriptionOperator.module.css'
 
-type Period = { id: string; startsOn: string; endsOn: string; dueOn: string; version: string; amountTry: string; paidTry: string; outstandingTry: string; overdue: boolean }
-type Payment = { id: string; paidOn: string; recordedAt: string; amountTry: string; reference: string | null; reason: string | null; reversed: boolean }
-type Data = { targetId: string; targetName: string; asOf: string; page: number; total: number; selectedPeriodId: string | null; periods: Period[]; payments: Payment[]; paymentsPage: number; paymentCount: number }
 type Editor = { kind: 'period' | 'payment' | 'reverse' | 'correct'; payment?: Payment; key: string }
 const money = formatTryPrice
 const date = (value: string) => new Intl.DateTimeFormat('tr-TR', { dateStyle: 'long', timeZone: 'Europe/Istanbul' }).format(new Date(value + 'T12:00:00Z'))
 const month = (value: string) => new Intl.DateTimeFormat('tr-TR', { month: 'long', year: 'numeric', timeZone: 'Europe/Istanbul' }).format(new Date(value + 'T12:00:00Z'))
 function inclusiveEnd(value: string) { const end = new Date(value + 'T12:00:00Z'); end.setUTCDate(end.getUTCDate() - 1); return end.toISOString().slice(0, 10) }
 const record = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null
-const validDate = (v: unknown) => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v) && Number.isFinite(Date.parse(v + 'T12:00:00Z'))
-const validMoney = (v: unknown) => typeof v === 'string' && /^-?\d{1,10}\.\d{2}$/.test(v)
-function dataResponse(value: unknown): Data {
-  if (!record(value) || typeof value.targetId !== 'string' || typeof value.targetName !== 'string' || typeof value.asOf !== 'string' ||
-    typeof value.page !== 'number' || typeof value.total !== 'number' || typeof value.paymentsPage !== 'number' || typeof value.paymentCount !== 'number' ||
-    !(value.selectedPeriodId === null || typeof value.selectedPeriodId === 'string') || !Array.isArray(value.periods) || !Array.isArray(value.payments) ||
-    value.periods.some(p => !record(p) || ['id','version'].some(k => typeof p[k] !== 'string') || ['startsOn','endsOn','dueOn'].some(k => !validDate(p[k])) || ['amountTry','paidTry','outstandingTry'].some(k => !validMoney(p[k])) || typeof p.overdue !== 'boolean') ||
-    value.payments.some(p => !record(p) || typeof p.id !== 'string' || !validDate(p.paidOn) || typeof p.recordedAt !== 'string' || !Number.isFinite(Date.parse(p.recordedAt)) || !validMoney(p.amountTry) || typeof p.reversed !== 'boolean' || !(p.reference === null || typeof p.reference === 'string') || !(p.reason === null || typeof p.reason === 'string'))) throw new Error('Abonelik yanıtı doğrulanamadı. Yeniden yükleyin.')
-  return value as Data
-}
-class SessionExpired extends Error {}
-async function readData(page = 1, periodId?: string, paymentsPage = 1): Promise<Data> {
-  const query = new URLSearchParams({ page: String(page), paymentsPage: String(paymentsPage), ...(periodId ? { periodId } : {}) })
-  const response = await fetch('/api/subscription?' + query, { cache: 'no-store', signal: AbortSignal.timeout(15000) })
-  if (response.status === 401) throw new SessionExpired()
-  if (!response.ok) throw new Error(response.status === 403 ? 'Bu işlem için operatör yetkiniz yok.' : response.status === 429 ? 'Çok fazla istek. Bekleyip yeniden deneyin.' : 'Firma kayıtları okunamadı. Hedefi ve bağlantıyı kontrol edip yeniden deneyin.')
-  return dataResponse(await response.json())
-}
 
-export default function SubscriptionOperator({ onExpired, onUnsaved, onBusy }: { onExpired: () => void; onUnsaved?: (value: boolean) => void; onBusy?: (value: boolean) => void }) {
+export default function SubscriptionOperator({ active = true, targetId, onBack, onExpired, onUnsaved, onBusy }: { active?: boolean; targetId?: string; onBack?: () => void; onExpired: () => void; onUnsaved?: (value: boolean) => void; onBusy?: (value: boolean) => void }) {
   const [data, setData] = useState<Data | null>(null), [loading, setLoading] = useState(true), [error, setError] = useState(''), [notice, setNotice] = useState('')
   const [editor, setEditor] = useState<Editor | null>(null), [busy, setBusy] = useState(false), [formError, setFormError] = useState('')
   const [start, setStart] = useState(''), [end, setEnd] = useState(''), [due, setDue] = useState(''), [paid, setPaid] = useState(''), [amount, setAmount] = useState(''), [reference, setReference] = useState(''), [reason, setReason] = useState('')
@@ -40,35 +20,35 @@ export default function SubscriptionOperator({ onExpired, onUnsaved, onBusy }: {
   const [mustReload, setMustReload] = useState(false)
   const [formPeriods, setFormPeriods] = useState<Period[]>([]), [formPage, setFormPage] = useState(1)
   const pending = useRef(false), popup = useRef<HTMLDivElement>(null), opener = useRef<HTMLElement | null>(null), generation = useRef(0), savedRequest = useRef<{ path: string; body: object } | null>(null)
-  useEffect(() => { onUnsaved?.(dirty || busy); return () => onUnsaved?.(false) }, [dirty, busy, onUnsaved])
-  useEffect(() => { onBusy?.(busy); return () => onBusy?.(false) }, [busy, onBusy])
+  useEffect(() => { onUnsaved?.(dirty || busy || uncertain); return () => onUnsaved?.(false) }, [dirty, busy, uncertain, onUnsaved])
+  useEffect(() => { onBusy?.(busy || uncertain); return () => onBusy?.(false) }, [busy, uncertain, onBusy])
   const load = useCallback(async (page = 1, periodId?: string, paymentsPage = 1) => {
     const version = ++generation.current; setLoading(true); setError('')
     try {
-      const result = await readData(page, periodId, paymentsPage); if (version === generation.current) { setData(result); return result }
+      const result = await readData(targetId, page, periodId, paymentsPage); if (version === generation.current) { setData(result); return result }
     } catch (problem) { if (version === generation.current) { if (problem instanceof SessionExpired) onExpired(); setData(null); setError(problem instanceof Error && !(problem instanceof TypeError) ? problem.message : 'Kayıtlar okunamadı. Bağlantıyı kontrol edip yeniden deneyin.') } }
     finally { if (version === generation.current) setLoading(false) }
-  }, [onExpired])
+  }, [onExpired, targetId])
   useEffect(() => {
     let active = true
-    void readData().then(value => { if (active) setData(value) }).catch(problem => { if (active) { if (problem instanceof SessionExpired) onExpired(); setError(problem instanceof Error && !(problem instanceof TypeError) ? problem.message : 'Kayıtlar okunamadı. Bağlantıyı kontrol edip yeniden deneyin.') } }).finally(() => { if (active) setLoading(false) })
+    void readData(targetId).then(value => { if (active) setData(value) }).catch(problem => { if (active) { if (problem instanceof SessionExpired) onExpired(); setError(problem instanceof Error && !(problem instanceof TypeError) ? problem.message : 'Kayıtlar okunamadı. Bağlantıyı kontrol edip yeniden deneyin.') } }).finally(() => { if (active) setLoading(false) })
     return () => { active = false }
-  }, [onExpired])
+  }, [onExpired, targetId])
   const selected = data?.periods.find(p => p.id === data.selectedPeriodId)
   const close = useCallback((force = false) => {
-    if (pending.current) return
-    if (!force && dirty && !window.confirm(uncertain ? 'İşlem sonucu belirsiz. Kapatmadan önce aynı işlemle yeniden deneyin veya kayıtlardan sonucu kontrol edin. Yine de kapatılsın mı?' : 'Kaydedilmemiş bilgiler silinsin mi?')) return
+    if (pending.current || uncertain && !force) return
+    if (!force && dirty && !window.confirm('Kaydedilmemiş bilgiler silinsin mi?')) return
     popup.current?.hidePopover(); setEditor(null); setDirty(false); setUncertain(false); savedRequest.current = null; opener.current?.focus()
   }, [dirty, uncertain])
   useEffect(() => {
     if (!editor) return
-    function unload(event: BeforeUnloadEvent) { if (dirty) event.preventDefault() }
+    function unload(event: BeforeUnloadEvent) { if (dirty || uncertain || busy) event.preventDefault() }
     function escape(event: KeyboardEvent) { if (event.key === 'Escape') { event.preventDefault(); close() } }
     window.addEventListener('beforeunload', unload); window.addEventListener('keydown', escape)
     return () => { window.removeEventListener('beforeunload', unload); window.removeEventListener('keydown', escape) }
-  }, [editor, dirty, close])
+  }, [editor, dirty, uncertain, busy, close])
   const editing = editor !== null
-  useEffect(() => { if (editing) { popup.current?.showPopover(); popup.current?.querySelector<HTMLInputElement>('input')?.focus() } }, [editing, data?.targetId])
+  useEffect(() => { if (editing && active) { popup.current?.showPopover(); popup.current?.querySelector<HTMLInputElement>('input')?.focus() } else popup.current?.hidePopover() }, [editing, active, data?.targetId])
   function open(kind: Editor['kind'], payment?: Payment) {
     if (!data || loading) return
     opener.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
@@ -93,12 +73,12 @@ export default function SubscriptionOperator({ onExpired, onUnsaved, onBusy }: {
         if (![start, end, due].every(validDate)) { setFormError('Geçerli dönem ve son ödeme tarihlerini girin.'); return }
         const endDate = new Date(end + 'T12:00:00Z'); endDate.setUTCDate(endDate.getUTCDate() + 1)
         if (endDate.getUTCFullYear() > 9999) { setFormError('Dönem tarihi desteklenen takvim aralığının dışında.'); return }
-        body = { ...common, startsOn: start, endsOn: endDate.toISOString().slice(0,10), dueOn: due, amountTry: parsed }; path = '/api/subscription/periods'
+        body = { ...common, startsOn: start, endsOn: endDate.toISOString().slice(0,10), dueOn: due, amountTry: parsed }; path = ledgerPath(targetId) + '/periods'
       } else {
         if (!period) { setFormError('Güncel dönemi seçin.'); return }
         const target = { ...common, periodId: period.id, version: period.version }
         body = editor.kind === 'reverse' ? { ...target, reason } : editor.kind === 'correct' ? { ...target, paidOn: paid, amountTry: parsed, reason } : { ...target, paidOn: paid, amountTry: parsed, reference }
-        path = editor.kind === 'payment' ? '/api/subscription/payments' : `/api/subscription/payments/${editor.payment?.id}/${editor.kind}`
+        path = ledgerPath(targetId) + (editor.kind === 'payment' ? '/payments' : `/payments/${editor.payment?.id}/${editor.kind}`)
       }
       savedRequest.current = { path, body }
     }
@@ -116,16 +96,26 @@ export default function SubscriptionOperator({ onExpired, onUnsaved, onBusy }: {
       pending.current = false; setNotice(editor.kind === 'period' ? 'Abonelik dönemi kaydedildi.' : editor.kind === 'payment' ? 'Doğruladığınız ödeme kaydedildi.' : 'Düzeltme kaydedildi. Önceki hareket geçmişte korundu.'); close(true)
       await load(data.page, selected?.id)
     } catch (problem) {
-      if (savedRequest.current) setUncertain(true)
+      if (problem instanceof RequestVerificationError) { if (!uncertain) savedRequest.current = null }
+      else if (savedRequest.current) setUncertain(true)
       setFormError(requestErrorMessage(problem, problem instanceof Error && !(problem instanceof TypeError) ? problem.message : 'Sonuç doğrulanamadı. Aynı işlemle yeniden deneyin.'))
     } finally { pending.current = false; setBusy(false) }
   }
   const edit = (setter: (s: string) => void) => (value: string) => { setter(value); setDirty(true); savedRequest.current = null }
+  function leave() {
+    if (pending.current || busy || uncertain) return
+    if (dirty && !window.confirm('Kaydedilmemiş bilgiler silinip firmalara dönülsün mü?')) return
+    onBack?.()
+  }
+  const heading = useRef<HTMLHeadingElement>(null)
+  useEffect(() => { if (targetId) heading.current?.focus() }, [targetId])
   return <main className={styles.main}>
-    <div className={styles.heading}><div><h1>Abonelik kaydı</h1>{data && <p>{data.targetName} · {data.targetId}</p>}</div><div className={styles.actions}>
+    {onBack && <button disabled={busy || uncertain} onClick={leave}>Firmalara dön</button>}
+    <div className={styles.heading}><div><h1 ref={heading} tabIndex={-1}>Abonelik kaydı</h1>{data && <p>{data.targetName} · {data.targetId}</p>}</div><div className={styles.actions}>
       <button disabled={!data || loading || !!editor} onClick={() => open('period')}>Dönem ekle</button>
       {selected && <button className={styles.primary} disabled={loading || !!editor || selected.outstandingTry === '0.00'} onClick={() => open('payment')}>Ödeme kaydet</button>}
     </div></div>
+    {data?.summary && <p className={styles.accessSummary} role="status">{data.summary.restrictionsApplied ? 'Erişim: salt okunur.' : 'Erişim: normal.'} Toplam gecikmiş borç: {money(data.summary.overdueOutstandingTry)} ({data.summary.overduePeriodCount} dönem). Bu özet bütün başlamış dönemleri kapsar.</p>}
     {notice && <p role="status">{notice}</p>}
     {loading ? <p role="status">Abonelik kayıtları yükleniyor…</p> : error ? <><p role="alert">{error}</p><button onClick={() => void load()}>Yeniden dene</button></> : data && !data.total ? <p>Bu firma için henüz abonelik dönemi kaydedilmedi. İlk dönemi ekleyin.</p> : data && <>
       <label htmlFor="subscription-period">Dönem</label><select id="subscription-period" value={data.selectedPeriodId ?? ''} disabled={!!editor} onChange={e => void load(data.page, e.target.value)}>
@@ -155,7 +145,7 @@ export default function SubscriptionOperator({ onExpired, onUnsaved, onBusy }: {
           <div><label htmlFor="period-due">Son ödeme tarihi</label><input id="period-due" type="date" required value={due} onChange={e => edit(setDue)(e.target.value)} /></div>
         </> : <div className={styles.wide}><label htmlFor="payment-period">Dönem</label><select id="payment-period" required value={destination} disabled={editor.kind !== 'correct'} onChange={e => edit(setDestination)(e.target.value)}>{formPeriods.map(p => <option key={p.id} value={p.id}>{date(p.startsOn)}</option>)}</select>
           {editor.kind === 'correct' && data.total > 12 && <div className={styles.actions}>{[-1, 1].map(delta => <button key={delta} type="button" disabled={busy || (delta < 0 ? formPage === 1 : formPage * 12 >= data.total)} onClick={() => {
-            setBusy(true); void readData(formPage + delta).then(next => { setFormPage(next.page); setFormPeriods(next.periods); setDestination(next.periods[0]?.id ?? ''); setDirty(true); savedRequest.current = null }).catch(() => setFormError('Dönemler yüklenemedi. Yeniden deneyin.')).finally(() => setBusy(false))
+            setBusy(true); void readData(targetId, formPage + delta).then(next => { setFormPage(next.page); setFormPeriods(next.periods); setDestination(next.periods[0]?.id ?? ''); setDirty(true); savedRequest.current = null }).catch(() => setFormError('Dönemler yüklenemedi. Yeniden deneyin.')).finally(() => setBusy(false))
           }}>{delta < 0 ? 'Daha yeni dönemler' : 'Önceki dönemler'}</button>)}</div>}
         </div>}
         {editor.kind !== 'period' && editor.kind !== 'reverse' && <div><label htmlFor="payment-date">Ödeme tarihi</label><input id="payment-date" type="date" required max={data.asOf} value={paid} onChange={e => edit(setPaid)(e.target.value)} /></div>}
@@ -164,7 +154,7 @@ export default function SubscriptionOperator({ onExpired, onUnsaved, onBusy }: {
         {(editor.kind === 'correct' || editor.kind === 'reverse') && <div className={styles.wide}><label htmlFor="payment-reason">Düzeltme gerekçesi</label><textarea id="payment-reason" required maxLength={300} value={reason} onChange={e => edit(setReason)(e.target.value)} /></div>}
       </fieldset>{formError && <p role="alert">{formError}</p>}{uncertain && <p>Sonuç belirsiz; bilgiler sabitlendi. Aynı işlemle yeniden deneyin veya kayıtları kontrol edin.</p>}
         {mustReload && <button type="button" disabled={busy} onClick={() => { void load(formPage, destination).then(latest => { if (!latest) return; setFormPeriods(latest.periods); setFormPage(latest.page); setMustReload(false); setEditor({ ...editor, key: crypto.randomUUID() }); setFormError('Güncel kayıtları yükledik. Bilgileri kontrol edip yeniden kaydedin.') }) }}>Güncel kayıtları yükle</button>}
-        <div className={styles.formActions}><button type="submit" disabled={busy || mustReload}>{busy ? 'Kaydediliyor…' : uncertain ? 'Aynı işlemle yeniden dene' : 'Kaydet'}</button><button type="button" disabled={busy} onClick={() => close()}>Vazgeç</button></div>
+        <div className={styles.formActions}><button type="submit" disabled={busy || mustReload}>{busy ? 'Kaydediliyor…' : uncertain ? 'Aynı işlemle yeniden dene' : 'Kaydet'}</button><button type="button" disabled={busy || uncertain} onClick={() => close()}>Vazgeç</button></div>
       </form>
     </div>}
   </main>
