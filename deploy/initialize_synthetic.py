@@ -49,6 +49,11 @@ def file_hash(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def source_hash(path):
+    # Git checkout satır sonunu değiştirebilir; özel kurulum dosyaları file_hash kullanır.
+    return hashlib.sha256(path.read_bytes().replace(b'\r\n', b'\n')).hexdigest()
+
+
 def no_links(path):
     for item in (path, *path.parents):
         require(not item.is_symlink() and not item.is_junction(), 'Bağlantılı/junction hedef reddedildi.')
@@ -158,7 +163,7 @@ def initialize(options):
     require(all(re.fullmatch(r'sha256:[0-9a-f]{64}', i) for i in images), 'İmajlar yerel tam sha256 kimliği olmalı.')
     folder = ROOT / '.local/synthetic' / options.instance
     no_links(folder)
-    fingerprint = {str(p.relative_to(ROOT)): file_hash(p) for p in
+    fingerprint = {str(p.relative_to(ROOT)): source_hash(p) for p in
                    [Path(__file__).resolve(), ROOT / 'deploy/New-SyntheticCertificates.ps1',
                     ROOT / 'deploy/app-user-grants.sql', ROOT / 'deploy/subscription-operator-target.sql',
                     ROOT / 'deploy/subscription-operator-identity.sql',
