@@ -551,3 +551,18 @@ python tests/Deployment/verify_monitoring.py --instance fr-synthetic-monitor-dem
 Kabul kendi geçici loopback sahte alıcısını, A/B/operatörü ve ayrıca8286 temiz restore hedefini kurar. A app/DB kesintisi, sınırlı64MiB tmpfs doluluğu, yedek eksik/başarısız/eski/hash kaybı, TLS/disk eşikleri, değişmeyen durum/düzelme, yanıt kaybı ve yeni süreçte backoff sınanır. Yedekten sonra yazılan sentetik ödeme, kaynak servis/dosyaları ve özgün paket/anahtar konumları yokken temiz restore'da bilerek geri gelmez; kurtarma noktası ve yerel süre bileşenleri raporlanır. Host diski doldurulmaz; gerçek mesaj/ücretli hizmet yoktur. [Kapsam ve sınırlar](docs/plans/P06.md#p06-06--yerel-izleme-ve-ölçülmüş-kurtarma-provası).
 
 `deploy/monitor_synthetic.py` içinde `arm` yalnız hazır, yeni sentetik hedefi ve ayrı `--receiver-port` değerini bağlar; `backup --package ... --key ...` mevcut tek-firma yardımcısının sonucunu güvenli receipt'e yazar; `scan` tek salt okunur taramadır. Tümünde açık `--instance` zorunludur. Scan çıkışı0 sakin/onaylı,2 aktif uyarı/onaylı,3 bekleyen veya blocked teslim,1 ret/hata demektir. Alıcı ve fixture'lar tam kabul sonunda kapatılır; bu komut arka planda çalışan alarm servisi veya gerçek uptime izleyicisi değildir. Olaylarda sır/kişisel veri yoktur. Üç teslim hatasında pending kayıt silinmez; otomatik sıfırlama olmadan elle inceleme gerekir. Volume, private dosyalar, şifreli paket ve ayrı anahtarlar korunur; gerçek host dışı yedek/alarm/RPO/RTO hâlâ açık kapıdır.
+
+### Readiness ve liveness
+
+Normal uygulamada `/health/live` DB kesintisinde de200 döner; `/health/ready` configured bağlantıyı açmanın ardından gerçek SELECT1 çalıştırır. Bağlantı/sorgu hatasında boş503, başarılı sorguda mevcut ready JSON/200 döner. Sorgunun açık3s CommandTimeout sınırı ve mevcut3s bağlı iptal bütçesi kullanılır; sürücü iptal işlemi/ağ yükü dahil kesin3s yanıt SLA'sı değildir. İş/rol/şema doğruluğunun tamamını tek başına kanıtlamaz.
+
+İlgili sunucu regresyonu: `dotnet run --project tests/Server.Tests/Server.Tests.csproj --no-build -- -class Server.Tests.HealthEndpointsTests -class Server.Tests.AppointmentPendingTests`. Gerçek HTTP/Docker kesinti kabulü [P06-06a planında](docs/plans/P06.md#p06-06a--gerçek-sorguyla-readiness); ana8080 DB'sini durdurmak bu testin parçası değildir.
+
+Paketli imajın ayrı sentetik kabulü (yukarıdaki build/EF tool ön koşullarıyla, yeni ID/boş port):
+
+```powershell
+$readyAppImage = docker image inspect firma-randevu:local --format '{{.Id}}'
+$readyOperatorImage = docker image inspect firma-randevu-operator:local --format '{{.Id}}'
+$readyPostgresImage = docker image inspect postgres:18.6-trixie --format '{{.Id}}'
+python tests/Deployment/verify_readiness.py --instance fr-synthetic-ready-demo --ports 8303 8304 8305 --app-image $readyAppImage --operator-image $readyOperatorImage --postgres-image $readyPostgresImage
+```

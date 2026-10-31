@@ -107,6 +107,9 @@ app.MapGet("/health/ready", async (HttpContext context) =>
     {
         await using var connection = new NpgsqlConnection(connectionString);
         await connection.OpenAsync(timeout.Token);
+        // Havuzun ertelenmiş reset yanıtı da takılabilir; komut süresi ayrıca sınırlı olmalı.
+        await using var command = new NpgsqlCommand("SELECT 1", connection) { CommandTimeout = 3 };
+        await command.ExecuteScalarAsync(timeout.Token);
         return Results.Ok(new { status = "ready" });
     }
     catch (Exception exception) when (
