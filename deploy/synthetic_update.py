@@ -132,6 +132,7 @@ def switch(instance,firm,expected_image,image,mode,catalog,package,key):
                 state.update(status='ready',image=expected_image,resources=resources,composeHash=fixture.file_hash(compose),history=state['history']+[attempt])
                 fixture.write_json(journal,state)
             except RuntimeError as error:
+                fixture.run(command+['stop','app-a'])
                 raise RuntimeError('Geçiş/geri dönüş durdu; review kaydı ve veri korunuyor. Otomatik DB restore/Down yok.') from error
             raise RuntimeError('Aday açılamadı; veri/anahtar korunarak önceki imaja dönüldü. İstenen geçiş başarısızdır.')
         attempt.update(outcome='success',seconds=round(time.monotonic()-started,3))
