@@ -517,3 +517,19 @@ python deploy/synthetic_recovery.py restore --package .local/recovery-packages/e
 ```
 
 Yedek komutu A uygulamasını ve fixture operatörünü durdurur; otomatik tekrar açmaz. Paket/anahtar dizinleri yeni ve ayrı olmalıdır. Restore yeni hedef ister, mevcut hedef/ana8080 üzerine yazamaz. Araç yalnız 64MiB bellek içi sentetik paketi destekler; üretim veya host dışı yedek aracı değildir. Kaynak dosyaları ve kurtarma anahtarları Git'e gönderilmez; anahtar kaybolursa paket açılamaz. Paket şifreli olsa da anahtarı aynı kayıp alanında tutmak host kaybına karşı koruma sağlamaz.
+
+### P06 sentetik imaj güncelleme ve geri dönüş provası
+
+Depo kökünde; Docker, Git geçmişi (P07-05 dahil), Python3.12+, PowerShell7.4+ ve önceki sentetik kurulumun dotnet tool/build ön koşulları gerekir. Yeni ve boş ID/port seçin:
+
+```powershell
+$updateOperatorImage = docker image inspect firma-randevu-operator:local --format '{{.Id}}'
+$updatePostgresImage = docker image inspect postgres:18.6-trixie --format '{{.Id}}'
+python tests/Deployment/verify_update.py --instance fr-synthetic-update-demo --ports 8263 8264 8265 --operator-image $updateOperatorImage --postgres-image $updatePostgresImage
+```
+
+Test başlangıç imajını P07-05 Git kaynağından, adayı mevcut Git HEAD'den ayrı etiketlerle üretir; ana `firma-randevu:local` etiketini değiştirmez. İsteğe bağlı `--baseline-image` yalnız bu kabulün tam P07-05 imaj ID'sini kabul eder. Mevcut worktree'deki commit dışı ürün değişiklikleri imaja alınmaz. Bu yüzden ürün kaynağı değiştiyse önce kaynak commit'i ve ilgili kabul gerekir. Şifreli backup, yanlış/sağlıksız aday, geçiş, yeni ödeme/profil ve rollback; B'nin veri/runtime ve no-op kontrolleri birlikte çalışır. Sonunda kendi servisleri kapalı, volume/dosyaları korunur. [Kapsam ve sınırlar](docs/plans/P06.md#p06-05--tek-firmada-kontrollü-imaj-geçişi).
+
+Geçiş modülünün tekil çağrısı açık firma, beklenen mevcut imaj, onaylı imaj, işlem modu, sürüm listesi ve doğrulanmış paket/anahtar ister. İlk upgrade için güncel başlangıç yedeği gerekir. Tam kabul sonunda yeni ödeme/profil verisi bulunduğundan eski yedekle ikinci upgrade reddedilir; bu araç otomatik yeni yedek veya genel filo döngüsü kurmaz. Çalışan tekrar güvenli kabul komutu yukarıdadır.
+
+`rollback` modu yalnız uyumlu imaja döner; DB yedeğini restore etmez. Şema farkında migration veya Down otomatik çalışmaz. `review`/yarım kayıt durumu, gerçek firma veya değiştirilmiş kaynak/config desteklenmez. Bu yerel sentetik araç üretim dağıtımı, registry'den imaj çekme veya filo yönetimi değildir.
