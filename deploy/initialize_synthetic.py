@@ -124,7 +124,8 @@ def resource_state(names, owner):
                 require(item['State']['Running'], f'Durmuş kaynak: {name}')
                 if 'Health' in item['State']:
                     require(item['State']['Health']['Status'] == 'healthy', f'Sağlıksız kaynak: {name}')
-                value = [item['Id'], item['Image'], item['Config'], item['HostConfig'], item['Mounts'],
+                # Eski Docker sürümleri inspect mount listesini farklı sıralarda döndürebilir.
+                value = [item['Id'], item['Image'], item['Config'], item['HostConfig'], sorted(item['Mounts'], key=lambda m: m['Destination']),
                          {name: net['NetworkID'] for name, net in item['NetworkSettings']['Networks'].items()}]
             else:
                 value = [item.get('Id', item['Name']), item.get('CreatedAt', item.get('Created')), labels,

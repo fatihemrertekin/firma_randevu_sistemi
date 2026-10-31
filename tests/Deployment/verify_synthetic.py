@@ -14,6 +14,7 @@ import sys
 import time
 import urllib.error
 import urllib.request
+from unittest.mock import patch
 
 sys.dont_write_bytecode = True
 ROOT = Path(__file__).resolve().parents[2]
@@ -36,6 +37,18 @@ def reject(options):
 
 def credentials(path):
     return dict(line.split('=', 1) for line in path.read_text().splitlines())
+
+
+def verify_mount_order():
+    item = dict(Id='container', Image='image', Config={'Labels': {fixture.LABEL: 'owner'}}, HostConfig={},
+        State={'Running': True}, Mounts=[dict(Destination='/keys', Source='keys'), dict(Destination='/tls', Source='cert')],
+        NetworkSettings={'Networks': {'a': {'NetworkID': 'network'}}})
+    with patch.object(fixture, 'run', return_value=json.dumps([item])) as inspect:
+        before = fixture.resource_state({'container': ['test']}, 'owner')
+        item['Mounts'].reverse(); inspect.return_value = json.dumps([item])
+        check(before == fixture.resource_state({'container': ['test']}, 'owner'), 'Mount sırası eşitliği bozuyor.')
+        item['Mounts'][0]['Source'] = 'foreign'; inspect.return_value = json.dumps([item])
+        check(before != fixture.resource_state({'container': ['test']}, 'owner'), 'Farklı mount kaynağı yakalanmadı.')
 
 
 def mfa(base, password, email, ca):
@@ -66,6 +79,7 @@ def mfa(base, password, email, ca):
 
 
 def verify(options):
+    verify_mount_order()
     folder = ROOT / '.local/synthetic' / options.instance
     check(not folder.exists(), 'Kabul testi yalnız yeni fixture kimliği kabul eder.')
     compose = ['docker', 'compose', '-f', str(folder / 'compose.json')]
@@ -155,7 +169,10 @@ def verify(options):
         file.write_bytes(original+b'\n')
         reject(options)
         file.write_bytes(original)
-        check(fixture.resource_state(manifest['names'], manifest['owner']) == resources_before and snapshot() == before, 'Config reddi kaynak/veri değiştirdi.')
+        resources_after = fixture.resource_state(manifest['names'], manifest['owner'])
+        check(resources_after == resources_before, 'Config reddinde farklı kaynak: '+','.join(k for k in resources_before if resources_before[k] != resources_after.get(k)))
+        after = snapshot()
+        check(after == before, 'Config reddinde farklı veri/anahtar: '+','.join(k for k in before if before[k] != after.get(k)))
         fixture.run(compose + ['stop', 'app-a'])
         reject(options)
         fixture.run(compose + ['start', 'app-a'])
