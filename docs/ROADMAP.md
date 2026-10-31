@@ -79,6 +79,7 @@ Pilot kapsamı [PRODUCT](PRODUCT.md#2-ürün-kararları) ile kararlaştırıldı
 
 ### P06 — İzolasyon/deploy/kurtarma (P05)
 
+- 31.10.2026 P06-04 yerel tek firma kabulü done: PR211 tam head CI41209641109/main CI41210948406; şifreli paket, kaynak yolları yokken temiz hedef,56 tablo/DDL/rol/grant/DP-MFA/iptal/iki restart geçti. [Kabul/sınırlar](plans/P06.md#p06-04-github-teslimi). Sıradaki P06-05; fiziksel host/uzak yedek/aktif HMAC/operatör Identity kabulü değildir.
 - 31.10.2026 P06-03 yerel sentetik kabulü done: PR209 tam head CI41203109033/main CI41203637114;29 ilgili sunucu testi ve8 Docker izolasyon/kaynak grubu geçti. [Kabul/sınırlar](plans/P06.md#p06-03-github-teslimi). Sıradaki P06-04 şifreli temiz restore provasıdır; gerçek host/kalıcı disk kotası/host dışı hizmetler açıktır.
 - 31.10.2026 P06-01: kullanıcı VPS/depolama seçmedi; ücretsiz yerel sentetik hazırlığı seçti. [Aktif kabul planı ve yerel doğrulaması](plans/P06.md#p06-01-yerel-kabul-kaydı) done (yalnız plan); kendi son head/main CI belge teslimi kapanışıdır, P06 bütünü done değildir. Sıradaki tek uygulama işi P06-02, ana kurulumdan bağımsız A/B firma ve operatörün tekrar güvenli yerel kurulum temelidir. Gerçek sunucu/host dışı depolama/izleme seçimi ve ücretli işlemler ayrıca kapıdır.
 - İş: Aynı imajla A/B sentetik firma; ayrı sır/ağ/volume/anahtar, Compose/Coolify şablonu, HTTPS, migration, yedek/restore, alarm/geri dönüş. Filo yönetimi: N firmaya toplu sürüm dağıtımı ve migration için runbook/script (sırayla, yedek sonrası, firma başına sonuç raporu).
