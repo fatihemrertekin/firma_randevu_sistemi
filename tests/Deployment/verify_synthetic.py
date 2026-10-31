@@ -11,6 +11,7 @@ import socket
 import ssl
 import struct
 import sys
+import tempfile
 import time
 import urllib.error
 import urllib.request
@@ -51,6 +52,18 @@ def verify_mount_order():
         check(before != fixture.resource_state({'container': ['test']}, 'owner'), 'Farklı mount kaynağı yakalanmadı.')
 
 
+def verify_source_line_endings():
+    with tempfile.TemporaryDirectory() as directory:
+        path = Path(directory) / 'source.py'
+        path.write_bytes(b'first\nsecond\n')
+        source, artifact = fixture.source_hash(path), fixture.file_hash(path)
+        path.write_bytes(b'first\r\nsecond\r\n')
+        check(source == fixture.source_hash(path), 'Git satır sonu kaynak eşitliğini bozuyor.')
+        check(artifact != fixture.file_hash(path), 'Özel dosya bayt kontrolü zayıfladı.')
+        path.write_bytes(b'changed\r\nsecond\r\n')
+        check(source != fixture.source_hash(path), 'Gerçek kaynak farkı yakalanmadı.')
+
+
 def mfa(base, password, email, ca):
     opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()),
         urllib.request.HTTPSHandler(context=ssl.create_default_context(cafile=str(ca))))
@@ -80,6 +93,7 @@ def mfa(base, password, email, ca):
 
 def verify(options):
     verify_mount_order()
+    verify_source_line_endings()
     folder = ROOT / '.local/synthetic' / options.instance
     check(not folder.exists(), 'Kabul testi yalnız yeni fixture kimliği kabul eder.')
     compose = ['docker', 'compose', '-f', str(folder / 'compose.json')]
