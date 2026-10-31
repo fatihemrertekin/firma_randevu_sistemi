@@ -116,7 +116,7 @@ public sealed class SubscriptionLedgerTests
         var period = SubscriptionData.Period(new(2026, 10, 1)); db.Add(period); await db.SaveChangesAsync(Token);
         var root = Directory.GetCurrentDirectory();
         while (!File.Exists(Path.Combine(root, "FirmaRandevu.slnx"))) root = Directory.GetParent(root)?.FullName ?? throw new InvalidOperationException("Repository root missing");
-        var grants = string.Join('\n', (await File.ReadAllLinesAsync(Path.Combine(root, "deploy/Apply-LocalMigration.ps1"), Token)).Where(line => line.Contains("\"SubscriptionPeriods\", \"SubscriptionPayments\"", StringComparison.Ordinal)));
+        var grants = string.Join('\n', (await File.ReadAllLinesAsync(Path.Combine(root, "deploy/app-user-grants.sql"), Token)).Where(line => line.Contains("\"SubscriptionPeriods\", \"SubscriptionPayments\"", StringComparison.Ordinal)));
         Assert.Contains("GRANT SELECT", grants); Assert.Contains("REVOKE INSERT, UPDATE, DELETE, TRUNCATE", grants);
         await db.Database.ExecuteSqlRawAsync("CREATE ROLE app_user NOLOGIN", Token);
         await db.Database.ExecuteSqlRawAsync(grants, Token);

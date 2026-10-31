@@ -472,3 +472,24 @@ Kontrollü kurulum sırası: P07-02 firma şeması/yedek → özel operatör Ide
 P07-07 izinli çok firma hedef temeli: eski tek firma ayarı çalışmaya devam eder. Yeni özel sunucu ayarında her hedef `SubscriptionTargets__0__InstanceId`, `SubscriptionTargets__0__Name`, `SubscriptionTargets__0__ConnectionString` şeklindedir; sonraki hedef 1,2... indeksidir. Eski `SubscriptionTarget`/`ConnectionStrings__SubscriptionTarget` ile birlikte kullanılamaz. Firma kodları ve DB hedefleri benzersiz olmalı; kimlik DB'si firma hedefi olamaz. Yeni çoğul ayarda Production DB bağlantısı `SSL Mode=VerifyFull` ve güvenilen sertifika/host ister; yalnız Development sayısal loopback testi şifresiz istisnadır. Sırlar frontend'e veya Git'e yazılmaz. Ağ/sertifika kurulumu bu temel tarafından açılmaz; mevcut Compose tek DB ağı şablonudur, çok ağ kurulumu ayrıca P06 kabulü ister.
 
 Operatör+MFA korumalı `GET /api/targets?page=1&search=...` sayfada12 ad/kurulum kodu, `GET /api/targets/{targetId}` tek hedef kimliği döndürür; host/parola/borç/erişim durumu döndürmez ve firma DB'sine bağlanmaz. Birden fazla hedef varken eski `/api/subscription` okuma ve dört mali yazma rotası `409 subscription_target_required` verir; ilk firma kendiliğinden seçilmez. Firma bazlı mali API ve onaylı seçim ekranı henüz bağlanmadığından mevcut UI ile çok firma ödeme yönetimi bu teslimde kullanılamaz. Çok hedefli `/health/ready` merkez kimliğini ölçer; her firmanın bağlantı durumunu göstermez. [Plan/kabul](docs/plans/P07.md#p07-07--izinli-firma-hedefleri-ve-izolasyon-temeli--30102026).
+
+## P06 sentetik A/B ve operatör kurulumu
+
+Yalnız depo kökünden; Python≥3.12, PowerShell≥7, Docker Compose `run --env-from-file` desteği, mevcut .NET build/EF aracı ve aynı kaynaktan hazırlanmış yerel firma/operatör imajları gerekir. Komut imaj çekmez/derlemez; örnekteki etiketler yalnız değişmez yerel imaj ID'sini bulmak içindir. Gerçek `deploy/.env`, ana8080 ve mevcut hesaplara işlem yapmaz.
+
+```powershell
+$fixtureApp = docker image inspect firma-randevu:local --format '{{.Id}}'
+$fixtureOperator = docker image inspect firma-randevu-operator:local --format '{{.Id}}'
+$fixturePostgres = docker image inspect postgres:18.6-trixie --format '{{.Id}}'
+python deploy/initialize_synthetic.py --instance fr-synthetic-demo --ports 8203 8204 8205 --app-image $fixtureApp --operator-image $fixtureOperator --postgres-image $fixturePostgres
+```
+
+Çıktı `.local/synthetic/fr-synthetic-demo/manifest.json` konumudur. Firma A/B HTTP8203/8204; operatör HTTPS8205; DB portları yayımlanmaz. Ayrı DB/volume/anahtar/parola ve A/B/Identity ağları vardır; operatör izinli üç ağa bağlıdır. İletişim/rezervasyon gönderimi kapalıdır. Sentetik CA yalnız dosyadadır, OS güven deposu değişmez; sertifikalar7günlüktür. Sırlar `private/` altında kullanıcı erişimli dosyalardadır; Git'e, argümanlara veya konsola konmaz. Test hesapları `owner@example.test`/`operator@example.test`; üretilmiş parolalar ilgili `owner-a.env`, `owner-b.env`, `operator-bootstrap.env` dosyasından yalnız yerelde okunur; MFA normal akışta kurulur.
+
+Aynı komutun ikinci çalışması yalnız dosya/kaynak/sağlık doğrular; hesap, MFA, marker veya anahtar üretmez. Farklı config/kaynak/imaj, kullanımda port, yabancı/eksik/değişmiş/durmuş kaynak ve yarım kurulum reddedilir. Onarım/reset/upgrade/silme seçeneği yoktur; başarısız hedef korunur. Bilerek durdurulan fixture'ı aynı `compose.json` ile `docker compose -f <tam-yol> start`/`stop` yönetin; volume silmeyin. Bu şablon üretim/host dışı yedek veya tam izolasyon kabulü değildir; [sınırlar ve kabul](docs/plans/P06.md#p06-02--tekrar-güvenli-sentetik-kurulum) planındadır.
+
+Gerçek Docker kabul testi yalnız **yeni** bir kimlik ister; ilk/tekrar kurulum, üç hesabın gerçek MFA akışı, tüm tablo/işaret/anahtar koruması, TLS ve yanlış hedefleri sınar. Bittiğinde kendi servislerini durdurur; volume/dosyaları ve çakışma için oluşturduğu boş test volume'unu korur:
+
+```powershell
+python tests/Deployment/verify_synthetic.py --instance fr-synthetic-check --ports 8213 8214 8215 --app-image $fixtureApp --operator-image $fixtureOperator --postgres-image $fixturePostgres
+```
