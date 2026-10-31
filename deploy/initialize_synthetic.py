@@ -20,7 +20,7 @@ import urllib.request
 ROOT = Path(__file__).resolve().parents[1]
 SERVICES = ('db-a', 'db-b', 'db-i', 'app-a', 'app-b', 'operator')
 VOLUMES = ('db_a', 'db_b', 'db_i', 'keys_a', 'keys_b', 'keys_operator')
-NETWORKS = ('a', 'b', 'identity')
+NETWORKS = ('a', 'b', 'operator-a', 'operator-b', 'identity')
 LABEL = 'tr.firmarandevu.synthetic'
 
 
@@ -233,9 +233,9 @@ def initialize(options):
             database = 'operator_identity' if suffix == 'i' else 'firma_randevu'
             admins[suffix] = secrets.token_hex(32)
             environment(private / f'{service}.env', dict(POSTGRES_DB=database, POSTGRES_PASSWORD=admins[suffix]))
-            services[service] = dict(image=images[2], env_file=[str(private / f'{service}.env')], networks=['identity' if suffix == 'i' else suffix],
-                volumes=[f'db_{suffix}:/var/lib/postgresql', bind(service+'.crt', '/tls/db.crt'), bind(service+'.key', '/tls/db.key')],
-                command=['bash', '-c', 'cp /tls/db.key /tmp/fixture.key && chown postgres:postgres /tmp/fixture.key && chmod 600 /tmp/fixture.key && exec docker-entrypoint.sh postgres -c ssl=on -c ssl_cert_file=/tls/db.crt -c ssl_key_file=/tmp/fixture.key'],
+            services[service] = dict(image=images[2], env_file=[str(private / f'{service}.env')], networks=['identity'] if suffix == 'i' else [suffix, 'operator-'+suffix],
+                volumes=[f'db_{suffix}:/var/lib/postgresql', bind(service+'.crt', '/tls/db.crt'), bind(service+'.key', '/tls/db.key'), bind('ca.pem', '/tls/ca.pem')],
+                command=['bash', '-c', 'cp /tls/db.key /tmp/fixture.key && chown postgres:postgres /tmp/fixture.key && chmod 600 /tmp/fixture.key && exec docker-entrypoint.sh postgres -c ssl=on -c ssl_cert_file=/tls/db.crt -c ssl_key_file=/tmp/fixture.key -c shared_buffers=64MB -c max_connections=30 -c work_mem=2MB -c temp_file_limit=32MB'],
                 healthcheck=dict(test=['CMD', 'pg_isready', '-U', 'postgres', '-d', database], interval='2s', timeout='3s', retries=40))
         for index, suffix in enumerate(('a', 'b')):
             apps[suffix], targets[suffix] = secrets.token_hex(32), secrets.token_hex(32)
@@ -258,13 +258,16 @@ def initialize(options):
         environment(private / 'operator.env', operator_env)
         environment(private / 'operator-bootstrap.env', dict(ConnectionStrings__OperatorIdentity=connection('db-i', 'operator_identity', 'postgres', admins['i']),
             OPERATOR_BOOTSTRAP_EMAIL='operator@example.test', OPERATOR_BOOTSTRAP_PASSWORD='Aa!'+secrets.token_hex(24)))
-        services['operator'] = dict(image=images[1], env_file=[str(private / 'operator.env')], networks=list(NETWORKS),
+        services['operator'] = dict(image=images[1], env_file=[str(private / 'operator.env')], networks=['operator-a', 'operator-b', 'identity'],
             ports=[f'127.0.0.1:{ports[2]}:8443'], volumes=['keys_operator:/app/keys', bind('ca.pem', '/tls/ca.pem'), bind('operator.pfx', '/tls/operator.pfx')])
         for name, service in services.items():
             service.update(container_name=f'{options.instance}-{name}', labels={LABEL: owner}, pull_policy='never')
+            memory = '384m' if name.startswith('db-') else '512m'
+            service.update(cpus=0.5, mem_limit=memory, memswap_limit=memory, pids_limit=128,
+                logging=dict(driver='json-file', options={'max-size': '1m', 'max-file': '2'}))
             service['environment'] = {'Logging__LogLevel__Microsoft.EntityFrameworkCore.Database.Command': 'Warning'} if not name.startswith('db-') else {}
             if not name.startswith('db-'):
-                service.update(read_only=True, tmpfs=['/tmp'], security_opt=['no-new-privileges:true'], cap_drop=['ALL'])
+                service.update(read_only=True, tmpfs=['/tmp:size=64m,mode=1777'], security_opt=['no-new-privileges:true'], cap_drop=['ALL'])
         write_json(folder / 'compose.json', dict(name=options.instance, services=services, volumes=volumes, networks=networks))
         write(private / 'migration.sql', migration)
         compose = ['docker', 'compose', '--env-file', str(private / 'app-a.env'), '-f', str(folder / 'compose.json')]

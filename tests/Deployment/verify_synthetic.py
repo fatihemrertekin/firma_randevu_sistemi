@@ -65,7 +65,8 @@ def verify_source_line_endings():
 
 
 def mfa(base, password, email, ca):
-    opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()),
+    jar = http.cookiejar.CookieJar()
+    opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(jar),
         urllib.request.HTTPSHandler(context=ssl.create_default_context(cafile=str(ca))))
 
     def post(path, value):
@@ -89,6 +90,7 @@ def mfa(base, password, email, ca):
     check(post('mfa/enable', dict(password=password, **code_value))[0] == 200, 'MFA açılamadı.')
     check(post('login', dict(email=email, password=password))[0] == 202, 'MFA zorunlu değil.')
     check(post('mfa/login', code_value)[0] == 204, 'MFA girişi başarısız.')
+    return opener, jar
 
 
 def verify(options):
@@ -148,11 +150,12 @@ def verify(options):
                 secrets_seen.append(connection.split('Password=', 1)[1].split(';')[0])
         check(len(secrets_seen) == len(set(secrets_seen)), 'Parolalar ayrı değil.')
         check(all(secret not in (folder / name).read_text() for secret in secrets_seen for name in ('manifest.json', 'compose.json')), 'Açık config sır içeriyor.')
+        sessions = {}
         for suffix, port in zip(('a', 'b'), options.ports[:2]):
             account = credentials(private / f'owner-{suffix}.env')
-            mfa(f'http://127.0.0.1:{port}', account['APP_BOOTSTRAP_OWNER_PASSWORD'], account['APP_BOOTSTRAP_OWNER_EMAIL'], private / 'ca.pem')
+            sessions[suffix] = mfa(f'http://127.0.0.1:{port}', account['APP_BOOTSTRAP_OWNER_PASSWORD'], account['APP_BOOTSTRAP_OWNER_EMAIL'], private / 'ca.pem')
         account = credentials(private / 'operator-bootstrap.env')
-        mfa(f'https://127.0.0.1:{options.ports[2]}', account['OPERATOR_BOOTSTRAP_PASSWORD'], account['OPERATOR_BOOTSTRAP_EMAIL'], private / 'ca.pem')
+        sessions['operator'] = mfa(f'https://127.0.0.1:{options.ports[2]}', account['OPERATOR_BOOTSTRAP_PASSWORD'], account['OPERATOR_BOOTSTRAP_EMAIL'], private / 'ca.pem')
 
         def sql(suffix, query):
             return fixture.run(compose + ['exec', '-T', 'db-'+suffix, 'psql', '-X', '-U', 'postgres', '-d',
@@ -172,6 +175,9 @@ def verify(options):
             sql(suffix, f'UPDATE "BusinessProfiles" SET "Name" = \'SYNTHETIC-PRESERVE-{suffix}\';')
             check(sql(suffix, 'SELECT count(*) FROM "AspNetUsers" WHERE "TwoFactorEnabled";') == '1', 'Owner/MFA yok.')
         before = snapshot()
+        from verify_isolation import verify_isolation
+        verify_isolation(options, folder, compose, sessions, sql, before, snapshot)
+        check(snapshot() == before, 'İzolasyon kabulü DB/marker/anahtar değiştirdi.')
         files_before = {str(p.relative_to(folder)): fixture.file_hash(p) for p in folder.rglob('*') if p.is_file()}
         check(fixture.initialize(options)['state'] == 'verified', 'İkinci kurulum salt okunur doğrulanmadı.')
         check(before == snapshot(), 'DB/işaret/MFA/anahtar koruması başarısız.')
@@ -192,7 +198,7 @@ def verify(options):
         fixture.run(compose + ['start', 'app-a'])
         fixture.ready(options.ports, private / 'ca.pem')
         check(snapshot() == before, 'Restart veriyi/anahtarı değiştirdi.')
-        report = dict(pass_=True, instance=options.instance, first=True, repeatReadOnly=True, mfaAndSentinelsPreserved=True,
+        report = dict(pass_=True, instance=options.instance, first=True, repeatReadOnly=True, isolation=True, mfaAndSentinelsPreserved=True,
                       conflictAndTamperRejected=True, stoppedTargetRejected=True, tlsVerified=True, mainTouched=False,
                       resources=manifest['names'], images=manifest['config']['images'])
         fixture.write_json(folder / 'acceptance.json', report)
