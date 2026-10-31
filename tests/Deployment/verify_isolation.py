@@ -77,6 +77,7 @@ def verify_isolation(options, folder, compose, sessions, sql, before, snapshot):
         check(item['HostConfig']['Memory'] == item['HostConfig']['MemorySwap'] == limit, service+': bellek/swap sınırı eksik.')
         check(item['HostConfig']['LogConfig'] == {'Type': 'json-file', 'Config': {'max-size': '1m', 'max-file': '2'}}, service+': log sınırı eksik.')
         if service.startswith('db-'):
+            check(item['Config']['Healthcheck']['Test'][:4] == ['CMD', 'pg_isready', '-h', '127.0.0.1'], 'DB sağlığı geçici init soketini hazır sayıyor.')
             check(not item['HostConfig']['PortBindings'], 'DB portu hosta açıldı.')
             allowed = {'/var/lib/postgresql', '/tls/db.crt', '/tls/db.key', '/tls/ca.pem'}
             volume = 'db_'+service[-1]

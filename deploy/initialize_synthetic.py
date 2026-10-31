@@ -236,7 +236,8 @@ def initialize(options):
             services[service] = dict(image=images[2], env_file=[str(private / f'{service}.env')], networks=['identity'] if suffix == 'i' else [suffix, 'operator-'+suffix],
                 volumes=[f'db_{suffix}:/var/lib/postgresql', bind(service+'.crt', '/tls/db.crt'), bind(service+'.key', '/tls/db.key'), bind('ca.pem', '/tls/ca.pem')],
                 command=['bash', '-c', 'cp /tls/db.key /tmp/fixture.key && chown postgres:postgres /tmp/fixture.key && chmod 600 /tmp/fixture.key && exec docker-entrypoint.sh postgres -c ssl=on -c ssl_cert_file=/tls/db.crt -c ssl_key_file=/tmp/fixture.key -c shared_buffers=64MB -c max_connections=30 -c work_mem=2MB -c temp_file_limit=32MB'],
-                healthcheck=dict(test=['CMD', 'pg_isready', '-U', 'postgres', '-d', database], interval='2s', timeout='3s', retries=40))
+                # Geçici init sunucusu yalnız Unix socket açar; son TCP sunucusunu bekle.
+                healthcheck=dict(test=['CMD', 'pg_isready', '-h', '127.0.0.1', '-U', 'postgres', '-d', database], interval='2s', timeout='3s', retries=40))
         for index, suffix in enumerate(('a', 'b')):
             apps[suffix], targets[suffix] = secrets.token_hex(32), secrets.token_hex(32)
             env = dict(ASPNETCORE_ENVIRONMENT='Development', Auth__InstanceId=options.instance+'-'+suffix, Auth__KeysDirectory='/app/keys',
@@ -276,7 +277,10 @@ def initialize(options):
 
         def sql(suffix, text):
             database = 'operator_identity' if suffix == 'i' else 'firma_randevu'
-            return run(compose + ['exec', '-T', 'db-'+suffix, 'psql', '-X', '-U', 'postgres', '-d', database, '-v', 'ON_ERROR_STOP=1'], text)
+            try:
+                return run(compose + ['exec', '-T', 'db-'+suffix, 'psql', '-X', '-U', 'postgres', '-d', database, '-v', 'ON_ERROR_STOP=1'], text)
+            except RuntimeError as error:
+                raise RuntimeError('Sentetik db-'+suffix+' şema/rol adımı: '+str(error)) from error
 
         for suffix in ('a', 'b'):
             sql(suffix, f"CREATE ROLE app_user LOGIN PASSWORD '{apps[suffix]}';\n" + migration + '\n' + (ROOT / 'deploy/app-user-grants.sql').read_text(encoding='utf-8-sig'))
