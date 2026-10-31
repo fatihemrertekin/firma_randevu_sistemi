@@ -79,6 +79,7 @@ Pilot kapsamı [PRODUCT](PRODUCT.md#2-ürün-kararları) ile kararlaştırıldı
 
 ### P06 — İzolasyon/deploy/kurtarma (P05)
 
+- 01.11.2026 P06-07a hedef/maliyet hazırlığı done (yalnız plan): resmi fiyat/stok, ayrı yedek/HTTP-heartbeat alarm seçenekleri, ek giderler ve [karar kartı/küçük uzak kabul sırası](plans/P06.md#p06-07a--hedef-ve-maliyet-karar-hazırlığı--01112026). Bütçe yanıtı “bilmiyorum”; seçim/ücretli işlem yok. Sonraki tek iş kartın tamamlanması; P06-07 uzak kabulü ve P06 bütünü açık.
 - 31.10.2026 P06-06a yerel kabul done: gerçek SELECT1/503,22 ilgili test, paketli A/B/operatör ve temiz kurulum; PR219 güncel tam head CI41238407094/main CI41239289818, ana8080 yedekli imaj teslimi/veri koruması. [Kabul ve ilk CI hatasının sınırı](plans/P06.md#p06-06a-github-ve-yerel-imaj-teslimi). Sıradaki P06-07 gerçek hedef/bütçe/sorumlu seçimidir; P06 bütünü açık.
 - 31.10.2026 P06-06 yerel sentetik kabul done: PR216 tam head CI41231910711/main CI41232464325; yerel sahte alıcı/gerçek arızalar ve kaynak yokken56 tablo ölçülmüş kurtarma. [Kabul/sınırlar](plans/P06.md#p06-06-github-teslimi). Sıradaki P06-06a mevcut readiness query/503 doğruluğu; P06-07 gerçek host/uzak yedek/alarm seçimi açıktır.
 - 31.10.2026 P06-05 yerel tek firma kabulü done: PR214 tam head CI41227332030/main CI41228257181; iki immutable imaj, yeni ödeme/profil koruyan rollback, DP/borç ve B eşitliği, veri değişiminde kapalı review geçti. [Kabul/sınırlar](plans/P06.md#p06-05-github-teslimi). Sıradaki P06-06; migration/registry/gerçek VPS kabulü değildir.
