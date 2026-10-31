@@ -1,10 +1,14 @@
 {
   "compose": true,
-  "server": [],
+  "server": [
+    "Server.Tests.HealthEndpointsTests",
+    "Server.Tests.AppointmentPendingTests"
+  ],
   "web": [],
   "files": [
-    "deploy/monitor_synthetic.py",
-    "tests/Deployment/verify_monitoring.py"
+    "src/Server/Program.cs",
+    "tests/Server.Tests/HealthEndpointsTests.cs",
+    "tests/Deployment/verify_readiness.py"
   ],
-  "reason": "P06-06 adds a synthetic-only one-shot monitor and local fake-receiver acceptance. New code reads pinned owned Docker containers, fixed loopback app/DB/TLS endpoints, actual host/DB/tmpfs usage, and verified encrypted backup receipts. It records bounded allowlisted event IDs before delivery, sends only to a fixed loopback /events receiver with no redirects/proxy, deduplicates unchanged states and recovery transitions, and retains pending events through lost acknowledgments, process restart, backoff and three-attempt blocking. Existing initializer, backup/restore, seed, MFA and API test helpers are reused unchanged. New actual PostgreSQL/Docker acceptance covers app/DB stoppage with healthy independent operator/B, real 64MiB tmpfs ENOSPC, backup failure and age/integrity, TLS and disk threshold injection, then source/config/original packages and keys unavailable during clean restore from staged local copies. RPO sentinel and local recovery components are measured; no physical host/offsite guarantee. No application, identity, migration, dependency or frontend source changes, so no unrelated C# or web test groups are selected. Compose acceptance installs the pinned .NET SDK for existing EF tooling and builds the scoped operator image; existing CI scope regressions remain mandatory. Existing initializer uses EF --no-build, so the new compose-only acceptance explicitly restores/builds the host Server project before migration-script generation; no C# code or test contract changes."
+  "reason": "P06-06a changes only the existing normal-app /health/ready handler: run SELECT 1 with its existing linked three-second cancellation token after opening the configured pooled connection. No startup registration, identity, schema, grants, DTO, frontend or dependency change. HealthEndpointsTests adds a real PostgreSQL warm single-connection pool pause/503/live200/unpause200 and sentinel-preservation regression; it fails as 200 on the old handler. AppointmentPendingTests already calls readiness during a database outage and worker recovery, so its related class is retained. New packaged Docker acceptance uses the unchanged synthetic initializer/recovery snapshots/DP key helper, warms actual HTTP, pauses A PostgreSQL, requires empty503 within ten seconds with live/B/operator200, then restores200 and exact A/B56-table metadata/key/container-start/resource equality. CI builds normal and operator packages since the shared Server assembly is referenced by Operator, but no operator route changes. Local/main delivery uses a frozen source image and established encrypted backup/readback/data-key-env/rollback guards; no main Owner login/POST, DB outage, migration, restore or real messaging. The same unchanged regression exposed a prepended pool-reset read exceeding the ten-second client bound when only cancellation was used; an explicit three-second CommandTimeout is scoped to SELECT 1, with no global connection-string/pool changes. Current HealthEndpointsTests passes; the existing Pending outage group is checked on the same implementation."
 }

@@ -201,6 +201,21 @@ jobs:
               --postgres-image "$(docker image inspect postgres:18.6-trixie --format '{{.Id}}')"
           fi
 
+      - name: İlgili gerçek HTTP readiness kesinti kabulü
+        if: steps.scope.outputs.compose == 'true'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          changed="$(git diff --name-only "$BASE_SHA" "$HEAD_SHA" -- src/Server/Program.cs deploy/initialize_synthetic.py deploy/synthetic_recovery.py deploy/synthetic_update.py tests/Deployment/verify_readiness.py)"
+          if [ -n "$changed" ]; then
+            dotnet tool restore
+            python3 tests/Deployment/verify_readiness.py --instance fr-synthetic-ready-ci --ports 8303 8304 8305 \
+              --app-image "$(docker image inspect firma-randevu:local --format '{{.Id}}')" \
+              --operator-image "$(docker image inspect firma-randevu-operator:ci --format '{{.Id}}')" \
+              --postgres-image "$(docker image inspect postgres:18.6-trixie --format '{{.Id}}')"
+          fi
+
       - name: Yerel test servislerini durdur
         if: always()
         run: |
