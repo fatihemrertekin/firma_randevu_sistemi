@@ -164,4 +164,4 @@ Resmi kaynaklar; sürüm, tarife ve mevzuat uygulama zamanında yeniden doğrula
 - [OWASP güvenlik rehberleri](https://cheatsheetseries.owasp.org/)
 - [KVKK yurt dışı aktarım](https://www.kvkk.gov.tr/Icerik/2053/Yurtdisina-Aktarim)
 
-- 31.10.2026 P06-02 yerel kurulum kabulü geçti; GitHub kapanışı beklenir. [A/B+operatör tekrar/ret ve veri koruma kanıtı](plans/P06.md#p06-02-yerel-kabul-kaydı--31102026). Sonraki uygulama dilimi P06-03 izolasyon matrisidir; gerçek VPS/host dışı hizmet kapıları açıktır.
+- 31.10.2026 P06-02 done: PR207 tam head CI41156765335/main CI41157176838 ve yerel kurulum kabulü geçti. [A/B+operatör tekrar/ret ve veri koruma kanıtı](plans/P06.md#p06-02-yerel-kabul-kaydı--31102026). Sonraki uygulama dilimi P06-03 izolasyon matrisidir; gerçek VPS/host dışı hizmet kapıları açıktır.
