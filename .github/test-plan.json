@@ -1,28 +1,17 @@
 {
-  "compose": false,
-  "reason": "P07-09 connects the approved firm selector to explicit scoped financial routes, retains pending/uncertain target and replay across authentication, and adds opt-in page-bounded summaries with a shared3-connection bound across concurrent list requests,5s per-firm and15s overall limits. Shared summary extraction affects legacy and scoped ledger readers. SubscriptionTargetSummariesTests covers two real firms, metadata compatibility, page/search/access filters, complete older debt,5s lock timeout/recovery, two concurrent requests sharing the3-connection bound, privacy and all56-table read invariance. Existing target/ledger/operator/access/Owner tests retain allowlist markers, MFA/CSRF, retries/corrections/races and read-only coordination. Operator UI/API tests cover selected route and body, foreign response rejection, stale requests, dirty/uncertain target lock, auth renewal, empty/errors and single-firm compatibility. Real packaged API/browser four-width acceptance and operator image are required. Only operator Web modules change; normal backend and normal web bundle equality will be verified without rebuilding/restarting normal8080. No schema/grant/dependency or deploy configuration changes.",
+  "compose": true,
+  "reason": "P06-02 adds a repo-root-only synthetic two-firm plus separate operator initializer with immutable local image IDs, unique secrets, per-firm networks/volumes/keys, guarded resource ownership, read-only repeat verification and fail-closed config/target collisions. Apply-LocalMigration and the fixture share identical extracted app-user SQL; SubscriptionLedgerTests and SubscriptionOperatorTests cover its ledger/authorization callers with real PostgreSQL. The scoped Docker acceptance exercises first/repeat setup, all-table/MFA/key preservation, TLS, occupied ports, foreign volume, wrong cwd/config/tampered file and stopped-target rejection. No runtime application/API/UI/schema change; no main8080 rebuild/restart locally. Resource snapshots normalize Docker inspect mount ordering; an assert regression requires reversed mount order to compare equal while a changed source remains unequal. All mount fields and database/key preservation checks remain enforced.",
   "server": [
-    "Server.Tests.SubscriptionTargetSummariesTests",
-    "Server.Tests.SubscriptionTargetLedgerTests",
-    "Server.Tests.SubscriptionTargetsTests",
-    "Server.Tests.SubscriptionOperatorTests",
-    "Server.Tests.SubscriptionTests",
-    "Server.Tests.SubscriptionAccessTests"
+    "Server.Tests.SubscriptionLedgerTests",
+    "Server.Tests.SubscriptionOperatorTests"
   ],
-  "web": [
-    "src/features/subscription-operator/SubscriptionOperator.test.tsx",
-    "src/app/api.test.tsx"
-  ],
+  "web": [],
   "files": [
-    "src/Operator/SubscriptionLedger.cs",
-    "src/Operator/SubscriptionSummary.cs",
-    "src/Operator/SubscriptionTargets.cs",
-    "src/Web/src/features/subscription-operator/OperatorApplication.tsx",
-    "src/Web/src/features/subscription-operator/OperatorFirms.tsx",
-    "src/Web/src/features/subscription-operator/SubscriptionOperator.module.css",
-    "src/Web/src/features/subscription-operator/SubscriptionOperator.test.tsx",
-    "src/Web/src/features/subscription-operator/SubscriptionOperator.tsx",
-    "src/Web/src/features/subscription-operator/operatorApi.ts",
-    "tests/Server.Tests/SubscriptionTargetSummariesTests.cs"
+    "deploy/Apply-LocalMigration.ps1",
+    "deploy/New-SyntheticCertificates.ps1",
+    "deploy/app-user-grants.sql",
+    "deploy/initialize_synthetic.py",
+    "tests/Deployment/verify_synthetic.py",
+    "tests/Server.Tests/SubscriptionLedgerTests.cs"
   ]
 }

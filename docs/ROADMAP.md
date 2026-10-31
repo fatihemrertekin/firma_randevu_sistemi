@@ -163,3 +163,5 @@ Resmi kaynaklar; sürüm, tarife ve mevzuat uygulama zamanında yeniden doğrula
 - iyzico: [abonelik](https://docs.iyzico.com/urunler/abonelik/abonelik-entegrasyonu), [webhook](https://docs.iyzico.com/ek-servisler/webhook)
 - [OWASP güvenlik rehberleri](https://cheatsheetseries.owasp.org/)
 - [KVKK yurt dışı aktarım](https://www.kvkk.gov.tr/Icerik/2053/Yurtdisina-Aktarim)
+
+- 31.10.2026 P06-02 yerel kurulum kabulü geçti; GitHub kapanışı beklenir. [A/B+operatör tekrar/ret ve veri koruma kanıtı](plans/P06.md#p06-02-yerel-kabul-kaydı--31102026). Sonraki uygulama dilimi P06-03 izolasyon matrisidir; gerçek VPS/host dışı hizmet kapıları açıktır.
