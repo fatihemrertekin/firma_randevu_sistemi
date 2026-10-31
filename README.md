@@ -533,3 +533,21 @@ Test başlangıç imajını P07-05 Git kaynağından, adayı mevcut Git HEAD'den
 Geçiş modülünün tekil çağrısı açık firma, beklenen mevcut imaj, onaylı imaj, işlem modu, sürüm listesi ve doğrulanmış paket/anahtar ister. İlk upgrade için güncel başlangıç yedeği gerekir. Tam kabul sonunda yeni ödeme/profil verisi bulunduğundan eski yedekle ikinci upgrade reddedilir; bu araç otomatik yeni yedek veya genel filo döngüsü kurmaz. Çalışan tekrar güvenli kabul komutu yukarıdadır.
 
 `rollback` modu yalnız uyumlu imaja döner; DB yedeğini restore etmez. Şema farkında migration veya Down otomatik çalışmaz. `review`/yarım kayıt durumu, gerçek firma veya değiştirilmiş kaynak/config desteklenmez. Bu yerel sentetik araç üretim dağıtımı, registry'den imaj çekme veya filo yönetimi değildir.
+
+### P06 yerel izleme ve kayıp-kurtarma provası
+
+Depo kökünde, önceki sentetik kurulumun Docker/Git/.NET tool/PowerShell7.4+/Python3.12+ ön koşullarıyla yeni ID ve boş portlar seçin:
+
+```powershell
+dotnet restore src/Server/Server.csproj --locked-mode
+dotnet build src/Server/Server.csproj --no-restore
+dotnet tool restore
+$monitorAppImage = docker image inspect firma-randevu:local --format '{{.Id}}'
+$monitorOperatorImage = docker image inspect firma-randevu-operator:local --format '{{.Id}}'
+$monitorPostgresImage = docker image inspect postgres:18.6-trixie --format '{{.Id}}'
+python tests/Deployment/verify_monitoring.py --instance fr-synthetic-monitor-demo --ports 8283 8284 8285 --app-image $monitorAppImage --operator-image $monitorOperatorImage --postgres-image $monitorPostgresImage
+```
+
+Kabul kendi geçici loopback sahte alıcısını, A/B/operatörü ve ayrıca8286 temiz restore hedefini kurar. A app/DB kesintisi, sınırlı64MiB tmpfs doluluğu, yedek eksik/başarısız/eski/hash kaybı, TLS/disk eşikleri, değişmeyen durum/düzelme, yanıt kaybı ve yeni süreçte backoff sınanır. Yedekten sonra yazılan sentetik ödeme, kaynak servis/dosyaları ve özgün paket/anahtar konumları yokken temiz restore'da bilerek geri gelmez; kurtarma noktası ve yerel süre bileşenleri raporlanır. Host diski doldurulmaz; gerçek mesaj/ücretli hizmet yoktur. [Kapsam ve sınırlar](docs/plans/P06.md#p06-06--yerel-izleme-ve-ölçülmüş-kurtarma-provası).
+
+`deploy/monitor_synthetic.py` içinde `arm` yalnız hazır, yeni sentetik hedefi ve ayrı `--receiver-port` değerini bağlar; `backup --package ... --key ...` mevcut tek-firma yardımcısının sonucunu güvenli receipt'e yazar; `scan` tek salt okunur taramadır. Tümünde açık `--instance` zorunludur. Scan çıkışı0 sakin/onaylı,2 aktif uyarı/onaylı,3 bekleyen veya blocked teslim,1 ret/hata demektir. Alıcı ve fixture'lar tam kabul sonunda kapatılır; bu komut arka planda çalışan alarm servisi veya gerçek uptime izleyicisi değildir. Olaylarda sır/kişisel veri yoktur. Üç teslim hatasında pending kayıt silinmez; otomatik sıfırlama olmadan elle inceleme gerekir. Volume, private dosyalar, şifreli paket ve ayrı anahtarlar korunur; gerçek host dışı yedek/alarm/RPO/RTO hâlâ açık kapıdır.
