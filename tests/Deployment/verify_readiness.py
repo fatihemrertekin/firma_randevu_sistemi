@@ -32,6 +32,7 @@ def verify(options):
     fixture.private_directory(folder);compose=['docker','compose','-f',str(source/'compose.json')];paused=False
     try:
         fixture.initialize(options)
+        print('P06-06a: Ayrı kurulum hazır; DP ve veri başlangıcı okunuyor.',flush=True)
         # Antiforgery DP anahtarlarını üretir; hesap girişi/POST gerekmez.
         for port in options.ports[:2]:check(get(port,'/api/auth/csrf')[0]==200,'Sentetik DP hazırlığı başarısız.')
         before={suffix:recovery.snapshot(options.instance+'-db-'+suffix) for suffix in ('a','b')}
@@ -40,18 +41,24 @@ def verify(options):
         containers=json.loads(fixture.run(['docker','inspect',*manifest['names']['container']]))
         starts={v['Name']:v['State']['StartedAt'] for v in containers}
         for _ in range(3):check(get(options.ports[0])[0]==200,'Havuz ısıtma başarısız.')
+        print('P06-06a: HTTP havuzu sıcak; yalnız A DB duraklatılıyor.',flush=True)
         fixture.run(['docker','pause',options.instance+'-db-a']);paused=True
         try:
             started=time.monotonic();status,body=get(options.ports[0]);elapsed=time.monotonic()-started
-            check(status==503 and not body and elapsed<10,'Sıcak havuz/yanıtsız DB 503 ve süre sınırı başarısız.')
+            check(status==503 and not body and elapsed<10,f'Sıcak havuz/yanıtsız DB: status={status}, bytes={len(body)}, seconds={elapsed:.3f}; 503/boş gövde/10s gerekli.')
             check(get(options.ports[0],'/health/live')[0]==200,'DB arızasında live kapandı.')
             check(get(options.ports[1])[0]==200,'A DB arızasında B etkilendi.')
             check(get(options.ports[2],ca=source/'private/ca.pem')[0]==200,'A DB arızasında merkez etkilendi.')
+            print('P06-06a: Pause503/boş gövde/live/B/merkez geçti; DB geri açılıyor.',flush=True)
         finally:
             fixture.run(['docker','unpause',options.instance+'-db-a']);paused=False
-        recovery.ready(options.ports[0]);check(get(options.ports[0])[0]==200,'DB açılınca readiness dönmedi.')
+        recovery.ready(options.ports[0]);recovered=get(options.ports[0])[0];check(recovered==200,f'DB açılınca readiness status={recovered}; 200 gerekli.')
+        print('P06-06a: Geri açılma200; son veri/anahtar/kaynak karşılaştırması.',flush=True)
         for suffix in ('a','b'):
-            check(recovery.snapshot(options.instance+'-db-'+suffix)==before[suffix] and keys(options.instance+'-app-'+suffix)==before_keys[suffix],'Sağlık probu veri/şema/yetki/anahtarı değiştirdi.')
+            after=recovery.snapshot(options.instance+'-db-'+suffix)
+            changed=[name for name in after if after[name]!=before[suffix][name]]
+            check(not changed,'Sentetik snapshot farkı alanları: '+','.join(changed))
+            check(keys(options.instance+'-app-'+suffix)==before_keys[suffix],'Sentetik DP anahtarları değişti.')
         check({v['Name']:v['State']['StartedAt'] for v in json.loads(fixture.run(['docker','inspect',*manifest['names']['container']]))}==starts,'Duraklatma konteyneri yeniden başlattı.')
         check(fixture.resource_state(manifest['names'],manifest['owner'])==manifest['resources'],'Kaynak/config değişti.')
         result=dict(pass_=True,instance=options.instance,appImage=options.app_image,operatorImage=options.operator_image,warm200=True,paused503=True,failedBodyEmpty=True,
@@ -66,5 +73,5 @@ def verify(options):
 
 if __name__=='__main__':
     try:verify(fixture.arguments())
-    except (RuntimeError,ValueError,KeyError,TypeError,OSError):
-        print('Sentetik readiness kabulü başarısız; ayrıntılar gizlendi, kaynak/volume korunuyor.',file=sys.stderr);sys.exit(1)
+    except (RuntimeError,ValueError,KeyError,TypeError,OSError) as error:
+        print(str(error) if isinstance(error,RuntimeError) else 'Sentetik readiness kabulü başarısız; tür='+type(error).__name__+', ayrıntılar gizlendi, kaynak/volume korunuyor.',file=sys.stderr);sys.exit(1)
