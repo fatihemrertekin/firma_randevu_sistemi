@@ -45,17 +45,20 @@ def verify(options):
         fixture.run(['docker','pause',options.instance+'-db-a']);paused=True
         try:
             started=time.monotonic();status,body=get(options.ports[0]);elapsed=time.monotonic()-started
-            check(status==503 and not body and elapsed<10,'Sıcak havuz/yanıtsız DB 503 ve süre sınırı başarısız.')
+            check(status==503 and not body and elapsed<10,f'Sıcak havuz/yanıtsız DB: status={status}, bytes={len(body)}, seconds={elapsed:.3f}; 503/boş gövde/10s gerekli.')
             check(get(options.ports[0],'/health/live')[0]==200,'DB arızasında live kapandı.')
             check(get(options.ports[1])[0]==200,'A DB arızasında B etkilendi.')
             check(get(options.ports[2],ca=source/'private/ca.pem')[0]==200,'A DB arızasında merkez etkilendi.')
             print('P06-06a: Pause503/boş gövde/live/B/merkez geçti; DB geri açılıyor.',flush=True)
         finally:
             fixture.run(['docker','unpause',options.instance+'-db-a']);paused=False
-        recovery.ready(options.ports[0]);check(get(options.ports[0])[0]==200,'DB açılınca readiness dönmedi.')
+        recovery.ready(options.ports[0]);recovered=get(options.ports[0])[0];check(recovered==200,f'DB açılınca readiness status={recovered}; 200 gerekli.')
         print('P06-06a: Geri açılma200; son veri/anahtar/kaynak karşılaştırması.',flush=True)
         for suffix in ('a','b'):
-            check(recovery.snapshot(options.instance+'-db-'+suffix)==before[suffix] and keys(options.instance+'-app-'+suffix)==before_keys[suffix],'Sağlık probu veri/şema/yetki/anahtarı değiştirdi.')
+            after=recovery.snapshot(options.instance+'-db-'+suffix)
+            changed=[name for name in after if after[name]!=before[suffix][name]]
+            check(not changed,'Sentetik snapshot farkı alanları: '+','.join(changed))
+            check(keys(options.instance+'-app-'+suffix)==before_keys[suffix],'Sentetik DP anahtarları değişti.')
         check({v['Name']:v['State']['StartedAt'] for v in json.loads(fixture.run(['docker','inspect',*manifest['names']['container']]))}==starts,'Duraklatma konteyneri yeniden başlattı.')
         check(fixture.resource_state(manifest['names'],manifest['owner'])==manifest['resources'],'Kaynak/config değişti.')
         result=dict(pass_=True,instance=options.instance,appImage=options.app_image,operatorImage=options.operator_image,warm200=True,paused503=True,failedBodyEmpty=True,
@@ -71,4 +74,4 @@ def verify(options):
 if __name__=='__main__':
     try:verify(fixture.arguments())
     except (RuntimeError,ValueError,KeyError,TypeError,OSError) as error:
-        print(str(error) if isinstance(error,RuntimeError) else 'Sentetik readiness kabulü başarısız; ayrıntılar gizlendi, kaynak/volume korunuyor.',file=sys.stderr);sys.exit(1)
+        print(str(error) if isinstance(error,RuntimeError) else 'Sentetik readiness kabulü başarısız; tür='+type(error).__name__+', ayrıntılar gizlendi, kaynak/volume korunuyor.',file=sys.stderr);sys.exit(1)
