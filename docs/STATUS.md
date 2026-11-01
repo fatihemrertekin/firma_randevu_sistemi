@@ -24,6 +24,8 @@
 
 **Sıradaki ücretsiz yerel iş:** aktif HMAC anahtarının gönderim kapalı kurtarma kapsamı ve kabulü. Gerçek SMS/operatör aktivasyonu bu işin parçası değildir.
 
+**P06-07b son kapanış düzeltmesi in_progress:** Windows PEM metin yazımı sertifika baytlarını değiştirdi; önceki TLS/MFA ve CI başarılı olsa da katı final-proof kontrolü kapanışı reddetti. Dört TLS dosyası ikili kopyaya çevrildi, TLS/env bayt eşitliği gerçek regresyona eklendi; yeni yerel kabul ve güncel head/main CI tamamlanmadan sonraki işe geçilmez. [Kapanış düzeltmesi](plans/P06.md#p06-07b-windows-dosya-bütünlüğü-kapanışı). Ana kurulum ve P04 korunur.
+
 **Uzak P06-07 beklemede (kullanıcı seçimi):** bütçe/ilk kurulum tavanı, sunucu/bölge/domain, yedek/saklama ve anahtar/alarm sorumlusu seçilmedi. Kart ve somut işlem/maliyet onayı sonrası yalnız tek uzak sentetik pilot kurulabilir. Aktif HMAC, kalıcı disk kotası, fiziksel host/host dışı kabul ve P06 bütünü açık kalır.
 
 P07-03/04/05 tek firma ödeme/Owner görünümü ve otomatik salt okunur/açılma, P07-07 hedef/izolasyon, P07-08 mali API/borç özeti done kalır. Depo geliştirme sırasında kullanıcı tercihiyle açıktır; görünürlük değiştirilmez. Ticari/mahremiyet kapıları, aylık görünüm/müşteri kartı iptali ve [gerçek SMS'in proje sonuna ertelenmesi](plans/P05.md#ücretli-gerçek-sms-kabulünün-proje-sonuna-ertelenmesi--20102026) korunur.

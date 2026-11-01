@@ -134,10 +134,10 @@ def restore(package,key,expected_operator,target,port):
             if sys.platform=='win32':sock.setsockopt(socket.SOL_SOCKET,socket.SO_EXCLUSIVEADDRUSE,1)
             sock.bind(('127.0.0.1',port))
         fixture.private_directory(root/'private');private=root/'private';owner=secrets.token_hex(24)
-        for name in ('ca.pem','db-i.crt','db-i.key'):fixture.write(private/name,files[name].decode(),public=name.endswith(('.pem','.crt')))
-        (private/'operator.pfx').write_bytes(files['operator.pfx'])
-        # Şifreli PFX'i konteyner UID1654 okuyabilmeli; host üst dizini700 kalır.
-        if sys.platform!='win32':(private/'operator.pfx').chmod(0o644)
+        # Windows metin yazımı PEM satır sonlarını değiştirmesin; şifreli PFX'i UID1654 okuyabilmeli.
+        for name in ('ca.pem','db-i.crt','db-i.key','operator.pfx'):
+            (private/name).write_bytes(files[name])
+            if sys.platform!='win32':(private/name).chmod(0o600 if name=='db-i.key' else 0o644)
         fixture.environment(private/'operator.env',env)
         fixture.environment(private/'db.env',dict(POSTGRES_DB='operator_identity',POSTGRES_PASSWORD=secrets.token_hex(32)))
         def bind(name,destination):return dict(type='bind',source=str(private/name),target=destination,read_only=True)
