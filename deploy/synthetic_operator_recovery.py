@@ -16,6 +16,7 @@ import synthetic_recovery as recovery
 
 TABLES = {'AspNetUsers', 'AspNetRoles', 'AspNetUserClaims', 'AspNetRoleClaims', 'AspNetUserRoles', 'AspNetUserLogins', 'AspNetUserTokens'}
 PROVISION = fixture.ROOT/'deploy/subscription-operator-identity.sql'
+INVALIDATE = fixture.ROOT/'deploy/Invalidate-RestoredOperatorAccess.sql'
 check = fixture.require
 
 
@@ -169,6 +170,15 @@ def restore(package,key,expected_operator,target,port):
         normalized=dict(m['snapshot'],schema=hashlib.sha256(schema(container,'operator_schema_reference')).hexdigest())
         recovery.binary(['docker','exec',container,'dropdb','-U','postgres','operator_schema_reference'])
         check(snapshot(container)==normalized,'Identity tablo/DDL/sequence/rol/grant/marker farkı.')
+        # Yedek sonrası iptaller bilinemez; hiçbir eski parola/MFA/oturum yeniden yetki kazanamaz.
+        sql(container,f"SELECT set_config('recovery.expected_operator','{expected_operator}',false);\n"+INVALIDATE.read_text(encoding='utf-8-sig'))
+        after=snapshot(container)
+        changed=[n for n in sorted(TABLES) if after['tables'][n]!=normalized['tables'][n]]
+        check('AspNetUsers' in changed and set(changed)<={'AspNetUsers','AspNetUserTokens'} and
+            all(after[k]==normalized[k] for k in normalized if k!='tables'),'İptal yalnız kimlik doğrulama alanlarını değiştirmeli.')
+        check(sql(container,'''SELECT count(*) FROM "AspNetUsers" WHERE "PasswordHash" IS NULL AND NOT "TwoFactorEnabled"
+            AND "LockoutEnabled" AND "LockoutEnd">clock_timestamp();''')=='1' and
+            sql(container,'SELECT count(*) FROM "AspNetUserTokens";')=='0','Kurtarılan hesap kapalı değil.')
         stream=io.BytesIO()
         with tarfile.open(fileobj=stream,mode='w') as output:
             directory=tarfile.TarInfo('.');directory.type=tarfile.DIRTYPE;directory.uid=directory.gid=1654;directory.mode=0o700;output.addfile(directory)
@@ -177,8 +187,9 @@ def restore(package,key,expected_operator,target,port):
                     item=tarfile.TarInfo(name[5:]);item.uid=item.gid=1654;item.mode=0o600;item.size=len(data);output.addfile(item,io.BytesIO(data))
         fixture.run(compose+['create','operator'])
         recovery.binary(['docker','cp','-a','-',target+'-operator:/app/keys/'],stream.getvalue())
-        # shortcut: Yalnız tek sahte hesap provası; gerçek hesap iptal mutabakatı/aktivasyonu ayrı kapıdır.
-        result.update(state='restored_closed',rawRestoreEqual=True,operatorStarted=False,plaintextArchiveOnDisk=False)
+        # shortcut: Güncel yetki kanıtı ve yeniden kayıt ayrı kapıdır; bu araç hesabı açmaz.
+        result.update(state='restored_closed',rawRestoreEqual=True,operatorStarted=False,plaintextArchiveOnDisk=False,
+                      accessInvalidated=True,reviewRequired=True,securityChangedTables=changed,accessPolicy=fixture.source_hash(INVALIDATE))
         fixture.write_json(root/'manifest.json',result)
         return result
 

@@ -1,17 +1,15 @@
 {
   "compose": true,
   "server": [
-    "Server.Tests.BookingVerificationTests",
-    "Server.Tests.BookingHmacBindingTests"
+    "Server.Tests.SubscriptionOperatorTests",
+    "Server.Tests.OperatorRecoveryTests"
   ],
   "web": [],
   "files": [
-    "deploy/synthetic_recovery.py",
-    "tests/Deployment/verify_recovery.py",
-    "tests/Deployment/verify_hmac_recovery.py",
-    "tests/Deployment/retire_ci_fixtures.py",
-    "tests/Deployment/test_ci_retirement.py",
-    "tests/Server.Tests/BookingHmacBindingTests.cs"
+    "deploy/Invalidate-RestoredOperatorAccess.sql",
+    "deploy/synthetic_operator_recovery.py",
+    "tests/Deployment/verify_operator_recovery.py",
+    "tests/Server.Tests/OperatorRecoveryTests.cs"
   ],
-  "reason": "P06-07c adds optional canonical32-byte HMAC preservation to the existing synthetic firm package. Configuration and persistent quota KeyId are checked before backup and after raw restore, and package binding is checked before target creation; existing inactive/legacy packages remain supported. New C# fixed vectors bind the package key-binding formula to actual BookingVerificationSecurity; existing BookingVerificationTests cover real PostgreSQL key mismatch/startup/recovery, disabled sending and complete table dump/restore. New HMAC mode reuses full firm restore acceptance with quota-bound source key, missing/wrong/malformed/unbound/enabled-dispatch rejections, exact key and TLS bytes, closed OTP endpoints, preserved quota and revoked budget/access history, MFA/two restarts. Shared recovery callers retain their existing related Docker gates: legacy restore, update, monitor, readiness and operator recovery. To prevent sequential CI network pool exhaustion, a guarded CI-only retirement step removes only stopped owned fixture containers/networks after each acceptance, retaining every volume/private file; four local/running/foreign-owner/positive lifecycle tests cover the guard. No application C#/identity/schema/UI/dependency change, so no unrelated server/web suite; current normal/operator packaging, Compose, EF preparation and CI scope regressions remain mandatory."
+  "reason": "P06-07d quarantines only the newly restored single synthetic operator after the full raw seven-table snapshot comparison. With no independent current revocation source, backup credentials never grant restored authority: stamps rotate, password/MFA/recovery tokens are invalidated and account stays locked for review. Roles/claims/logins/schema/grants/DP/TLS and both firm ledgers remain intact; no automatic reenrollment or real-account support. New real-PostgreSQL OperatorRecoveryTests exercise the actual guarded SQL, old cookie/password/pending MFA/recovery denial even after a test-only unlock, and wrong-marker/multi-account atomic rejection. Existing SubscriptionOperatorTests cover actual operator Identity/MFA/immediate revocation, authorization and ledger contracts. The packaged operator restore acceptance now proves post-backup source revocation, pre-quarantine raw equality, precise two-table security changes, old credential401, two restarts and both real firm Owner600TRY summaries/data/keys/starts;16 archive negatives remain. Normal/operator packaging, Compose/restart, four CI retirement guards and eight CI scope regressions remain. No production application C#/schema/migration/dependency/UI or shared firm-recovery helper change, so unrelated BookingVerification/web/full suites are excluded."
 }
