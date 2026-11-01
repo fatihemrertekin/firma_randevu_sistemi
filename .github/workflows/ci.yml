@@ -140,6 +140,28 @@ jobs:
             psql -U postgres -d firma_randevu -tAc 'SELECT value FROM p01_restart_check;')" = korundu
           curl --fail --silent --show-error --retry 20 --retry-all-errors --retry-delay 2 http://127.0.0.1:8080/health/ready
 
+      - name: CI fixture emeklilik korumaları
+        if: steps.scope.outputs.compose == 'true'
+        run: python3 -m unittest discover -s tests/Deployment -p 'test_ci_retirement.py'
+
+      - name: İlgili HMAC kapalı kurtarma kabulü
+        if: steps.scope.outputs.compose == 'true'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          changed="$(git diff --name-only "$BASE_SHA" "$HEAD_SHA" -- deploy/synthetic_recovery.py tests/Deployment/verify_recovery.py tests/Deployment/verify_hmac_recovery.py src/Server/Features/Scheduling/BookingVerificationSecurity.cs tests/Server.Tests/BookingHmacBindingTests.cs)"
+          if [ -n "$changed" ]; then
+            dotnet restore src/Server/Server.csproj --locked-mode
+            dotnet build src/Server/Server.csproj --no-restore
+            dotnet tool restore
+            python3 tests/Deployment/verify_hmac_recovery.py --instance fr-synthetic-hmac-ci --ports 8363 8364 8365 \
+              --app-image "$(docker image inspect firma-randevu:local --format '{{.Id}}')" \
+              --operator-image "$(docker image inspect firma-randevu-operator:ci --format '{{.Id}}')" \
+              --postgres-image "$(docker image inspect postgres:18.6-trixie --format '{{.Id}}')"
+            python3 tests/Deployment/retire_ci_fixtures.py
+          fi
+
       - name: İlgili sentetik A/B kurulum kabulü
         if: steps.scope.outputs.compose == 'true'
         env:
@@ -153,6 +175,7 @@ jobs:
               --app-image "$(docker image inspect firma-randevu:local --format '{{.Id}}')" \
               --operator-image "$(docker image inspect firma-randevu-operator:ci --format '{{.Id}}')" \
               --postgres-image "$(docker image inspect postgres:18.6-trixie --format '{{.Id}}')"
+            python3 tests/Deployment/retire_ci_fixtures.py
           fi
 
       - name: İlgili şifreli temiz restore kabulü
@@ -168,6 +191,7 @@ jobs:
               --app-image "$(docker image inspect firma-randevu:local --format '{{.Id}}')" \
               --operator-image "$(docker image inspect firma-randevu-operator:ci --format '{{.Id}}')" \
               --postgres-image "$(docker image inspect postgres:18.6-trixie --format '{{.Id}}')"
+            python3 tests/Deployment/retire_ci_fixtures.py
           fi
 
       - name: İlgili tek firma imaj güncelleme ve geri dönüş kabulü
@@ -182,6 +206,7 @@ jobs:
             python3 tests/Deployment/verify_update.py --instance fr-synthetic-update-ci --ports 8263 8264 8265 \
               --operator-image "$(docker image inspect firma-randevu-operator:ci --format '{{.Id}}')" \
               --postgres-image "$(docker image inspect postgres:18.6-trixie --format '{{.Id}}')"
+            python3 tests/Deployment/retire_ci_fixtures.py
           fi
 
       - name: İlgili yerel izleme ve kayıp-kurtarma kabulü
@@ -195,10 +220,11 @@ jobs:
             dotnet restore src/Server/Server.csproj --locked-mode
             dotnet build src/Server/Server.csproj --no-restore
             dotnet tool restore
-            python3 tests/Deployment/verify_monitoring.py --instance fr-synthetic-monitor-ci --ports 8283 8284 8285 \
+            python3 tests/Deployment/verify_monitoring.py --instance fr-synthetic-monitor-ci --ports 8383 8384 8385 \
               --app-image "$(docker image inspect firma-randevu:local --format '{{.Id}}')" \
               --operator-image "$(docker image inspect firma-randevu-operator:ci --format '{{.Id}}')" \
               --postgres-image "$(docker image inspect postgres:18.6-trixie --format '{{.Id}}')"
+            python3 tests/Deployment/retire_ci_fixtures.py
           fi
 
       - name: İlgili gerçek HTTP readiness kesinti kabulü
@@ -214,6 +240,7 @@ jobs:
               --app-image "$(docker image inspect firma-randevu:local --format '{{.Id}}')" \
               --operator-image "$(docker image inspect firma-randevu-operator:ci --format '{{.Id}}')" \
               --postgres-image "$(docker image inspect postgres:18.6-trixie --format '{{.Id}}')"
+            python3 tests/Deployment/retire_ci_fixtures.py
           fi
 
       - name: İlgili kapalı operatör Identity kurtarma kabulü
@@ -231,6 +258,7 @@ jobs:
               --app-image "$(docker image inspect firma-randevu:local --format '{{.Id}}')" \
               --operator-image "$(docker image inspect firma-randevu-operator:ci --format '{{.Id}}')" \
               --postgres-image "$(docker image inspect postgres:18.6-trixie --format '{{.Id}}')"
+            python3 tests/Deployment/retire_ci_fixtures.py
           fi
 
       - name: Yerel test servislerini durdur

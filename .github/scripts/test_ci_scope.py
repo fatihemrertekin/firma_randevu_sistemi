@@ -1,4 +1,5 @@
 import unittest
+import re
 from unittest.mock import patch
 import subprocess
 import tempfile
@@ -8,6 +9,22 @@ from ci_scope import PLAN, changed_paths, select_checks
 
 
 class ScopeTests(unittest.TestCase):
+    def test_fixture_acceptance_port_ranges_are_disjoint(self):
+        workflow = (Path(__file__).resolve().parents[1] / 'workflows/ci.yml').read_text()
+        commands = re.findall(r'python3 tests/Deployment/(verify_\w+)\.py --instance \S+ --ports (\d+) (\d+) (\d+)', workflow)
+        self.assertEqual(len(commands), 7)
+        used = {8080}
+        for name, a, b, c in commands:
+            ports = {int(a), int(b), int(c)}
+            if name == 'verify_update':
+                ports |= {p + offset for p in list(ports) for offset in (10, 20)}
+            if name in ('verify_recovery', 'verify_hmac_recovery', 'verify_monitoring'):
+                ports.add(int(a) + 3)
+            if name == 'verify_operator_recovery':
+                ports.add(int(c) + 1)
+            self.assertFalse(used & ports, f'{name} reuses a fixture port: {sorted(used & ports)}')
+            used |= ports
+
     def test_document_validator_rejects_broken_local_link(self):
         script = Path(__file__).with_name("Validate-Documentation.ps1").resolve()
         with tempfile.TemporaryDirectory() as directory:
