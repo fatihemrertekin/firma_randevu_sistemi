@@ -220,7 +220,7 @@ jobs:
             dotnet restore src/Server/Server.csproj --locked-mode
             dotnet build src/Server/Server.csproj --no-restore
             dotnet tool restore
-            python3 tests/Deployment/verify_monitoring.py --instance fr-synthetic-monitor-ci --ports 8283 8284 8285 \
+            python3 tests/Deployment/verify_monitoring.py --instance fr-synthetic-monitor-ci --ports 8383 8384 8385 \
               --app-image "$(docker image inspect firma-randevu:local --format '{{.Id}}')" \
               --operator-image "$(docker image inspect firma-randevu-operator:ci --format '{{.Id}}')" \
               --postgres-image "$(docker image inspect postgres:18.6-trixie --format '{{.Id}}')"
