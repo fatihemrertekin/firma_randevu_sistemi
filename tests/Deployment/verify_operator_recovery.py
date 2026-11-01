@@ -124,6 +124,9 @@ INSERT INTO "AspNetUserLogins" ("LoginProvider","ProviderKey","ProviderDisplayNa
             result=operator.restore(copied,key_copy,operator_id,target,options.ports[2]+1)
         check(result['state']=='restored_closed' and result['rawRestoreEqual'] and not result['operatorStarted'],'Restore varsayılan kapalı değil.')
         check(not json.loads(fixture.run(['docker','inspect',target+'-operator']))[0]['State']['Running'],'Operatör kendiliğinden açıldı.')
+        for name in ('ca.pem','db-i.crt','db-i.key','operator.pfx'):
+            check((root/'private'/name).read_bytes()==files[name],'Kurtarılan TLS dosyası baytları farklı.')
+        check((root/'private/operator.env').read_bytes()==files['operator.env'],'Kurtarılan operatör config baytları farklı.')
         check(keys(target+'-operator')==dp,'Kurtarılan DP dosyaları farklı.')
         print('Operator recovery: seven populated Identity tables/full schema/grants/sequences/DP equal; operator closed.',flush=True)
         # Yalnız bu tek sahte hesap kabulünde açık test başlangıcı; gerçek aktivasyon prosedürü değildir.
@@ -172,7 +175,7 @@ INSERT INTO "AspNetUserLogins" ("LoginProvider","ProviderKey","ProviderDisplayNa
         logs=recovery.binary(['docker','logs',target+'-operator'])
         for secret in (password,authenticator,*[v.split('Password=',1)[1].split(';')[0] for k,v in env.items() if k.endswith('ConnectionString') or k=='ConnectionStrings__OperatorIdentity']):check(secret.encode() not in logs,'Operatör logunda sır var.')
         summary=dict(pass_=True,instance=options.instance,target=target,identityTables=7,firmTablesEach=56,rawIdentityRestoreEqual=True,closedByDefault=True,
-            oldMfaCookieWorks=True,freshMfa=True,twoRestarts=True,firmDataKeysStartsPreserved=True,originalIdentityAndOperatorNotRead=True,
+            oldMfaCookieWorks=True,freshMfa=True,twoRestarts=True,tlsBytesPreserved=True,firmDataKeysStartsPreserved=True,originalIdentityAndOperatorNotRead=True,
             originalPrivatePackageKeyUnavailable=True,negativeChecks=negatives,mainTouched=False,productionActivation=False,offsiteHostLossProven=False,
             localRecoveryAndAcceptanceSeconds=round(time.monotonic()-loss,3),totalSeconds=round(time.monotonic()-started,3))
         fixture.write_json(report/'acceptance.json',summary);print('OPERATOR-RECOVERY-EVIDENCE:'+json.dumps(summary),flush=True)
