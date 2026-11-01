@@ -2,6 +2,7 @@
 import argparse
 import base64
 import hashlib
+import hmac
 import io
 import json
 from pathlib import Path
@@ -84,6 +85,34 @@ def archive(files, manifest):
     return stream.getvalue()
 
 
+def hmac_binding(env, expected_firm):
+    value=env.get('BookingVerification__HmacKey')
+    if value is None:return None
+    try:key=base64.b64decode(value,validate=True)
+    except ValueError as error:raise RuntimeError('HMAC anahtarı geçersiz.') from error
+    fixture.require(len(key)==32 and base64.b64encode(key).decode()==value,'Kanonik 32 bayt HMAC anahtarı gerekli.')
+    # BookingVerificationSecurity.Hash("key-binding") sözleşmesi; C# vektör testiyle bağlıdır.
+    payload=json.dumps(dict(Instance=expected_firm,Purpose='key-binding',Values=[]),separators=(',',':')).encode()
+    return hmac.new(key,payload,hashlib.sha256).hexdigest().upper()
+
+
+def validate_env(env, expected_firm, expected_hmac):
+    fixture.require(env['Auth__InstanceId']==expected_firm and env['IdentityEmail__Mode']=='Local','Paket kimlik/yerel iletişim sözleşmesi yanlış.')
+    allowed={'ASPNETCORE_ENVIRONMENT','Auth__InstanceId','Auth__KeysDirectory','ConnectionStrings__AppDatabase','IdentityEmail__Mode',
+        'BookingVerification__Enabled','BookingSms__DispatchEnabled','AppointmentReminders__Enabled','PublicBooking__AccessEnabled','Netgsm__Enabled'}
+    if expected_hmac is not None:allowed.add('BookingVerification__HmacKey')
+    fixture.require(set(env)==allowed,'Bilinmeyen/eksik config anahtarı.')
+    fixture.require(env['ASPNETCORE_ENVIRONMENT']=='Development' and env['Auth__KeysDirectory']=='/app/keys' and
+        re.fullmatch(r'Host=db-a;Database=firma_randevu;Username=app_user;Password=[0-9a-f]{64};SSL Mode=VerifyFull;Root Certificate=/tls/ca.pem;GSS Encryption Mode=Disable;Timeout=3',env['ConnectionStrings__AppDatabase']),'Paket bağlantı/config sözleşmesi farklı.')
+    fixture.require(all(env[k]=='false' for k in ('BookingVerification__Enabled','BookingSms__DispatchEnabled','AppointmentReminders__Enabled','Netgsm__Enabled')),'Gönderim açık paket reddedildi.')
+    fixture.require(hmac_binding(env,expected_firm)==expected_hmac,'Paket HMAC kimliği eşleşmiyor.')
+
+
+def validate_quota_binding(container, key_id):
+    ids=sql(container,'SELECT DISTINCT "KeyId" FROM "BookingVerificationQuotaEvents" ORDER BY "KeyId";').splitlines()
+    fixture.require(not ids or key_id is not None and ids==[key_id],'Kalıcı kota için aynı HMAC anahtarı gerekli; anahtar yenilenmez.')
+
+
 def backup(source, package, key):
     fixture.require(Path.cwd().resolve() == fixture.ROOT, 'Depo kökü gerekli.')
     source, package, key = map(local_path, (source, package, key))
@@ -102,7 +131,9 @@ def backup(source, package, key):
         fixture.require(fixture.file_hash(path) == expected, 'Kaynak dosyası değişmiş.')
     private = source/'private'
     app_env = env_bytes((private/'app-a.env').read_bytes())
-    fixture.require(all(app_env.get(k, 'false') == 'false' for k in ('BookingVerification__Enabled', 'BookingSms__DispatchEnabled', 'AppointmentReminders__Enabled', 'Netgsm__Enabled')), 'Gönderim kapalı olmalı.')
+    key_id=hmac_binding(app_env,config['instance']+'-a')
+    validate_env(app_env,config['instance']+'-a',key_id)
+    validate_quota_binding(config['instance']+'-db-a',key_id)
     compose = ['docker', 'compose', '-f', str(source/'compose.json')]
     # DP anahtarları ve DB aynı firma yazıcıları durduktan sonra alınır; DB çalışır.
     fixture.run(compose+['stop', 'app-a', 'operator'])
@@ -128,6 +159,7 @@ def backup(source, package, key):
     metadata = dict(version=1, firm=app_env['Auth__InstanceId'], images=[config['images'][0], config['images'][2]],
         snapshot=before, createdUtc=time.time(), tools=fixture.run(['docker', 'exec', container, 'pg_dump', '--version']),
         provisioning={n: fixture.source_hash(fixture.ROOT/'deploy'/n) for n in SQL_FILES})
+    if key_id is not None:metadata['hmacKeyId']=key_id
     with fixture.lock():
         for parent in (package.parent, key.parent):
             fixture.require(not parent.exists(), 'Yeni paket/anahtar dizini gerekli.')
@@ -159,12 +191,7 @@ def read_package(package, key, expected_firm):
     fixture.require(re.fullmatch(b'[0-9a-f]{64}',files['target-password']), 'Mali rol parolası biçimi yanlış.')
     fixture.require(manifest['provisioning'] == {n:fixture.source_hash(fixture.ROOT/'deploy'/n) for n in SQL_FILES}, 'Provisioning sürümü farklı; otomatik yükseltme yok.')
     env = env_bytes(files['app.env'])
-    fixture.require(env['Auth__InstanceId'] == expected_firm and env['IdentityEmail__Mode'] == 'Local', 'Paket kimlik/yerel iletişim sözleşmesi yanlış.')
-    fixture.require(set(env) == {'ASPNETCORE_ENVIRONMENT','Auth__InstanceId','Auth__KeysDirectory','ConnectionStrings__AppDatabase',
-        'IdentityEmail__Mode','BookingVerification__Enabled','BookingSms__DispatchEnabled','AppointmentReminders__Enabled','PublicBooking__AccessEnabled','Netgsm__Enabled'}, 'Bilinmeyen config anahtarı.')
-    fixture.require(env['ASPNETCORE_ENVIRONMENT']=='Development' and env['Auth__KeysDirectory']=='/app/keys' and
-        re.fullmatch(r'Host=db-a;Database=firma_randevu;Username=app_user;Password=[0-9a-f]{64};SSL Mode=VerifyFull;Root Certificate=/tls/ca.pem;GSS Encryption Mode=Disable;Timeout=3',env['ConnectionStrings__AppDatabase']), 'Paket bağlantı/config sözleşmesi farklı.')
-    fixture.require(all(env.get(k, 'false') == 'false' for k in ('BookingVerification__Enabled', 'BookingSms__DispatchEnabled', 'AppointmentReminders__Enabled', 'Netgsm__Enabled')), 'Gönderim açık paket reddedildi.')
+    validate_env(env,expected_firm,manifest.get('hmacKeyId'))
     fixture.require(files['database.dump'].startswith(b'PGDMP'), 'pg_dump arşivi geçersiz.')
     return manifest, files, env
 
@@ -228,6 +255,7 @@ def restore(package, key, expected_firm, target, port):
         reference=binary(['docker','exec',container,'pg_dump','-U','postgres','-d','recovery_schema_reference','--schema-only','--no-owner','--no-acl','--restrict-key=FRSyntheticRecovery'])
         normalized=dict(manifest['snapshot'],schema=hashlib.sha256(reference).hexdigest())
         fixture.require(snapshot(container)==normalized, 'Ham restore veri/ayrıştırılmış şema/sequence/rol/grant/marker eşitliği başarısız.')
+        validate_quota_binding(container,manifest.get('hmacKeyId'))
         sql(container,(fixture.ROOT/'deploy/Invalidate-RestoredPublicAccess.sql').read_text(encoding='utf-8-sig'))
         after=snapshot(container)
         changed=[n for n in after['tables'] if after['tables'][n]!=manifest['snapshot']['tables'][n]]

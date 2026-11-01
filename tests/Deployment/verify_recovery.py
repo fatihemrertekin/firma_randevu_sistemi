@@ -79,6 +79,25 @@ def verify(options):
         client,jar=mfa(f'http://127.0.0.1:{options.ports[0]}',account['APP_BOOTSTRAP_OWNER_PASSWORD'],account['APP_BOOTSTRAP_OWNER_EMAIL'],private/'ca.pem')
         firm=options.instance+'-a';container=options.instance+'-db-a'
         test=seed(container,firm)
+        hmac_mode=getattr(options,'hmac',False);hmac_value=None;hmac_id=None
+        if hmac_mode:
+            hmac_value=base64.b64encode(secrets.token_bytes(32)).decode()
+            app_env=recovery.env_bytes((private/'app-a.env').read_bytes());app_env['BookingVerification__HmacKey']=hmac_value
+            hmac_id=recovery.hmac_binding(app_env,firm)
+            recovery.sql(container,f'''INSERT INTO "BookingVerificationQuotaEvents" ("Id","KeyId","Kind","PhoneHash","IpHash","OccurredAt","RetainUntil") VALUES ('{uuid.uuid4()}','{hmac_id}','Send','SYNTHETIC-PHONE','SYNTHETIC-IP',clock_timestamp(),clock_timestamp()+interval '2 days');''')
+            fixture.run(source_compose+['stop','app-a'])
+            fixture.environment(private/'app-a.env',app_env)
+            fixture.run(source_compose+['up','-d','--no-build','--no-deps','app-a']);recovery.ready(options.ports[0])
+            # Yalnız bu fonksiyonun yeni oluşturduğu fixture; dışarıdan gelen kaynak benimsenmez.
+            manifest=json.loads((source/'manifest.json').read_text());manifest['files'][str(Path('private')/'app-a.env')]=fixture.file_hash(private/'app-a.env')
+            manifest['resources']=fixture.resource_state(manifest['names'],manifest['owner']);fixture.write_json(source/'manifest.json',manifest)
+            for value in (None,base64.b64encode(secrets.token_bytes(32)).decode()):
+                candidate=dict(app_env)
+                if value is None:candidate.pop('BookingVerification__HmacKey')
+                else:candidate['BookingVerification__HmacKey']=value
+                try:recovery.validate_quota_binding(container,recovery.hmac_binding(candidate,firm))
+                except RuntimeError:pass
+                else:raise RuntimeError('Kaynak eksik/farklı HMAC kota bağını kabul etti.')
         before=recovery.snapshot(container)
         check(before['tables']['Appointments'].startswith('1:') and before['tables']['SubscriptionPayments'].startswith('1:'),'Kabul verisi eksik.')
         backup=recovery.backup(source,package,key)
@@ -132,10 +151,36 @@ def verify(options):
             with zipfile.ZipFile(stream,'w') as output:
                 for n,v in changed.items():output.writestr(n,v)
             invalid=report_root/(kind+'.frbk');invalid.write_bytes(recovery.crypt(stream.getvalue(),key_copy,'Encrypt'));reject(p=invalid)
+        if hmac_mode:
+            for kind in ('hmac-missing','hmac-malformed','hmac-wrong','hmac-unbound','hmac-dispatch'):
+                changed=dict(entries);meta=json.loads(changed['manifest.json']);candidate=recovery.env_bytes(changed['app.env'])
+                if kind=='hmac-missing':candidate.pop('BookingVerification__HmacKey')
+                elif kind=='hmac-malformed':candidate['BookingVerification__HmacKey']='invalid'
+                elif kind=='hmac-wrong':candidate['BookingVerification__HmacKey']=base64.b64encode(secrets.token_bytes(32)).decode()
+                elif kind=='hmac-unbound':meta.pop('hmacKeyId')
+                else:candidate['BookingSms__DispatchEnabled']='true'
+                changed['app.env']=''.join(f'{k}={v}\n' for k,v in candidate.items()).encode()
+                meta['files']['app.env']=hashlib.sha256(changed['app.env']).hexdigest();changed['manifest.json']=json.dumps(meta).encode()
+                stream=io.BytesIO()
+                with zipfile.ZipFile(stream,'w') as output:
+                    for n,v in changed.items():output.writestr(n,v)
+                invalid=report_root/(kind+'.frbk');invalid.write_bytes(recovery.crypt(stream.getvalue(),key_copy,'Encrypt'));reject(p=invalid)
         print('P06-04: Yanlış anahtar/bozuk-eksik paket/yol/dump/firma/hedef reddi kaynak oluşturmadan geçti.',flush=True)
         result=recovery.restore(copied,key_copy,firm,target,options.ports[0]+3)
         check(result['rawRestoreEqual'],'Ham restore karşılaştırması eksik.')
         restored=target+'-db';base=f'http://127.0.0.1:{options.ports[0]+3}'
+        if hmac_mode:
+            current=recovery.env_bytes((target_root/'private/app.env').read_bytes())
+            check(current['BookingVerification__HmacKey']==hmac_value and recovery.hmac_binding(current,firm)==hmac_id,'HMAC aynen kurtarılmadı.')
+            check(all(current[k]=='false' for k in ('BookingVerification__Enabled','BookingSms__DispatchEnabled','AppointmentReminders__Enabled','PublicBooking__AccessEnabled','Netgsm__Enabled')),'Kurtarmada kapı açıldı.')
+            recovery.validate_quota_binding(restored,hmac_id)
+            check(recovery.sql(restored,'SELECT count(*) FROM "BookingVerificationQuotaEvents";')=='1','HMAC kota geçmişi kayboldu.')
+            anonymous=urllib.request.build_opener(urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))
+            csrf=request(anonymous,base+'/api/auth/csrf')[1]['token']
+            for action in ('request','resend','verify'):
+                check(request(anonymous,base+'/api/public-booking/verification/'+action,{}, {'Origin':base,'X-CSRF-TOKEN':csrf})[0]==503,'Kapalı OTP API açıldı.')
+            for name in ('ca.pem','db.crt','db.key'):
+                check((target_root/'private'/name).read_bytes()==entries[name],'TLS baytları farklı.')
         check(request(client,base+'/api/auth/me')[0]==200,'DP anahtarları eski MFA oturumunu çözemedi.')
         status,summary=request(client,base+'/api/subscription')
         check(status==200 and summary['periods'][0]['outstandingTry']=='600.00','Abonelik/kısmi ödeme geçmişi yanlış.')
@@ -176,13 +221,16 @@ def verify(options):
         else:raise RuntimeError('Mevcut hedef üstüne restore kabul edildi.')
         check(target_inventory()==current and recovery.snapshot(restored)==stable,'Tekrar restore hedefi değiştirdi.')
         logs=recovery.binary(['docker','logs',target+'-app'])
-        for secret in (account['APP_BOOTSTRAP_OWNER_PASSWORD'],test['token'],authenticator):check(secret.encode() not in logs,'Logda kabul sırrı var.')
+        for secret in (account['APP_BOOTSTRAP_OWNER_PASSWORD'],test['token'],authenticator,*([hmac_value] if hmac_mode else [])):check(secret.encode() not in logs,'Logda kabul sırrı var.')
         fixture.write_json(report_root/'acceptance.json',dict(pass_=True,source=options.instance,target=target,rawRestoreEqual=True,
             tableCount=len(before['tables']),securityChangedTables=result['securityChangedTables'],originalSourceStoppedAndUnavailable=True,
             copiedKeyAndPackageOnly=True,oldCookieDecrypted=True,oldToken403=True,receiptAndBudgetRevoked=True,reminderUnknown=True,
             freshMfa=True,twoRestarts=True,mainTouched=False,plaintextArchiveOnDisk=False,encryptedBytes=backup['encryptedBytes'],
             localRecoverySeconds=round(time.monotonic()-loss,3),totalAcceptanceSeconds=round(time.monotonic()-started,3),offsiteHostLossProven=False))
         print('P06-04: Temiz restore, tüm tablo/şema/rol/grant, DP/MFA/borç, iptaller ve iki restart geçti.',flush=True)
+        if hmac_mode:
+            result=json.loads((report_root/'acceptance.json').read_text());result.update(hmacPreserved=True,quotaBindingPreserved=True,hmacNegativeCases=5,allDispatchGatesClosed=True,tlsBytesPreserved=True)
+            fixture.write_json(report_root/'acceptance.json',result);print('HMAC-RECOVERY-EVIDENCE:'+json.dumps(result),flush=True)
     finally:
         if target_root.exists():fixture.run(target_compose+['stop'])
         if moved and moved.exists():moved.rename(source)

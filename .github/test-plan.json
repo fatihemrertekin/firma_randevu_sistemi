@@ -1,10 +1,17 @@
 {
   "compose": true,
-  "server": [],
+  "server": [
+    "Server.Tests.BookingVerificationTests",
+    "Server.Tests.BookingHmacBindingTests"
+  ],
   "web": [],
   "files": [
-    "deploy/synthetic_operator_recovery.py",
-    "tests/Deployment/verify_operator_recovery.py"
+    "deploy/synthetic_recovery.py",
+    "tests/Deployment/verify_recovery.py",
+    "tests/Deployment/verify_hmac_recovery.py",
+    "tests/Deployment/retire_ci_fixtures.py",
+    "tests/Deployment/test_ci_retirement.py",
+    "tests/Server.Tests/BookingHmacBindingTests.cs"
   ],
-  "reason": "Follow-up to P06-07b closure: on Windows, fixture.write text-mode conversion changed PEM bytes although TLS/MFA worked. Write TLS certificate/key/PFX bytes exactly, preserving existing Linux file permissions and closed-by-default behavior; add byte equality of all four TLS files and operator config to the actual Docker recovery acceptance. No C#/Identity/schema/UI/dependency change. The same narrow real PostgreSQL/operator MFA/two-restart/16-negative and A/B56-table preservation gate is mandatory, with EF host preparation and existing packaging/Compose gates. Server/web suites remain unrelated and unselected. Original failed strict closure is retained; main runtime/images are unchanged."
+  "reason": "P06-07c adds optional canonical32-byte HMAC preservation to the existing synthetic firm package. Configuration and persistent quota KeyId are checked before backup and after raw restore, and package binding is checked before target creation; existing inactive/legacy packages remain supported. New C# fixed vectors bind the package key-binding formula to actual BookingVerificationSecurity; existing BookingVerificationTests cover real PostgreSQL key mismatch/startup/recovery, disabled sending and complete table dump/restore. New HMAC mode reuses full firm restore acceptance with quota-bound source key, missing/wrong/malformed/unbound/enabled-dispatch rejections, exact key and TLS bytes, closed OTP endpoints, preserved quota and revoked budget/access history, MFA/two restarts. Shared recovery callers retain their existing related Docker gates: legacy restore, update, monitor, readiness and operator recovery. To prevent sequential CI network pool exhaustion, a guarded CI-only retirement step removes only stopped owned fixture containers/networks after each acceptance, retaining every volume/private file; four local/running/foreign-owner/positive lifecycle tests cover the guard. No application C#/identity/schema/UI/dependency change, so no unrelated server/web suite; current normal/operator packaging, Compose, EF preparation and CI scope regressions remain mandatory."
 }

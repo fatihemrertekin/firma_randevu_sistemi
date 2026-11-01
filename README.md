@@ -567,6 +567,19 @@ $readyPostgresImage = docker image inspect postgres:18.6-trixie --format '{{.Id}
 python tests/Deployment/verify_readiness.py --instance fr-synthetic-ready-demo --ports 8303 8304 8305 --app-image $readyAppImage --operator-image $readyOperatorImage --postgres-image $readyPostgresImage
 ```
 
+### P06 gönderim kapalı HMAC kurtarma kabulü
+
+Firma paketinin HMAC/kota bağı kabulü, depo kökünde önceki dotnet build/tool ve Docker/Python/PowerShell ön koşullarıyla çalışır. Yeni ve boş ID/port gerekir:
+
+```powershell
+$hmacAppImage = docker image inspect firma-randevu:local --format '{{.Id}}'
+$hmacOperatorImage = docker image inspect firma-randevu-operator:local --format '{{.Id}}'
+$hmacPostgresImage = docker image inspect postgres:18.6-trixie --format '{{.Id}}'
+python tests/Deployment/verify_hmac_recovery.py --instance fr-synthetic-hmac-demo --ports 8363 8364 8365 --app-image $hmacAppImage --operator-image $hmacOperatorImage --postgres-image $hmacPostgresImage
+```
+
+Temiz hedef ilk port+3 (8366). Mevcut firma yardımcısı, bütün gönderim ayarları kapalıyken isteğe bağlı `BookingVerification__HmacKey` alanını aynı şifreli pakette taşır; kota kaydıyla bağını doğrular. Anahtar CLI'ya/loga yazılmaz, yenisi üretilmez; yok/farklı anahtar kotayı gizleyemez. Kapalı request/resend/verify API503, bütçe/erişim iptali,56 tablo/DP/MFA/iki restart ve TLS bayt eşitliği sınanır. Test kendi kaynak/hedefini sonunda durdurur, volume/özel dosyaları silmez. [Kapsam ve sınırlar](docs/plans/P06.md#p06-07c--gönderim-kapalı-hmac-kurtarma--01112026). `retire_ci_fixtures.py` yalnız GitHub CI içindir; yerelde çalıştırılmaz.
+
 ### P06 yerel operatör kimlik kurtarma provası
 
 Depo kökünde Docker, Python3.12+, PowerShell7.4+ ve mevcut kabul imajlarıyla; her çalıştırmada yeni ID ve boş portlar gerekir:
