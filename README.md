@@ -566,3 +566,21 @@ $readyOperatorImage = docker image inspect firma-randevu-operator:local --format
 $readyPostgresImage = docker image inspect postgres:18.6-trixie --format '{{.Id}}'
 python tests/Deployment/verify_readiness.py --instance fr-synthetic-ready-demo --ports 8303 8304 8305 --app-image $readyAppImage --operator-image $readyOperatorImage --postgres-image $readyPostgresImage
 ```
+
+### P06 yerel operatör kimlik kurtarma provası
+
+Depo kökünde Docker, Python3.12+, PowerShell7.4+ ve mevcut kabul imajlarıyla; her çalıştırmada yeni ID ve boş portlar gerekir:
+
+```powershell
+dotnet restore src/Server/Server.csproj --locked-mode
+dotnet build src/Server/Server.csproj --no-restore
+dotnet tool restore
+$operatorRecoveryApp = docker image inspect firma-randevu:local --format '{{.Id}}'
+$operatorRecoveryImage = docker image inspect firma-randevu-operator:local --format '{{.Id}}'
+$operatorRecoveryPostgres = docker image inspect postgres:18.6-trixie --format '{{.Id}}'
+python tests/Deployment/verify_operator_recovery.py --instance fr-synthetic-oprec-demo --ports 8323 8324 8325 --app-image $operatorRecoveryApp --operator-image $operatorRecoveryImage --postgres-image $operatorRecoveryPostgres
+```
+
+Hedef TLS portu üçüncü port+1'dir (örnekte8326). Tek sahte `operator@example.test` hesabı kabul edilir. Kaynak operatör/Identity DB kapatılıp özgün özel dizin/paket/anahtar konumları yokken, ayrı kopyadan yedi Identity tablosu+DP/config/TLS temiz hedefte doğrulanır; eski oturum/yeni MFA ve iki firma verisi sınanır. Test sonunda kaynak/hedef kapalı, volume ve özel dosyalar korunur. [Kapsam ve sınırlar](docs/plans/P06.md#p06-07b--yerel-operatör-identity-kurtarma--01112026).
+
+Tekil `python deploy/synthetic_operator_recovery.py backup --source .local/synthetic/fr-synthetic-example --package .local/operator-recovery-packages/example/operator.frbk --key .local/operator-recovery-keys/example/recovery.key` mevcut ve doğrulanan fixture operatörünü durdurur. `restore` aynı `--package`/`--key` yanında `--expected-operator fr-synthetic-example-operator --target fr-oprestore-example --port 8326` ister. Paket/anahtar dizinleri yeni ve ayrı; restore hedefi yeni olmalıdır. Sonuç `restored_closed`: operatör otomatik açılmaz. Araç, en fazla64MiB bellek içi tek sahte hesap provasıdır; gerçek hesap/çok hesap/iptal mutabakatı/host dışı yedek/üretim aktivasyonu aracı değildir. Testteki açık start gerçek operatör yeniden açılış prosedürü sayılmaz.

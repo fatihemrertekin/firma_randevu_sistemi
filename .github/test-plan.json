@@ -1,12 +1,10 @@
 {
   "compose": true,
-  "server": [
-    "Server.Tests.HealthEndpointsTests",
-    "Server.Tests.AppointmentPendingTests"
-  ],
+  "server": [],
   "web": [],
   "files": [
-    "tests/Deployment/verify_readiness.py"
+    "deploy/synthetic_operator_recovery.py",
+    "tests/Deployment/verify_operator_recovery.py"
   ],
-  "reason": "P06-06a packaged readiness passed local and PR head, but its first merged-main Docker acceptance failed while all22 server tests passed. This follow-up changes only safe stage/RuntimeError diagnostics in the packaged verifier; assertions, ten-second bound, snapshots and handler remain unchanged. RuntimeError sources are fixed validation strings or the existing redacted command wrapper, never process stderr/SQL/secret values. The same HealthEndpointsTests and existing AppointmentPendingTests remain the narrow related server gates; normal/operator packaging and the same actual PostgreSQL warm-pool pause/503/live/B/op/recovery/data-key acceptance remain mandatory. Main runtime is untouched until the current head and main are both green; initial failed CI is retained as evidence."
+  "reason": "Local-only operator Identity recovery for one fake operator@example.test in an owned synthetic fixture. Reuses existing initializer, AES-GCM archive, bounded binary runner, provisioning SQL, MFA helper and firm snapshot/seed helpers unchanged. New command packages only seven Identity tables, DP, runtime config/TLS and allowed target credentials; validates fixed config/paths/images/ownership and restores into a new loopback-only closed target. Real packaged Docker/PostgreSQL acceptance covers wrong key/corruption/missing and malicious archive/config/network/image inputs before resources; original operator/identity/private paths unavailable; full seven-table DDL/sequence/role/grant/marker equality; old DP cookie, fresh MFA, two restarts, real A/B summaries and unchanged56-table firm snapshots/keys/starts. Production activation, post-backup account revocation reconciliation and active HMAC recovery remain outside this bounded single-fake-account helper; operator is not automatically started. Normal/operator C# identity/startup, application schema, dependencies and frontend are unchanged, so no unrelated server/web suite is selected. Existing CI scope regressions and Compose/normal/operator packaging remain mandatory; pinned EF host build/tool restore is needed by unchanged synthetic initializer."
 }
